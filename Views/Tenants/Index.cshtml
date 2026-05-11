@@ -1,0 +1,75 @@
+@model IEnumerable<YnclinoAMS.Models.tblTenant>
+@{
+    ViewData["Title"] = "Tenants";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="fw-bold mb-0">Tenants</h3>
+    <a asp-action="Create" class="btn btn-primary">+ Register Tenant</a>
+</div>
+
+<!-- Filters -->
+<form method="get" class="row g-2 mb-4">
+    <div class="col-auto">
+        <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" class="form-control"
+               placeholder="Search by name…" />
+    </div>
+    <div class="col-auto">
+        <select name="statusFilter" class="form-select">
+            <option value="Active" selected="@(ViewBag.StatusFilter == "Active")">Active</option>
+            <option value="Inactive" selected="@(ViewBag.StatusFilter == "Inactive")">Inactive</option>
+            <option value="" selected="@(ViewBag.StatusFilter == "")">All</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-outline-secondary">Filter</button>
+        <a asp-action="Index" class="btn btn-link">Clear</a>
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-primary">
+            <tr>
+                <th>Name</th>
+                <th>Unit</th>
+                <th>Contact</th>
+                <th>Move-In</th>
+                <th>Lease End</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var tenant in Model)
+            {
+                <tr>
+                    <td class="fw-semibold">@tenant.LastName, @tenant.FirstName</td>
+                    <td>@(tenant.Unit?.UnitNumber ?? "—")</td>
+                    <td>@(tenant.ContactNumber ?? "—")</td>
+                    <td>@(tenant.MoveInDate?.ToString("MMM dd, yyyy") ?? "—")</td>
+                    <td>@(tenant.LeaseEnd?.ToString("MMM dd, yyyy") ?? "—")</td>
+                    <td>
+                        <span class="badge @(tenant.Status == "Active" ? "bg-success" : "bg-secondary")">
+                            @tenant.Status
+                        </span>
+                    </td>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@tenant.TenantID" class="btn btn-sm btn-outline-info">Details</a>
+                        <a asp-action="Edit" asp-route-id="@tenant.TenantID" class="btn btn-sm btn-outline-primary">Edit</a>
+                        @if (tenant.Status == "Active")
+                        {
+                            <a asp-action="Delete" asp-route-id="@tenant.TenantID" class="btn btn-sm btn-outline-danger">Deactivate</a>
+                        }
+                    </td>
+                </tr>
+            }
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">No tenants found.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

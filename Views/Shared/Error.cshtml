@@ -1,0 +1,14 @@
+@model YnclinoAMS.Models.ErrorViewModel
+@{
+    ViewData["Title"] = "Error";
+}
+
+<div class="text-center py-5">
+    <h1 class="text-danger">An Error Occurred</h1>
+    <h2 class="text-muted">The request could not be processed.</h2>
+    @if (Model.ShowRequestId)
+    {
+        <p><strong>Request ID:</strong> <code>@Model.RequestId</code></p>
+    }
+    <a asp-controller="Home" asp-action="Index" class="btn btn-primary mt-3">Go to Dashboard</a>
+</div>

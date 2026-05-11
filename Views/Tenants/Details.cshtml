@@ -1,0 +1,56 @@
+@model YnclinoAMS.Models.tblTenant
+@{
+    ViewData["Title"] = Model.FullName;
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-info text-white fw-semibold">Tenant Details — @Model.FullName</div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Full Name</dt>
+                    <dd class="col-sm-8">@Model.LastName, @Model.FirstName</dd>
+
+                    <dt class="col-sm-4">Unit</dt>
+                    <dd class="col-sm-8">@(Model.Unit?.UnitNumber ?? "—") (@(Model.Unit?.UnitType ?? "—"))</dd>
+
+                    <dt class="col-sm-4">Rent Price</dt>
+                    <dd class="col-sm-8">₱@(Model.Unit?.RentPrice.ToString("N2") ?? "—")</dd>
+
+                    <dt class="col-sm-4">Contact Number</dt>
+                    <dd class="col-sm-8">@(Model.ContactNumber ?? "—")</dd>
+
+                    <dt class="col-sm-4">Emergency Contact</dt>
+                    <dd class="col-sm-8">@(Model.EmergencyContact ?? "—")</dd>
+
+                    <dt class="col-sm-4">Move-In Date</dt>
+                    <dd class="col-sm-8">@(Model.MoveInDate?.ToString("MMMM dd, yyyy") ?? "—")</dd>
+
+                    <dt class="col-sm-4">Move-Out Date</dt>
+                    <dd class="col-sm-8">@(Model.MoveOutDate?.ToString("MMMM dd, yyyy") ?? "—")</dd>
+
+                    <dt class="col-sm-4">Lease Start</dt>
+                    <dd class="col-sm-8">@(Model.LeaseStart?.ToString("MMMM dd, yyyy") ?? "—")</dd>
+
+                    <dt class="col-sm-4">Lease End</dt>
+                    <dd class="col-sm-8">@(Model.LeaseEnd?.ToString("MMMM dd, yyyy") ?? "—")</dd>
+
+                    <dt class="col-sm-4">Status</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge @(Model.Status == "Active" ? "bg-success" : "bg-secondary")">
+                            @Model.Status
+                        </span>
+                    </dd>
+
+                    <dt class="col-sm-4">Date Recorded</dt>
+                    <dd class="col-sm-8">@Model.DateRecorded.ToString("MMMM dd, yyyy")</dd>
+                </dl>
+            </div>
+            <div class="card-footer d-flex gap-2">
+                <a asp-action="Edit" asp-route-id="@Model.TenantID" class="btn btn-primary btn-sm">Edit</a>
+                <a asp-action="Index" class="btn btn-outline-secondary btn-sm">Back to List</a>
+            </div>
+        </div>
+    </div>
+</div>

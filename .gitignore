@@ -1,0 +1,25 @@
+## .NET / ASP.NET Core
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.log
+
+## NuGet
+packages/
+*.nupkg
+
+## wwwroot/lib (restored by libman or npm)
+wwwroot/lib/bootstrap/
+wwwroot/lib/jquery/
+wwwroot/lib/jquery-validation/
+wwwroot/lib/jquery-validation-unobtrusive/
+
+## Environment / secrets
+appsettings.*.json
+!appsettings.Development.json
+
+## OS
+.DS_Store
+Thumbs.db

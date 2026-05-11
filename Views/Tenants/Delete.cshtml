@@ -1,0 +1,37 @@
+@model YnclinoAMS.Models.tblTenant
+@{
+    ViewData["Title"] = "Deactivate Tenant";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-warning shadow-sm">
+            <div class="card-header bg-warning text-dark fw-semibold">Confirm Deactivation</div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>Note:</strong> This is a soft delete. The tenant record will be preserved
+                    for billing and maintenance history — only the status will be set to <em>Inactive</em>.
+                </div>
+
+                <p>Are you sure you want to deactivate this tenant?</p>
+
+                <dl class="row">
+                    <dt class="col-sm-4">Name</dt>
+                    <dd class="col-sm-8">@Model.LastName, @Model.FirstName</dd>
+                    <dt class="col-sm-4">Unit</dt>
+                    <dd class="col-sm-8">@(Model.Unit?.UnitNumber ?? "—")</dd>
+                    <dt class="col-sm-4">Status</dt>
+                    <dd class="col-sm-8">@Model.Status</dd>
+                </dl>
+
+                <form asp-action="Delete" method="post">
+                    <input type="hidden" name="id" value="@Model.TenantID" />
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-warning text-dark">Yes, Deactivate</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
