@@ -1,0 +1,38 @@
+/* ── Ynclino AMS Global Styles ── */
+
+body {
+    background-color: #f5f7fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.navbar-brand {
+    font-size: 1.1rem;
+    letter-spacing: .5px;
+}
+
+/* Card tweaks */
+.card {
+    border-radius: .5rem;
+}
+
+.card-header {
+    border-radius: .5rem .5rem 0 0 !important;
+}
+
+/* Table */
+.table th {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Alert auto-hide */
+.alert {
+    border-radius: .5rem;
+}
+
+/* Footer */
+footer {
+    color: #888;
+    font-size: .8rem;
+    padding: 1rem 0;
+}

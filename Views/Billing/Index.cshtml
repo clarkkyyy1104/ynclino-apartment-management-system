@@ -1,0 +1,47 @@
+@model IEnumerable<YnclinoAMS.Models.tblTenant>
+@{
+    ViewData["Title"] = "Billing & Payment Monitoring";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold mb-0">Billing &amp; Payment Monitoring</h3>
+</div>
+
+<div class="alert alert-info">
+    This section will track billing records and payment history for each tenant.
+    Full billing CRUD will be implemented here.
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-primary">
+            <tr>
+                <th>Tenant</th>
+                <th>Unit</th>
+                <th>Rent Price</th>
+                <th>Lease End</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var tenant in Model)
+            {
+                <tr>
+                    <td class="fw-semibold">@tenant.LastName, @tenant.FirstName</td>
+                    <td>@(tenant.Unit?.UnitNumber ?? "—")</td>
+                    <td>₱@(tenant.Unit?.RentPrice.ToString("N2") ?? "—")</td>
+                    <td>@(tenant.LeaseEnd?.ToString("MMM dd, yyyy") ?? "—")</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" disabled>View Bills</button>
+                    </td>
+                </tr>
+            }
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">No active tenants found.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

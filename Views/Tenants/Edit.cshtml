@@ -1,0 +1,94 @@
+@model YnclinoAMS.Models.ViewModels.TenantViewModel
+@{
+    ViewData["Title"] = "Edit Tenant";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white fw-semibold">Edit Tenant — @Model.FullName</div>
+            <div class="card-body">
+                <form asp-action="Edit" method="post">
+                    <input type="hidden" asp-for="TenantID" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" style="display:none"></div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="FirstName" class="form-label fw-semibold"></label>
+                            <input asp-for="FirstName" class="form-control" />
+                            <span asp-validation-for="FirstName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="LastName" class="form-label fw-semibold"></label>
+                            <input asp-for="LastName" class="form-control" />
+                            <span asp-validation-for="LastName" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="UnitID" class="form-label fw-semibold"></label>
+                        <select asp-for="UnitID" asp-items="Model.AvailableUnits" class="form-select"></select>
+                        <span asp-validation-for="UnitID" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="ContactNumber" class="form-label fw-semibold"></label>
+                            <input asp-for="ContactNumber" class="form-control" />
+                            <span asp-validation-for="ContactNumber" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="EmergencyContact" class="form-label fw-semibold"></label>
+                            <input asp-for="EmergencyContact" class="form-control" />
+                            <span asp-validation-for="EmergencyContact" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="MoveInDate" class="form-label fw-semibold"></label>
+                            <input asp-for="MoveInDate" class="form-control" type="date" />
+                            <span asp-validation-for="MoveInDate" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="MoveOutDate" class="form-label fw-semibold"></label>
+                            <input asp-for="MoveOutDate" class="form-control" type="date" />
+                            <span asp-validation-for="MoveOutDate" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="LeaseStart" class="form-label fw-semibold"></label>
+                            <input asp-for="LeaseStart" class="form-control" type="date" />
+                            <span asp-validation-for="LeaseStart" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="LeaseEnd" class="form-label fw-semibold"></label>
+                            <input asp-for="LeaseEnd" class="form-control" type="date" />
+                            <span asp-validation-for="LeaseEnd" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Status" class="form-label fw-semibold"></label>
+                        <select asp-for="Status" class="form-select">
+                            <option>Active</option>
+                            <option>Inactive</option>
+                        </select>
+                        <span asp-validation-for="Status" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">Update Tenant</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}
