@@ -5,8 +5,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 
+// Use an absolute SQLite path inside the app's content root so it works
+// the same locally and in containers (Railway, Docker, etc.)
+var dbPath = Path.Combine(builder.Environment.ContentRootPath, "YnclinoAMS.db");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite($"Data Source={dbPath}"));
 
 var app = builder.Build();
 
@@ -17,13 +20,10 @@ using (var scope = app.Services.CreateScope())
     db.Database.EnsureCreated();
 }
 
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
-}
+// Show detailed errors everywhere for now so deployment issues are visible.
+// Replace with the friendly Error page once the app is stable.
+app.UseDeveloperExceptionPage();
 
-app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();
