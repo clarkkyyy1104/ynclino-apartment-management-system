@@ -9,7 +9,12 @@ builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 builder.Services.AddControllersWithViews();
 
-var dbPath = Path.Combine(builder.Environment.ContentRootPath, "YnclinoAMS.db");
+// Use /tmp on Linux containers (Railway), local content root in dev
+var dbDir  = OperatingSystem.IsWindows()
+    ? builder.Environment.ContentRootPath
+    : "/tmp";
+var dbPath = Path.Combine(dbDir, "YnclinoAMS.db");
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite($"Data Source={dbPath}"));
 
