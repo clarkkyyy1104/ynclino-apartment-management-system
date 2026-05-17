@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="840"
+     viewBox="0 0 1100 840" font-family="Segoe UI, Arial, sans-serif">
+
+  <defs>
+    <marker id="arr-open" markerWidth="10" markerHeight="8"
+            refX="9" refY="4" orient="auto">
+      <polyline points="0,0 9,4 0,8"
+                fill="none" stroke="#9ca3af" stroke-width="1.2"/>
+    </marker>
+  </defs>
+
+  <!-- ── Background ── -->
+  <rect width="1100" height="840" fill="#f8fafc"/>
+
+  <!-- ── Diagram title ── -->
+  <text x="550" y="22" text-anchor="middle"
+        font-size="14" font-weight="700" fill="#111827">
+    Use Case Diagram — Ynclino Apartment Management System
+  </text>
+
+  <!-- ── System boundary ── -->
+  <rect x="155" y="36" width="815" height="762"
+        fill="white" stroke="#9ca3af" stroke-width="1.8" rx="4"/>
+
+  <!-- System boundary label -->
+  <text x="562" y="54" text-anchor="middle"
+        font-size="10" fill="#9ca3af" font-style="italic">
+    &laquo;system&raquo;  Ynclino AMS
+  </text>
+
+  <!-- ── Internal dividers ── -->
+  <!-- Vertical: Units | Tenants -->
+  <line x1="482" y1="62" x2="482" y2="510"
+        stroke="#e5e7eb" stroke-width="1.4" stroke-dasharray="5,4"/>
+  <!-- Horizontal: use cases | system actions -->
+  <line x1="175" y1="512" x2="950" y2="512"
+        stroke="#e5e7eb" stroke-width="1.4" stroke-dasharray="5,4"/>
+
+  <!-- ── Section labels ── -->
+  <text x="316" y="73" text-anchor="middle"
+        font-size="9" fill="#d1d5db" letter-spacing="1.5" font-weight="600">
+    MASTER FILE — UNITS
+  </text>
+  <text x="660" y="73" text-anchor="middle"
+        font-size="9" fill="#d1d5db" letter-spacing="1.5" font-weight="600">
+    MASTER FILE — TENANTS
+  </text>
+  <text x="562" y="527" text-anchor="middle"
+        font-size="9" fill="#d1d5db" letter-spacing="1.5" font-weight="600">
+    SYSTEM — AUTOMATED ACTIONS
+  </text>
+
+
+  <!-- ════════════════════════════════════════
+       ASSOCIATION LINES
+       ════════════════════════════════════════ -->
+
+  <!-- Admin → Units (left edge of Units ellipses = 316-106 = 210) -->
+  <line x1="96" y1="212" x2="210" y2="110" stroke="#6b7280" stroke-width="1"/>
+  <line x1="96" y1="212" x2="210" y2="175" stroke="#6b7280" stroke-width="1"/>
+  <line x1="96" y1="212" x2="210" y2="240" stroke="#6b7280" stroke-width="1"/>
+  <line x1="96" y1="212" x2="210" y2="305" stroke="#6b7280" stroke-width="1"/>
+  <line x1="96" y1="212" x2="210" y2="370" stroke="#6b7280" stroke-width="1"/>
+
+  <!-- Admin → Tenants (left edge = 660-106 = 554), skip View Own Details -->
+  <line x1="96" y1="212" x2="554" y2="110" stroke="#6b7280" stroke-width="1"/>
+  <line x1="96" y1="212" x2="554" y2="175" stroke="#6b7280" stroke-width="1"/>
+  <line x1="96" y1="212" x2="554" y2="305" stroke="#6b7280" stroke-width="1"/>
+  <line x1="96" y1="212" x2="554" y2="370" stroke="#6b7280" stroke-width="1"/>
+  <line x1="96" y1="212" x2="554" y2="435" stroke="#6b7280" stroke-width="1"/>
+
+  <!-- Tenant → View Units & View Own Details -->
+  <line x1="96" y1="472" x2="210" y2="175" stroke="#6b7280" stroke-width="1"/>
+  <line x1="96" y1="472" x2="554" y2="240" stroke="#6b7280" stroke-width="1"/>
+
+  <!-- System (left of head ≈ 1044) → Update Unit Status & Preserve Tenant History -->
+  <line x1="1044" y1="615" x2="438" y2="635" stroke="#6b7280" stroke-width="1"/>
+  <line x1="1044" y1="615" x2="792" y2="635" stroke="#6b7280" stroke-width="1"/>
+
+
+  <!-- ════════════════════════════════════════
+       INCLUDE RELATIONSHIPS  (dashed open arrow)
+       ════════════════════════════════════════ -->
+
+  <!-- Register Tenant bottom → Update Unit Status top -->
+  <line x1="660" y1="132" x2="318" y2="613"
+        stroke="#9ca3af" stroke-width="1.2" stroke-dasharray="6,4"
+        marker-end="url(#arr-open)"/>
+  <text x="448" y="360" text-anchor="middle"
+        font-size="9" fill="#9ca3af" font-style="italic">&laquo;include&raquo;</text>
+
+  <!-- Deactivate Tenant bottom → Update Unit Status top -->
+  <line x1="640" y1="392" x2="318" y2="613"
+        stroke="#9ca3af" stroke-width="1.2" stroke-dasharray="6,4"
+        marker-end="url(#arr-open)"/>
+  <text x="448" y="510" text-anchor="middle"
+        font-size="9" fill="#9ca3af" font-style="italic">&laquo;include&raquo;</text>
+
+  <!-- Deactivate Tenant bottom → Preserve Tenant History top -->
+  <line x1="680" y1="392" x2="660" y2="613"
+        stroke="#9ca3af" stroke-width="1.2" stroke-dasharray="6,4"
+        marker-end="url(#arr-open)"/>
+  <text x="700" y="510" text-anchor="middle"
+        font-size="9" fill="#9ca3af" font-style="italic">&laquo;include&raquo;</text>
+
+
+  <!-- ════════════════════════════════════════
+       USE CASES — UNITS  (blue)
+       ════════════════════════════════════════ -->
+
+  <ellipse cx="316" cy="110" rx="106" ry="22" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="316" y="114" text-anchor="middle" dominant-baseline="middle"
+        font-size="12" fill="#1e40af">Add Unit</text>
+
+  <ellipse cx="316" cy="175" rx="106" ry="22" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="316" y="179" text-anchor="middle" dominant-baseline="middle"
+        font-size="12" fill="#1e40af">View Units</text>
+
+  <ellipse cx="316" cy="240" rx="106" ry="22" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="316" y="244" text-anchor="middle" dominant-baseline="middle"
+        font-size="12" fill="#1e40af">Edit Unit</text>
+
+  <ellipse cx="316" cy="305" rx="106" ry="22" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="316" y="309" text-anchor="middle" dominant-baseline="middle"
+        font-size="12" fill="#1e40af">Delete Unit</text>
+
+  <ellipse cx="316" cy="370" rx="106" ry="22" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="316" y="374" text-anchor="middle" dominant-baseline="middle"
+        font-size="12" fill="#1e40af">Filter / Search Units</text>
+
+
+  <!-- ════════════════════════════════════════
+       USE CASES — TENANTS  (green)
+       ════════════════════════════════════════ -->
+
+  <ellipse cx="660" cy="110" rx="106" ry="22" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="660" y="114" text-anchor="middle" dominant-baseline="middle"
+        font-size="12" fill="#15803d">Register Tenant</text>
+
+  <ellipse cx="660" cy="175" rx="106" ry="22" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="660" y="179" text-anchor="middle" dominant-baseline="middle"
+        font-size="12" fill="#15803d">View Tenants</text>
+
+  <ellipse cx="660" cy="240" rx="106" ry="22" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="660" y="244" text-anchor="middle" dominant-baseline="middle"
+        font-size="12" fill="#15803d">View Own Details</text>
+
+  <ellipse cx="660" cy="305" rx="106" ry="22" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="660" y="309" text-anchor="middle" dominant-baseline="middle"
+        font-size="12" fill="#15803d">Edit Tenant</text>
+
+  <ellipse cx="660" cy="370" rx="106" ry="22" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="660" y="374" text-anchor="middle" dominant-baseline="middle"
+        font-size="12" fill="#15803d">Deactivate Tenant</text>
+
+  <ellipse cx="660" cy="435" rx="106" ry="22" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="660" y="439" text-anchor="middle" dominant-baseline="middle"
+        font-size="12" fill="#15803d">Filter / Search Tenants</text>
+
+
+  <!-- ════════════════════════════════════════
+       USE CASES — SYSTEM ACTIONS  (orange)
+       ════════════════════════════════════════ -->
+
+  <ellipse cx="318" cy="635" rx="120" ry="22" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+  <text x="318" y="639" text-anchor="middle" dominant-baseline="middle"
+        font-size="12" fill="#c2410c">Update Unit Status</text>
+
+  <ellipse cx="660" cy="635" rx="132" ry="22" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+  <text x="660" y="639" text-anchor="middle" dominant-baseline="middle"
+        font-size="12" fill="#c2410c">Preserve Tenant History</text>
+
+
+  <!-- ════════════════════════════════════════
+       ACTOR: ADMIN
+       ════════════════════════════════════════ -->
+  <circle cx="80" cy="186" r="17" fill="none" stroke="#1f2937" stroke-width="2"/>
+  <line x1="80" y1="203" x2="80" y2="250" stroke="#1f2937" stroke-width="2"/>
+  <line x1="52" y1="226" x2="108" y2="226" stroke="#1f2937" stroke-width="2"/>
+  <line x1="80" y1="250" x2="54" y2="288" stroke="#1f2937" stroke-width="2"/>
+  <line x1="80" y1="250" x2="106" y2="288" stroke="#1f2937" stroke-width="2"/>
+  <text x="80" y="308" text-anchor="middle"
+        font-size="13" font-weight="600" fill="#1f2937">Admin</text>
+
+
+  <!-- ════════════════════════════════════════
+       ACTOR: TENANT
+       ════════════════════════════════════════ -->
+  <circle cx="80" cy="446" r="17" fill="none" stroke="#1f2937" stroke-width="2"/>
+  <line x1="80" y1="463" x2="80" y2="510" stroke="#1f2937" stroke-width="2"/>
+  <line x1="52" y1="486" x2="108" y2="486" stroke="#1f2937" stroke-width="2"/>
+  <line x1="80" y1="510" x2="54" y2="548" stroke="#1f2937" stroke-width="2"/>
+  <line x1="80" y1="510" x2="106" y2="548" stroke="#1f2937" stroke-width="2"/>
+  <text x="80" y="568" text-anchor="middle"
+        font-size="13" font-weight="600" fill="#1f2937">Tenant</text>
+
+
+  <!-- ════════════════════════════════════════
+       ACTOR: SYSTEM  (outside right boundary)
+       ════════════════════════════════════════ -->
+  <circle cx="1060" cy="590" r="17" fill="none" stroke="#1f2937" stroke-width="2"/>
+  <line x1="1060" y1="607" x2="1060" y2="654" stroke="#1f2937" stroke-width="2"/>
+  <line x1="1032" y1="630" x2="1088" y2="630" stroke="#1f2937" stroke-width="2"/>
+  <line x1="1060" y1="654" x2="1034" y2="692" stroke="#1f2937" stroke-width="2"/>
+  <line x1="1060" y1="654" x2="1086" y2="692" stroke="#1f2937" stroke-width="2"/>
+  <text x="1060" y="712" text-anchor="middle"
+        font-size="13" font-weight="600" fill="#1f2937">System</text>
+
+
+  <!-- ════════════════════════════════════════
+       LEGEND
+       ════════════════════════════════════════ -->
+  <rect x="175" y="700" width="770" height="86"
+        fill="#f9fafb" stroke="#e5e7eb" stroke-width="1" rx="3"/>
+  <text x="195" y="718" font-size="9" font-weight="700"
+        fill="#6b7280" letter-spacing="1">LEGEND</text>
+
+  <!-- Association -->
+  <line x1="195" y1="734" x2="240" y2="734"
+        stroke="#6b7280" stroke-width="1.2"/>
+  <text x="248" y="738" font-size="10" fill="#374151">
+    Association — actor can perform this action
+  </text>
+
+  <!-- Include -->
+  <line x1="195" y1="754" x2="240" y2="754"
+        stroke="#9ca3af" stroke-width="1.2" stroke-dasharray="5,3"/>
+  <polyline points="236,751 244,754 236,757"
+            fill="none" stroke="#9ca3af" stroke-width="1.2"/>
+  <text x="248" y="758" font-size="10" fill="#374151">
+    &laquo;include&raquo; — triggered automatically when the parent use case runs
+  </text>
+
+  <!-- Color swatches -->
+  <rect x="195" y="768" width="12" height="10"
+        fill="#eff6ff" stroke="#3b82f6" stroke-width="1"/>
+  <text x="213" y="778" font-size="10" fill="#374151">Units</text>
+
+  <rect x="260" y="768" width="12" height="10"
+        fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+  <text x="278" y="778" font-size="10" fill="#374151">Tenants</text>
+
+  <rect x="335" y="768" width="12" height="10"
+        fill="#fff7ed" stroke="#f97316" stroke-width="1"/>
+  <text x="353" y="778" font-size="10" fill="#374151">Automated System Action</text>
+
+</svg>
