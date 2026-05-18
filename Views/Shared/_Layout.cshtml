@@ -17,25 +17,33 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navMenu">
-                <ul class="navbar-nav me-auto">
+                <ul class="navbar-nav me-auto align-items-lg-center">
 
-                    <!-- Master File -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Master File</a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" asp-controller="Units" asp-action="Index">Units</a></li>
-                            <li><a class="dropdown-item" asp-controller="Tenants" asp-action="Index">Tenants</a></li>
-                        </ul>
+                    <!-- Master File group -->
+                    <li class="nav-item">
+                        <span class="nav-label">Master File</span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-sub" asp-controller="Units" asp-action="Index">Units</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-sub" asp-controller="Tenants" asp-action="Index">Tenants</a>
                     </li>
 
-                    <!-- Transactions -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Transactions</a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" asp-controller="Billing" asp-action="Index">Billing &amp; Payment Monitoring</a></li>
-                            <li><a class="dropdown-item" asp-controller="Maintenance" asp-action="Index">Maintenance Request</a></li>
-                            <li><a class="dropdown-item" asp-controller="LostFound" asp-action="Index">Lost &amp; Found</a></li>
-                        </ul>
+                    <li class="nav-item nav-divider d-none d-lg-block"></li>
+
+                    <!-- Transactions group -->
+                    <li class="nav-item">
+                        <span class="nav-label">Transactions</span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-sub" asp-controller="Billing" asp-action="Index">Billing &amp; Payment</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-sub" asp-controller="Maintenance" asp-action="Index">Maintenance</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-sub" asp-controller="LostFound" asp-action="Index">Lost &amp; Found</a>
                     </li>
 
                 </ul>
@@ -43,7 +51,7 @@
         </div>
     </nav>
 
-    <div class="container-fluid py-4">
+    <div class="container-fluid py-4 px-4">
         @if (TempData["Success"] != null)
         {
             <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -63,7 +71,7 @@
     </div>
 
     <footer class="border-top py-3 text-center text-muted small">
-        &copy; @DateTime.Now.Year — Ynclino Apartment Management System
+        &copy; @DateTime.Now.Year &mdash; Ynclino Apartment Management System
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
