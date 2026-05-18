@@ -3,15 +3,19 @@ using YnclinoAMS.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Read the PORT Railway assigns and bind to it automatically
-var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+// Only override the URL on Railway (PORT is set by Railway, not locally)
+var railwayPort = Environment.GetEnvironmentVariable("PORT");
+if (railwayPort != null)
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{railwayPort}");
+}
 
 builder.Services.AddControllersWithViews();
 
-// Use /tmp on Linux containers (Railway), local content root in dev
-var dbDir  = OperatingSystem.IsWindows()
-    ? builder.Environment.ContentRootPath
+// Windows (local dev): DB sits in the project root beside the .csproj
+// Linux (Railway):      DB sits in /tmp (writable on any container)
+var dbDir = OperatingSystem.IsWindows()
+    ? Directory.GetCurrentDirectory()
     : "/tmp";
 var dbPath = Path.Combine(dbDir, "YnclinoAMS.db");
 
@@ -20,13 +24,22 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 var app = builder.Build();
 
+// Auto-create tables on first run — no migrations needed
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     db.Database.EnsureCreated();
 }
 
-app.UseDeveloperExceptionPage();
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+else
+{
+    app.UseExceptionHandler("/Home/Error");
+}
+
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();
