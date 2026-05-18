@@ -17,11 +17,21 @@ namespace YnclinoAMS.Controllers
 
         public async Task<IActionResult> Index()
         {
-            ViewBag.TotalUnits = await _context.tblUnits.CountAsync();
-            ViewBag.VacantUnits = await _context.tblUnits.CountAsync(u => u.Status == "Vacant");
-            ViewBag.OccupiedUnits = await _context.tblUnits.CountAsync(u => u.Status == "Occupied");
-            ViewBag.ActiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Active");
-            return View();
+            try
+            {
+                ViewBag.TotalUnits     = await _context.tblUnits.CountAsync();
+                ViewBag.VacantUnits    = await _context.tblUnits.CountAsync(u => u.Status == "Vacant");
+                ViewBag.OccupiedUnits  = await _context.tblUnits.CountAsync(u => u.Status == "Occupied");
+                ViewBag.ActiveTenants  = await _context.tblTenants.CountAsync(t => t.Status == "Active");
+                return View();
+            }
+            catch (Exception ex)
+            {
+                // Temporary: expose the real error so we can diagnose
+                return Content(
+                    $"DB ERROR — {ex.GetType().Name}\n\n{ex.Message}\n\n{ex.StackTrace}",
+                    "text/plain");
+            }
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
