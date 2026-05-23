@@ -22,6 +22,7 @@ namespace YnclinoAMS.Data
                 entity.Property(e => e.Username).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.Password).IsRequired().HasMaxLength(255);
                 entity.Property(e => e.Role).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.DateCreated).HasDefaultValueSql("GETDATE()");
                 entity.HasIndex(e => e.Username).IsUnique();
             });
 
@@ -30,7 +31,9 @@ namespace YnclinoAMS.Data
                 entity.HasKey(e => e.UnitID);
                 entity.Property(e => e.UnitNumber).IsRequired().HasMaxLength(20);
                 entity.Property(e => e.UnitType).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.RentPrice).HasColumnType("decimal(10,2)");
                 entity.Property(e => e.Status).IsRequired().HasMaxLength(20).HasDefaultValue("Vacant");
+                entity.Property(e => e.DateAdded).HasDefaultValueSql("GETDATE()");
                 entity.HasIndex(e => e.UnitNumber).IsUnique();
             });
 
@@ -42,6 +45,7 @@ namespace YnclinoAMS.Data
                 entity.Property(e => e.ContactNumber).HasMaxLength(20);
                 entity.Property(e => e.EmergencyContact).HasMaxLength(100);
                 entity.Property(e => e.Status).IsRequired().HasMaxLength(20).HasDefaultValue("Active");
+                entity.Property(e => e.DateRecorded).HasDefaultValueSql("GETDATE()");
 
                 entity.HasOne(t => t.User)
                       .WithMany(u => u.Tenants)
