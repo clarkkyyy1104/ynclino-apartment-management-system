@@ -1,0 +1,53 @@
+@model IEnumerable<YnclinoAMS.Models.tblUser>
+@{
+    ViewData["Title"] = "User Accounts";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">User Accounts</h4>
+    <a asp-action="Create" class="btn btn-primary btn-sm">Add Account</a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-hover table-sm align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>#</th>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Date Created</th>
+                <th style="width:130px">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model)
+            {
+                <tr>
+                    <td>@user.UserID</td>
+                    <td>@user.Username</td>
+                    <td>
+                        <span class="badge @(user.Role == "Admin" ? "bg-danger" : "bg-secondary")">
+                            @user.Role
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge @(user.IsActive ? "bg-success" : "bg-warning text-dark")">
+                            @(user.IsActive ? "Active" : "Inactive")
+                        </span>
+                    </td>
+                    <td>@user.DateCreated.ToString("MM/dd/yyyy")</td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@user.UserID" class="btn btn-outline-secondary btn-sm">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@user.UserID" class="btn btn-outline-danger btn-sm">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Any())
+{
+    <p class="text-muted text-center py-4">No accounts found.</p>
+}
