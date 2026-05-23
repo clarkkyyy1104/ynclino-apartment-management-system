@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using YnclinoAMS.Data;
@@ -6,6 +7,7 @@ using YnclinoAMS.Models.ViewModels;
 
 namespace YnclinoAMS.Controllers
 {
+    [Authorize]
     public class UnitsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -47,6 +49,7 @@ namespace YnclinoAMS.Controllers
         }
 
         // GET: Units/Create
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             return View(new UnitViewModel());
@@ -55,6 +58,7 @@ namespace YnclinoAMS.Controllers
         // POST: Units/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(UnitViewModel vm)
         {
             if (!ModelState.IsValid) return View(vm);
@@ -83,6 +87,7 @@ namespace YnclinoAMS.Controllers
         }
 
         // GET: Units/Edit/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -105,6 +110,7 @@ namespace YnclinoAMS.Controllers
         // POST: Units/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id, UnitViewModel vm)
         {
             if (id != vm.UnitID) return NotFound();
@@ -140,6 +146,7 @@ namespace YnclinoAMS.Controllers
         }
 
         // GET: Units/Delete/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -155,6 +162,7 @@ namespace YnclinoAMS.Controllers
         // POST: Units/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var unit = await _context.tblUnits.Include(u => u.Tenants).FirstOrDefaultAsync(u => u.UnitID == id);

@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using YnclinoAMS.Data;
 
 namespace YnclinoAMS.Controllers
 {
+    [Authorize]
     public class BillingController : Controller
     {
         private readonly ApplicationDbContext _context;

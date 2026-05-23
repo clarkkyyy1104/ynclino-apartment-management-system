@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +8,7 @@ using YnclinoAMS.Models.ViewModels;
 
 namespace YnclinoAMS.Controllers
 {
+    [Authorize]
     public class TenantsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -51,6 +53,7 @@ namespace YnclinoAMS.Controllers
         }
 
         // GET: Tenants/Create
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create()
         {
             var vm = new TenantViewModel
@@ -63,6 +66,7 @@ namespace YnclinoAMS.Controllers
         // POST: Tenants/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(TenantViewModel vm)
         {
             if (!ModelState.IsValid)
@@ -98,6 +102,7 @@ namespace YnclinoAMS.Controllers
         }
 
         // GET: Tenants/Edit/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -127,6 +132,7 @@ namespace YnclinoAMS.Controllers
         // POST: Tenants/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id, TenantViewModel vm)
         {
             if (id != vm.TenantID) return NotFound();
@@ -183,6 +189,7 @@ namespace YnclinoAMS.Controllers
         }
 
         // GET: Tenants/Delete/5  (soft delete confirmation)
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -198,6 +205,7 @@ namespace YnclinoAMS.Controllers
         // POST: Tenants/Delete/5  (soft delete — sets status to Inactive)
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var tenant = await _context.tblTenants.FindAsync(id);
