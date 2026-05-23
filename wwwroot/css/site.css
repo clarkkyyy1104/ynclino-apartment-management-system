@@ -24,6 +24,7 @@ body {
 
 /* Sub-links under each label */
 .nav-sub {
+    margin-left: .95rem !important;
     padding-left: .75rem !important;
     font-size: .92rem;
 }
