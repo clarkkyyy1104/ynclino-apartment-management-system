@@ -37,6 +37,7 @@ using (var scope = app.Services.CreateScope())
             Password = PasswordHelper.Hash("Admin@123"),
             Role = "Admin",
             IsActive = true,
+            IsSuperAdmin = true,
             DateCreated = DateTime.Now
         });
         db.SaveChanges();

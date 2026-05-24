@@ -54,15 +54,35 @@
 
                     <div class="mb-3">
                         <label asp-for="Role" class="form-label fw-semibold small"></label>
-                        <select asp-for="Role" class="form-select">
-                            <option value="Tenant">Tenant</option>
-                            <option value="Admin">Admin</option>
-                        </select>
+                        @if (ViewBag.TargetIsSuperAdmin == true)
+                        {
+                            <input type="text" class="form-control" value="Admin (Super Admin)" disabled />
+                            <input asp-for="Role" type="hidden" value="Admin" />
+                        }
+                        else
+                        {
+                            <select asp-for="Role" class="form-select">
+                                <option value="Tenant">Tenant</option>
+                                @if (ViewBag.IsAdmin == true)
+                                {
+                                    <option value="SemiAdmin">Semi-Admin</option>
+                                }
+                                @if (ViewBag.IsSuperAdmin == true)
+                                {
+                                    <option value="Admin">Admin</option>
+                                }
+                            </select>
+                        }
                     </div>
 
                     <div class="mb-4 form-check">
-                        <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                        <input asp-for="IsActive" class="form-check-input" type="checkbox"
+                               @(ViewBag.TargetIsSuperAdmin == true ? "disabled" : "") />
                         <label asp-for="IsActive" class="form-check-label small">Active</label>
+                        @if (ViewBag.TargetIsSuperAdmin == true)
+                        {
+                            <input asp-for="IsActive" type="hidden" value="true" />
+                        }
                     </div>
 
                     <div class="d-flex gap-2">
