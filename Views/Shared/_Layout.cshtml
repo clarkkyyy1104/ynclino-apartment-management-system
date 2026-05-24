@@ -10,23 +10,55 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
-            <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">
-                Ynclino AMS
-            </a>
+            <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">Ynclino AMS</a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
             @if (User.Identity?.IsAuthenticated == true)
             {
-                <div class="ms-auto d-flex align-items-center gap-2">
-                    <span class="navbar-text text-white-50 small">
-                        @User.Identity.Name
-                        <span class="badge @(User.IsInRole("Admin") ? "bg-danger" : "bg-secondary") ms-1">
-                            @(User.IsInRole("Admin") ? "Admin" : "Tenant")
-                        </span>
-                    </span>
-                    <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-sm btn-outline-light">Sign Out</button>
-                    </form>
+                <div class="collapse navbar-collapse" id="navMenu">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Units" asp-action="Index">Units</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Tenants" asp-action="Index">Tenants</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Billing" asp-action="Index">Billing &amp; Payment</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Maintenance" asp-action="Index">Maintenance</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="LostFound" asp-action="Index">Lost &amp; Found</a>
+                        </li>
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Users" asp-action="Index">User Accounts</a>
+                            </li>
+                        }
+                    </ul>
+
+                    <ul class="navbar-nav ms-auto align-items-lg-center">
+                        <li class="nav-item me-2">
+                            <span class="navbar-text text-white-50 small">
+                                @User.Identity.Name
+                                <span class="badge @(User.IsInRole("Admin") ? "bg-danger" : "bg-secondary") ms-1">
+                                    @(User.IsInRole("Admin") ? "Admin" : "Tenant")
+                                </span>
+                            </span>
+                        </li>
+                        <li class="nav-item">
+                            <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-light">Sign Out</button>
+                            </form>
+                        </li>
+                    </ul>
                 </div>
             }
         </div>
