@@ -62,6 +62,39 @@ footer {
     padding: 1rem 0;
 }
 
+/* ── Dashboard — stat cards ── */
+.stat-card {
+    border-radius: .5rem;
+    transition: box-shadow .15s ease;
+}
+
+.stat-card:hover {
+    box-shadow: 0 4px 14px rgba(0,0,0,0.09) !important;
+}
+
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: .5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.stat-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: #212529;
+}
+
+.stat-label {
+    font-size: .78rem;
+    color: #6c757d;
+    margin-top: .15rem;
+}
+
 /* ── Dashboard — section label ── */
 .section-label {
     color: #6c757d;
