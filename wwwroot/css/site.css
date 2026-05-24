@@ -11,7 +11,6 @@ body {
     letter-spacing: .5px;
 }
 
-/* Section label (non-clickable: "Master File", "Transactions") */
 .nav-label {
     color: rgba(255, 255, 255, 0.5);
     font-size: .72rem;
@@ -22,7 +21,6 @@ body {
     display: block;
 }
 
-/* Sub-links under each label */
 .nav-sub {
     padding-left: .75rem !important;
     font-size: .92rem;
@@ -34,7 +32,6 @@ body {
     border-radius: .25rem;
 }
 
-/* Vertical divider between groups */
 .nav-divider {
     width: 1px;
     height: 32px;
@@ -64,3 +61,134 @@ footer {
     font-size: .8rem;
     padding: 1rem 0;
 }
+
+/* ── Dashboard — section label ── */
+.section-label {
+    color: #6c757d;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    margin-bottom: .25rem;
+}
+
+/* ── Dashboard — module cards (admin) ── */
+.module-card {
+    transition: box-shadow .15s ease, transform .15s ease;
+    cursor: pointer;
+}
+
+.module-card:hover {
+    box-shadow: 0 6px 18px rgba(0,0,0,0.10) !important;
+    transform: translateY(-2px);
+}
+
+.module-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: .5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.module-title {
+    font-weight: 600;
+    font-size: .92rem;
+    color: #212529;
+    margin-bottom: .2rem;
+}
+
+.module-desc {
+    font-size: .78rem;
+    color: #6c757d;
+    line-height: 1.4;
+}
+
+/* ── Dashboard — tenant module links ── */
+.tenant-module-link {
+    border: 1px solid #e9ecef;
+    transition: background-color .12s ease;
+}
+
+.tenant-module-link:hover {
+    background-color: #f0f4ff !important;
+}
+
+/* ── Info list (dl/dt/dd) ── */
+.info-list dt {
+    font-weight: 600;
+    font-size: .83rem;
+    color: #495057;
+    padding-top: .35rem;
+}
+
+.info-list dd {
+    font-size: .88rem;
+    color: #212529;
+    padding-top: .35rem;
+    margin-bottom: .1rem;
+}
+
+/* ── Password field wrapper ── */
+.pw-wrapper {
+    position: relative;
+}
+
+.pw-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 2px 4px;
+    color: #6c757d;
+    cursor: pointer;
+    line-height: 1;
+    z-index: 5;
+}
+
+.pw-toggle:hover { color: #343a40; }
+
+/* ── Password rules list ── */
+.pw-rules {
+    margin-top: .4rem;
+    padding: .5rem .75rem;
+    background: #f8f9fa;
+    border-radius: .375rem;
+    border: 1px solid #e9ecef;
+}
+
+.pw-rules li {
+    color: #6c757d;
+    padding: .15rem 0;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+}
+
+.pw-rules li.rule-pass {
+    color: #198754;
+}
+
+.pw-rules li.rule-fail {
+    color: #dc3545;
+}
+
+.pw-rules .rule-icon {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%       { transform: translateX(-6px); }
+    40%       { transform: translateX(6px); }
+    60%       { transform: translateX(-4px); }
+    80%       { transform: translateX(4px); }
+}
+
+.shake { animation: shake .4s ease; }
