@@ -35,7 +35,7 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-controller="LostFound" asp-action="Index">Lost &amp; Found</a>
                         </li>
-                        @if (User.IsInRole("Admin"))
+                        @if (User.IsInRole("Admin") || User.IsInRole("SemiAdmin"))
                         {
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Users" asp-action="Index">User Accounts</a>
@@ -47,8 +47,8 @@
                         <li class="nav-item me-2">
                             <span class="navbar-text text-white-50 small">
                                 @User.Identity.Name
-                                <span class="badge @(User.IsInRole("Admin") ? "bg-danger" : "bg-secondary") ms-1">
-                                    @(User.IsInRole("Admin") ? "Admin" : "Tenant")
+                                <span class="badge @(User.IsInRole("Admin") ? "bg-danger" : User.IsInRole("SemiAdmin") ? "bg-warning text-dark" : "bg-secondary") ms-1">
+                                    @(User.IsInRole("Admin") ? "Admin" : User.IsInRole("SemiAdmin") ? "Semi-Admin" : "Tenant")
                                 </span>
                             </span>
                         </li>

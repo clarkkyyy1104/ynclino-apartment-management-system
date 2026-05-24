@@ -49,7 +49,7 @@ namespace YnclinoAMS.Controllers
         }
 
         // GET: Units/Create
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,SemiAdmin")]
         public IActionResult Create()
         {
             return View(new UnitViewModel());
@@ -58,7 +58,7 @@ namespace YnclinoAMS.Controllers
         // POST: Units/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,SemiAdmin")]
         public async Task<IActionResult> Create(UnitViewModel vm)
         {
             if (!ModelState.IsValid) return View(vm);
@@ -87,7 +87,7 @@ namespace YnclinoAMS.Controllers
         }
 
         // GET: Units/Edit/5
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,SemiAdmin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -110,7 +110,7 @@ namespace YnclinoAMS.Controllers
         // POST: Units/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,SemiAdmin")]
         public async Task<IActionResult> Edit(int id, UnitViewModel vm)
         {
             if (id != vm.UnitID) return NotFound();
@@ -146,7 +146,7 @@ namespace YnclinoAMS.Controllers
         }
 
         // GET: Units/Delete/5
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,SemiAdmin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -162,7 +162,7 @@ namespace YnclinoAMS.Controllers
         // POST: Units/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,SemiAdmin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var unit = await _context.tblUnits.Include(u => u.Tenants).FirstOrDefaultAsync(u => u.UnitID == id);

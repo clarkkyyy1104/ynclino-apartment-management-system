@@ -130,6 +130,8 @@ namespace YnclinoAMS.Migrations
 
                     b.Property<bool>("IsActive").HasColumnType("bit");
 
+                    b.Property<bool>("IsSuperAdmin").HasColumnType("bit");
+
                     b.Property<string>("Password")
                         .IsRequired()
                         .HasMaxLength(255)

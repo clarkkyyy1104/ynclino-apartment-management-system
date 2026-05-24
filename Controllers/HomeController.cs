@@ -19,7 +19,7 @@ namespace YnclinoAMS.Controllers
 
         public async Task<IActionResult> Index()
         {
-            if (User.IsInRole("Admin"))
+            if (User.IsInRole("Admin") || User.IsInRole("SemiAdmin"))
             {
                 ViewBag.TotalUnits        = await _context.tblUnits.CountAsync();
                 ViewBag.VacantUnits       = await _context.tblUnits.CountAsync(u => u.Status == "Vacant");
