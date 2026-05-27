@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -17,6 +18,13 @@ namespace YnclinoAMS.Controllers
         public TenantsController(ApplicationDbContext context)
         {
             _context = context;
+        }
+
+        private bool CurrentUserIsSuperAdmin()
+        {
+            var idStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(idStr, out int id)) return false;
+            return _context.tblUsers.Any(u => u.UserID == id && u.IsSuperAdmin);
         }
 
         // GET: Tenants
@@ -144,6 +152,8 @@ namespace YnclinoAMS.Controllers
             if (tenant.UserID.HasValue)
                 linkedUser = await _context.tblUsers.FindAsync(tenant.UserID.Value);
 
+            ViewBag.IsSuperAdmin = CurrentUserIsSuperAdmin();
+
             var vm = new TenantViewModel
             {
                 TenantID         = tenant.TenantID,
@@ -172,8 +182,10 @@ namespace YnclinoAMS.Controllers
         {
             if (id != vm.TenantID) return NotFound();
 
-            // Password is optional on edit — remove from validation if blank
-            if (string.IsNullOrWhiteSpace(vm.Password))
+            bool isSuperAdmin = CurrentUserIsSuperAdmin();
+
+            // Only super admin may change another user's password
+            if (!isSuperAdmin || string.IsNullOrWhiteSpace(vm.Password))
             {
                 ModelState.Remove("Password");
                 ModelState.Remove("ConfirmPassword");
@@ -184,6 +196,7 @@ namespace YnclinoAMS.Controllers
 
             if (!ModelState.IsValid)
             {
+                ViewBag.IsSuperAdmin = isSuperAdmin;
                 vm.AvailableUnits = await GetAllUnitsAsync();
                 return View(vm);
             }
@@ -202,12 +215,14 @@ namespace YnclinoAMS.Controllers
                     if (duplicate)
                     {
                         ModelState.AddModelError("Username", "Username already exists.");
+                        ViewBag.IsSuperAdmin = isSuperAdmin;
                         vm.AvailableUnits = await GetAllUnitsAsync();
                         return View(vm);
                     }
 
                     linkedUser.Username = vm.Username!;
-                    if (!string.IsNullOrWhiteSpace(vm.Password))
+                    // Only super admin can reset another user's password
+                    if (isSuperAdmin && !string.IsNullOrWhiteSpace(vm.Password))
                         linkedUser.Password = PasswordHelper.Hash(vm.Password);
                 }
             }

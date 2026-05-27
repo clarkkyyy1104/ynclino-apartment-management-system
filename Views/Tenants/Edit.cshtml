@@ -17,41 +17,48 @@
                     <!-- Account Credentials -->
                     <h6 class="section-label mb-3">Login Account</h6>
 
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label asp-for="Username" class="form-label fw-semibold small"></label>
                         <input asp-for="Username" class="form-control" autocomplete="username" />
                         <span asp-validation-for="Username" class="text-danger small"></span>
                     </div>
 
-                    <div class="mb-2">
-                        <label asp-for="Password" class="form-label fw-semibold small"></label>
-                        <div class="pw-wrapper">
-                            <input asp-for="Password" id="pw" class="form-control pe-5" placeholder="Leave blank to keep current password" autocomplete="new-password" oninput="checkStrength(this.value)" />
-                            <button type="button" class="pw-toggle" onclick="togglePw('pw')" tabindex="-1">
-                                @Html.Raw(EyeIcon("pw"))
-                            </button>
+                    @if (ViewBag.IsSuperAdmin == true)
+                    {
+                        <div class="mb-2">
+                            <label asp-for="Password" class="form-label fw-semibold small"></label>
+                            <div class="pw-wrapper">
+                                <input asp-for="Password" id="pw" class="form-control pe-5" placeholder="Leave blank to keep current password" autocomplete="new-password" oninput="checkStrength(this.value)" />
+                                <button type="button" class="pw-toggle" onclick="togglePw('pw')" tabindex="-1">
+                                    @Html.Raw(EyeIcon("pw"))
+                                </button>
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger small"></span>
                         </div>
-                        <span asp-validation-for="Password" class="text-danger small"></span>
-                    </div>
 
-                    <ul class="pw-rules list-unstyled small mb-3 ps-1" id="pwRules" style="display:none">
-                        <li id="r-len"><span class="rule-icon"></span> At least 8 characters</li>
-                        <li id="r-upper"><span class="rule-icon"></span> At least one uppercase letter</li>
-                        <li id="r-lower"><span class="rule-icon"></span> At least one lowercase letter</li>
-                        <li id="r-digit"><span class="rule-icon"></span> At least one number</li>
-                        <li id="r-special"><span class="rule-icon"></span> At least one special character (!&#64;#$%^&amp;*)</li>
-                    </ul>
+                        <ul class="pw-rules list-unstyled small mb-3 ps-1" id="pwRules" style="display:none">
+                            <li id="r-len"><span class="rule-icon"></span> At least 8 characters</li>
+                            <li id="r-upper"><span class="rule-icon"></span> At least one uppercase letter</li>
+                            <li id="r-lower"><span class="rule-icon"></span> At least one lowercase letter</li>
+                            <li id="r-digit"><span class="rule-icon"></span> At least one number</li>
+                            <li id="r-special"><span class="rule-icon"></span> At least one special character (!&#64;#$%^&amp;*)</li>
+                        </ul>
 
-                    <div class="mb-4">
-                        <label asp-for="ConfirmPassword" class="form-label fw-semibold small"></label>
-                        <div class="pw-wrapper">
-                            <input asp-for="ConfirmPassword" id="cpw" class="form-control pe-5" placeholder="Confirm new password" autocomplete="new-password" />
-                            <button type="button" class="pw-toggle" onclick="togglePw('cpw')" tabindex="-1">
-                                @Html.Raw(EyeIcon("cpw"))
-                            </button>
+                        <div class="mb-4">
+                            <label asp-for="ConfirmPassword" class="form-label fw-semibold small"></label>
+                            <div class="pw-wrapper">
+                                <input asp-for="ConfirmPassword" id="cpw" class="form-control pe-5" placeholder="Confirm new password" autocomplete="new-password" />
+                                <button type="button" class="pw-toggle" onclick="togglePw('cpw')" tabindex="-1">
+                                    @Html.Raw(EyeIcon("cpw"))
+                                </button>
+                            </div>
+                            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
                         </div>
-                        <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
-                    </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted small mb-4">Only the Super Admin can reset a tenant's password.</p>
+                    }
 
                     <!-- Tenant Profile -->
                     <h6 class="section-label mb-3">Tenant Profile</h6>
@@ -136,23 +143,26 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/password.js" asp-append-version="true"></script>
-    <script>
-        var pwInput = document.getElementById('pw');
-        pwInput.addEventListener('input', function () {
-            var rules = document.getElementById('pwRules');
-            rules.style.display = this.value.length > 0 ? '' : 'none';
-        });
+    @if (ViewBag.IsSuperAdmin == true)
+    {
+        <script>
+            var pwInput = document.getElementById('pw');
+            pwInput.addEventListener('input', function () {
+                var rules = document.getElementById('pwRules');
+                rules.style.display = this.value.length > 0 ? '' : 'none';
+            });
 
-        document.getElementById('editForm').addEventListener('submit', function (e) {
-            var pw = pwInput.value;
-            if (pw.length > 0 && !meetsAllRules(pw)) {
-                e.preventDefault();
-                document.getElementById('pwRules').style.display = '';
-                document.getElementById('pwRules').classList.add('shake');
-                setTimeout(() => document.getElementById('pwRules').classList.remove('shake'), 600);
-            }
-        });
-    </script>
+            document.getElementById('editForm').addEventListener('submit', function (e) {
+                var pw = pwInput.value;
+                if (pw.length > 0 && !meetsAllRules(pw)) {
+                    e.preventDefault();
+                    document.getElementById('pwRules').style.display = '';
+                    document.getElementById('pwRules').classList.add('shake');
+                    setTimeout(() => document.getElementById('pwRules').classList.remove('shake'), 600);
+                }
+            });
+        </script>
+    }
 }
 
 @functions {

@@ -165,8 +165,8 @@ namespace YnclinoAMS.Controllers
             if (!isAdmin)
                 return Forbid();
 
-            // Remove password validation if field left blank
-            if (string.IsNullOrWhiteSpace(vm.Password))
+            // Only super admin may reset another account's password; always clear validation for non-super-admins
+            if (!isSuperAdmin || string.IsNullOrWhiteSpace(vm.Password))
             {
                 ModelState.Remove("Password");
                 ModelState.Remove("ConfirmPassword");
@@ -211,7 +211,7 @@ namespace YnclinoAMS.Controllers
             user.Role     = vm.Role;
             user.IsActive = vm.IsActive;
 
-            if (!string.IsNullOrWhiteSpace(vm.Password))
+            if (isSuperAdmin && !string.IsNullOrWhiteSpace(vm.Password))
                 user.Password = PasswordHelper.Hash(vm.Password);
 
             await _context.SaveChangesAsync();

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using YnclinoAMS.Data;
@@ -76,6 +77,41 @@ namespace YnclinoAMS.Controllers
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Login");
+        }
+
+        // GET: /Account/ChangePassword
+        [Authorize]
+        [HttpGet]
+        public IActionResult ChangePassword() => View(new ChangePasswordViewModel());
+
+        // POST: /Account/ChangePassword
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel vm)
+        {
+            if (!ModelState.IsValid)
+                return View(vm);
+
+            var idStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(idStr, out int userId))
+                return Forbid();
+
+            var user = await _context.tblUsers.FindAsync(userId);
+            if (user == null)
+                return Forbid();
+
+            if (!PasswordHelper.Verify(vm.CurrentPassword, user.Password))
+            {
+                ModelState.AddModelError("CurrentPassword", "Current password is incorrect.");
+                return View(vm);
+            }
+
+            user.Password = PasswordHelper.Hash(vm.NewPassword);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Password changed successfully.";
+            return RedirectToAction("Index", "Home");
         }
 
         // GET: /Account/AccessDenied

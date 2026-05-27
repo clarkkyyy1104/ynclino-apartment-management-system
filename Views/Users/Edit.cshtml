@@ -21,36 +21,42 @@
                         <span asp-validation-for="Username" class="text-danger small"></span>
                     </div>
 
-                    <div class="mb-2">
-                        <label asp-for="Password" class="form-label fw-semibold small"></label>
-                        <div class="pw-wrapper">
-                            <input asp-for="Password" id="pw" class="form-control pe-5" placeholder="Leave blank to keep current password" autocomplete="new-password" oninput="checkStrength(this.value)" />
-                            <button type="button" class="pw-toggle" onclick="togglePw('pw')" tabindex="-1">
-                                @Html.Raw(EyeIcon("pw"))
-                            </button>
+                    @if (ViewBag.IsSuperAdmin == true)
+                    {
+                        <div class="mb-2">
+                            <label asp-for="Password" class="form-label fw-semibold small"></label>
+                            <div class="pw-wrapper">
+                                <input asp-for="Password" id="pw" class="form-control pe-5" placeholder="Leave blank to keep current password" autocomplete="new-password" oninput="checkStrength(this.value)" />
+                                <button type="button" class="pw-toggle" onclick="togglePw('pw')" tabindex="-1">
+                                    @Html.Raw(EyeIcon("pw"))
+                                </button>
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger small"></span>
                         </div>
-                        <span asp-validation-for="Password" class="text-danger small"></span>
-                    </div>
 
-                    <!-- Password requirements (hidden until user types) -->
-                    <ul class="pw-rules list-unstyled small mb-3 ps-1" id="pwRules" style="display:none">
-                        <li id="r-len"><span class="rule-icon"></span> At least 8 characters</li>
-                        <li id="r-upper"><span class="rule-icon"></span> At least one uppercase letter</li>
-                        <li id="r-lower"><span class="rule-icon"></span> At least one lowercase letter</li>
-                        <li id="r-digit"><span class="rule-icon"></span> At least one number</li>
-                        <li id="r-special"><span class="rule-icon"></span> At least one special character (!&#64;#$%^&amp;*)</li>
-                    </ul>
+                        <ul class="pw-rules list-unstyled small mb-3 ps-1" id="pwRules" style="display:none">
+                            <li id="r-len"><span class="rule-icon"></span> At least 8 characters</li>
+                            <li id="r-upper"><span class="rule-icon"></span> At least one uppercase letter</li>
+                            <li id="r-lower"><span class="rule-icon"></span> At least one lowercase letter</li>
+                            <li id="r-digit"><span class="rule-icon"></span> At least one number</li>
+                            <li id="r-special"><span class="rule-icon"></span> At least one special character (!&#64;#$%^&amp;*)</li>
+                        </ul>
 
-                    <div class="mb-3">
-                        <label asp-for="ConfirmPassword" class="form-label fw-semibold small"></label>
-                        <div class="pw-wrapper">
-                            <input asp-for="ConfirmPassword" id="cpw" class="form-control pe-5" placeholder="Confirm new password" autocomplete="new-password" />
-                            <button type="button" class="pw-toggle" onclick="togglePw('cpw')" tabindex="-1">
-                                @Html.Raw(EyeIcon("cpw"))
-                            </button>
+                        <div class="mb-3">
+                            <label asp-for="ConfirmPassword" class="form-label fw-semibold small"></label>
+                            <div class="pw-wrapper">
+                                <input asp-for="ConfirmPassword" id="cpw" class="form-control pe-5" placeholder="Confirm new password" autocomplete="new-password" />
+                                <button type="button" class="pw-toggle" onclick="togglePw('cpw')" tabindex="-1">
+                                    @Html.Raw(EyeIcon("cpw"))
+                                </button>
+                            </div>
+                            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
                         </div>
-                        <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
-                    </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted small mb-3">Only the Super Admin can reset another account's password.</p>
+                    }
 
                     <div class="mb-3">
                         <label asp-for="Role" class="form-label fw-semibold small"></label>
@@ -62,14 +68,10 @@
                         else
                         {
                             <select asp-for="Role" class="form-select">
-                                <option value="Tenant">Tenant</option>
-                                @if (ViewBag.IsAdmin == true)
-                                {
-                                    <option value="SemiAdmin">Semi-Admin</option>
-                                }
+                                <option value="SemiAdmin" selected="@(Model.Role == "SemiAdmin")">Semi-Admin</option>
                                 @if (ViewBag.IsSuperAdmin == true)
                                 {
-                                    <option value="Admin">Admin</option>
+                                    <option value="Admin" selected="@(Model.Role == "Admin")">Admin</option>
                                 }
                             </select>
                         }
@@ -100,25 +102,27 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script src="~/js/password.js" asp-append-version="true"></script>
-    <script>
-        var pwInput = document.getElementById('pw');
-        // show rules only when user starts typing
-        pwInput.addEventListener('input', function () {
-            var rules = document.getElementById('pwRules');
-            rules.style.display = this.value.length > 0 ? '' : 'none';
-        });
+    @if (ViewBag.IsSuperAdmin == true)
+    {
+        <script src="~/js/password.js" asp-append-version="true"></script>
+        <script>
+            var pwInput = document.getElementById('pw');
+            pwInput.addEventListener('input', function () {
+                var rules = document.getElementById('pwRules');
+                rules.style.display = this.value.length > 0 ? '' : 'none';
+            });
 
-        document.getElementById('editForm').addEventListener('submit', function (e) {
-            var pw = pwInput.value;
-            if (pw.length > 0 && !meetsAllRules(pw)) {
-                e.preventDefault();
-                document.getElementById('pwRules').style.display = '';
-                document.getElementById('pwRules').classList.add('shake');
-                setTimeout(() => document.getElementById('pwRules').classList.remove('shake'), 600);
-            }
-        });
-    </script>
+            document.getElementById('editForm').addEventListener('submit', function (e) {
+                var pw = pwInput.value;
+                if (pw.length > 0 && !meetsAllRules(pw)) {
+                    e.preventDefault();
+                    document.getElementById('pwRules').style.display = '';
+                    document.getElementById('pwRules').classList.add('shake');
+                    setTimeout(() => document.getElementById('pwRules').classList.remove('shake'), 600);
+                }
+            });
+        </script>
+    }
 }
 
 @functions {
