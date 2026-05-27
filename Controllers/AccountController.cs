@@ -101,12 +101,6 @@ namespace YnclinoAMS.Controllers
             if (user == null)
                 return Forbid();
 
-            if (!PasswordHelper.Verify(vm.CurrentPassword, user.Password))
-            {
-                ModelState.AddModelError("CurrentPassword", "Current password is incorrect.");
-                return View(vm);
-            }
-
             user.Password = PasswordHelper.Hash(vm.NewPassword);
             await _context.SaveChangesAsync();
 
