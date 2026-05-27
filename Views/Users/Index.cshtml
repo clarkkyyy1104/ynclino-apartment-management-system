@@ -6,8 +6,14 @@
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="mb-0">User Accounts</h4>
-    <a asp-action="Create" class="btn btn-primary btn-sm">Add Account</a>
+    <div>
+        <h4 class="mb-0">User Accounts</h4>
+        <p class="text-muted small mb-0">Staff accounts only. Tenant accounts are managed in the Tenants module.</p>
+    </div>
+    @if (ViewBag.IsAdmin == true)
+    {
+        <a asp-action="Create" class="btn btn-primary btn-sm">Add Staff Account</a>
+    }
 </div>
 
 <div class="table-responsive">

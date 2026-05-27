@@ -9,6 +9,21 @@ namespace YnclinoAMS.Models.ViewModels
 
         public int? UserID { get; set; }
 
+        // Account credentials — required on Create, optional on Edit
+        [MaxLength(50)]
+        [Display(Name = "Username")]
+        public string? Username { get; set; }
+
+        [MaxLength(255)]
+        [DataType(DataType.Password)]
+        [Display(Name = "Password")]
+        public string? Password { get; set; }
+
+        [DataType(DataType.Password)]
+        [Compare(nameof(Password), ErrorMessage = "Passwords do not match.")]
+        [Display(Name = "Confirm Password")]
+        public string? ConfirmPassword { get; set; }
+
         [Required(ErrorMessage = "Unit is required.")]
         [Display(Name = "Unit")]
         public int UnitID { get; set; }

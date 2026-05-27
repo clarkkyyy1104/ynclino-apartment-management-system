@@ -1,13 +1,13 @@
 @model YnclinoAMS.Models.ViewModels.UserViewModel
 @{
-    ViewData["Title"] = "Add Account";
+    ViewData["Title"] = "Add Staff Account";
 }
 
 <div class="row justify-content-center">
     <div class="col-md-5">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0 small fw-semibold">Add User Account</h5>
+                <h5 class="mb-0 small fw-semibold">Add Staff Account</h5>
             </div>
             <div class="card-body">
                 <form asp-action="Create" method="post" id="userForm">
@@ -54,16 +54,13 @@
                     <div class="mb-3">
                         <label asp-for="Role" class="form-label fw-semibold small"></label>
                         <select asp-for="Role" class="form-select">
-                            <option value="Tenant">Tenant</option>
-                            @if (ViewBag.IsAdmin == true)
-                            {
-                                <option value="SemiAdmin">Semi-Admin</option>
-                            }
+                            <option value="SemiAdmin">Semi-Admin</option>
                             @if (ViewBag.IsSuperAdmin == true)
                             {
                                 <option value="Admin">Admin</option>
                             }
                         </select>
+                        <div class="form-text small text-muted">To add a tenant account, go to the Tenants module.</div>
                     </div>
 
                     <div class="mb-4 form-check">

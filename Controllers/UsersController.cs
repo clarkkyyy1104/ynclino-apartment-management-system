@@ -26,21 +26,33 @@ namespace YnclinoAMS.Controllers
             return _context.tblUsers.Any(u => u.UserID == id && u.IsSuperAdmin);
         }
 
-        // GET: Users
+        // GET: Users — staff accounts only (Admin / SemiAdmin)
         public async Task<IActionResult> Index()
         {
-            var users = await _context.tblUsers.OrderBy(u => u.Username).ToListAsync();
+            var users = await _context.tblUsers
+                .Where(u => u.Role != "Tenant")
+                .OrderBy(u => u.Username)
+                .ToListAsync();
             ViewBag.IsSuperAdmin = CurrentUserIsSuperAdmin();
             ViewBag.IsAdmin = User.IsInRole("Admin");
             return View(users);
         }
 
-        // GET: Users/Create
+        // GET: Users/Create — staff accounts only
         public IActionResult Create()
         {
-            ViewBag.IsSuperAdmin = CurrentUserIsSuperAdmin();
-            ViewBag.IsAdmin = User.IsInRole("Admin");
-            return View(new UserViewModel());
+            bool isSuperAdmin = CurrentUserIsSuperAdmin();
+            bool isAdmin = User.IsInRole("Admin");
+            // SemiAdmin has no reason to be here (they can't create staff); redirect them out
+            if (!isAdmin)
+            {
+                TempData["Error"] = "Only Admins can create staff accounts. Register tenants from the Tenants module.";
+                return RedirectToAction(nameof(Index));
+            }
+            ViewBag.IsSuperAdmin = isSuperAdmin;
+            ViewBag.IsAdmin = isAdmin;
+            var vm = new UserViewModel { Role = "SemiAdmin" };
+            return View(vm);
         }
 
         // POST: Users/Create
@@ -51,16 +63,13 @@ namespace YnclinoAMS.Controllers
             bool isSuperAdmin = CurrentUserIsSuperAdmin();
             bool isAdmin = User.IsInRole("Admin");
 
-            // SemiAdmin can only create Tenant accounts
-            if (!isAdmin && vm.Role != "Tenant")
-            {
-                ModelState.AddModelError("Role", "You can only create Tenant accounts.");
-            }
+            // Staff accounts only — Tenants are registered through the Tenants module
+            if (vm.Role == "Tenant")
+                ModelState.AddModelError("Role", "Tenant accounts must be created from the Tenants module.");
+
             // Only Super Admin can create Admin accounts
-            if (isAdmin && !isSuperAdmin && vm.Role == "Admin")
-            {
+            if (!isSuperAdmin && vm.Role == "Admin")
                 ModelState.AddModelError("Role", "Only the Super Admin can create Admin accounts.");
-            }
 
             if (string.IsNullOrWhiteSpace(vm.Password))
                 ModelState.AddModelError("Password", "Password is required when creating an account.");
@@ -83,12 +92,12 @@ namespace YnclinoAMS.Controllers
 
             var user = new tblUser
             {
-                Username  = vm.Username,
-                Password  = PasswordHelper.Hash(vm.Password!),
-                Role      = vm.Role,
-                IsActive  = vm.IsActive,
+                Username     = vm.Username,
+                Password     = PasswordHelper.Hash(vm.Password!),
+                Role         = vm.Role,
+                IsActive     = vm.IsActive,
                 IsSuperAdmin = false,
-                DateCreated = DateTime.Now
+                DateCreated  = DateTime.Now
             };
 
             _context.tblUsers.Add(user);
@@ -108,8 +117,15 @@ namespace YnclinoAMS.Controllers
             bool isSuperAdmin = CurrentUserIsSuperAdmin();
             bool isAdmin = User.IsInRole("Admin");
 
+            // Tenant accounts are managed from Tenants module
+            if (user.Role == "Tenant")
+            {
+                TempData["Error"] = "Tenant accounts are managed from the Tenants module.";
+                return RedirectToAction(nameof(Index));
+            }
+
             // SemiAdmin cannot edit Admin or SemiAdmin accounts
-            if (!isAdmin && user.Role != "Tenant")
+            if (!isAdmin)
                 return Forbid();
 
             ViewBag.IsSuperAdmin = isSuperAdmin;
@@ -138,8 +154,15 @@ namespace YnclinoAMS.Controllers
             bool isSuperAdmin = CurrentUserIsSuperAdmin();
             bool isAdmin = User.IsInRole("Admin");
 
-            // SemiAdmin cannot edit Admin or SemiAdmin accounts
-            if (!isAdmin && user.Role != "Tenant")
+            // Tenant accounts are managed from Tenants module
+            if (user.Role == "Tenant")
+            {
+                TempData["Error"] = "Tenant accounts are managed from the Tenants module.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Only Admins can edit staff accounts
+            if (!isAdmin)
                 return Forbid();
 
             // Remove password validation if field left blank
@@ -150,12 +173,12 @@ namespace YnclinoAMS.Controllers
             }
 
             // Only Super Admin can assign Admin role
-            if (isAdmin && !isSuperAdmin && vm.Role == "Admin")
+            if (!isSuperAdmin && vm.Role == "Admin")
                 ModelState.AddModelError("Role", "Only the Super Admin can assign the Admin role.");
 
-            // SemiAdmin cannot change role away from Tenant
-            if (!isAdmin && vm.Role != "Tenant")
-                ModelState.AddModelError("Role", "You can only manage Tenant accounts.");
+            // Prevent assigning Tenant role from here
+            if (vm.Role == "Tenant")
+                ModelState.AddModelError("Role", "Use the Tenants module to manage Tenant accounts.");
 
             // Cannot demote or deactivate the super admin
             if (user.IsSuperAdmin)
@@ -204,17 +227,19 @@ namespace YnclinoAMS.Controllers
             var user = await _context.tblUsers.FindAsync(id);
             if (user == null) return NotFound();
 
-            // Super admin is undeletable
             if (user.IsSuperAdmin)
             {
                 TempData["Error"] = "The Super Admin account cannot be deleted.";
                 return RedirectToAction(nameof(Index));
             }
 
-            bool isAdmin = User.IsInRole("Admin");
+            if (user.Role == "Tenant")
+            {
+                TempData["Error"] = "Tenant accounts are managed from the Tenants module.";
+                return RedirectToAction(nameof(Index));
+            }
 
-            // SemiAdmin can only delete Tenant accounts
-            if (!isAdmin && user.Role != "Tenant")
+            if (!User.IsInRole("Admin"))
                 return Forbid();
 
             return View(user);
@@ -234,8 +259,13 @@ namespace YnclinoAMS.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            bool isAdmin = User.IsInRole("Admin");
-            if (!isAdmin && user.Role != "Tenant")
+            if (user.Role == "Tenant")
+            {
+                TempData["Error"] = "Tenant accounts are managed from the Tenants module.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (!User.IsInRole("Admin"))
                 return Forbid();
 
             _context.tblUsers.Remove(user);
