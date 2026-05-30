@@ -35,19 +35,6 @@ namespace YnclinoAMS.Controllers
             return View(units);
         }
 
-        // GET: Units/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null) return NotFound();
-
-            var unit = await _context.tblUnits
-                .Include(u => u.Tenants)
-                .FirstOrDefaultAsync(u => u.UnitID == id);
-
-            if (unit == null) return NotFound();
-            return View(unit);
-        }
-
         // GET: Units/Create
         [Authorize(Roles = "Admin,SemiAdmin")]
         public IActionResult Create()

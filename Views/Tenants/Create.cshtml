@@ -78,7 +78,7 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label asp-for="ContactNumber" class="form-label fw-semibold small"></label>
-                            <input asp-for="ContactNumber" class="form-control" placeholder="e.g. 09XX-XXX-XXXX" />
+                            <input asp-for="ContactNumber" class="form-control" inputmode="numeric" placeholder="e.g. 09171234567" />
                             <span asp-validation-for="ContactNumber" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
@@ -91,25 +91,20 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label asp-for="MoveInDate" class="form-label fw-semibold small"></label>
-                            <input asp-for="MoveInDate" class="form-control" type="date" />
+                            <input asp-for="MoveInDate" class="form-control" type="date" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
                             <span asp-validation-for="MoveInDate" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="MoveOutDate" class="form-label fw-semibold small"></label>
-                            <input asp-for="MoveOutDate" class="form-control" type="date" />
-                            <span asp-validation-for="MoveOutDate" class="text-danger small"></span>
+                            <label asp-for="LeaseStart" class="form-label fw-semibold small"></label>
+                            <input asp-for="LeaseStart" class="form-control" type="date" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                            <span asp-validation-for="LeaseStart" class="text-danger small"></span>
                         </div>
                     </div>
 
                     <div class="row mb-4">
                         <div class="col-md-6">
-                            <label asp-for="LeaseStart" class="form-label fw-semibold small"></label>
-                            <input asp-for="LeaseStart" class="form-control" type="date" />
-                            <span asp-validation-for="LeaseStart" class="text-danger small"></span>
-                        </div>
-                        <div class="col-md-6">
                             <label asp-for="LeaseEnd" class="form-label fw-semibold small"></label>
-                            <input asp-for="LeaseEnd" class="form-control" type="date" />
+                            <input asp-for="LeaseEnd" class="form-control" type="date" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
                             <span asp-validation-for="LeaseEnd" class="text-danger small"></span>
                         </div>
                     </div>

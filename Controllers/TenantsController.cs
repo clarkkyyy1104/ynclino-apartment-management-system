@@ -84,6 +84,13 @@ namespace YnclinoAMS.Controllers
             if (string.IsNullOrWhiteSpace(vm.Password))
                 ModelState.AddModelError("Password", "Password is required.");
 
+            // Move-In / Lease Start cannot be set to a date in the past
+            var today = DateTime.Today;
+            if (vm.MoveInDate.HasValue && vm.MoveInDate.Value.Date < today)
+                ModelState.AddModelError("MoveInDate", "Move-In Date cannot be in the past.");
+            if (vm.LeaseStart.HasValue && vm.LeaseStart.Value.Date < today)
+                ModelState.AddModelError("LeaseStart", "Lease Start cannot be in the past.");
+
             if (!ModelState.IsValid)
             {
                 vm.AvailableUnits = await GetAvailableUnitsAsync();
