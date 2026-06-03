@@ -16,8 +16,11 @@
                     <h6 class="section-label mb-3">Login Account</h6>
 
                     <div class="mb-3">
-                        <label asp-for="Username" class="form-label fw-semibold small"></label>
-                        <input asp-for="Username" class="form-control" autocomplete="username" placeholder="Tenant's login username" />
+                        <label class="form-label fw-semibold small">Username <span class="text-muted fw-normal">(auto-generated)</span></label>
+                        <input type="text" id="usernameDisplay" class="form-control bg-light" readonly
+                               placeholder="Fill in First Name, Last Name &amp; Date of Birth below" />
+                        <input asp-for="Username" type="hidden" id="usernameHidden" />
+                        <div class="form-text text-muted small">Format: FirstName + LastName initial + birth month + birth day &nbsp;(e.g. <em>JuanD0315</em>)</div>
                         <span asp-validation-for="Username" class="text-danger small"></span>
                     </div>
 
@@ -57,14 +60,21 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label asp-for="FirstName" class="form-label fw-semibold small"></label>
-                            <input asp-for="FirstName" class="form-control" placeholder="First name" />
+                            <input asp-for="FirstName" id="firstNameInput" class="form-control" placeholder="First name" />
                             <span asp-validation-for="FirstName" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
                             <label asp-for="LastName" class="form-label fw-semibold small"></label>
-                            <input asp-for="LastName" class="form-control" placeholder="Last name" />
+                            <input asp-for="LastName" id="lastNameInput" class="form-control" placeholder="Last name" />
                             <span asp-validation-for="LastName" class="text-danger small"></span>
                         </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="DateOfBirth" class="form-label fw-semibold small"></label>
+                        <input asp-for="DateOfBirth" id="dobInput" class="form-control" type="date"
+                               max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                        <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
                     </div>
 
                     <div class="mb-3">
@@ -123,6 +133,26 @@
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/password.js" asp-append-version="true"></script>
     <script>
+        function updateUsername() {
+            var fn  = document.getElementById('firstNameInput').value.trim();
+            var ln  = document.getElementById('lastNameInput').value.trim();
+            var dob = document.getElementById('dobInput').value;
+            if (fn && ln && dob) {
+                var d   = new Date(dob);
+                var mm  = String(d.getMonth() + 1).padStart(2, '0');
+                var dd  = String(d.getDate()).padStart(2, '0');
+                var gen = fn + ln[0] + mm + dd;
+                document.getElementById('usernameDisplay').value = gen;
+                document.getElementById('usernameHidden').value  = gen;
+            } else {
+                document.getElementById('usernameDisplay').value = '';
+                document.getElementById('usernameHidden').value  = '';
+            }
+        }
+        document.getElementById('firstNameInput').addEventListener('input', updateUsername);
+        document.getElementById('lastNameInput').addEventListener('input', updateUsername);
+        document.getElementById('dobInput').addEventListener('change', updateUsername);
+
         document.getElementById('tenantForm').addEventListener('submit', function (e) {
             var pw = document.getElementById('pw').value;
             if (!meetsAllRules(pw)) {

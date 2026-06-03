@@ -44,6 +44,9 @@ namespace YnclinoAMS.Models
         [Required, MaxLength(20)]
         public string Status { get; set; } = "Active"; // Active | Inactive
 
+        [Display(Name = "Date of Birth")]
+        public DateTime? DateOfBirth { get; set; }
+
         [Display(Name = "Date Recorded")]
         public DateTime DateRecorded { get; set; } = DateTime.Now;
 

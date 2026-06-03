@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using YnclinoAMS.Data;
@@ -52,6 +54,28 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
+
+// DEV ONLY — auto-login as admin so CRUD can be tested without going through login.
+// To re-enable the login page, delete the four lines below (the app.Use block).
+app.Use(async (ctx, next) =>
+{
+    if (!ctx.User.Identity!.IsAuthenticated && !ctx.Request.Path.StartsWithSegments("/Account"))
+    {
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, "1"),
+            new(ClaimTypes.Name,           "admin"),
+            new(ClaimTypes.Role,           "Admin"),
+            new("IsSuperAdmin",            "true")
+        };
+        var identity  = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        var principal = new ClaimsPrincipal(identity);
+        await ctx.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+        ctx.User = principal;
+    }
+    await next();
+});
+
 app.UseAuthorization();
 
 app.MapControllerRoute(

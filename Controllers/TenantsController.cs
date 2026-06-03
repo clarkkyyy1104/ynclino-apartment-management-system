@@ -78,9 +78,22 @@ namespace YnclinoAMS.Controllers
         [Authorize(Roles = "Admin,SemiAdmin")]
         public async Task<IActionResult> Create(TenantViewModel vm)
         {
+            // Auto-generate username from first name + last-name initial + birth month + birth day
+            if (!string.IsNullOrWhiteSpace(vm.FirstName) && !string.IsNullOrWhiteSpace(vm.LastName) && vm.DateOfBirth.HasValue)
+            {
+                string baseUsername = vm.FirstName.Trim()
+                    + vm.LastName.Trim()[0]
+                    + vm.DateOfBirth.Value.ToString("MMdd");
+                string generated = baseUsername;
+                int suffix = 2;
+                while (await _context.tblUsers.AnyAsync(u => u.Username == generated))
+                    generated = baseUsername + "_" + suffix++;
+                vm.Username = generated;
+            }
+
             // Account fields are required on create
             if (string.IsNullOrWhiteSpace(vm.Username))
-                ModelState.AddModelError("Username", "Username is required.");
+                ModelState.AddModelError("Username", "Username could not be generated. Ensure First Name, Last Name, and Date of Birth are filled.");
             if (string.IsNullOrWhiteSpace(vm.Password))
                 ModelState.AddModelError("Password", "Password is required.");
 
@@ -93,15 +106,6 @@ namespace YnclinoAMS.Controllers
 
             if (!ModelState.IsValid)
             {
-                vm.AvailableUnits = await GetAvailableUnitsAsync();
-                return View(vm);
-            }
-
-            // Check username uniqueness
-            bool duplicate = await _context.tblUsers.AnyAsync(u => u.Username == vm.Username);
-            if (duplicate)
-            {
-                ModelState.AddModelError("Username", "Username already exists.");
                 vm.AvailableUnits = await GetAvailableUnitsAsync();
                 return View(vm);
             }
@@ -128,6 +132,7 @@ namespace YnclinoAMS.Controllers
                 LastName         = vm.LastName,
                 ContactNumber    = vm.ContactNumber,
                 EmergencyContact = vm.EmergencyContact,
+                DateOfBirth      = vm.DateOfBirth,
                 MoveInDate       = vm.MoveInDate,
                 MoveOutDate      = vm.MoveOutDate,
                 LeaseStart       = vm.LeaseStart,
@@ -171,6 +176,7 @@ namespace YnclinoAMS.Controllers
                 LastName         = tenant.LastName,
                 ContactNumber    = tenant.ContactNumber,
                 EmergencyContact = tenant.EmergencyContact,
+                DateOfBirth      = tenant.DateOfBirth,
                 MoveInDate       = tenant.MoveInDate,
                 MoveOutDate      = tenant.MoveOutDate,
                 LeaseStart       = tenant.LeaseStart,
@@ -241,6 +247,7 @@ namespace YnclinoAMS.Controllers
             tenant.LastName         = vm.LastName;
             tenant.ContactNumber    = vm.ContactNumber;
             tenant.EmergencyContact = vm.EmergencyContact;
+            tenant.DateOfBirth      = vm.DateOfBirth;
             tenant.MoveInDate       = vm.MoveInDate;
             tenant.MoveOutDate      = vm.MoveOutDate;
             tenant.LeaseStart       = vm.LeaseStart;
