@@ -41,11 +41,12 @@ namespace YnclinoAMS.Models.ViewModels
         public string LastName { get; set; } = string.Empty;
 
         [MaxLength(20)]
-        [RegularExpression(@"^\+?[0-9]{7,15}$", ErrorMessage = "Contact Number must contain digits only (7–15 digits).")]
+        [RegularExpression(@"^[0-9]{7,15}$", ErrorMessage = "Contact Number must contain digits only (7–15 digits).")]
         [Display(Name = "Contact Number")]
         public string? ContactNumber { get; set; }
 
-        [MaxLength(100)]
+        [MaxLength(20)]
+        [RegularExpression(@"^[0-9]{7,15}$", ErrorMessage = "Emergency Contact must contain digits only (7–15 digits).")]
         [Display(Name = "Emergency Contact")]
         public string? EmergencyContact { get; set; }
 

@@ -78,11 +78,10 @@ namespace YnclinoAMS.Controllers
         [Authorize(Roles = "Admin,SemiAdmin")]
         public async Task<IActionResult> Create(TenantViewModel vm)
         {
-            // Auto-generate username from first name + last-name initial + move-in month + move-in day
-            if (!string.IsNullOrWhiteSpace(vm.FirstName) && !string.IsNullOrWhiteSpace(vm.LastName) && vm.MoveInDate.HasValue)
+            // Auto-generate username from first name + move-in month + move-in day
+            if (!string.IsNullOrWhiteSpace(vm.FirstName) && vm.MoveInDate.HasValue)
             {
                 string baseUsername = vm.FirstName.Trim()
-                    + vm.LastName.Trim()[0]
                     + vm.MoveInDate.Value.ToString("MMdd");
                 string generated = baseUsername;
                 int suffix = 2;
@@ -93,7 +92,7 @@ namespace YnclinoAMS.Controllers
 
             // Account fields are required on create
             if (string.IsNullOrWhiteSpace(vm.Username))
-                ModelState.AddModelError("Username", "Username could not be generated. Ensure First Name, Last Name, and Move-In Date are filled.");
+                ModelState.AddModelError("Username", "Username could not be generated. Ensure First Name and Move-In Date are filled.");
             if (string.IsNullOrWhiteSpace(vm.Password))
                 ModelState.AddModelError("Password", "Password is required.");
 

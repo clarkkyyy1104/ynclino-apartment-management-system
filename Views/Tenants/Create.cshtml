@@ -18,9 +18,9 @@
                     <div class="mb-3">
                         <label class="form-label fw-semibold small">Username <span class="text-muted fw-normal">(auto-generated)</span></label>
                         <input type="text" id="usernameDisplay" class="form-control bg-light" readonly
-                               placeholder="Fill in First Name, Last Name &amp; Move-In Date below" />
+                               placeholder="Fill in First Name &amp; Move-In Date below" />
                         <input asp-for="Username" type="hidden" id="usernameHidden" />
-                        <div class="form-text text-muted small">Format: FirstName + LastName initial + move-in month + move-in day &nbsp;(e.g. <em>JuanD0315</em>)</div>
+                        <div class="form-text text-muted small">Format: FirstName + move-in month + move-in day &nbsp;(e.g. <em>Juan0315</em>)</div>
                         <span asp-validation-for="Username" class="text-danger small"></span>
                     </div>
 
@@ -86,7 +86,7 @@
                         </div>
                         <div class="col-md-6">
                             <label asp-for="EmergencyContact" class="form-label fw-semibold small"></label>
-                            <input asp-for="EmergencyContact" class="form-control" placeholder="Name — Number" />
+                            <input asp-for="EmergencyContact" class="form-control" inputmode="numeric" placeholder="e.g. 09181234567" />
                             <span asp-validation-for="EmergencyContact" class="text-danger small"></span>
                         </div>
                     </div>
@@ -128,13 +128,12 @@
     <script>
         function updateUsername() {
             var fn     = document.getElementById('firstNameInput').value.trim();
-            var ln     = document.getElementById('lastNameInput').value.trim();
             var moveIn = document.getElementById('moveInInput').value;
-            if (fn && ln && moveIn) {
+            if (fn && moveIn) {
                 var d   = new Date(moveIn);
                 var mm  = String(d.getMonth() + 1).padStart(2, '0');
                 var dd  = String(d.getDate()).padStart(2, '0');
-                var gen = fn + ln[0] + mm + dd;
+                var gen = fn + mm + dd;
                 document.getElementById('usernameDisplay').value = gen;
                 document.getElementById('usernameHidden').value  = gen;
             } else {
@@ -143,7 +142,6 @@
             }
         }
         document.getElementById('firstNameInput').addEventListener('input', updateUsername);
-        document.getElementById('lastNameInput').addEventListener('input', updateUsername);
         document.getElementById('moveInInput').addEventListener('change', updateUsername);
 
         document.getElementById('tenantForm').addEventListener('submit', function (e) {

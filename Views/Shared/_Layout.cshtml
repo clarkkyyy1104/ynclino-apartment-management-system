@@ -18,27 +18,28 @@
 
             @if (User.Identity?.IsAuthenticated == true)
             {
+                var activeController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
                 <div class="collapse navbar-collapse" id="navMenu">
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Units" asp-action="Index">Units</a>
+                            <a class="nav-link @(activeController == "Units" ? "active" : "")" asp-controller="Units" asp-action="Index">Units</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Tenants" asp-action="Index">Tenants</a>
+                            <a class="nav-link @(activeController == "Tenants" ? "active" : "")" asp-controller="Tenants" asp-action="Index">Tenants</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Billing" asp-action="Index">Billing &amp; Payment</a>
+                            <a class="nav-link @(activeController == "Billing" ? "active" : "")" asp-controller="Billing" asp-action="Index">Billing &amp; Payment</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Maintenance" asp-action="Index">Maintenance</a>
+                            <a class="nav-link @(activeController == "Maintenance" ? "active" : "")" asp-controller="Maintenance" asp-action="Index">Maintenance</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="LostFound" asp-action="Index">Lost &amp; Found</a>
+                            <a class="nav-link @(activeController == "LostFound" ? "active" : "")" asp-controller="LostFound" asp-action="Index">Lost &amp; Found</a>
                         </li>
                         @if (User.IsInRole("Admin") || User.IsInRole("SemiAdmin"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Users" asp-action="Index">User Accounts</a>
+                                <a class="nav-link @(activeController == "Users" ? "active" : "")" asp-controller="Users" asp-action="Index">User Accounts</a>
                             </li>
                         }
                     </ul>

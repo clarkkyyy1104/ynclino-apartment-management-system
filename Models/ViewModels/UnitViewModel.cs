@@ -9,6 +9,7 @@ namespace YnclinoAMS.Models.ViewModels
 
         [Required(ErrorMessage = "Unit Number is required.")]
         [MaxLength(20)]
+        [RegularExpression(@"^\d+$", ErrorMessage = "Unit Number must contain digits only.")]
         [Display(Name = "Unit Number")]
         public string UnitNumber { get; set; } = string.Empty;
 
