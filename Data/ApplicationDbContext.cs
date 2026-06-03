@@ -60,8 +60,6 @@ namespace YnclinoAMS.Data
             modelBuilder.Entity<tblBilling>(entity =>
             {
                 entity.HasKey(e => e.BillingID);
-                entity.Property(e => e.AmountDue).HasColumnType("decimal(10,2)");
-                entity.Property(e => e.AmountPaid).HasColumnType("decimal(10,2)");
                 entity.Property(e => e.Status).IsRequired().HasMaxLength(20).HasDefaultValue("Unpaid");
                 entity.Property(e => e.Notes).HasMaxLength(500);
 
