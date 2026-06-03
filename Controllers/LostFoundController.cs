@@ -27,11 +27,11 @@ namespace YnclinoAMS.Controllers
             IQueryable<tblLostFoundItem> query = _context.tblLostFoundItems
                 .Include(l => l.ReportedBy);
 
-            // Tenants only see their own reports
+            // Tenants see their own reports AND all Found items
             if (User.IsInRole("Tenant"))
             {
                 var uid = CurrentUserID();
-                query = query.Where(l => l.ReportedByUserID == uid);
+                query = query.Where(l => l.ReportedByUserID == uid || l.ItemType == "Found");
             }
 
             if (!string.IsNullOrEmpty(typeFilter))
@@ -63,8 +63,17 @@ namespace YnclinoAMS.Controllers
 
             if (item == null) return NotFound();
 
-            if (User.IsInRole("Tenant") && item.ReportedByUserID != CurrentUserID())
+            if (User.IsInRole("Tenant") && item.ItemType != "Found" && item.ReportedByUserID != CurrentUserID())
                 return Forbid();
+
+            if (User.IsInRole("Admin") || User.IsInRole("SemiAdmin"))
+            {
+                ViewBag.Claims = await _context.tblClaimRequests
+                    .Include(c => c.Claimant)
+                    .Where(c => c.ItemID == id)
+                    .OrderByDescending(c => c.SubmittedAt)
+                    .ToListAsync();
+            }
 
             return View(item);
         }
@@ -175,6 +184,76 @@ namespace YnclinoAMS.Controllers
             await _context.SaveChangesAsync();
             TempData["Success"] = "Item record deleted.";
             return RedirectToAction(nameof(Index));
+        }
+
+        // GET: LostFound/Claim/5
+        public async Task<IActionResult> Claim(int? id)
+        {
+            if (id == null) return NotFound();
+            var item = await _context.tblLostFoundItems.FindAsync(id);
+            if (item == null || item.ItemType != "Found" || item.Status != "Reported")
+                return NotFound();
+
+            // Prevent duplicate pending claims
+            var uid = CurrentUserID();
+            bool alreadyClaimed = await _context.tblClaimRequests
+                .AnyAsync(c => c.ItemID == id && c.ClaimantUserID == uid && c.Status == "Pending");
+            if (alreadyClaimed)
+            {
+                TempData["Error"] = "You already have a pending claim for this item.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            ViewBag.Item = item;
+            return View();
+        }
+
+        // POST: LostFound/Claim/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Claim(int id, string verificationDetails)
+        {
+            var item = await _context.tblLostFoundItems.FindAsync(id);
+            if (item == null || item.ItemType != "Found" || item.Status != "Reported")
+                return NotFound();
+
+            var uid = CurrentUserID();
+            if (uid == null) return Forbid();
+
+            var claim = new tblClaimRequest
+            {
+                ItemID              = id,
+                ClaimantUserID      = uid.Value,
+                VerificationDetails = verificationDetails ?? string.Empty,
+                SubmittedAt         = DateTime.Now,
+                Status              = "Pending"
+            };
+            _context.tblClaimRequests.Add(claim);
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Your claim has been submitted. Admins have been notified and will verify your details.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // POST: LostFound/ReviewClaim
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,SemiAdmin")]
+        public async Task<IActionResult> ReviewClaim(int claimId, string decision, string? adminNotes)
+        {
+            var claim = await _context.tblClaimRequests
+                .Include(c => c.Item)
+                .FirstOrDefaultAsync(c => c.ClaimID == claimId);
+            if (claim == null) return NotFound();
+
+            claim.Status     = decision; // "Approved" or "Rejected"
+            claim.AdminNotes = adminNotes;
+
+            if (decision == "Approved" && claim.Item != null)
+                claim.Item.Status = "Claimed";
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = $"Claim has been {decision.ToLower()}.";
+            return RedirectToAction(nameof(Details), new { id = claim.ItemID });
         }
     }
 }

@@ -49,6 +49,48 @@
                     <dd class="col-sm-8">@(Model.Notes ?? "—")</dd>
                 </dl>
 
+                @if (User.IsInRole("Admin") || User.IsInRole("SemiAdmin"))
+                {
+                    var claims = ViewBag.Claims as IEnumerable<YnclinoAMS.Models.tblClaimRequest> ?? new List<YnclinoAMS.Models.tblClaimRequest>();
+                    if (claims.Any())
+                    {
+                        <hr />
+                        <h6 class="fw-semibold mb-2">Ownership Claims</h6>
+                        @foreach (var claim in claims)
+                        {
+                            <div class="border rounded p-3 mb-2 @(claim.Status == "Pending" ? "border-warning" : claim.Status == "Approved" ? "border-success" : "border-secondary")">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <span class="fw-semibold small">@(claim.Claimant?.Username ?? "—")</span>
+                                    <span class="badge @(claim.Status == "Pending" ? "bg-warning text-dark" : claim.Status == "Approved" ? "bg-success" : "bg-secondary")">@claim.Status</span>
+                                </div>
+                                <p class="small mb-1">@claim.VerificationDetails</p>
+                                <p class="text-muted small mb-2">Submitted: @claim.SubmittedAt.ToString("MMM dd, yyyy hh:mm tt")</p>
+                                @if (claim.Status == "Pending")
+                                {
+                                    <div class="d-flex gap-2">
+                                        <form asp-action="ReviewClaim" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="claimId" value="@claim.ClaimID" />
+                                            <input type="hidden" name="decision" value="Approved" />
+                                            <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                                        </form>
+                                        <form asp-action="ReviewClaim" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="claimId" value="@claim.ClaimID" />
+                                            <input type="hidden" name="decision" value="Rejected" />
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">Reject</button>
+                                        </form>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrEmpty(claim.AdminNotes))
+                                {
+                                    <p class="text-muted small mt-1 mb-0">Note: @claim.AdminNotes</p>
+                                }
+                            </div>
+                        }
+                    }
+                }
+
                 <div class="d-flex gap-2 mt-3">
                     @if (User.IsInRole("Admin") || User.IsInRole("SemiAdmin"))
                     {

@@ -14,6 +14,7 @@ namespace YnclinoAMS.Data
         public DbSet<tblBilling> tblBillings { get; set; }
         public DbSet<tblMaintenanceRequest> tblMaintenanceRequests { get; set; }
         public DbSet<tblLostFoundItem> tblLostFoundItems { get; set; }
+        public DbSet<tblClaimRequest> tblClaimRequests { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -97,6 +98,24 @@ namespace YnclinoAMS.Data
                 entity.HasOne(l => l.ReportedBy)
                       .WithMany()
                       .HasForeignKey(l => l.ReportedByUserID)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<tblClaimRequest>(entity =>
+            {
+                entity.HasKey(e => e.ClaimID);
+                entity.Property(e => e.VerificationDetails).IsRequired().HasMaxLength(1000);
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(20).HasDefaultValue("Pending");
+                entity.Property(e => e.AdminNotes).HasMaxLength(500);
+
+                entity.HasOne(c => c.Item)
+                      .WithMany()
+                      .HasForeignKey(c => c.ItemID)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(c => c.Claimant)
+                      .WithMany()
+                      .HasForeignKey(c => c.ClaimantUserID)
                       .OnDelete(DeleteBehavior.Restrict);
             });
         }

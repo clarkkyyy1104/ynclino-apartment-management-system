@@ -38,8 +38,9 @@
                         <label asp-for="AmountDue" class="form-label fw-semibold small"></label>
                         <div class="input-group">
                             <span class="input-group-text">₱</span>
-                            <input asp-for="AmountDue" type="number" min="0.01" step="0.01" class="form-control" placeholder="0.00" />
+                            <input asp-for="AmountDue" id="amountDueInput" type="number" min="0.01" step="0.01" class="form-control" placeholder="0.00" />
                         </div>
+                        <div id="amountHint" class="form-text text-muted small"></div>
                         <span asp-validation-for="AmountDue" class="text-danger small"></span>
                     </div>
 
@@ -61,4 +62,21 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.getElementById('tenantSelect').addEventListener('change', function() {
+            var tid = this.value;
+            if (!tid) { document.getElementById('amountHint').textContent = ''; return; }
+            fetch('/Billing/GetSuggestedAmount?tenantId=' + tid)
+                .then(r => r.json())
+                .then(function(data) {
+                    document.getElementById('amountDueInput').value = data.suggestedAmount.toFixed(2);
+                    var hint = 'Unit price: ₱' + data.unitPrice.toLocaleString('en-PH', {minimumFractionDigits:2});
+                    if (data.unpaidMonths > 0)
+                        hint += ' · ' + data.unpaidMonths + ' unpaid month(s) + current = ' + (data.unpaidMonths + 1) + ' months';
+                    else
+                        hint += ' · 1 month (current)';
+                    document.getElementById('amountHint').textContent = hint;
+                });
+        });
+    </script>
 }

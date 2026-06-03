@@ -76,10 +76,9 @@
                     </td>
                     <td>
                         <a asp-action="Details" asp-route-id="@item.ItemID" class="btn btn-sm btn-outline-info">Details</a>
-                        @if (isAdmin)
+                        @if (!isAdmin && item.ItemType == "Found" && item.Status == "Reported")
                         {
-                            <a asp-action="Edit"   asp-route-id="@item.ItemID" class="btn btn-sm btn-outline-primary">Edit</a>
-                            <a asp-action="Delete" asp-route-id="@item.ItemID" class="btn btn-sm btn-outline-danger">Delete</a>
+                            <a asp-action="Claim" asp-route-id="@item.ItemID" class="btn btn-sm btn-outline-success">Claim</a>
                         }
                     </td>
                 </tr>
