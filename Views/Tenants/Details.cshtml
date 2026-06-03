@@ -49,6 +49,14 @@
             </div>
             <div class="card-footer d-flex gap-2">
                 <a asp-action="Edit" asp-route-id="@Model.TenantID" class="btn btn-primary btn-sm">Edit</a>
+                @if (Model.Status == "Active")
+                {
+                    <form asp-action="Delete" asp-route-id="@Model.TenantID" method="post" class="d-inline"
+                          onsubmit="return confirm('Deactivate this tenant?')">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-outline-danger btn-sm">Deactivate</button>
+                    </form>
+                }
                 <a asp-action="Index" class="btn btn-outline-secondary btn-sm">Back to List</a>
             </div>
         </div>

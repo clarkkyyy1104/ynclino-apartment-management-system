@@ -90,11 +90,25 @@ namespace YnclinoAMS.Controllers
                 vm.Username = generated;
             }
 
+            // Auto-generate password from contact number + name initials if not provided
+            if (string.IsNullOrWhiteSpace(vm.Password)
+                && !string.IsNullOrWhiteSpace(vm.ContactNumber)
+                && !string.IsNullOrWhiteSpace(vm.FirstName)
+                && !string.IsNullOrWhiteSpace(vm.LastName))
+            {
+                vm.Password = vm.ContactNumber.Trim()
+                    + "@"
+                    + char.ToUpper(vm.FirstName.Trim()[0])
+                    + char.ToLower(vm.LastName.Trim()[0]);
+                ModelState.Remove("Password");
+                ModelState.Remove("ConfirmPassword");
+            }
+
             // Account fields are required on create
             if (string.IsNullOrWhiteSpace(vm.Username))
                 ModelState.AddModelError("Username", "Username could not be generated. Ensure First Name and Move-In Date are filled.");
             if (string.IsNullOrWhiteSpace(vm.Password))
-                ModelState.AddModelError("Password", "Password is required.");
+                ModelState.AddModelError("Password", "Password is required. Enter a password or fill in Contact Number and Name.");
 
             // Move-In / Lease Start cannot be set to a date in the past
             var today = DateTime.Today;

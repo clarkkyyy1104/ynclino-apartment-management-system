@@ -200,6 +200,28 @@ namespace YnclinoAMS.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // AJAX: returns suggested amount for a tenant (unpaid months × unit price)
+        [HttpGet]
+        public async Task<IActionResult> GetSuggestedAmount(int tenantId)
+        {
+            var tenant = await _context.tblTenants
+                .Include(t => t.Unit)
+                .FirstOrDefaultAsync(t => t.TenantID == tenantId);
+            if (tenant == null || tenant.Unit == null)
+                return Json(new { unitPrice = 0m, suggestedAmount = 0m, unpaidMonths = 0 });
+
+            var unpaidCount = await _context.tblBillings
+                .CountAsync(b => b.TenantID == tenantId && (b.Status == "Unpaid" || b.Status == "Overdue"));
+
+            // Suggest 1 month (current) + arrears
+            var months = unpaidCount + 1;
+            return Json(new {
+                unitPrice       = tenant.Unit.RentPrice,
+                unpaidMonths    = unpaidCount,
+                suggestedAmount = tenant.Unit.RentPrice * months
+            });
+        }
+
         private async Task<IEnumerable<SelectListItem>> GetActiveTenantListAsync()
         {
             return await _context.tblTenants

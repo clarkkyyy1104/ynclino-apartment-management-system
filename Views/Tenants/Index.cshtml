@@ -56,11 +56,6 @@
                     </td>
                     <td>
                         <a asp-action="Details" asp-route-id="@tenant.TenantID" class="btn btn-sm btn-outline-info">Details</a>
-                        <a asp-action="Edit" asp-route-id="@tenant.TenantID" class="btn btn-sm btn-outline-primary">Edit</a>
-                        @if (tenant.Status == "Active")
-                        {
-                            <a asp-action="Delete" asp-route-id="@tenant.TenantID" class="btn btn-sm btn-outline-danger">Deactivate</a>
-                        }
                     </td>
                 </tr>
             }

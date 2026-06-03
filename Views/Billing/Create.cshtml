@@ -14,7 +14,7 @@
 
                     <div class="mb-3">
                         <label asp-for="TenantID" class="form-label fw-semibold small"></label>
-                        <select asp-for="TenantID" asp-items="Model.AvailableTenants" class="form-select">
+                        <select asp-for="TenantID" id="tenantSelect" asp-items="Model.AvailableTenants" class="form-select">
                             <option value="">— Select Tenant —</option>
                         </select>
                         <span asp-validation-for="TenantID" class="text-danger small"></span>

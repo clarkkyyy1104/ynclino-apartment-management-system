@@ -80,11 +80,6 @@
                     <td>@r.DateSubmitted.ToString("MMM dd, yyyy")</td>
                     <td>
                         <a asp-action="Details" asp-route-id="@r.RequestID" class="btn btn-sm btn-outline-info">Details</a>
-                        @if (isAdmin)
-                        {
-                            <a asp-action="Edit"   asp-route-id="@r.RequestID" class="btn btn-sm btn-outline-primary">Edit</a>
-                            <a asp-action="Delete" asp-route-id="@r.RequestID" class="btn btn-sm btn-outline-danger">Delete</a>
-                        }
                     </td>
                 </tr>
             }
