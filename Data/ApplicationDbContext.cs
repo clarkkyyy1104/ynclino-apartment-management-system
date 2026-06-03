@@ -11,6 +11,9 @@ namespace YnclinoAMS.Data
         public DbSet<tblUser> tblUsers { get; set; }
         public DbSet<tblUnit> tblUnits { get; set; }
         public DbSet<tblTenant> tblTenants { get; set; }
+        public DbSet<tblBilling> tblBillings { get; set; }
+        public DbSet<tblMaintenanceRequest> tblMaintenanceRequests { get; set; }
+        public DbSet<tblLostFoundItem> tblLostFoundItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -51,6 +54,51 @@ namespace YnclinoAMS.Data
                 entity.HasOne(t => t.Unit)
                       .WithMany(u => u.Tenants)
                       .HasForeignKey(t => t.UnitID)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<tblBilling>(entity =>
+            {
+                entity.HasKey(e => e.BillingID);
+                entity.Property(e => e.AmountDue).HasColumnType("decimal(10,2)");
+                entity.Property(e => e.AmountPaid).HasColumnType("decimal(10,2)");
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(20).HasDefaultValue("Unpaid");
+                entity.Property(e => e.Notes).HasMaxLength(500);
+
+                entity.HasOne(b => b.Tenant)
+                      .WithMany()
+                      .HasForeignKey(b => b.TenantID)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<tblMaintenanceRequest>(entity =>
+            {
+                entity.HasKey(e => e.RequestID);
+                entity.Property(e => e.Category).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.Priority).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(30).HasDefaultValue("Pending");
+                entity.Property(e => e.AdminNotes).HasMaxLength(500);
+
+                entity.HasOne(m => m.Tenant)
+                      .WithMany()
+                      .HasForeignKey(m => m.TenantID)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<tblLostFoundItem>(entity =>
+            {
+                entity.HasKey(e => e.ItemID);
+                entity.Property(e => e.ItemName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Description).HasMaxLength(500);
+                entity.Property(e => e.ItemType).IsRequired().HasMaxLength(10);
+                entity.Property(e => e.Location).HasMaxLength(200);
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(20).HasDefaultValue("Reported");
+                entity.Property(e => e.Notes).HasMaxLength(500);
+
+                entity.HasOne(l => l.ReportedBy)
+                      .WithMany()
+                      .HasForeignKey(l => l.ReportedByUserID)
                       .OnDelete(DeleteBehavior.Restrict);
             });
         }

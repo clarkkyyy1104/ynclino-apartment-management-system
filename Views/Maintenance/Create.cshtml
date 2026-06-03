@@ -1,0 +1,78 @@
+@model YnclinoAMS.Models.ViewModels.MaintenanceViewModel
+@{
+    ViewData["Title"] = "New Maintenance Request";
+    bool isAdmin = User.IsInRole("Admin") || User.IsInRole("SemiAdmin");
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white fw-semibold">New Maintenance Request</div>
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+
+                    @if (isAdmin)
+                    {
+                        <div class="mb-3">
+                            <label asp-for="TenantID" class="form-label fw-semibold small"></label>
+                            <select asp-for="TenantID" asp-items="Model.AvailableTenants" class="form-select">
+                                <option value="">— Select Tenant —</option>
+                            </select>
+                            <span asp-validation-for="TenantID" class="text-danger small"></span>
+                        </div>
+                    }
+                    else
+                    {
+                        <input type="hidden" asp-for="TenantID" />
+                        <div class="mb-3">
+                            <span class="form-text text-muted small">
+                                Submitting as: <strong>@Model.TenantName</strong> — Unit @Model.UnitNumber
+                            </span>
+                        </div>
+                    }
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Category" class="form-label fw-semibold small"></label>
+                            <select asp-for="Category" class="form-select">
+                                <option>Plumbing</option>
+                                <option>Electrical</option>
+                                <option>Structural</option>
+                                <option>Appliance</option>
+                                <option>Other</option>
+                            </select>
+                            <span asp-validation-for="Category" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Priority" class="form-label fw-semibold small"></label>
+                            <select asp-for="Priority" class="form-select">
+                                <option>Low</option>
+                                <option selected>Medium</option>
+                                <option>High</option>
+                            </select>
+                            <span asp-validation-for="Priority" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Description" class="form-label fw-semibold small"></label>
+                        <textarea asp-for="Description" class="form-control" rows="3"
+                                  placeholder="Describe the issue in detail…"></textarea>
+                        <span asp-validation-for="Description" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-sm">Submit Request</button>
+                        <a asp-action="Index" class="btn btn-secondary btn-sm">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

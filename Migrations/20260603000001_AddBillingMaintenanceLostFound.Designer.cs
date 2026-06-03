@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using YnclinoAMS.Data;
 
@@ -11,9 +12,10 @@ using YnclinoAMS.Data;
 namespace YnclinoAMS.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260603000001_AddBillingMaintenanceLostFound")]
+    partial class AddBillingMaintenanceLostFound
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -163,12 +165,10 @@ namespace YnclinoAMS.Migrations
                         .HasForeignKey("UnitID")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
                     b.HasOne("YnclinoAMS.Models.tblUser", "User")
                         .WithMany("Tenants")
                         .HasForeignKey("UserID")
                         .OnDelete(DeleteBehavior.SetNull);
-
                     b.Navigation("Unit");
                     b.Navigation("User");
                 });

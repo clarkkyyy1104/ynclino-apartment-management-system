@@ -1,0 +1,72 @@
+@model YnclinoAMS.Models.ViewModels.LostFoundViewModel
+@{
+    ViewData["Title"] = "Edit Item";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-secondary text-white fw-semibold">Edit Item Report</div>
+            <div class="card-body">
+                <form asp-action="Edit" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="ItemID" />
+                    <input type="hidden" asp-for="ReportedByUserID" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+
+                    @if (!string.IsNullOrEmpty(Model.ReportedByName))
+                    {
+                        <p class="text-muted small mb-3">Reported by: <strong>@Model.ReportedByName</strong></p>
+                    }
+
+                    <div class="mb-3">
+                        <label asp-for="ItemType" class="form-label fw-semibold small"></label>
+                        <select asp-for="ItemType" class="form-select">
+                            <option>Lost</option>
+                            <option>Found</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ItemName" class="form-label fw-semibold small"></label>
+                        <input asp-for="ItemName" class="form-control" />
+                        <span asp-validation-for="ItemName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label fw-semibold small"></label>
+                        <textarea asp-for="Description" class="form-control" rows="2"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Location" class="form-label fw-semibold small"></label>
+                        <input asp-for="Location" class="form-control" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Status" class="form-label fw-semibold small"></label>
+                        <select asp-for="Status" class="form-select">
+                            <option>Reported</option>
+                            <option>Claimed</option>
+                            <option>Resolved</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Notes" class="form-label fw-semibold small"></label>
+                        <textarea asp-for="Notes" class="form-control" rows="2"></textarea>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+                        <a asp-action="Index" class="btn btn-secondary btn-sm">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

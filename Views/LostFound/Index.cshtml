@@ -1,19 +1,93 @@
+@model IEnumerable<YnclinoAMS.Models.tblLostFoundItem>
 @{
     ViewData["Title"] = "Lost & Found";
+    bool isAdmin = User.IsInRole("Admin") || User.IsInRole("SemiAdmin");
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center mb-3">
     <h3 class="fw-bold mb-0">Lost &amp; Found</h3>
+    <a asp-action="Create" class="btn btn-primary">+ Report Item</a>
 </div>
 
-<div class="alert alert-info">
-    This section will manage lost and found items reported within the apartment premises.
-    Full Lost &amp; Found CRUD will be implemented here.
-</div>
-
-<div class="card shadow-sm">
-    <div class="card-body text-center py-5 text-muted">
-        <p class="mt-3">Lost &amp; Found module — coming soon.</p>
-        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-primary btn-sm">Back to Dashboard</a>
+<form method="get" class="row g-2 mb-4">
+    @if (isAdmin)
+    {
+        <div class="col-auto">
+            <input type="text" name="searchTerm" value="@ViewBag.SearchTerm"
+                   class="form-control" placeholder="Search item or location…" />
+        </div>
+    }
+    <div class="col-auto">
+        <select name="typeFilter" class="form-select">
+            <option value="">Lost &amp; Found</option>
+            <option value="Lost"  selected="@(ViewBag.TypeFilter == "Lost")">Lost</option>
+            <option value="Found" selected="@(ViewBag.TypeFilter == "Found")">Found</option>
+        </select>
     </div>
+    <div class="col-auto">
+        <select name="statusFilter" class="form-select">
+            <option value="">All Statuses</option>
+            <option value="Reported"  selected="@(ViewBag.StatusFilter == "Reported")">Reported</option>
+            <option value="Claimed"   selected="@(ViewBag.StatusFilter == "Claimed")">Claimed</option>
+            <option value="Resolved"  selected="@(ViewBag.StatusFilter == "Resolved")">Resolved</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-outline-secondary">Filter</button>
+        <a asp-action="Index" class="btn btn-link">Clear</a>
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-primary">
+            <tr>
+                <th>Type</th>
+                <th>Item Name</th>
+                <th>Location</th>
+                <th>Reported By</th>
+                <th>Date Reported</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        <span class="badge @(item.ItemType == "Lost" ? "bg-danger" : "bg-info text-dark")">
+                            @item.ItemType
+                        </span>
+                    </td>
+                    <td class="fw-semibold">@item.ItemName</td>
+                    <td>@(item.Location ?? "—")</td>
+                    <td>@(item.ReportedBy?.Username ?? "—")</td>
+                    <td>@item.DateReported.ToString("MMM dd, yyyy")</td>
+                    <td>
+                        @{
+                            var sbadge = item.Status switch {
+                                "Resolved" => "bg-success",
+                                "Claimed"  => "bg-primary",
+                                _          => "bg-warning text-dark"
+                            };
+                        }
+                        <span class="badge @sbadge">@item.Status</span>
+                    </td>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@item.ItemID" class="btn btn-sm btn-outline-info">Details</a>
+                        @if (isAdmin)
+                        {
+                            <a asp-action="Edit"   asp-route-id="@item.ItemID" class="btn btn-sm btn-outline-primary">Edit</a>
+                            <a asp-action="Delete" asp-route-id="@item.ItemID" class="btn btn-sm btn-outline-danger">Delete</a>
+                        }
+                    </td>
+                </tr>
+            }
+            @if (!Model.Any())
+            {
+                <tr><td colspan="7" class="text-center text-muted py-4">No items reported.</td></tr>
+            }
+        </tbody>
+    </table>
 </div>
