@@ -18,9 +18,9 @@
                     <div class="mb-3">
                         <label class="form-label fw-semibold small">Username <span class="text-muted fw-normal">(auto-generated)</span></label>
                         <input type="text" id="usernameDisplay" class="form-control bg-light" readonly
-                               placeholder="Fill in First Name, Last Name &amp; Date of Birth below" />
+                               placeholder="Fill in First Name, Last Name &amp; Move-In Date below" />
                         <input asp-for="Username" type="hidden" id="usernameHidden" />
-                        <div class="form-text text-muted small">Format: FirstName + LastName initial + birth month + birth day &nbsp;(e.g. <em>JuanD0315</em>)</div>
+                        <div class="form-text text-muted small">Format: FirstName + LastName initial + move-in month + move-in day &nbsp;(e.g. <em>JuanD0315</em>)</div>
                         <span asp-validation-for="Username" class="text-danger small"></span>
                     </div>
 
@@ -71,13 +71,6 @@
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="DateOfBirth" class="form-label fw-semibold small"></label>
-                        <input asp-for="DateOfBirth" id="dobInput" class="form-control" type="date"
-                               max="@DateTime.Today.ToString("yyyy-MM-dd")" />
-                        <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
-                    </div>
-
-                    <div class="mb-3">
                         <label asp-for="UnitID" class="form-label fw-semibold small"></label>
                         <select asp-for="UnitID" asp-items="Model.AvailableUnits" class="form-select">
                             <option value="">— Select Unit —</option>
@@ -101,7 +94,7 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label asp-for="MoveInDate" class="form-label fw-semibold small"></label>
-                            <input asp-for="MoveInDate" class="form-control" type="date" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                            <input asp-for="MoveInDate" id="moveInInput" class="form-control" type="date" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
                             <span asp-validation-for="MoveInDate" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
@@ -134,11 +127,11 @@
     <script src="~/js/password.js" asp-append-version="true"></script>
     <script>
         function updateUsername() {
-            var fn  = document.getElementById('firstNameInput').value.trim();
-            var ln  = document.getElementById('lastNameInput').value.trim();
-            var dob = document.getElementById('dobInput').value;
-            if (fn && ln && dob) {
-                var d   = new Date(dob);
+            var fn     = document.getElementById('firstNameInput').value.trim();
+            var ln     = document.getElementById('lastNameInput').value.trim();
+            var moveIn = document.getElementById('moveInInput').value;
+            if (fn && ln && moveIn) {
+                var d   = new Date(moveIn);
                 var mm  = String(d.getMonth() + 1).padStart(2, '0');
                 var dd  = String(d.getDate()).padStart(2, '0');
                 var gen = fn + ln[0] + mm + dd;
@@ -151,7 +144,7 @@
         }
         document.getElementById('firstNameInput').addEventListener('input', updateUsername);
         document.getElementById('lastNameInput').addEventListener('input', updateUsername);
-        document.getElementById('dobInput').addEventListener('change', updateUsername);
+        document.getElementById('moveInInput').addEventListener('change', updateUsername);
 
         document.getElementById('tenantForm').addEventListener('submit', function (e) {
             var pw = document.getElementById('pw').value;

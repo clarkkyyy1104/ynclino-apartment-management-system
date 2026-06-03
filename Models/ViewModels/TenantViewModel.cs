@@ -65,10 +65,6 @@ namespace YnclinoAMS.Models.ViewModels
         [DataType(DataType.Date)]
         public DateTime? LeaseEnd { get; set; }
 
-        [Display(Name = "Date of Birth")]
-        [DataType(DataType.Date)]
-        public DateTime? DateOfBirth { get; set; }
-
         [Required]
         [MaxLength(20)]
         public string Status { get; set; } = "Active";
