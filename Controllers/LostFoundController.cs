@@ -27,7 +27,7 @@ namespace YnclinoAMS.Controllers
             IQueryable<tblLostFoundItem> query = _context.tblLostFoundItems
                 .Include(l => l.ReportedBy);
 
-            // Tenants see their own reports AND all Found items
+            // tenants see their own reports plus anything marked Found
             if (User.IsInRole("Tenant"))
             {
                 var uid = CurrentUserID();
@@ -45,9 +45,9 @@ namespace YnclinoAMS.Controllers
                     l.ItemName.Contains(searchTerm) ||
                     (l.Location != null && l.Location.Contains(searchTerm)));
 
-            ViewBag.TypeFilter   = typeFilter;
+            ViewBag.TypeFilter = typeFilter;
             ViewBag.StatusFilter = statusFilter;
-            ViewBag.SearchTerm   = searchTerm;
+            ViewBag.SearchTerm = searchTerm;
 
             return View(await query.OrderByDescending(l => l.DateReported).ToListAsync());
         }
@@ -94,13 +94,13 @@ namespace YnclinoAMS.Controllers
             var item = new tblLostFoundItem
             {
                 ReportedByUserID = uid.Value,
-                ItemName         = vm.ItemName,
-                Description      = vm.Description,
-                ItemType         = vm.ItemType,
-                Location         = vm.Location,
-                Status           = "Reported",
-                DateReported     = DateTime.Now,
-                Notes            = vm.Notes
+                ItemName = vm.ItemName,
+                Description = vm.Description,
+                ItemType = vm.ItemType,
+                Location = vm.Location,
+                Status = "Reported",
+                DateReported = DateTime.Now,
+                Notes = vm.Notes
             };
 
             _context.tblLostFoundItems.Add(item);
@@ -122,16 +122,16 @@ namespace YnclinoAMS.Controllers
 
             var vm = new LostFoundViewModel
             {
-                ItemID           = item.ItemID,
+                ItemID = item.ItemID,
                 ReportedByUserID = item.ReportedByUserID,
-                ReportedByName   = item.ReportedBy?.Username,
-                ItemName         = item.ItemName,
-                Description      = item.Description,
-                ItemType         = item.ItemType,
-                Location         = item.Location,
-                Status           = item.Status,
-                DateReported     = item.DateReported,
-                Notes            = item.Notes
+                ReportedByName = item.ReportedBy?.Username,
+                ItemName = item.ItemName,
+                Description = item.Description,
+                ItemType = item.ItemType,
+                Location = item.Location,
+                Status = item.Status,
+                DateReported = item.DateReported,
+                Notes = item.Notes
             };
             return View(vm);
         }
@@ -147,12 +147,12 @@ namespace YnclinoAMS.Controllers
             var item = await _context.tblLostFoundItems.FindAsync(id);
             if (item == null) return NotFound();
 
-            item.ItemName    = vm.ItemName;
+            item.ItemName = vm.ItemName;
             item.Description = vm.Description;
-            item.ItemType    = vm.ItemType;
-            item.Location    = vm.Location;
-            item.Status      = vm.Status;
-            item.Notes       = vm.Notes;
+            item.ItemType = vm.ItemType;
+            item.Location = vm.Location;
+            item.Status = vm.Status;
+            item.Notes = vm.Notes;
 
             await _context.SaveChangesAsync();
             TempData["Success"] = "Item record updated.";
@@ -194,7 +194,7 @@ namespace YnclinoAMS.Controllers
             if (item == null || item.ItemType != "Found" || item.Status != "Reported")
                 return NotFound();
 
-            // Prevent duplicate pending claims
+            // don't let the same person stack pending claims on one item
             var uid = CurrentUserID();
             bool alreadyClaimed = await _context.tblClaimRequests
                 .AnyAsync(c => c.ItemID == id && c.ClaimantUserID == uid && c.Status == "Pending");
@@ -222,11 +222,11 @@ namespace YnclinoAMS.Controllers
 
             var claim = new tblClaimRequest
             {
-                ItemID              = id,
-                ClaimantUserID      = uid.Value,
+                ItemID = id,
+                ClaimantUserID = uid.Value,
                 VerificationDetails = verificationDetails ?? string.Empty,
-                SubmittedAt         = DateTime.Now,
-                Status              = "Pending"
+                SubmittedAt = DateTime.Now,
+                Status = "Pending"
             };
             _context.tblClaimRequests.Add(claim);
             await _context.SaveChangesAsync();
@@ -245,7 +245,7 @@ namespace YnclinoAMS.Controllers
                 .FirstOrDefaultAsync(c => c.ClaimID == claimId);
             if (claim == null) return NotFound();
 
-            claim.Status     = decision; // "Approved" or "Rejected"
+            claim.Status = decision; // Approved or Rejected
             claim.AdminNotes = adminNotes;
 
             if (decision == "Approved" && claim.Item != null)

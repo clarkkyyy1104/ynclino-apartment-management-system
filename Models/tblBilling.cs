@@ -13,7 +13,7 @@ namespace YnclinoAMS.Models
 
         [Required]
         [Display(Name = "Billing Period")]
-        public DateTime BillingPeriod { get; set; }   // stored as first day of month
+        public DateTime BillingPeriod { get; set; }   // first day of the month
 
         [Required]
         [Column(TypeName = "decimal(10,2)")]

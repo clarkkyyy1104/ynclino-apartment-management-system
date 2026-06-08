@@ -35,7 +35,7 @@ namespace YnclinoAMS.Controllers
             IQueryable<tblBilling> query = _context.tblBillings
                 .Include(b => b.Tenant).ThenInclude(t => t!.Unit);
 
-            // Tenants only see their own bills
+            // tenants only see their own bills
             if (User.IsInRole("Tenant"))
             {
                 var tenant = await GetCurrentTenantAsync();
@@ -68,7 +68,7 @@ namespace YnclinoAMS.Controllers
 
             if (billing == null) return NotFound();
 
-            // Tenant can only see their own
+            // tenant can only see their own
             if (User.IsInRole("Tenant"))
             {
                 var tenant = await GetCurrentTenantAsync();
@@ -101,13 +101,13 @@ namespace YnclinoAMS.Controllers
 
             var billing = new tblBilling
             {
-                TenantID      = vm.TenantID,
+                TenantID = vm.TenantID,
                 BillingPeriod = new DateTime(vm.BillingPeriod.Year, vm.BillingPeriod.Month, 1),
-                AmountDue     = vm.AmountDue,
-                DueDate       = vm.DueDate,
-                Status        = "Unpaid",
-                Notes         = vm.Notes,
-                DateIssued    = DateTime.Now
+                AmountDue = vm.AmountDue,
+                DueDate = vm.DueDate,
+                Status = "Unpaid",
+                Notes = vm.Notes,
+                DateIssued = DateTime.Now
             };
 
             _context.tblBillings.Add(billing);
@@ -129,16 +129,16 @@ namespace YnclinoAMS.Controllers
 
             var vm = new BillingViewModel
             {
-                BillingID       = billing.BillingID,
-                TenantID        = billing.TenantID,
-                TenantName      = billing.Tenant?.FullName,
-                BillingPeriod   = billing.BillingPeriod,
-                AmountDue       = billing.AmountDue,
-                DueDate         = billing.DueDate,
-                AmountPaid      = billing.AmountPaid,
-                DatePaid        = billing.DatePaid,
-                Status          = billing.Status,
-                Notes           = billing.Notes,
+                BillingID = billing.BillingID,
+                TenantID = billing.TenantID,
+                TenantName = billing.Tenant?.FullName,
+                BillingPeriod = billing.BillingPeriod,
+                AmountDue = billing.AmountDue,
+                DueDate = billing.DueDate,
+                AmountPaid = billing.AmountPaid,
+                DatePaid = billing.DatePaid,
+                Status = billing.Status,
+                Notes = billing.Notes,
                 AvailableTenants = await GetActiveTenantListAsync()
             };
             return View(vm);
@@ -159,14 +159,14 @@ namespace YnclinoAMS.Controllers
             var billing = await _context.tblBillings.FindAsync(id);
             if (billing == null) return NotFound();
 
-            billing.TenantID      = vm.TenantID;
+            billing.TenantID = vm.TenantID;
             billing.BillingPeriod = new DateTime(vm.BillingPeriod.Year, vm.BillingPeriod.Month, 1);
-            billing.AmountDue     = vm.AmountDue;
-            billing.DueDate       = vm.DueDate;
-            billing.AmountPaid    = vm.AmountPaid;
-            billing.DatePaid      = vm.DatePaid;
-            billing.Status        = vm.Status;
-            billing.Notes         = vm.Notes;
+            billing.AmountDue = vm.AmountDue;
+            billing.DueDate = vm.DueDate;
+            billing.AmountPaid = vm.AmountPaid;
+            billing.DatePaid = vm.DatePaid;
+            billing.Status = vm.Status;
+            billing.Notes = vm.Notes;
 
             await _context.SaveChangesAsync();
             TempData["Success"] = "Billing record updated.";
@@ -200,7 +200,7 @@ namespace YnclinoAMS.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // AJAX: returns suggested amount for a tenant (unpaid months × unit price)
+        // ajax helper - suggested amount = unpaid months times unit price
         [HttpGet]
         public async Task<IActionResult> GetSuggestedAmount(int tenantId)
         {
@@ -213,11 +213,11 @@ namespace YnclinoAMS.Controllers
             var unpaidCount = await _context.tblBillings
                 .CountAsync(b => b.TenantID == tenantId && (b.Status == "Unpaid" || b.Status == "Overdue"));
 
-            // Suggest 1 month (current) + arrears
+            // current month plus whatever's outstanding
             var months = unpaidCount + 1;
             return Json(new {
-                unitPrice       = tenant.Unit.RentPrice,
-                unpaidMonths    = unpaidCount,
+                unitPrice = tenant.Unit.RentPrice,
+                unpaidMonths = unpaidCount,
                 suggestedAmount = tenant.Unit.RentPrice * months
             });
         }
@@ -231,7 +231,7 @@ namespace YnclinoAMS.Controllers
                 .Select(t => new SelectListItem
                 {
                     Value = t.TenantID.ToString(),
-                    Text  = $"{t.LastName}, {t.FirstName} — Unit {t.Unit!.UnitNumber}"
+                    Text = $"{t.LastName}, {t.FirstName} — Unit {t.Unit!.UnitNumber}"
                 })
                 .ToListAsync();
         }

@@ -9,7 +9,7 @@ namespace YnclinoAMS.Models.ViewModels
 
         public int? UserID { get; set; }
 
-        // Account credentials — required on Create, optional on Edit
+        // login fields - required when creating, optional when editing
         [MaxLength(50)]
         [Display(Name = "Username")]
         public string? Username { get; set; }

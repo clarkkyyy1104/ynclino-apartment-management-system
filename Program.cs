@@ -28,7 +28,7 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     db.Database.Migrate();
 
-    // Seed default admin account if none exists
+    // create a default admin the first time the app runs
     if (!db.tblUsers.Any(u => u.Role == "Admin"))
     {
         db.tblUsers.Add(new tblUser
@@ -55,8 +55,8 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
 
-// DEV ONLY — auto-login as admin so CRUD can be tested without going through login.
-// To re-enable the login page, delete the four lines below (the app.Use block).
+// dev only: auto-login as admin so we can test CRUD without the login page.
+// remove this whole app.Use block before going to production.
 app.Use(async (ctx, next) =>
 {
     if (!ctx.User.Identity!.IsAuthenticated && !ctx.Request.Path.StartsWithSegments("/Account"))
@@ -64,11 +64,11 @@ app.Use(async (ctx, next) =>
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, "1"),
-            new(ClaimTypes.Name,           "admin"),
-            new(ClaimTypes.Role,           "Admin"),
-            new("IsSuperAdmin",            "true")
+            new(ClaimTypes.Name, "admin"),
+            new(ClaimTypes.Role, "Admin"),
+            new("IsSuperAdmin", "true")
         };
-        var identity  = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         var principal = new ClaimsPrincipal(identity);
         await ctx.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
         ctx.User = principal;

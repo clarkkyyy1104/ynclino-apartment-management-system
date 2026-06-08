@@ -38,7 +38,7 @@ namespace YnclinoAMS.Models.ViewModels
         [Display(Name = "Admin Notes")]
         public string? AdminNotes { get; set; }
 
-        // Display helpers
+        // for display only
         public string? TenantName { get; set; }
         public string? UnitNumber { get; set; }
 

@@ -41,7 +41,7 @@ namespace YnclinoAMS.Models.ViewModels
         [MaxLength(500)]
         public string? Notes { get; set; }
 
-        // Display helpers
+        // for display only
         public string? TenantName { get; set; }
         public string? UnitNumber { get; set; }
 

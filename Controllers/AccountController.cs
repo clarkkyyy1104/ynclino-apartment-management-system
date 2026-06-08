@@ -19,7 +19,6 @@ namespace YnclinoAMS.Controllers
             _context = context;
         }
 
-        // GET: /Account/Login
         [HttpGet]
         public IActionResult Login(string? returnUrl)
         {
@@ -30,7 +29,6 @@ namespace YnclinoAMS.Controllers
             return View(new LoginViewModel());
         }
 
-        // POST: /Account/Login
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel vm, string? returnUrl)
@@ -57,8 +55,7 @@ namespace YnclinoAMS.Controllers
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var principal = new ClaimsPrincipal(identity);
 
-            // IsPersistent = false → session cookie, no Expires header
-            // Browser deletes it on close; minimize/tab-switch keeps it alive
+            // non-persistent so it dies when the browser closes
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 principal,
@@ -70,7 +67,6 @@ namespace YnclinoAMS.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        // POST: /Account/Logout
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
@@ -79,12 +75,10 @@ namespace YnclinoAMS.Controllers
             return RedirectToAction("Login");
         }
 
-        // GET: /Account/ChangePassword
         [Authorize]
         [HttpGet]
         public IActionResult ChangePassword() => View(new ChangePasswordViewModel());
 
-        // POST: /Account/ChangePassword
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -108,7 +102,6 @@ namespace YnclinoAMS.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        // GET: /Account/AccessDenied
         public IActionResult AccessDenied()
         {
             return View();

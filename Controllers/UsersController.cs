@@ -26,7 +26,7 @@ namespace YnclinoAMS.Controllers
             return _context.tblUsers.Any(u => u.UserID == id && u.IsSuperAdmin);
         }
 
-        // GET: Users — staff accounts only (Admin / SemiAdmin)
+        // GET: Users - staff accounts only (Admin / SemiAdmin)
         public async Task<IActionResult> Index()
         {
             var users = await _context.tblUsers
@@ -38,12 +38,12 @@ namespace YnclinoAMS.Controllers
             return View(users);
         }
 
-        // GET: Users/Create — staff accounts only
+        // GET: Users/Create
         public IActionResult Create()
         {
             bool isSuperAdmin = CurrentUserIsSuperAdmin();
             bool isAdmin = User.IsInRole("Admin");
-            // SemiAdmin has no reason to be here (they can't create staff); redirect them out
+            // semiadmin can't create staff, bounce them out
             if (!isAdmin)
             {
                 TempData["Error"] = "Only Admins can create staff accounts. Register tenants from the Tenants module.";
@@ -63,11 +63,11 @@ namespace YnclinoAMS.Controllers
             bool isSuperAdmin = CurrentUserIsSuperAdmin();
             bool isAdmin = User.IsInRole("Admin");
 
-            // Staff accounts only — Tenants are registered through the Tenants module
+            // tenants come from the Tenants module, not here
             if (vm.Role == "Tenant")
                 ModelState.AddModelError("Role", "Tenant accounts must be created from the Tenants module.");
 
-            // Only Super Admin can create Admin accounts
+            // only super admin can create Admin accounts
             if (!isSuperAdmin && vm.Role == "Admin")
                 ModelState.AddModelError("Role", "Only the Super Admin can create Admin accounts.");
 
@@ -92,12 +92,12 @@ namespace YnclinoAMS.Controllers
 
             var user = new tblUser
             {
-                Username     = vm.Username,
-                Password     = PasswordHelper.Hash(vm.Password!),
-                Role         = vm.Role,
-                IsActive     = vm.IsActive,
+                Username = vm.Username,
+                Password = PasswordHelper.Hash(vm.Password!),
+                Role = vm.Role,
+                IsActive = vm.IsActive,
                 IsSuperAdmin = false,
-                DateCreated  = DateTime.Now
+                DateCreated = DateTime.Now
             };
 
             _context.tblUsers.Add(user);
@@ -117,14 +117,14 @@ namespace YnclinoAMS.Controllers
             bool isSuperAdmin = CurrentUserIsSuperAdmin();
             bool isAdmin = User.IsInRole("Admin");
 
-            // Tenant accounts are managed from Tenants module
+            // tenant accounts live in the Tenants module
             if (user.Role == "Tenant")
             {
                 TempData["Error"] = "Tenant accounts are managed from the Tenants module.";
                 return RedirectToAction(nameof(Index));
             }
 
-            // SemiAdmin cannot edit Admin or SemiAdmin accounts
+            // semiadmin can't edit staff accounts
             if (!isAdmin)
                 return Forbid();
 
@@ -134,9 +134,9 @@ namespace YnclinoAMS.Controllers
 
             return View(new UserViewModel
             {
-                UserID   = user.UserID,
+                UserID = user.UserID,
                 Username = user.Username,
-                Role     = user.Role,
+                Role = user.Role,
                 IsActive = user.IsActive
             });
         }
@@ -154,18 +154,18 @@ namespace YnclinoAMS.Controllers
             bool isSuperAdmin = CurrentUserIsSuperAdmin();
             bool isAdmin = User.IsInRole("Admin");
 
-            // Tenant accounts are managed from Tenants module
+            // tenant accounts live in the Tenants module
             if (user.Role == "Tenant")
             {
                 TempData["Error"] = "Tenant accounts are managed from the Tenants module.";
                 return RedirectToAction(nameof(Index));
             }
 
-            // Only Admins can edit staff accounts
+            // only admins can edit staff accounts
             if (!isAdmin)
                 return Forbid();
 
-            // Only super admin may reset another account's password; always clear validation for non-super-admins
+            // only super admin can reset another account's password
             if (!isSuperAdmin || string.IsNullOrWhiteSpace(vm.Password))
             {
                 ModelState.Remove("Password");

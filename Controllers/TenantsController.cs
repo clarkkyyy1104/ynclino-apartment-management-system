@@ -78,7 +78,7 @@ namespace YnclinoAMS.Controllers
         [Authorize(Roles = "Admin,SemiAdmin")]
         public async Task<IActionResult> Create(TenantViewModel vm)
         {
-            // Auto-generate username from first name + move-in month + move-in day
+            // build a username from first name + move-in MMdd, bump a suffix if taken
             if (!string.IsNullOrWhiteSpace(vm.FirstName) && vm.MoveInDate.HasValue)
             {
                 string baseUsername = vm.FirstName.Trim()
@@ -90,7 +90,7 @@ namespace YnclinoAMS.Controllers
                 vm.Username = generated;
             }
 
-            // Auto-generate password from contact number + name initials if not provided
+            // fall back to a generated password from contact number + initials
             if (string.IsNullOrWhiteSpace(vm.Password)
                 && !string.IsNullOrWhiteSpace(vm.ContactNumber)
                 && !string.IsNullOrWhiteSpace(vm.FirstName)
@@ -104,13 +104,13 @@ namespace YnclinoAMS.Controllers
                 ModelState.Remove("ConfirmPassword");
             }
 
-            // Account fields are required on create
+            // account fields are required on create
             if (string.IsNullOrWhiteSpace(vm.Username))
                 ModelState.AddModelError("Username", "Username could not be generated. Ensure First Name and Move-In Date are filled.");
             if (string.IsNullOrWhiteSpace(vm.Password))
                 ModelState.AddModelError("Password", "Password is required. Enter a password or fill in Contact Number and Name.");
 
-            // Move-In / Lease Start cannot be set to a date in the past
+            // can't set move-in or lease start in the past
             var today = DateTime.Today;
             if (vm.MoveInDate.HasValue && vm.MoveInDate.Value.Date < today)
                 ModelState.AddModelError("MoveInDate", "Move-In Date cannot be in the past.");
@@ -123,34 +123,33 @@ namespace YnclinoAMS.Controllers
                 return View(vm);
             }
 
-            // Create login account first (need the generated UserID)
+            // create the login account first so we have the UserID to link
             var user = new tblUser
             {
-                Username    = vm.Username!,
-                Password    = PasswordHelper.Hash(vm.Password!),
-                Role        = "Tenant",
-                IsActive    = true,
+                Username = vm.Username!,
+                Password = PasswordHelper.Hash(vm.Password!),
+                Role = "Tenant",
+                IsActive = true,
                 IsSuperAdmin = false,
                 DateCreated = DateTime.Now
             };
             _context.tblUsers.Add(user);
             await _context.SaveChangesAsync();
 
-            // Create tenant profile linked to the new account
             var tenant = new tblTenant
             {
-                UserID           = user.UserID,
-                UnitID           = vm.UnitID,
-                FirstName        = vm.FirstName,
-                LastName         = vm.LastName,
-                ContactNumber    = vm.ContactNumber,
+                UserID = user.UserID,
+                UnitID = vm.UnitID,
+                FirstName = vm.FirstName,
+                LastName = vm.LastName,
+                ContactNumber = vm.ContactNumber,
                 EmergencyContact = vm.EmergencyContact,
-                MoveInDate       = vm.MoveInDate,
-                MoveOutDate      = vm.MoveOutDate,
-                LeaseStart       = vm.LeaseStart,
-                LeaseEnd         = vm.LeaseEnd,
-                Status           = "Active",
-                DateRecorded     = DateTime.Now
+                MoveInDate = vm.MoveInDate,
+                MoveOutDate = vm.MoveOutDate,
+                LeaseStart = vm.LeaseStart,
+                LeaseEnd = vm.LeaseEnd,
+                Status = "Active",
+                DateRecorded = DateTime.Now
             };
             _context.tblTenants.Add(tenant);
 
@@ -171,7 +170,7 @@ namespace YnclinoAMS.Controllers
             var tenant = await _context.tblTenants.FindAsync(id);
             if (tenant == null) return NotFound();
 
-            // Load linked account username if one exists
+            // pull the linked account username if there is one
             tblUser? linkedUser = null;
             if (tenant.UserID.HasValue)
                 linkedUser = await _context.tblUsers.FindAsync(tenant.UserID.Value);
@@ -180,20 +179,20 @@ namespace YnclinoAMS.Controllers
 
             var vm = new TenantViewModel
             {
-                TenantID         = tenant.TenantID,
-                UserID           = tenant.UserID,
-                Username         = linkedUser?.Username,
-                UnitID           = tenant.UnitID,
-                FirstName        = tenant.FirstName,
-                LastName         = tenant.LastName,
-                ContactNumber    = tenant.ContactNumber,
+                TenantID = tenant.TenantID,
+                UserID = tenant.UserID,
+                Username = linkedUser?.Username,
+                UnitID = tenant.UnitID,
+                FirstName = tenant.FirstName,
+                LastName = tenant.LastName,
+                ContactNumber = tenant.ContactNumber,
                 EmergencyContact = tenant.EmergencyContact,
-                MoveInDate       = tenant.MoveInDate,
-                MoveOutDate      = tenant.MoveOutDate,
-                LeaseStart       = tenant.LeaseStart,
-                LeaseEnd         = tenant.LeaseEnd,
-                Status           = tenant.Status,
-                AvailableUnits   = await GetAllUnitsAsync()
+                MoveInDate = tenant.MoveInDate,
+                MoveOutDate = tenant.MoveOutDate,
+                LeaseStart = tenant.LeaseStart,
+                LeaseEnd = tenant.LeaseEnd,
+                Status = tenant.Status,
+                AvailableUnits = await GetAllUnitsAsync()
             };
             return View(vm);
         }
@@ -208,7 +207,7 @@ namespace YnclinoAMS.Controllers
 
             bool isSuperAdmin = CurrentUserIsSuperAdmin();
 
-            // Only super admin may change another user's password
+            // only super admin can change another user's password
             if (!isSuperAdmin || string.IsNullOrWhiteSpace(vm.Password))
             {
                 ModelState.Remove("Password");
@@ -228,13 +227,13 @@ namespace YnclinoAMS.Controllers
             var tenant = await _context.tblTenants.FindAsync(id);
             if (tenant == null) return NotFound();
 
-            // Update linked account if one exists
+            // update the linked account too
             if (tenant.UserID.HasValue)
             {
                 var linkedUser = await _context.tblUsers.FindAsync(tenant.UserID.Value);
                 if (linkedUser != null)
                 {
-                    // Check username uniqueness (exclude self)
+                    // username must stay unique (ignore self)
                     bool duplicate = await _context.tblUsers.AnyAsync(u => u.Username == vm.Username && u.UserID != linkedUser.UserID);
                     if (duplicate)
                     {
@@ -245,7 +244,6 @@ namespace YnclinoAMS.Controllers
                     }
 
                     linkedUser.Username = vm.Username!;
-                    // Only super admin can reset another user's password
                     if (isSuperAdmin && !string.IsNullOrWhiteSpace(vm.Password))
                         linkedUser.Password = PasswordHelper.Hash(vm.Password);
                 }
@@ -253,16 +251,16 @@ namespace YnclinoAMS.Controllers
 
             int previousUnitID = tenant.UnitID;
 
-            tenant.UnitID           = vm.UnitID;
-            tenant.FirstName        = vm.FirstName;
-            tenant.LastName         = vm.LastName;
-            tenant.ContactNumber    = vm.ContactNumber;
+            tenant.UnitID = vm.UnitID;
+            tenant.FirstName = vm.FirstName;
+            tenant.LastName = vm.LastName;
+            tenant.ContactNumber = vm.ContactNumber;
             tenant.EmergencyContact = vm.EmergencyContact;
-            tenant.MoveInDate       = vm.MoveInDate;
-            tenant.MoveOutDate      = vm.MoveOutDate;
-            tenant.LeaseStart       = vm.LeaseStart;
-            tenant.LeaseEnd         = vm.LeaseEnd;
-            tenant.Status           = vm.Status;
+            tenant.MoveInDate = vm.MoveInDate;
+            tenant.MoveOutDate = vm.MoveOutDate;
+            tenant.LeaseStart = vm.LeaseStart;
+            tenant.LeaseEnd = vm.LeaseEnd;
+            tenant.Status = vm.Status;
 
             if (previousUnitID != vm.UnitID)
             {
@@ -291,7 +289,7 @@ namespace YnclinoAMS.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: Tenants/Delete/5  (soft delete confirmation)
+        // GET: Tenants/Delete/5 (soft delete confirmation)
         [Authorize(Roles = "Admin,SemiAdmin")]
         public async Task<IActionResult> Delete(int? id)
         {
@@ -305,7 +303,7 @@ namespace YnclinoAMS.Controllers
             return View(tenant);
         }
 
-        // POST: Tenants/Delete/5  (soft delete — sets status to Inactive)
+        // POST: Tenants/Delete/5 (soft delete - sets status to Inactive)
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin,SemiAdmin")]
@@ -325,7 +323,7 @@ namespace YnclinoAMS.Controllers
                 if (unit != null) unit.Status = "Vacant";
             }
 
-            // Also deactivate the linked login account
+            // deactivate the linked login account as well
             if (tenant.UserID.HasValue)
             {
                 var linkedUser = await _context.tblUsers.FindAsync(tenant.UserID.Value);

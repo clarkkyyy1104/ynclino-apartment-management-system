@@ -112,7 +112,7 @@ namespace YnclinoAMS.Controllers
                 return View(vm);
             }
 
-            // Tenants can only submit for themselves
+            // tenants can only submit for themselves
             if (User.IsInRole("Tenant"))
             {
                 var tenant = await GetCurrentTenantAsync();
@@ -122,11 +122,11 @@ namespace YnclinoAMS.Controllers
 
             var request = new tblMaintenanceRequest
             {
-                TenantID      = vm.TenantID,
-                Category      = vm.Category,
-                Description   = vm.Description,
-                Priority      = vm.Priority,
-                Status        = "Pending",
+                TenantID = vm.TenantID,
+                Category = vm.Category,
+                Description = vm.Description,
+                Priority = vm.Priority,
+                Status = "Pending",
                 DateSubmitted = DateTime.Now
             };
 
@@ -149,17 +149,17 @@ namespace YnclinoAMS.Controllers
 
             var vm = new MaintenanceViewModel
             {
-                RequestID     = request.RequestID,
-                TenantID      = request.TenantID,
-                TenantName    = request.Tenant?.FullName,
-                UnitNumber    = request.Tenant?.Unit?.UnitNumber,
-                Category      = request.Category,
-                Description   = request.Description,
-                Priority      = request.Priority,
-                Status        = request.Status,
+                RequestID = request.RequestID,
+                TenantID = request.TenantID,
+                TenantName = request.Tenant?.FullName,
+                UnitNumber = request.Tenant?.Unit?.UnitNumber,
+                Category = request.Category,
+                Description = request.Description,
+                Priority = request.Priority,
+                Status = request.Status,
                 DateSubmitted = request.DateSubmitted,
-                DateResolved  = request.DateResolved,
-                AdminNotes    = request.AdminNotes,
+                DateResolved = request.DateResolved,
+                AdminNotes = request.AdminNotes,
                 AvailableTenants = await GetActiveTenantListAsync()
             };
             return View(vm);
@@ -180,11 +180,11 @@ namespace YnclinoAMS.Controllers
             var request = await _context.tblMaintenanceRequests.FindAsync(id);
             if (request == null) return NotFound();
 
-            request.Category    = vm.Category;
+            request.Category = vm.Category;
             request.Description = vm.Description;
-            request.Priority    = vm.Priority;
-            request.Status      = vm.Status;
-            request.AdminNotes  = vm.AdminNotes;
+            request.Priority = vm.Priority;
+            request.Status = vm.Status;
+            request.AdminNotes = vm.AdminNotes;
 
             if (vm.Status == "Resolved" && request.DateResolved == null)
                 request.DateResolved = DateTime.Now;
@@ -232,7 +232,7 @@ namespace YnclinoAMS.Controllers
                 .Select(t => new SelectListItem
                 {
                     Value = t.TenantID.ToString(),
-                    Text  = $"{t.LastName}, {t.FirstName} — Unit {t.Unit!.UnitNumber}"
+                    Text = $"{t.LastName}, {t.FirstName} — Unit {t.Unit!.UnitNumber}"
                 })
                 .ToListAsync();
         }

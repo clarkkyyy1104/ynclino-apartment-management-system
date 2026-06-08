@@ -32,7 +32,7 @@ namespace YnclinoAMS.Models.ViewModels
         [Display(Name = "Additional Notes")]
         public string? Notes { get; set; }
 
-        // Display helpers
+        // for display only
         public string? ReportedByName { get; set; }
         public DateTime DateReported { get; set; } = DateTime.Now;
     }

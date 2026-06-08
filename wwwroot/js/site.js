@@ -1,4 +1,4 @@
-// Auto-dismiss alert messages after 4 seconds
+// auto-dismiss alerts after a few seconds
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.alert.alert-success, .alert.alert-danger').forEach(function (el) {
         setTimeout(function () {
