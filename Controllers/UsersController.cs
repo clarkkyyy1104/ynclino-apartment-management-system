@@ -172,15 +172,15 @@ namespace YnclinoAMS.Controllers
                 ModelState.Remove("ConfirmPassword");
             }
 
-            // Only Super Admin can assign Admin role
+            // only super admin can assign the Admin role
             if (!isSuperAdmin && vm.Role == "Admin")
                 ModelState.AddModelError("Role", "Only the Super Admin can assign the Admin role.");
 
-            // Prevent assigning Tenant role from here
+            // no assigning Tenant role from here
             if (vm.Role == "Tenant")
                 ModelState.AddModelError("Role", "Use the Tenants module to manage Tenant accounts.");
 
-            // Cannot demote or deactivate the super admin
+            // super admin can't be demoted or deactivated
             if (user.IsSuperAdmin)
             {
                 if (vm.Role != "Admin")
@@ -208,7 +208,7 @@ namespace YnclinoAMS.Controllers
             }
 
             user.Username = vm.Username;
-            user.Role     = vm.Role;
+            user.Role = vm.Role;
             user.IsActive = vm.IsActive;
 
             if (isSuperAdmin && !string.IsNullOrWhiteSpace(vm.Password))
