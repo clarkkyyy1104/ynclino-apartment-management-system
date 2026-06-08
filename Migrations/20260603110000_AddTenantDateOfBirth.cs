@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace YnclinoAMS.Migrations
+namespace YnclinoApartmentManagementSystem.Migrations
 {
     public partial class AddTenantDateOfBirth : Migration
     {

@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace YnclinoAMS.Models
+namespace YnclinoApartmentManagementSystem.Models
 {
     public class tblBilling
     {

@@ -2,9 +2,9 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
-using YnclinoAMS.Data;
-using YnclinoAMS.Helpers;
-using YnclinoAMS.Models;
+using YnclinoApartmentManagementSystem.Data;
+using YnclinoApartmentManagementSystem.Helpers;
+using YnclinoApartmentManagementSystem.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 

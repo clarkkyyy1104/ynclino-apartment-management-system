@@ -1,4 +1,4 @@
-namespace YnclinoAMS.Models
+namespace YnclinoApartmentManagementSystem.Models
 {
     public class ErrorViewModel
     {

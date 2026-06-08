@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace YnclinoAMS.Models
+namespace YnclinoApartmentManagementSystem.Models
 {
     public class tblUser
     {

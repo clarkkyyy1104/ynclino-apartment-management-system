@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace YnclinoAMS.Models.ViewModels
+namespace YnclinoApartmentManagementSystem.Models.ViewModels
 {
     public class BillingViewModel
     {

@@ -2,7 +2,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YnclinoAMS", "YnclinoAMS.csproj", "{281D2B5A-BD6A-D950-A602-97A75F2C9523}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YnclinoApartmentManagementSystem", "YnclinoApartmentManagementSystem.csproj", "{281D2B5A-BD6A-D950-A602-97A75F2C9523}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

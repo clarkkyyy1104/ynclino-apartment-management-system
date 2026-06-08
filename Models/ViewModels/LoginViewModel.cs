@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace YnclinoAMS.Models.ViewModels
+namespace YnclinoApartmentManagementSystem.Models.ViewModels
 {
     public class LoginViewModel
     {

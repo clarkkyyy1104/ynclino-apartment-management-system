@@ -4,11 +4,11 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using YnclinoAMS.Data;
-using YnclinoAMS.Helpers;
-using YnclinoAMS.Models.ViewModels;
+using YnclinoApartmentManagementSystem.Data;
+using YnclinoApartmentManagementSystem.Helpers;
+using YnclinoApartmentManagementSystem.Models.ViewModels;
 
-namespace YnclinoAMS.Controllers
+namespace YnclinoApartmentManagementSystem.Controllers
 {
     public class AccountController : Controller
     {

@@ -3,11 +3,11 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using YnclinoAMS.Data;
+using YnclinoApartmentManagementSystem.Data;
 
 #nullable disable
 
-namespace YnclinoAMS.Migrations
+namespace YnclinoApartmentManagementSystem.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     partial class ApplicationDbContextModelSnapshot : ModelSnapshot
@@ -17,7 +17,7 @@ namespace YnclinoAMS.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.0");
 
-            modelBuilder.Entity("YnclinoAMS.Models.tblUser", b =>
+            modelBuilder.Entity("YnclinoApartmentManagementSystem.Models.tblUser", b =>
             {
                 b.Property<int>("UserID").ValueGeneratedOnAdd().HasColumnType("INTEGER");
                 b.Property<string>("Username").IsRequired().HasMaxLength(50).HasColumnType("TEXT");
@@ -31,7 +31,7 @@ namespace YnclinoAMS.Migrations
                 b.ToTable("tblUsers");
             });
 
-            modelBuilder.Entity("YnclinoAMS.Models.tblUnit", b =>
+            modelBuilder.Entity("YnclinoApartmentManagementSystem.Models.tblUnit", b =>
             {
                 b.Property<int>("UnitID").ValueGeneratedOnAdd().HasColumnType("INTEGER");
                 b.Property<string>("UnitNumber").IsRequired().HasMaxLength(20).HasColumnType("TEXT");
@@ -45,7 +45,7 @@ namespace YnclinoAMS.Migrations
                 b.ToTable("tblUnits");
             });
 
-            modelBuilder.Entity("YnclinoAMS.Models.tblTenant", b =>
+            modelBuilder.Entity("YnclinoApartmentManagementSystem.Models.tblTenant", b =>
             {
                 b.Property<int>("TenantID").ValueGeneratedOnAdd().HasColumnType("INTEGER");
                 b.Property<int?>("UserID").HasColumnType("INTEGER");
@@ -66,7 +66,7 @@ namespace YnclinoAMS.Migrations
                 b.ToTable("tblTenants");
             });
 
-            modelBuilder.Entity("YnclinoAMS.Models.tblBilling", b =>
+            modelBuilder.Entity("YnclinoApartmentManagementSystem.Models.tblBilling", b =>
             {
                 b.Property<int>("BillingID").ValueGeneratedOnAdd().HasColumnType("INTEGER");
                 b.Property<int>("TenantID").HasColumnType("INTEGER");
@@ -83,7 +83,7 @@ namespace YnclinoAMS.Migrations
                 b.ToTable("tblBillings");
             });
 
-            modelBuilder.Entity("YnclinoAMS.Models.tblMaintenanceRequest", b =>
+            modelBuilder.Entity("YnclinoApartmentManagementSystem.Models.tblMaintenanceRequest", b =>
             {
                 b.Property<int>("RequestID").ValueGeneratedOnAdd().HasColumnType("INTEGER");
                 b.Property<int>("TenantID").HasColumnType("INTEGER");
@@ -99,7 +99,7 @@ namespace YnclinoAMS.Migrations
                 b.ToTable("tblMaintenanceRequests");
             });
 
-            modelBuilder.Entity("YnclinoAMS.Models.tblLostFoundItem", b =>
+            modelBuilder.Entity("YnclinoApartmentManagementSystem.Models.tblLostFoundItem", b =>
             {
                 b.Property<int>("ItemID").ValueGeneratedOnAdd().HasColumnType("INTEGER");
                 b.Property<int>("ReportedByUserID").HasColumnType("INTEGER");
@@ -115,7 +115,7 @@ namespace YnclinoAMS.Migrations
                 b.ToTable("tblLostFoundItems");
             });
 
-            modelBuilder.Entity("YnclinoAMS.Models.tblClaimRequest", b =>
+            modelBuilder.Entity("YnclinoApartmentManagementSystem.Models.tblClaimRequest", b =>
             {
                 b.Property<int>("ClaimID").ValueGeneratedOnAdd().HasColumnType("INTEGER");
                 b.Property<int>("ItemID").HasColumnType("INTEGER");
@@ -130,42 +130,42 @@ namespace YnclinoAMS.Migrations
                 b.ToTable("tblClaimRequests");
             });
 
-            modelBuilder.Entity("YnclinoAMS.Models.tblTenant", b =>
+            modelBuilder.Entity("YnclinoApartmentManagementSystem.Models.tblTenant", b =>
             {
-                b.HasOne("YnclinoAMS.Models.tblUser", "User").WithMany("Tenants").HasForeignKey("UserID").OnDelete(DeleteBehavior.SetNull);
-                b.HasOne("YnclinoAMS.Models.tblUnit", "Unit").WithMany("Tenants").HasForeignKey("UnitID").OnDelete(DeleteBehavior.Restrict).IsRequired();
+                b.HasOne("YnclinoApartmentManagementSystem.Models.tblUser", "User").WithMany("Tenants").HasForeignKey("UserID").OnDelete(DeleteBehavior.SetNull);
+                b.HasOne("YnclinoApartmentManagementSystem.Models.tblUnit", "Unit").WithMany("Tenants").HasForeignKey("UnitID").OnDelete(DeleteBehavior.Restrict).IsRequired();
                 b.Navigation("User");
                 b.Navigation("Unit");
             });
 
-            modelBuilder.Entity("YnclinoAMS.Models.tblBilling", b =>
+            modelBuilder.Entity("YnclinoApartmentManagementSystem.Models.tblBilling", b =>
             {
-                b.HasOne("YnclinoAMS.Models.tblTenant", "Tenant").WithMany().HasForeignKey("TenantID").OnDelete(DeleteBehavior.Cascade).IsRequired();
+                b.HasOne("YnclinoApartmentManagementSystem.Models.tblTenant", "Tenant").WithMany().HasForeignKey("TenantID").OnDelete(DeleteBehavior.Cascade).IsRequired();
                 b.Navigation("Tenant");
             });
 
-            modelBuilder.Entity("YnclinoAMS.Models.tblMaintenanceRequest", b =>
+            modelBuilder.Entity("YnclinoApartmentManagementSystem.Models.tblMaintenanceRequest", b =>
             {
-                b.HasOne("YnclinoAMS.Models.tblTenant", "Tenant").WithMany().HasForeignKey("TenantID").OnDelete(DeleteBehavior.Cascade).IsRequired();
+                b.HasOne("YnclinoApartmentManagementSystem.Models.tblTenant", "Tenant").WithMany().HasForeignKey("TenantID").OnDelete(DeleteBehavior.Cascade).IsRequired();
                 b.Navigation("Tenant");
             });
 
-            modelBuilder.Entity("YnclinoAMS.Models.tblLostFoundItem", b =>
+            modelBuilder.Entity("YnclinoApartmentManagementSystem.Models.tblLostFoundItem", b =>
             {
-                b.HasOne("YnclinoAMS.Models.tblUser", "ReportedBy").WithMany().HasForeignKey("ReportedByUserID").OnDelete(DeleteBehavior.Restrict).IsRequired();
+                b.HasOne("YnclinoApartmentManagementSystem.Models.tblUser", "ReportedBy").WithMany().HasForeignKey("ReportedByUserID").OnDelete(DeleteBehavior.Restrict).IsRequired();
                 b.Navigation("ReportedBy");
             });
 
-            modelBuilder.Entity("YnclinoAMS.Models.tblClaimRequest", b =>
+            modelBuilder.Entity("YnclinoApartmentManagementSystem.Models.tblClaimRequest", b =>
             {
-                b.HasOne("YnclinoAMS.Models.tblLostFoundItem", "Item").WithMany().HasForeignKey("ItemID").OnDelete(DeleteBehavior.Cascade).IsRequired();
-                b.HasOne("YnclinoAMS.Models.tblUser", "Claimant").WithMany().HasForeignKey("ClaimantUserID").OnDelete(DeleteBehavior.Restrict).IsRequired();
+                b.HasOne("YnclinoApartmentManagementSystem.Models.tblLostFoundItem", "Item").WithMany().HasForeignKey("ItemID").OnDelete(DeleteBehavior.Cascade).IsRequired();
+                b.HasOne("YnclinoApartmentManagementSystem.Models.tblUser", "Claimant").WithMany().HasForeignKey("ClaimantUserID").OnDelete(DeleteBehavior.Restrict).IsRequired();
                 b.Navigation("Item");
                 b.Navigation("Claimant");
             });
 
-            modelBuilder.Entity("YnclinoAMS.Models.tblUnit", b => { b.Navigation("Tenants"); });
-            modelBuilder.Entity("YnclinoAMS.Models.tblUser", b => { b.Navigation("Tenants"); });
+            modelBuilder.Entity("YnclinoApartmentManagementSystem.Models.tblUnit", b => { b.Navigation("Tenants"); });
+            modelBuilder.Entity("YnclinoApartmentManagementSystem.Models.tblUser", b => { b.Navigation("Tenants"); });
 #pragma warning restore 612, 618
         }
     }

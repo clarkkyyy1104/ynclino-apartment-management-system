@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using YnclinoAMS.Models;
+using YnclinoApartmentManagementSystem.Models;
 
-namespace YnclinoAMS.Data
+namespace YnclinoApartmentManagementSystem.Data
 {
     public class ApplicationDbContext : DbContext
     {

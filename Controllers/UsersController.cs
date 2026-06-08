@@ -2,12 +2,12 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using YnclinoAMS.Data;
-using YnclinoAMS.Helpers;
-using YnclinoAMS.Models;
-using YnclinoAMS.Models.ViewModels;
+using YnclinoApartmentManagementSystem.Data;
+using YnclinoApartmentManagementSystem.Helpers;
+using YnclinoApartmentManagementSystem.Models;
+using YnclinoApartmentManagementSystem.Models.ViewModels;
 
-namespace YnclinoAMS.Controllers
+namespace YnclinoApartmentManagementSystem.Controllers
 {
     [Authorize(Roles = "Admin,SemiAdmin")]
     public class UsersController : Controller

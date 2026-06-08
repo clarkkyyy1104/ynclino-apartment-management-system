@@ -2,11 +2,11 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using YnclinoAMS.Data;
-using YnclinoAMS.Models;
-using YnclinoAMS.Models.ViewModels;
+using YnclinoApartmentManagementSystem.Data;
+using YnclinoApartmentManagementSystem.Models;
+using YnclinoApartmentManagementSystem.Models.ViewModels;
 
-namespace YnclinoAMS.Controllers
+namespace YnclinoApartmentManagementSystem.Controllers
 {
     [Authorize]
     public class LostFoundController : Controller

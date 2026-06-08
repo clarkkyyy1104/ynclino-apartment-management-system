@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 
-namespace YnclinoAMS.Helpers
+namespace YnclinoApartmentManagementSystem.Helpers
 {
     public static class PasswordHelper
     {

@@ -2,10 +2,10 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using YnclinoAMS.Data;
-using YnclinoAMS.Models;
+using YnclinoApartmentManagementSystem.Data;
+using YnclinoApartmentManagementSystem.Models;
 
-namespace YnclinoAMS.Controllers
+namespace YnclinoApartmentManagementSystem.Controllers
 {
     [Authorize]
     public class HomeController : Controller
