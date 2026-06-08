@@ -10,12 +10,6 @@ obj/
 packages/
 *.nupkg
 
-## wwwroot/lib (restored via LibMan if used)
-wwwroot/lib/bootstrap/
-wwwroot/lib/jquery/
-wwwroot/lib/jquery-validation/
-wwwroot/lib/jquery-validation-unobtrusive/
-
 ## Local SQLite leftovers (no longer used — SQL Server now)
 *.db
 *.db-shm
