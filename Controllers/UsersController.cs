@@ -71,8 +71,14 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (!isSuperAdmin && vm.Role == "Admin")
                 ModelState.AddModelError("Role", "Only the Super Admin can create Admin accounts.");
 
+            // default the password to the username if none was entered
             if (string.IsNullOrWhiteSpace(vm.Password))
-                ModelState.AddModelError("Password", "Password is required when creating an account.");
+            {
+                vm.Password = vm.Username;
+                vm.ConfirmPassword = vm.Username;
+                ModelState.Remove(nameof(vm.Password));
+                ModelState.Remove(nameof(vm.ConfirmPassword));
+            }
 
             if (!ModelState.IsValid)
             {

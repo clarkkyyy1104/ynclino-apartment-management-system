@@ -28,6 +28,7 @@
                                 @Html.Raw(EyeIcon("pw"))
                             </button>
                         </div>
+                        <div class="form-text text-muted small">Defaults to the username. You can change it.</div>
                         <span asp-validation-for="Password" class="text-danger small"></span>
                     </div>
 
@@ -82,10 +83,26 @@
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/password.js" asp-append-version="true"></script>
     <script>
-        // block submit if any rule is unmet
+        var unameField = document.getElementById('Username');
+        var pwField = document.getElementById('pw');
+        var cpwField = document.getElementById('cpw');
+
+        // default the password to whatever username is typed, until it's edited by hand
+        var pwAuto = '';
+        unameField.addEventListener('input', function () {
+            var u = unameField.value.trim();
+            if (pwField.value === '' || pwField.value === pwAuto) {
+                pwAuto = u;
+                pwField.value = u;
+                cpwField.value = u;
+                checkStrength(u);
+            }
+        });
+
+        // username-as-password is allowed, so only enforce the rules on a custom password
         document.getElementById('userForm').addEventListener('submit', function (e) {
-            var pw = document.getElementById('pw').value;
-            if (!meetsAllRules(pw)) {
+            var pw = pwField.value;
+            if (pw !== unameField.value.trim() && !meetsAllRules(pw)) {
                 e.preventDefault();
                 document.getElementById('pwRules').classList.add('shake');
                 setTimeout(() => document.getElementById('pwRules').classList.remove('shake'), 600);
