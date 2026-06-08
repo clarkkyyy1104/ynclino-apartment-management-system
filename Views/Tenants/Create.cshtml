@@ -179,9 +179,13 @@
             if (moveIn) {
                 if (!leaseStart.value) leaseStart.value = moveIn;
                 if (!leaseEnd.value) {
-                    var d = new Date(moveIn);
-                    d.setFullYear(d.getFullYear() + 1);
-                    leaseEnd.value = d.toISOString().split('T')[0];
+                    // same day, one month after the move-in date
+                    var parts = moveIn.split('-');
+                    var d = new Date(parts[0], parts[1] - 1, parts[2]);
+                    d.setMonth(d.getMonth() + 1);
+                    var mm = String(d.getMonth() + 1).padStart(2, '0');
+                    var dd = String(d.getDate()).padStart(2, '0');
+                    leaseEnd.value = d.getFullYear() + '-' + mm + '-' + dd;
                 }
             }
         });
