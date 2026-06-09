@@ -14,7 +14,7 @@
                placeholder="Search unit number or type…" />
     </div>
     <div class="col-auto">
-        <select name="statusFilter" class="form-select" onchange="this.form.submit()">
+        <select name="statusFilter" class="form-select" style="width:229px" onchange="this.form.submit()">
             <option value="">All Statuses</option>
             <option value="Vacant" selected="@(ViewBag.StatusFilter == "Vacant")">Vacant</option>
             <option value="Occupied" selected="@(ViewBag.StatusFilter == "Occupied")">Occupied</option>

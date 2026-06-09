@@ -18,7 +18,7 @@
         </div>
     }
     <div class="col-auto">
-        <select name="statusFilter" class="form-select" onchange="this.form.submit()">
+        <select name="statusFilter" class="form-select" style="width:229px" onchange="this.form.submit()">
             <option value="">All Statuses</option>
             <option value="Pending"     selected="@(ViewBag.StatusFilter == "Pending")">Pending</option>
             <option value="In Progress" selected="@(ViewBag.StatusFilter == "In Progress")">In Progress</option>

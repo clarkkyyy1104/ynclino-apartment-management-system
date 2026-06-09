@@ -18,14 +18,14 @@
         </div>
     }
     <div class="col-auto">
-        <select name="typeFilter" class="form-select" onchange="this.form.submit()">
+        <select name="typeFilter" class="form-select" style="width:229px" onchange="this.form.submit()">
             <option value="">Lost &amp; Found</option>
             <option value="Lost"  selected="@(ViewBag.TypeFilter == "Lost")">Lost</option>
             <option value="Found" selected="@(ViewBag.TypeFilter == "Found")">Found</option>
         </select>
     </div>
     <div class="col-auto">
-        <select name="statusFilter" class="form-select" onchange="this.form.submit()">
+        <select name="statusFilter" class="form-select" style="width:229px" onchange="this.form.submit()">
             <option value="">All Statuses</option>
             <option value="Reported"  selected="@(ViewBag.StatusFilter == "Reported")">Reported</option>
             <option value="Claimed"   selected="@(ViewBag.StatusFilter == "Claimed")">Claimed</option>

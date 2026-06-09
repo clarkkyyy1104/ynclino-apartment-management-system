@@ -21,7 +21,7 @@
         </div>
     }
     <div class="col-auto">
-        <select name="statusFilter" class="form-select" onchange="this.form.submit()">
+        <select name="statusFilter" class="form-select" style="width:229px" onchange="this.form.submit()">
             <option value="">All Statuses</option>
             <option value="Unpaid"  selected="@(ViewBag.StatusFilter == "Unpaid")">Unpaid</option>
             <option value="Paid"    selected="@(ViewBag.StatusFilter == "Paid")">Paid</option>
