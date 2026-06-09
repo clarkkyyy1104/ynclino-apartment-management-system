@@ -69,9 +69,12 @@
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     <script>
         var presetPrices = { 'Studio': 3500, '1-Bedroom': 5000, '2-Bedroom': 8000, '3-Bedroom': 12000 };
+        var presetCapacity = { 'Studio': 1, '1-Bedroom': 2, '2-Bedroom': 4, '3-Bedroom': 6 };
         document.getElementById('unitTypeSelect').addEventListener('change', function () {
             var price = presetPrices[this.value];
             if (price) document.getElementById('RentPrice').value = price;
+            var capacity = presetCapacity[this.value];
+            if (capacity) document.getElementById('Capacity').value = capacity;
         });
     </script>
 }
