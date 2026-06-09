@@ -36,6 +36,12 @@
                         <li class="nav-item">
                             <a class="nav-link @(activeController == "LostFound" ? "active" : "")" asp-controller="LostFound" asp-action="Index">Lost &amp; Found</a>
                         </li>
+                        @if (User.IsInRole("Admin") || User.IsInRole("SemiAdmin"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link @(activeController == "Users" ? "active" : "")" asp-controller="Users" asp-action="Index">Staff Accounts</a>
+                            </li>
+                        }
                     </ul>
 
                     <ul class="navbar-nav ms-auto align-items-lg-center">
