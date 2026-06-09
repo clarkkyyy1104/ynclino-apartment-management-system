@@ -37,9 +37,24 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
         // GET: Units/Create
         [Authorize(Roles = "Admin,SemiAdmin")]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            return View(new UnitViewModel());
+            return View(new UnitViewModel { UnitNumber = await NextUnitNumberAsync() });
+        }
+
+        // suggests the next clean numeric unit number (highest existing + 1)
+        private async Task<string> NextUnitNumberAsync()
+        {
+            var numbers = await _context.tblUnits
+                .Select(u => u.UnitNumber)
+                .ToListAsync();
+
+            int max = numbers
+                .Select(n => int.TryParse(n, out int v) ? v : 0)
+                .DefaultIfEmpty(100)
+                .Max();
+
+            return (max + 1).ToString();
         }
 
         // POST: Units/Create
