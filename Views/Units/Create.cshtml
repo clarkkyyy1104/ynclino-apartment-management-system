@@ -68,7 +68,7 @@
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     <script>
-        var presetPrices = { 'Studio': 10000, '1-Bedroom': 15000, '2-Bedroom': 25000, '3-Bedroom': 35000 };
+        var presetPrices = { 'Studio': 3500, '1-Bedroom': 5000, '2-Bedroom': 8000, '3-Bedroom': 12000 };
         document.getElementById('unitTypeSelect').addEventListener('change', function () {
             var price = presetPrices[this.value];
             if (price) document.getElementById('RentPrice').value = price;
