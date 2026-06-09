@@ -12,48 +12,6 @@
                     @Html.AntiForgeryToken()
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
 
-                    <h6 class="section-label mb-3">Login Account</h6>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold small">Username <span class="text-muted fw-normal">(auto-generated)</span></label>
-                        <input type="text" id="usernameDisplay" class="form-control bg-light" readonly
-                               placeholder="Fill in First Name &amp; Move-In Date below" />
-                        <input asp-for="Username" type="hidden" id="usernameHidden" />
-                        <div class="form-text text-muted small">Format: FirstName + move-in month + move-in day &nbsp;(e.g. <em>Juan0315</em>)</div>
-                        <span asp-validation-for="Username" class="text-danger small"></span>
-                    </div>
-
-                    <div class="mb-2">
-                        <label asp-for="Password" class="form-label fw-semibold small"></label>
-                        <div class="pw-wrapper">
-                            <input asp-for="Password" id="pw" class="form-control pe-5" autocomplete="new-password" oninput="checkStrength(this.value)" />
-                            <button type="button" class="pw-toggle" onclick="togglePw('pw')" tabindex="-1">
-                                @Html.Raw(EyeIcon("pw"))
-                            </button>
-                        </div>
-                        <div class="form-text text-muted small">Auto-filled from Contact Number + name initials. You can change it.</div>
-                        <span asp-validation-for="Password" class="text-danger small"></span>
-                    </div>
-
-                    <ul class="pw-rules list-unstyled small mb-3 ps-1" id="pwRules">
-                        <li id="r-len"><span class="rule-icon"></span> At least 8 characters</li>
-                        <li id="r-upper"><span class="rule-icon"></span> At least one uppercase letter</li>
-                        <li id="r-lower"><span class="rule-icon"></span> At least one lowercase letter</li>
-                        <li id="r-digit"><span class="rule-icon"></span> At least one number</li>
-                        <li id="r-special"><span class="rule-icon"></span> At least one special character (!&#64;#$%^&amp;*)</li>
-                    </ul>
-
-                    <div class="mb-4">
-                        <label asp-for="ConfirmPassword" class="form-label fw-semibold small"></label>
-                        <div class="pw-wrapper">
-                            <input asp-for="ConfirmPassword" id="cpw" class="form-control pe-5" autocomplete="new-password" />
-                            <button type="button" class="pw-toggle" onclick="togglePw('cpw')" tabindex="-1">
-                                @Html.Raw(EyeIcon("cpw"))
-                            </button>
-                        </div>
-                        <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
-                    </div>
-
                     <h6 class="section-label mb-3">Tenant Profile</h6>
 
                     <div class="row mb-3">
@@ -111,6 +69,48 @@
                         </div>
                     </div>
 
+                    <h6 class="section-label mb-3">Login Account</h6>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Username <span class="text-muted fw-normal">(auto-generated)</span></label>
+                        <input type="text" id="usernameDisplay" class="form-control bg-light" readonly
+                               placeholder="Fill in First Name &amp; Move-In Date below" />
+                        <input asp-for="Username" type="hidden" id="usernameHidden" />
+                        <div class="form-text text-muted small">Format: FirstName + move-in month + move-in day &nbsp;(e.g. <em>John0315</em>)</div>
+                        <span asp-validation-for="Username" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-2">
+                        <label asp-for="Password" class="form-label fw-semibold small"></label>
+                        <div class="pw-wrapper">
+                            <input asp-for="Password" id="pw" class="form-control pe-5" autocomplete="new-password" oninput="checkStrength(this.value)" />
+                            <button type="button" class="pw-toggle" onclick="togglePw('pw')" tabindex="-1">
+                                @Html.Raw(EyeIcon("pw"))
+                            </button>
+                        </div>
+                        <div class="form-text text-muted small">Auto-filled from Contact Number + name initials. You can change it.</div>
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+
+                    <ul class="pw-rules list-unstyled small mb-3 ps-1" id="pwRules">
+                        <li id="r-len"><span class="rule-icon"></span> At least 8 characters</li>
+                        <li id="r-upper"><span class="rule-icon"></span> At least one uppercase letter</li>
+                        <li id="r-lower"><span class="rule-icon"></span> At least one lowercase letter</li>
+                        <li id="r-digit"><span class="rule-icon"></span> At least one number</li>
+                        <li id="r-special"><span class="rule-icon"></span> At least one special character (!&#64;#$%^&amp;*)</li>
+                    </ul>
+
+                    <div class="mb-4">
+                        <label asp-for="ConfirmPassword" class="form-label fw-semibold small"></label>
+                        <div class="pw-wrapper">
+                            <input asp-for="ConfirmPassword" id="cpw" class="form-control pe-5" autocomplete="new-password" />
+                            <button type="button" class="pw-toggle" onclick="togglePw('cpw')" tabindex="-1">
+                                @Html.Raw(EyeIcon("cpw"))
+                            </button>
+                        </div>
+                        <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                    </div>
+                    
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary btn-sm">Register Tenant</button>
                         <a asp-action="Index" class="btn btn-secondary btn-sm">Cancel</a>
