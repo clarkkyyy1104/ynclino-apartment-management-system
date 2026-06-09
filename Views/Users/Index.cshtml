@@ -1,13 +1,13 @@
 @model IEnumerable<YnclinoApartmentManagementSystem.Models.tblUser>
 @{
-    ViewData["Title"] = "User Accounts";
+    ViewData["Title"] = "User Management";
     bool isSuperAdmin = ViewBag.IsSuperAdmin == true;
     bool isAdmin = ViewBag.IsAdmin == true;
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
-        <h4 class="mb-0">User Accounts</h4>
+        <h4 class="mb-0">User Management</h4>
         <p class="text-muted small mb-0">Staff accounts only. Tenant accounts are managed in the Tenants module.</p>
     </div>
     @if (ViewBag.IsAdmin == true)

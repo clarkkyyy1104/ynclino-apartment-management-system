@@ -39,7 +39,7 @@
                         @if (User.IsInRole("Admin") || User.IsInRole("SemiAdmin"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link @(activeController == "Users" ? "active" : "")" asp-controller="Users" asp-action="Index">Staff Accounts</a>
+                                <a class="nav-link @(activeController == "Users" ? "active" : "")" asp-controller="Users" asp-action="Index">User Management</a>
                             </li>
                         }
                     </ul>
