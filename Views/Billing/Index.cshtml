@@ -17,11 +17,11 @@
     {
         <div class="col-auto">
             <input type="text" name="searchTerm" value="@ViewBag.SearchTerm"
-                   class="form-control" placeholder="Search tenant name…" />
+                   class="form-control" style="width:229px" placeholder="Search tenant name…" />
         </div>
     }
     <div class="col-auto">
-        <select name="statusFilter" class="form-select">
+        <select name="statusFilter" class="form-select" onchange="this.form.submit()">
             <option value="">All Statuses</option>
             <option value="Unpaid"  selected="@(ViewBag.StatusFilter == "Unpaid")">Unpaid</option>
             <option value="Paid"    selected="@(ViewBag.StatusFilter == "Paid")">Paid</option>
@@ -29,7 +29,6 @@
         </select>
     </div>
     <div class="col-auto">
-        <button type="submit" class="btn btn-outline-secondary">Filter</button>
         <a asp-action="Index" class="btn btn-link">Clear</a>
     </div>
 </form>

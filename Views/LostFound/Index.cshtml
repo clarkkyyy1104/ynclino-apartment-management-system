@@ -14,18 +14,18 @@
     {
         <div class="col-auto">
             <input type="text" name="searchTerm" value="@ViewBag.SearchTerm"
-                   class="form-control" placeholder="Search item or location…" />
+                   class="form-control" style="width:229px" placeholder="Search item or location…" />
         </div>
     }
     <div class="col-auto">
-        <select name="typeFilter" class="form-select">
+        <select name="typeFilter" class="form-select" onchange="this.form.submit()">
             <option value="">Lost &amp; Found</option>
             <option value="Lost"  selected="@(ViewBag.TypeFilter == "Lost")">Lost</option>
             <option value="Found" selected="@(ViewBag.TypeFilter == "Found")">Found</option>
         </select>
     </div>
     <div class="col-auto">
-        <select name="statusFilter" class="form-select">
+        <select name="statusFilter" class="form-select" onchange="this.form.submit()">
             <option value="">All Statuses</option>
             <option value="Reported"  selected="@(ViewBag.StatusFilter == "Reported")">Reported</option>
             <option value="Claimed"   selected="@(ViewBag.StatusFilter == "Claimed")">Claimed</option>
@@ -33,7 +33,6 @@
         </select>
     </div>
     <div class="col-auto">
-        <button type="submit" class="btn btn-outline-secondary">Filter</button>
         <a asp-action="Index" class="btn btn-link">Clear</a>
     </div>
 </form>

@@ -10,18 +10,17 @@
 
 <form method="get" class="row g-2 mb-4">
     <div class="col-auto">
-        <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" class="form-control"
+        <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" class="form-control" style="width:229px"
                placeholder="Search by name…" />
     </div>
     <div class="col-auto">
-        <select name="statusFilter" class="form-select">
+        <select name="statusFilter" class="form-select" onchange="this.form.submit()">
             <option value="Active" selected="@(ViewBag.StatusFilter == "Active")">Active</option>
             <option value="Inactive" selected="@(ViewBag.StatusFilter == "Inactive")">Inactive</option>
             <option value="" selected="@(ViewBag.StatusFilter == "")">All</option>
         </select>
     </div>
     <div class="col-auto">
-        <button type="submit" class="btn btn-outline-secondary">Filter</button>
         <a asp-action="Index" class="btn btn-link">Clear</a>
     </div>
 </form>
