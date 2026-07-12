@@ -64,8 +64,8 @@
                     <td>@user.DateCreated.ToString("MM/dd/yyyy")</td>
                     <td>
                         @{
-                            bool canEdit = isAdmin || user.Role == "Tenant";
-                            bool canDelete = !user.IsSuperAdmin && (isAdmin || user.Role == "Tenant");
+                            bool canEdit = isAdmin;
+                            bool canDelete = isAdmin && !user.IsSuperAdmin;
                         }
                         @if (canEdit)
                         {

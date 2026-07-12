@@ -27,20 +27,35 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return _context.tblUsers.Any(u => u.UserID == id && u.IsSuperAdmin);
         }
 
+        private int? CurrentUserID() =>
+            int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int id) ? id : null;
+
+        // Re-derive a unit's occupancy from its active tenants. A unit under
+        // maintenance keeps that status until an admin clears it by hand.
+        private async Task SyncUnitStatusAsync(int unitId)
+        {
+            var unit = await _context.tblUnits.FindAsync(unitId);
+            if (unit == null || unit.Status == "Under Maintenance") return;
+
+            bool hasActive = await _context.tblTenants.AnyAsync(t => t.UnitID == unitId && t.Status == "Active");
+            unit.Status = hasActive ? "Occupied" : "Vacant";
+        }
+
         // GET: Tenants
+        [Authorize(Roles = "Admin,SemiAdmin")]
         public async Task<IActionResult> Index(string? statusFilter, string? searchTerm)
         {
             var query = _context.tblTenants.Include(t => t.Unit).AsQueryable();
 
-            if (!string.IsNullOrEmpty(statusFilter))
+            // default view is Active; "All" is an explicit choice that skips filtering
+            statusFilter ??= "Active";
+            if (statusFilter is "Active" or "Inactive")
                 query = query.Where(t => t.Status == statusFilter);
-            else
-                query = query.Where(t => t.Status == "Active");
 
             if (!string.IsNullOrEmpty(searchTerm))
                 query = query.Where(t => t.FirstName.Contains(searchTerm) || t.LastName.Contains(searchTerm));
 
-            ViewBag.StatusFilter = statusFilter ?? "Active";
+            ViewBag.StatusFilter = statusFilter;
             ViewBag.SearchTerm = searchTerm;
 
             var tenants = await query.OrderBy(t => t.LastName).ThenBy(t => t.FirstName).ToListAsync();
@@ -58,6 +73,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 .FirstOrDefaultAsync(t => t.TenantID == id);
 
             if (tenant == null) return NotFound();
+
+            // a tenant may only open their own profile
+            if (User.IsInRole("Tenant") && tenant.UserID != CurrentUserID())
+                return Forbid();
+
             return View(tenant);
         }
 
@@ -85,7 +105,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                     + vm.MoveInDate.Value.ToString("MMdd");
                 string generated = baseUsername;
                 int suffix = 2;
-                while (await _context.tblUsers.AnyAsync(u => u.Username == generated))
+                while (await _context.tblUsers.AnyAsync(u => u.Username.ToLower() == generated.ToLower()))
                     generated = baseUsername + "_" + suffix++;
                 vm.Username = generated;
             }
@@ -117,13 +137,26 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (vm.LeaseStart.HasValue && vm.LeaseStart.Value.Date < today)
                 ModelState.AddModelError("LeaseStart", "Lease Start cannot be in the past.");
 
+            // the posted unit must exist and still have room
+            var unit = await _context.tblUnits.FindAsync(vm.UnitID);
+            if (unit == null)
+                ModelState.AddModelError("UnitID", "Select a valid unit.");
+            else if (unit.Status == "Under Maintenance")
+                ModelState.AddModelError("UnitID", "That unit is under maintenance and cannot take tenants.");
+            else if (await ActiveTenantCountAsync(unit.UnitID) >= unit.Capacity)
+                ModelState.AddModelError("UnitID", "That unit is already at full capacity.");
+
+            // flag an obvious duplicate registration
+            if (await IsDuplicateTenantAsync(vm.FirstName, vm.LastName, vm.ContactNumber, null))
+                ModelState.AddModelError(string.Empty, "An active tenant with the same name and contact number already exists.");
+
             if (!ModelState.IsValid)
             {
                 vm.AvailableUnits = await GetAvailableUnitsAsync();
                 return View(vm);
             }
 
-            // create the login account first so we have the UserID to link
+            // create the login account and tenant together so a failure leaves neither behind
             var user = new tblUser
             {
                 Username = vm.Username!,
@@ -133,12 +166,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 IsSuperAdmin = false,
                 DateCreated = DateTime.Now
             };
-            _context.tblUsers.Add(user);
-            await _context.SaveChangesAsync();
 
             var tenant = new tblTenant
             {
-                UserID = user.UserID,
+                User = user,
                 UnitID = vm.UnitID,
                 FirstName = vm.FirstName,
                 LastName = vm.LastName,
@@ -153,8 +184,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             };
             _context.tblTenants.Add(tenant);
 
-            var unit = await _context.tblUnits.FindAsync(vm.UnitID);
-            if (unit != null) unit.Status = "Occupied";
+            if (unit!.Status == "Vacant") unit.Status = "Occupied";
 
             await _context.SaveChangesAsync();
             TempData["Success"] = $"Tenant {tenant.FullName} has been registered with account '{user.Username}'.";
@@ -227,29 +257,76 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var tenant = await _context.tblTenants.FindAsync(id);
             if (tenant == null) return NotFound();
 
-            // update the linked account too
-            if (tenant.UserID.HasValue)
-            {
-                var linkedUser = await _context.tblUsers.FindAsync(tenant.UserID.Value);
-                if (linkedUser != null)
-                {
-                    // username must stay unique (ignore self)
-                    bool duplicate = await _context.tblUsers.AnyAsync(u => u.Username == vm.Username && u.UserID != linkedUser.UserID);
-                    if (duplicate)
-                    {
-                        ModelState.AddModelError("Username", "Username already exists.");
-                        ViewBag.IsSuperAdmin = isSuperAdmin;
-                        vm.AvailableUnits = await GetAllUnitsAsync();
-                        return View(vm);
-                    }
+            int previousUnitID = tenant.UnitID;
+            string previousStatus = tenant.Status;
+            bool becomingActive = vm.Status == "Active";
 
-                    linkedUser.Username = vm.Username!;
-                    if (isSuperAdmin && !string.IsNullOrWhiteSpace(vm.Password))
-                        linkedUser.Password = PasswordHelper.Hash(vm.Password);
+            // when the tenant is (or is becoming) active, the target unit must be valid and have room
+            if (becomingActive)
+            {
+                var targetUnit = await _context.tblUnits.FindAsync(vm.UnitID);
+                if (targetUnit == null)
+                    ModelState.AddModelError("UnitID", "Select a valid unit.");
+                else
+                {
+                    int activeInTarget = await ActiveTenantCountAsync(vm.UnitID, excludeTenantId: id);
+                    if (targetUnit.Status == "Under Maintenance")
+                        ModelState.AddModelError("UnitID", "That unit is under maintenance and cannot take tenants.");
+                    else if (activeInTarget >= targetUnit.Capacity)
+                        ModelState.AddModelError("UnitID", "That unit is already at full capacity.");
                 }
             }
 
-            int previousUnitID = tenant.UnitID;
+            if (!ModelState.IsValid)
+            {
+                ViewBag.IsSuperAdmin = isSuperAdmin;
+                vm.AvailableUnits = await GetAllUnitsAsync();
+                return View(vm);
+            }
+
+            // the username must be free (ignoring this tenant's own account)
+            bool duplicateUsername = await _context.tblUsers
+                .AnyAsync(u => u.Username.ToLower() == vm.Username!.ToLower() && u.UserID != tenant.UserID);
+            if (duplicateUsername)
+            {
+                ModelState.AddModelError("Username", "Username already exists.");
+                ViewBag.IsSuperAdmin = isSuperAdmin;
+                vm.AvailableUnits = await GetAllUnitsAsync();
+                return View(vm);
+            }
+
+            if (tenant.UserID.HasValue)
+            {
+                // update the existing linked account
+                var linkedUser = await _context.tblUsers.FindAsync(tenant.UserID.Value);
+                if (linkedUser != null)
+                {
+                    linkedUser.Username = vm.Username!;
+                    if (isSuperAdmin && !string.IsNullOrWhiteSpace(vm.Password))
+                        linkedUser.Password = PasswordHelper.Hash(vm.Password);
+
+                    // login follows the tenant's active state
+                    linkedUser.IsActive = becomingActive;
+                }
+            }
+            else
+            {
+                // tenant has no account yet — create one, generating a password if none was given
+                string password = !string.IsNullOrWhiteSpace(vm.Password)
+                    ? vm.Password!
+                    : $"{vm.ContactNumber}@{char.ToUpper(vm.FirstName[0])}{char.ToLower(vm.LastName[0])}";
+
+                var newUser = new tblUser
+                {
+                    Username = vm.Username!,
+                    Password = PasswordHelper.Hash(password),
+                    Role = "Tenant",
+                    IsActive = becomingActive,
+                    IsSuperAdmin = false,
+                    DateCreated = DateTime.Now
+                };
+                tenant.User = newUser;
+            }
 
             tenant.UnitID = vm.UnitID;
             tenant.FirstName = vm.FirstName;
@@ -257,35 +334,27 @@ namespace YnclinoApartmentManagementSystem.Controllers
             tenant.ContactNumber = vm.ContactNumber;
             tenant.EmergencyContact = vm.EmergencyContact;
             tenant.MoveInDate = vm.MoveInDate;
-            tenant.MoveOutDate = vm.MoveOutDate;
             tenant.LeaseStart = vm.LeaseStart;
             tenant.LeaseEnd = vm.LeaseEnd;
             tenant.Status = vm.Status;
 
+            // stamp a move-out when deactivating, clear it when bringing the tenant back
+            if (previousStatus == "Active" && !becomingActive)
+                tenant.MoveOutDate = vm.MoveOutDate ?? DateTime.Now;
+            else if (becomingActive)
+                tenant.MoveOutDate = null;
+            else
+                tenant.MoveOutDate = vm.MoveOutDate;
+
+            await _context.SaveChangesAsync();
+
+            // re-derive occupancy for both the old and the new unit
+            await SyncUnitStatusAsync(previousUnitID);
             if (previousUnitID != vm.UnitID)
-            {
-                var newUnit = await _context.tblUnits.FindAsync(vm.UnitID);
-                if (newUnit != null) newUnit.Status = "Occupied";
+                await SyncUnitStatusAsync(vm.UnitID);
+            await _context.SaveChangesAsync();
 
-                bool stillOccupied = await _context.tblTenants
-                    .AnyAsync(t => t.UnitID == previousUnitID && t.Status == "Active" && t.TenantID != id);
-                if (!stillOccupied)
-                {
-                    var oldUnit = await _context.tblUnits.FindAsync(previousUnitID);
-                    if (oldUnit != null) oldUnit.Status = "Vacant";
-                }
-            }
-
-            try
-            {
-                await _context.SaveChangesAsync();
-                TempData["Success"] = $"Tenant {tenant.FullName} has been updated.";
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.tblTenants.Any(t => t.TenantID == id)) return NotFound();
-                throw;
-            }
+            TempData["Success"] = $"Tenant {tenant.FullName} has been updated.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -315,14 +384,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             tenant.Status = "Inactive";
             tenant.MoveOutDate ??= DateTime.Now;
 
-            bool stillOccupied = await _context.tblTenants
-                .AnyAsync(t => t.UnitID == tenant.UnitID && t.Status == "Active" && t.TenantID != id);
-            if (!stillOccupied)
-            {
-                var unit = await _context.tblUnits.FindAsync(tenant.UnitID);
-                if (unit != null) unit.Status = "Vacant";
-            }
-
             // deactivate the linked login account as well
             if (tenant.UserID.HasValue)
             {
@@ -331,14 +392,34 @@ namespace YnclinoApartmentManagementSystem.Controllers
             }
 
             await _context.SaveChangesAsync();
+
+            await SyncUnitStatusAsync(tenant.UnitID);
+            await _context.SaveChangesAsync();
+
             TempData["Success"] = $"Tenant {tenant.FullName} has been set to Inactive.";
             return RedirectToAction(nameof(Index));
         }
 
+        private Task<int> ActiveTenantCountAsync(int unitId, int? excludeTenantId = null) =>
+            _context.tblTenants.CountAsync(t =>
+                t.UnitID == unitId &&
+                t.Status == "Active" &&
+                (excludeTenantId == null || t.TenantID != excludeTenantId));
+
+        private Task<bool> IsDuplicateTenantAsync(string firstName, string lastName, string? contact, int? excludeTenantId) =>
+            _context.tblTenants.AnyAsync(t =>
+                t.Status == "Active" &&
+                t.FirstName == firstName &&
+                t.LastName == lastName &&
+                t.ContactNumber == contact &&
+                (excludeTenantId == null || t.TenantID != excludeTenantId));
+
+        // units that aren't under maintenance and still have a free slot
         private async Task<IEnumerable<SelectListItem>> GetAvailableUnitsAsync()
         {
             return await _context.tblUnits
-                .Where(u => u.Status == "Vacant")
+                .Where(u => u.Status != "Under Maintenance"
+                            && u.Tenants.Count(t => t.Status == "Active") < u.Capacity)
                 .OrderBy(u => u.UnitNumber)
                 .Select(u => new SelectListItem
                 {

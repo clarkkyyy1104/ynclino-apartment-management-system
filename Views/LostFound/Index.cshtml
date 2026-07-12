@@ -10,13 +10,10 @@
 </div>
 
 <form method="get" class="row g-2 mb-4">
-    @if (isAdmin)
-    {
-        <div class="col-auto">
-            <input type="text" name="searchTerm" value="@ViewBag.SearchTerm"
-                   class="form-control" style="width:229px" placeholder="Search item or location…" />
-        </div>
-    }
+    <div class="col-auto">
+        <input type="text" name="searchTerm" value="@ViewBag.SearchTerm"
+               class="form-control" style="width:229px" placeholder="Search item or location…" />
+    </div>
     <div class="col-auto">
         <select name="typeFilter" class="form-select" style="width:229px" onchange="this.form.submit()">
             <option value="">Lost &amp; Found</option>
@@ -75,9 +72,15 @@
                     </td>
                     <td>
                         <a asp-action="Details" asp-route-id="@item.ItemID" class="btn btn-sm btn-outline-info">Details</a>
-                        @if (!isAdmin && item.ItemType == "Found" && item.Status == "Reported")
+                        @if (!isAdmin && item.ItemType == "Found" && item.Status == "Reported"
+                            && item.ReportedByUserID != (int?)ViewBag.CurrentUserID)
                         {
                             <a asp-action="Claim" asp-route-id="@item.ItemID" class="btn btn-sm btn-outline-success">Claim</a>
+                        }
+                        @if (isAdmin)
+                        {
+                            <a asp-action="Edit" asp-route-id="@item.ItemID" class="btn btn-sm btn-outline-primary">Edit</a>
+                            <a asp-action="Delete" asp-route-id="@item.ItemID" class="btn btn-sm btn-outline-danger">Delete</a>
                         }
                     </td>
                 </tr>

@@ -16,6 +16,8 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
 
         [MaxLength(255)]
         [DataType(DataType.Password)]
+        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$",
+            ErrorMessage = "Password must be at least 8 characters with an uppercase letter, a lowercase letter, a number, and a special character.")]
         [Display(Name = "Password")]
         public string? Password { get; set; }
 

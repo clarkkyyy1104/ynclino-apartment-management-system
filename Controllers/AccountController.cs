@@ -34,14 +34,27 @@ namespace YnclinoApartmentManagementSystem.Controllers
         public async Task<IActionResult> Login(LoginViewModel vm, string? returnUrl)
         {
             if (!ModelState.IsValid)
+            {
+                ViewBag.ReturnUrl = returnUrl;
                 return View(vm);
+            }
 
+            var username = vm.Username.Trim();
             var user = await _context.tblUsers
-                .FirstOrDefaultAsync(u => u.Username == vm.Username && u.IsActive);
+                .FirstOrDefaultAsync(u => u.Username.ToLower() == username.ToLower());
 
             if (user == null || !PasswordHelper.Verify(vm.Password, user.Password))
             {
                 ModelState.AddModelError(string.Empty, "Invalid username or password.");
+                ViewBag.ReturnUrl = returnUrl;
+                return View(vm);
+            }
+
+            // correct password on a deactivated account gets a clearer message
+            if (!user.IsActive)
+            {
+                ModelState.AddModelError(string.Empty, "This account has been deactivated. Please contact the administrator.");
+                ViewBag.ReturnUrl = returnUrl;
                 return View(vm);
             }
 
@@ -94,6 +107,18 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var user = await _context.tblUsers.FindAsync(userId);
             if (user == null)
                 return Forbid();
+
+            if (!PasswordHelper.Verify(vm.CurrentPassword, user.Password))
+            {
+                ModelState.AddModelError("CurrentPassword", "Current password is incorrect.");
+                return View(vm);
+            }
+
+            if (vm.NewPassword == vm.CurrentPassword)
+            {
+                ModelState.AddModelError("NewPassword", "New password must be different from the current one.");
+                return View(vm);
+            }
 
             user.Password = PasswordHelper.Hash(vm.NewPassword);
             await _context.SaveChangesAsync();

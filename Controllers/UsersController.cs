@@ -26,6 +26,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return _context.tblUsers.Any(u => u.UserID == id && u.IsSuperAdmin);
         }
 
+        private int? CurrentUserID() =>
+            int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int id) ? id : null;
+
         // GET: Users — staff accounts only (Admin / SemiAdmin)
         public async Task<IActionResult> Index()
         {
@@ -78,7 +81,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 return View(vm);
             }
 
-            bool duplicate = await _context.tblUsers.AnyAsync(u => u.Username == vm.Username);
+            bool duplicate = await _context.tblUsers.AnyAsync(u => u.Username.ToLower() == vm.Username.ToLower());
             if (duplicate)
             {
                 ModelState.AddModelError("Username", "Username already exists.");
@@ -126,6 +129,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
             ViewBag.IsSuperAdmin = isSuperAdmin;
             ViewBag.IsAdmin = isAdmin;
             ViewBag.TargetIsSuperAdmin = user.IsSuperAdmin;
+            ViewBag.CanResetPassword = isSuperAdmin || (isAdmin && user.Role == "SemiAdmin");
+            ViewBag.TargetRole = user.Role;
 
             return View(new UserViewModel
             {
@@ -158,13 +163,18 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (!isAdmin)
                 return Forbid();
 
-            if (!isSuperAdmin || string.IsNullOrWhiteSpace(vm.Password))
+            bool isSelf = user.UserID == CurrentUserID();
+
+            // super admin can reset any staff password, a regular admin only semi-admin ones
+            bool canResetPassword = isSuperAdmin || (isAdmin && user.Role == "SemiAdmin");
+            if (!canResetPassword || string.IsNullOrWhiteSpace(vm.Password))
             {
                 ModelState.Remove("Password");
                 ModelState.Remove("ConfirmPassword");
             }
 
-            if (!isSuperAdmin && vm.Role == "Admin")
+            // promoting to Admin is super-admin territory; keeping an existing Admin role is fine
+            if (!isSuperAdmin && vm.Role == "Admin" && user.Role != "Admin")
                 ModelState.AddModelError("Role", "Only the Super Admin can assign the Admin role.");
 
             if (vm.Role == "Tenant")
@@ -178,21 +188,31 @@ namespace YnclinoApartmentManagementSystem.Controllers
                     ModelState.AddModelError("IsActive", "The Super Admin account cannot be deactivated.");
             }
 
+            // don't let someone demote or deactivate the account they're signed in with
+            if (isSelf && vm.Role != user.Role)
+                ModelState.AddModelError("Role", "You cannot change the role of your own account.");
+            if (isSelf && !vm.IsActive)
+                ModelState.AddModelError("IsActive", "You cannot deactivate your own account.");
+
             if (!ModelState.IsValid)
             {
                 ViewBag.IsSuperAdmin = isSuperAdmin;
                 ViewBag.IsAdmin = isAdmin;
                 ViewBag.TargetIsSuperAdmin = user.IsSuperAdmin;
+                ViewBag.CanResetPassword = canResetPassword;
+                ViewBag.TargetRole = user.Role;
                 return View(vm);
             }
 
-            bool duplicate = await _context.tblUsers.AnyAsync(u => u.Username == vm.Username && u.UserID != id);
+            bool duplicate = await _context.tblUsers.AnyAsync(u => u.Username.ToLower() == vm.Username.ToLower() && u.UserID != id);
             if (duplicate)
             {
                 ModelState.AddModelError("Username", "Username already exists.");
                 ViewBag.IsSuperAdmin = isSuperAdmin;
                 ViewBag.IsAdmin = isAdmin;
                 ViewBag.TargetIsSuperAdmin = user.IsSuperAdmin;
+                ViewBag.CanResetPassword = canResetPassword;
+                ViewBag.TargetRole = user.Role;
                 return View(vm);
             }
 
@@ -200,7 +220,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             user.Role     = vm.Role;
             user.IsActive = vm.IsActive;
 
-            if (isSuperAdmin && !string.IsNullOrWhiteSpace(vm.Password))
+            if (canResetPassword && !string.IsNullOrWhiteSpace(vm.Password))
                 user.Password = PasswordHelper.Hash(vm.Password);
 
             await _context.SaveChangesAsync();
@@ -231,6 +251,12 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (!User.IsInRole("Admin"))
                 return Forbid();
 
+            if (user.UserID == CurrentUserID())
+            {
+                TempData["Error"] = "You cannot delete the account you are signed in with.";
+                return RedirectToAction(nameof(Index));
+            }
+
             return View(user);
         }
 
@@ -256,6 +282,23 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             if (!User.IsInRole("Admin"))
                 return Forbid();
+
+            if (user.UserID == CurrentUserID())
+            {
+                TempData["Error"] = "You cannot delete the account you are signed in with.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // lost & found rows keep a hard reference to their reporter/claimant,
+            // so deleting this account would fail at the database level
+            bool hasLostFoundRecords =
+                await _context.tblLostFoundItems.AnyAsync(l => l.ReportedByUserID == id) ||
+                await _context.tblClaimRequests.AnyAsync(c => c.ClaimantUserID == id);
+            if (hasLostFoundRecords)
+            {
+                TempData["Error"] = $"Account '{user.Username}' has Lost & Found records and cannot be deleted. Deactivate it instead.";
+                return RedirectToAction(nameof(Index));
+            }
 
             _context.tblUsers.Remove(user);
             await _context.SaveChangesAsync();

@@ -54,14 +54,25 @@
                     <dt class="col-sm-4">Date Resolved</dt>
                     <dd class="col-sm-8">@(Model.DateResolved?.ToString("MMM dd, yyyy") ?? "—")</dd>
 
-                    <dt class="col-sm-4">Admin Notes</dt>
-                    <dd class="col-sm-8">@(Model.AdminNotes ?? "—")</dd>
+                    @if (User.IsInRole("Admin") || User.IsInRole("SemiAdmin"))
+                    {
+                        <dt class="col-sm-4">Admin Notes</dt>
+                        <dd class="col-sm-8">@(Model.AdminNotes ?? "—")</dd>
+                    }
                 </dl>
 
                 <div class="d-flex gap-2 mt-3">
                     @if (User.IsInRole("Admin") || User.IsInRole("SemiAdmin"))
                     {
                         <a asp-action="Edit" asp-route-id="@Model.RequestID" class="btn btn-primary btn-sm">Edit</a>
+                    }
+                    else if (Model.Status == "Pending")
+                    {
+                        <form asp-action="Cancel" asp-route-id="@Model.RequestID" method="post" class="d-inline"
+                              onsubmit="return confirm('Cancel this request?')">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-danger btn-sm">Cancel Request</button>
+                        </form>
                     }
                     <a asp-action="Index" class="btn btn-secondary btn-sm">Back</a>
                 </div>

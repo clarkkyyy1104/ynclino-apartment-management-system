@@ -43,22 +43,40 @@
                         </span>
                     </dd>
 
+                    <dt class="col-sm-4">Login Account</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.User != null)
+                        {
+                            @Model.User.Username
+                            <span class="badge @(Model.User.IsActive ? "bg-success" : "bg-secondary") ms-1">
+                                @(Model.User.IsActive ? "Active" : "Disabled")
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">No account</span>
+                        }
+                    </dd>
+
                     <dt class="col-sm-4">Date Recorded</dt>
                     <dd class="col-sm-8">@Model.DateRecorded.ToString("MMMM dd, yyyy")</dd>
                 </dl>
             </div>
-            <div class="card-footer d-flex gap-2">
-                <a asp-action="Edit" asp-route-id="@Model.TenantID" class="btn btn-primary btn-sm">Edit</a>
-                @if (Model.Status == "Active")
-                {
-                    <form asp-action="Delete" asp-route-id="@Model.TenantID" method="post" class="d-inline"
-                          onsubmit="return confirm('Deactivate this tenant?')">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-outline-danger btn-sm">Deactivate</button>
-                    </form>
-                }
-                <a asp-action="Index" class="btn btn-outline-secondary btn-sm">Back to List</a>
-            </div>
+            @if (User.IsInRole("Admin") || User.IsInRole("SemiAdmin"))
+            {
+                <div class="card-footer d-flex gap-2">
+                    <a asp-action="Edit" asp-route-id="@Model.TenantID" class="btn btn-primary btn-sm">Edit</a>
+                    @if (Model.Status == "Active")
+                    {
+                        <form asp-action="Delete" asp-route-id="@Model.TenantID" method="post" class="d-inline"
+                              onsubmit="return confirm('Deactivate this tenant?')">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-danger btn-sm">Deactivate</button>
+                        </form>
+                    }
+                    <a asp-action="Index" class="btn btn-outline-secondary btn-sm">Back to List</a>
+                </div>
+            }
         </div>
     </div>
 </div>

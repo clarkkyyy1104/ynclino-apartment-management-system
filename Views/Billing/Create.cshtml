@@ -70,11 +70,9 @@
                 .then(r => r.json())
                 .then(function(data) {
                     document.getElementById('amountDueInput').value = data.suggestedAmount.toFixed(2);
-                    var hint = 'Unit price: ₱' + data.unitPrice.toLocaleString('en-PH', {minimumFractionDigits:2});
+                    var hint = 'Suggested: one month of rent';
                     if (data.unpaidMonths > 0)
-                        hint += ' · ' + data.unpaidMonths + ' unpaid month(s) + current = ' + (data.unpaidMonths + 1) + ' months';
-                    else
-                        hint += ' · 1 month (current)';
+                        hint += ' · note: tenant has ' + data.unpaidMonths + ' unpaid month(s) still outstanding';
                     document.getElementById('amountHint').textContent = hint;
                 });
         });

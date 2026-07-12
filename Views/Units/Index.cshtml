@@ -1,11 +1,15 @@
 @model IEnumerable<YnclinoApartmentManagementSystem.Models.tblUnit>
 @{
     ViewData["Title"] = "Units";
+    bool isStaff = User.IsInRole("Admin") || User.IsInRole("SemiAdmin");
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3 class="fw-bold mb-0">Units</h3>
-    <a asp-action="Create" class="btn btn-primary">+ Add Unit</a>
+    @if (isStaff)
+    {
+        <a asp-action="Create" class="btn btn-primary">+ Add Unit</a>
+    }
 </div>
 
 <form method="get" class="row g-2 mb-4">
@@ -25,7 +29,6 @@
         <a asp-action="Index" class="btn btn-link">Clear</a>
     </div>
 </form>
-
 
 <div class="table-responsive">
     <table class="table table-hover align-middle">
@@ -60,8 +63,12 @@
                     </td>
                     <td>@unit.DateAdded.ToString("MMM dd, yyyy")</td>
                     <td>
-                        <a asp-action="Edit" asp-route-id="@unit.UnitID" class="btn btn-sm btn-outline-primary">Edit</a>
-                        <a asp-action="Delete" asp-route-id="@unit.UnitID" class="btn btn-sm btn-outline-danger">Delete</a>
+                        <a asp-action="Details" asp-route-id="@unit.UnitID" class="btn btn-sm btn-outline-info">Details</a>
+                        @if (isStaff)
+                        {
+                            <a asp-action="Edit" asp-route-id="@unit.UnitID" class="btn btn-sm btn-outline-primary">Edit</a>
+                            <a asp-action="Delete" asp-route-id="@unit.UnitID" class="btn btn-sm btn-outline-danger">Delete</a>
+                        }
                     </td>
                 </tr>
             }

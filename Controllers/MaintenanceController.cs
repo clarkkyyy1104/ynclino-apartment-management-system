@@ -26,8 +26,14 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             var uid = CurrentUserID();
             if (uid == null) return null;
-            return await _context.tblTenants.FirstOrDefaultAsync(t => t.UserID == uid && t.Status == "Active");
+            return await _context.tblTenants
+                .Include(t => t.Unit)
+                .FirstOrDefaultAsync(t => t.UserID == uid && t.Status == "Active");
         }
+
+        private static readonly string[] Categories = { "Plumbing", "Electrical", "Structural", "Appliance", "Other" };
+        private static readonly string[] Priorities = { "Low", "Medium", "High" };
+        private static readonly string[] Statuses = { "Pending", "In Progress", "Resolved", "Cancelled" };
 
         // GET: Maintenance
         public async Task<IActionResult> Index(string? statusFilter, string? searchTerm)
@@ -85,12 +91,14 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (User.IsInRole("Tenant"))
             {
                 var tenant = await GetCurrentTenantAsync();
-                if (tenant != null)
+                if (tenant == null)
                 {
-                    vm.TenantID = tenant.TenantID;
-                    vm.TenantName = tenant.FullName;
-                    vm.UnitNumber = tenant.Unit?.UnitNumber;
+                    TempData["Error"] = "You have no active tenancy on file, so you cannot submit a request.";
+                    return RedirectToAction(nameof(Index));
                 }
+                vm.TenantID = tenant.TenantID;
+                vm.TenantName = tenant.FullName;
+                vm.UnitNumber = tenant.Unit?.UnitNumber;
             }
             else
             {
@@ -105,12 +113,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(MaintenanceViewModel vm)
         {
-            if (!ModelState.IsValid)
-            {
-                if (!User.IsInRole("Tenant"))
-                    vm.AvailableTenants = await GetActiveTenantListAsync();
-                return View(vm);
-            }
+            if (!Categories.Contains(vm.Category))
+                ModelState.AddModelError("Category", "Select a valid category.");
+            if (!Priorities.Contains(vm.Priority))
+                ModelState.AddModelError("Priority", "Select a valid priority.");
 
             // tenants can only submit for themselves
             if (User.IsInRole("Tenant"))
@@ -118,6 +124,17 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 var tenant = await GetCurrentTenantAsync();
                 if (tenant == null) return Forbid();
                 vm.TenantID = tenant.TenantID;
+            }
+            else if (!await _context.tblTenants.AnyAsync(t => t.TenantID == vm.TenantID && t.Status == "Active"))
+            {
+                ModelState.AddModelError("TenantID", "Select a valid tenant.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                if (!User.IsInRole("Tenant"))
+                    vm.AvailableTenants = await GetActiveTenantListAsync();
+                return View(vm);
             }
 
             var request = new tblMaintenanceRequest
@@ -137,6 +154,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // GET: Maintenance/Edit/5
+        [Authorize(Roles = "Admin,SemiAdmin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -159,8 +177,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 Status = request.Status,
                 DateSubmitted = request.DateSubmitted,
                 DateResolved = request.DateResolved,
-                AdminNotes = request.AdminNotes,
-                AvailableTenants = await GetActiveTenantListAsync()
+                AdminNotes = request.AdminNotes
             };
             return View(vm);
         }
@@ -168,17 +185,29 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // POST: Maintenance/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,SemiAdmin")]
         public async Task<IActionResult> Edit(int id, MaintenanceViewModel vm)
         {
             if (id != vm.RequestID) return NotFound();
+
+            if (!Categories.Contains(vm.Category))
+                ModelState.AddModelError("Category", "Select a valid category.");
+            if (!Priorities.Contains(vm.Priority))
+                ModelState.AddModelError("Priority", "Select a valid priority.");
+            if (!Statuses.Contains(vm.Status))
+                ModelState.AddModelError("Status", "Select a valid status.");
+
+            var request = await _context.tblMaintenanceRequests
+                .Include(m => m.Tenant).ThenInclude(t => t!.Unit)
+                .FirstOrDefaultAsync(m => m.RequestID == id);
+            if (request == null) return NotFound();
+
             if (!ModelState.IsValid)
             {
-                vm.AvailableTenants = await GetActiveTenantListAsync();
+                vm.TenantName = request.Tenant?.FullName;
+                vm.UnitNumber = request.Tenant?.Unit?.UnitNumber;
                 return View(vm);
             }
-
-            var request = await _context.tblMaintenanceRequests.FindAsync(id);
-            if (request == null) return NotFound();
 
             request.Category = vm.Category;
             request.Description = vm.Description;
@@ -196,7 +225,34 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // POST: Maintenance/Cancel/5 — a tenant withdraws their own pending request
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Cancel(int id)
+        {
+            var request = await _context.tblMaintenanceRequests.FindAsync(id);
+            if (request == null) return NotFound();
+
+            if (User.IsInRole("Tenant"))
+            {
+                var tenant = await GetCurrentTenantAsync();
+                if (tenant == null || request.TenantID != tenant.TenantID) return Forbid();
+            }
+
+            if (request.Status != "Pending")
+            {
+                TempData["Error"] = "Only a pending request can be cancelled.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            request.Status = "Cancelled";
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Maintenance request cancelled.";
+            return RedirectToAction(nameof(Index));
+        }
+
         // GET: Maintenance/Delete/5
+        [Authorize(Roles = "Admin,SemiAdmin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -212,6 +268,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // POST: Maintenance/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,SemiAdmin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var request = await _context.tblMaintenanceRequests.FindAsync(id);

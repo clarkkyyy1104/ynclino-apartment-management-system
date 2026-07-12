@@ -35,6 +35,19 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return View(units);
         }
 
+        // GET: Units/Details/5
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var unit = await _context.tblUnits
+                .Include(u => u.Tenants)
+                .FirstOrDefaultAsync(u => u.UnitID == id);
+
+            if (unit == null) return NotFound();
+            return View(unit);
+        }
+
         // GET: Units/Create
         [Authorize(Roles = "Admin,SemiAdmin")]
         public async Task<IActionResult> Create()
@@ -125,6 +138,19 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 return View(vm);
             }
 
+            // keep the status honest against actual tenancy
+            bool hasActiveTenants = await _context.tblTenants.AnyAsync(t => t.UnitID == id && t.Status == "Active");
+            if (vm.Status == "Vacant" && hasActiveTenants)
+            {
+                ModelState.AddModelError("Status", "This unit still has an active tenant. Deactivate or move the tenant first.");
+                return View(vm);
+            }
+            if (vm.Status == "Occupied" && !hasActiveTenants)
+            {
+                ModelState.AddModelError("Status", "This unit has no active tenant. Register a tenant to mark it occupied.");
+                return View(vm);
+            }
+
             var unit = await _context.tblUnits.FindAsync(id);
             if (unit == null) return NotFound();
 
@@ -174,6 +200,13 @@ namespace YnclinoApartmentManagementSystem.Controllers
             {
                 TempData["Error"] = "Cannot delete a unit with active tenants.";
                 return RedirectToAction(nameof(Delete), new { id });
+            }
+
+            // past tenants keep a hard reference to the unit, so the delete would fail anyway
+            if (unit.Tenants.Any())
+            {
+                TempData["Error"] = $"Unit {unit.UnitNumber} has tenancy history and cannot be deleted.";
+                return RedirectToAction(nameof(Index));
             }
 
             _context.tblUnits.Remove(unit);

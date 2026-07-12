@@ -71,12 +71,17 @@
                     </td>
                     <td>
                         <a asp-action="Details" asp-route-id="@b.BillingID" class="btn btn-sm btn-outline-info">Details</a>
+                        @if (isAdmin)
+                        {
+                            <a asp-action="Edit" asp-route-id="@b.BillingID" class="btn btn-sm btn-outline-primary">Edit</a>
+                            <a asp-action="Delete" asp-route-id="@b.BillingID" class="btn btn-sm btn-outline-danger">Delete</a>
+                        }
                     </td>
                 </tr>
             }
             @if (!Model.Any())
             {
-                <tr><td colspan="8" class="text-center text-muted py-4">No billing records found.</td></tr>
+                <tr><td colspan="@(isAdmin ? 8 : 6)" class="text-center text-muted py-4">No billing records found.</td></tr>
             }
         </tbody>
     </table>

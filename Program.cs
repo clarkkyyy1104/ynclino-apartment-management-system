@@ -19,6 +19,43 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.LoginPath = "/Account/Login";
         options.LogoutPath = "/Account/Logout";
         options.AccessDeniedPath = "/Account/AccessDenied";
+
+        // re-check the account on every request so a deactivated user
+        // (or a stale role claim) doesn't keep working on an old cookie
+        options.Events.OnValidatePrincipal = async context =>
+        {
+            var idStr = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(idStr, out int userId))
+            {
+                context.RejectPrincipal();
+                return;
+            }
+
+            var db = context.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
+            var account = await db.tblUsers.AsNoTracking().FirstOrDefaultAsync(u => u.UserID == userId);
+
+            if (account == null || !account.IsActive)
+            {
+                context.RejectPrincipal();
+                await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                return;
+            }
+
+            // rebuild the cookie if the username or role changed since login
+            if (context.Principal?.FindFirstValue(ClaimTypes.Role) != account.Role ||
+                context.Principal?.FindFirstValue(ClaimTypes.Name) != account.Username)
+            {
+                var claims = new List<Claim>
+                {
+                    new(ClaimTypes.NameIdentifier, account.UserID.ToString()),
+                    new(ClaimTypes.Name, account.Username),
+                    new(ClaimTypes.Role, account.Role)
+                };
+                var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                context.ReplacePrincipal(new ClaimsPrincipal(identity));
+                context.ShouldRenew = true;
+            }
+        };
     });
 
 var app = builder.Build();
@@ -54,28 +91,6 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
-
-// dev only: auto-login as admin so we can test CRUD without the login page.
-// remove this whole app.Use block before going to production.
-app.Use(async (ctx, next) =>
-{
-    if (!ctx.User.Identity!.IsAuthenticated && !ctx.Request.Path.StartsWithSegments("/Account"))
-    {
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, "1"),
-            new(ClaimTypes.Name, "admin"),
-            new(ClaimTypes.Role, "Admin"),
-            new("IsSuperAdmin", "true")
-        };
-        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        var principal = new ClaimsPrincipal(identity);
-        await ctx.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
-        ctx.User = principal;
-    }
-    await next();
-});
-
 app.UseAuthorization();
 
 app.MapControllerRoute(

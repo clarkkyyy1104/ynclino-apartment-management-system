@@ -67,20 +67,16 @@
                                 <p class="text-muted small mb-2">Submitted: @claim.SubmittedAt.ToString("MMM dd, yyyy hh:mm tt")</p>
                                 @if (claim.Status == "Pending")
                                 {
-                                    <div class="d-flex gap-2">
-                                        <form asp-action="ReviewClaim" method="post" class="d-inline">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="claimId" value="@claim.ClaimID" />
-                                            <input type="hidden" name="decision" value="Approved" />
-                                            <button type="submit" class="btn btn-success btn-sm">Approve</button>
-                                        </form>
-                                        <form asp-action="ReviewClaim" method="post" class="d-inline">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="claimId" value="@claim.ClaimID" />
-                                            <input type="hidden" name="decision" value="Rejected" />
-                                            <button type="submit" class="btn btn-outline-danger btn-sm">Reject</button>
-                                        </form>
-                                    </div>
+                                    <form asp-action="ReviewClaim" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="claimId" value="@claim.ClaimID" />
+                                        <textarea name="adminNotes" class="form-control form-control-sm mb-2" rows="2"
+                                                  placeholder="Optional note (shown to the claimant)…"></textarea>
+                                        <div class="d-flex gap-2">
+                                            <button type="submit" name="decision" value="Approved" class="btn btn-success btn-sm">Approve</button>
+                                            <button type="submit" name="decision" value="Rejected" class="btn btn-outline-danger btn-sm">Reject</button>
+                                        </div>
+                                    </form>
                                 }
                                 @if (!string.IsNullOrEmpty(claim.AdminNotes))
                                 {
@@ -91,10 +87,47 @@
                     }
                 }
 
+                @if (User.IsInRole("Tenant"))
+                {
+                    var myClaims = ViewBag.MyClaims as IEnumerable<YnclinoApartmentManagementSystem.Models.tblClaimRequest> ?? new List<YnclinoApartmentManagementSystem.Models.tblClaimRequest>();
+                    if (myClaims.Any())
+                    {
+                        <hr />
+                        <h6 class="fw-semibold mb-2">My Claim</h6>
+                        @foreach (var claim in myClaims)
+                        {
+                            <div class="border rounded p-3 mb-2 @(claim.Status == "Pending" ? "border-warning" : claim.Status == "Approved" ? "border-success" : "border-secondary")">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <span class="text-muted small">Submitted @claim.SubmittedAt.ToString("MMM dd, yyyy")</span>
+                                    <span class="badge @(claim.Status == "Pending" ? "bg-warning text-dark" : claim.Status == "Approved" ? "bg-success" : "bg-secondary")">@claim.Status</span>
+                                </div>
+                                <p class="small mb-1">@claim.VerificationDetails</p>
+                                @if (!string.IsNullOrEmpty(claim.AdminNotes))
+                                {
+                                    <p class="text-muted small mb-0">Admin note: @claim.AdminNotes</p>
+                                }
+                            </div>
+                        }
+                    }
+                }
+
                 <div class="d-flex gap-2 mt-3">
                     @if (User.IsInRole("Admin") || User.IsInRole("SemiAdmin"))
                     {
                         <a asp-action="Edit" asp-route-id="@Model.ItemID" class="btn btn-primary btn-sm">Edit</a>
+                        @if (Model.Status == "Claimed")
+                        {
+                            <form asp-action="Resolve" asp-route-id="@Model.ItemID" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-outline-success btn-sm">Mark Resolved</button>
+                            </form>
+                        }
+                        <a asp-action="Delete" asp-route-id="@Model.ItemID" class="btn btn-outline-danger btn-sm">Delete</a>
+                    }
+                    else if (Model.ItemType == "Found" && Model.Status == "Reported"
+                        && Model.ReportedByUserID != (int?)ViewBag.CurrentUserID)
+                    {
+                        <a asp-action="Claim" asp-route-id="@Model.ItemID" class="btn btn-outline-success btn-sm">Claim This Item</a>
                     }
                     <a asp-action="Index" class="btn btn-secondary btn-sm">Back</a>
                 </div>

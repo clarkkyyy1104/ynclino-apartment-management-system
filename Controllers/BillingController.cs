@@ -29,9 +29,26 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return await _context.tblTenants.FirstOrDefaultAsync(t => t.UserID == uid && t.Status == "Active");
         }
 
+        private static readonly string[] AllowedStatuses = { "Unpaid", "Paid", "Overdue" };
+
+        // flip any unpaid bill whose due date has passed to Overdue
+        private async Task MarkOverdueBillsAsync()
+        {
+            var overdue = await _context.tblBillings
+                .Where(b => b.Status == "Unpaid" && b.DueDate < DateTime.Today)
+                .ToListAsync();
+            if (overdue.Count == 0) return;
+
+            foreach (var bill in overdue)
+                bill.Status = "Overdue";
+            await _context.SaveChangesAsync();
+        }
+
         // GET: Billing
         public async Task<IActionResult> Index(string? statusFilter, string? searchTerm)
         {
+            await MarkOverdueBillsAsync();
+
             IQueryable<tblBilling> query = _context.tblBillings
                 .Include(b => b.Tenant).ThenInclude(t => t!.Unit);
 
@@ -79,6 +96,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // GET: Billing/Create
+        [Authorize(Roles = "Admin,SemiAdmin")]
         public async Task<IActionResult> Create()
         {
             var vm = new BillingViewModel
@@ -91,8 +109,17 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // POST: Billing/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,SemiAdmin")]
         public async Task<IActionResult> Create(BillingViewModel vm)
         {
+            var period = new DateTime(vm.BillingPeriod.Year, vm.BillingPeriod.Month, 1);
+
+            // one bill per tenant per month
+            bool alreadyBilled = await _context.tblBillings
+                .AnyAsync(b => b.TenantID == vm.TenantID && b.BillingPeriod == period);
+            if (alreadyBilled)
+                ModelState.AddModelError(string.Empty, "This tenant already has a bill for the selected month.");
+
             if (!ModelState.IsValid)
             {
                 vm.AvailableTenants = await GetActiveTenantListAsync();
@@ -102,7 +129,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var billing = new tblBilling
             {
                 TenantID = vm.TenantID,
-                BillingPeriod = new DateTime(vm.BillingPeriod.Year, vm.BillingPeriod.Month, 1),
+                BillingPeriod = period,
                 AmountDue = vm.AmountDue,
                 DueDate = vm.DueDate,
                 Status = "Unpaid",
@@ -117,6 +144,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // GET: Billing/Edit/5
+        [Authorize(Roles = "Admin,SemiAdmin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -139,7 +167,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 DatePaid = billing.DatePaid,
                 Status = billing.Status,
                 Notes = billing.Notes,
-                AvailableTenants = await GetActiveTenantListAsync()
+                AvailableTenants = await GetTenantListForBillAsync(billing.TenantID)
             };
             return View(vm);
         }
@@ -147,12 +175,23 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // POST: Billing/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,SemiAdmin")]
         public async Task<IActionResult> Edit(int id, BillingViewModel vm)
         {
             if (id != vm.BillingID) return NotFound();
+
+            if (!AllowedStatuses.Contains(vm.Status))
+                ModelState.AddModelError("Status", "Select a valid status.");
+
+            // keep payment fields consistent with the recorded amount
+            if (vm.Status == "Paid" && (vm.AmountPaid == null || vm.AmountPaid < vm.AmountDue))
+                ModelState.AddModelError("AmountPaid", "A paid bill must record a payment of at least the amount due.");
+            if (vm.AmountPaid != null && vm.AmountPaid < 0)
+                ModelState.AddModelError("AmountPaid", "Amount paid cannot be negative.");
+
             if (!ModelState.IsValid)
             {
-                vm.AvailableTenants = await GetActiveTenantListAsync();
+                vm.AvailableTenants = await GetTenantListForBillAsync(vm.TenantID);
                 return View(vm);
             }
 
@@ -164,9 +203,14 @@ namespace YnclinoApartmentManagementSystem.Controllers
             billing.AmountDue = vm.AmountDue;
             billing.DueDate = vm.DueDate;
             billing.AmountPaid = vm.AmountPaid;
-            billing.DatePaid = vm.DatePaid;
             billing.Status = vm.Status;
             billing.Notes = vm.Notes;
+
+            // stamp the payment date automatically when a bill is marked paid
+            if (vm.Status == "Paid")
+                billing.DatePaid = vm.DatePaid ?? DateTime.Today;
+            else
+                billing.DatePaid = null;
 
             await _context.SaveChangesAsync();
             TempData["Success"] = "Billing record updated.";
@@ -174,6 +218,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // GET: Billing/Delete/5
+        [Authorize(Roles = "Admin,SemiAdmin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -189,6 +234,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // POST: Billing/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,SemiAdmin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var billing = await _context.tblBillings.FindAsync(id);
@@ -200,25 +246,24 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // ajax helper - suggested amount = unpaid months times unit price
+        // ajax helper - suggests the unit's monthly rent and reports any arrears
         [HttpGet]
+        [Authorize(Roles = "Admin,SemiAdmin")]
         public async Task<IActionResult> GetSuggestedAmount(int tenantId)
         {
             var tenant = await _context.tblTenants
                 .Include(t => t.Unit)
                 .FirstOrDefaultAsync(t => t.TenantID == tenantId);
             if (tenant == null || tenant.Unit == null)
-                return Json(new { unitPrice = 0m, suggestedAmount = 0m, unpaidMonths = 0 });
+                return Json(new { suggestedAmount = 0m, unpaidMonths = 0 });
 
             var unpaidCount = await _context.tblBillings
                 .CountAsync(b => b.TenantID == tenantId && (b.Status == "Unpaid" || b.Status == "Overdue"));
 
-            // current month plus whatever's outstanding
-            var months = unpaidCount + 1;
+            // each month is its own bill, so suggest one month's rent
             return Json(new {
-                unitPrice = tenant.Unit.RentPrice,
-                unpaidMonths = unpaidCount,
-                suggestedAmount = tenant.Unit.RentPrice * months
+                suggestedAmount = tenant.Unit.RentPrice,
+                unpaidMonths = unpaidCount
             });
         }
 
@@ -227,6 +272,21 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return await _context.tblTenants
                 .Include(t => t.Unit)
                 .Where(t => t.Status == "Active")
+                .OrderBy(t => t.LastName)
+                .Select(t => new SelectListItem
+                {
+                    Value = t.TenantID.ToString(),
+                    Text = $"{t.LastName}, {t.FirstName} — Unit {t.Unit!.UnitNumber}"
+                })
+                .ToListAsync();
+        }
+
+        // like the active list, but always includes the bill's own tenant even if they moved out
+        private async Task<IEnumerable<SelectListItem>> GetTenantListForBillAsync(int currentTenantId)
+        {
+            return await _context.tblTenants
+                .Include(t => t.Unit)
+                .Where(t => t.Status == "Active" || t.TenantID == currentTenantId)
                 .OrderBy(t => t.LastName)
                 .Select(t => new SelectListItem
                 {
