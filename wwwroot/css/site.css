@@ -225,3 +225,14 @@ footer {
 }
 
 .shake { animation: shake .4s ease; }
+
+/* red notification dot on the nav links */
+.nav-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: #dc3545;
+    border-radius: 50%;
+    margin-left: 3px;
+    vertical-align: top;
+}
