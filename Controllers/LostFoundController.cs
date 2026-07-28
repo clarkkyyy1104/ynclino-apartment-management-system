@@ -69,7 +69,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (User.IsInRole("Tenant") && item.ItemType != "Found" && item.ReportedByUserID != CurrentUserID())
                 return Forbid();
 
-            if (User.IsInRole("Admin") || User.IsInRole("SemiAdmin"))
+            if (User.IsInRole("Admin"))
             {
                 ViewBag.Claims = await _context.tblClaimRequests
                     .Include(c => c.Claimant)
@@ -122,7 +122,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // GET: LostFound/Edit/5
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -152,7 +152,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // POST: LostFound/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id, LostFoundViewModel vm)
         {
             if (id != vm.ItemID) return NotFound();
@@ -178,7 +178,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // GET: LostFound/Delete/5
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -194,7 +194,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // POST: LostFound/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var item = await _context.tblLostFoundItems.FindAsync(id);
@@ -288,7 +288,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // POST: LostFound/ReviewClaim
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ReviewClaim(int claimId, string decision, string? adminNotes)
         {
             if (decision != "Approved" && decision != "Rejected")
@@ -331,7 +331,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // POST: LostFound/Resolve/5 — close out an item that's been handed over
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Resolve(int id)
         {
             var item = await _context.tblLostFoundItems.FindAsync(id);

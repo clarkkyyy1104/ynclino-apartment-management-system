@@ -191,7 +191,7 @@
       <tr><td>Login required?</td><td>Yes — cookie auth</td></tr>
       <tr><td>Default user</td><td>admin / Admin@123</td></tr>
       <tr><td>Modules</td><td>All 6 + Dashboard</td></tr>
-      <tr><td>Roles</td><td>Admin, SemiAdmin, Tenant</td></tr>
+      <tr><td>Roles</td><td>Admin, Tenant</td></tr>
       <tr><td>DB tables</td><td>7 tables</td></tr>
     </table>
   </div>
@@ -333,9 +333,9 @@ HTTP Response → Browser renders the page</span></div>
   <tr><td><code>UserID</code></td><td>int (PK)</td><td>Auto-incremented primary key</td></tr>
   <tr><td><code>Username</code></td><td>string (50)</td><td>Must be unique across all users</td></tr>
   <tr><td><code>Password</code></td><td>string (255)</td><td>PBKDF2-SHA256 hash — never plain text</td></tr>
-  <tr><td><code>Role</code></td><td>string (20)</td><td><code>Admin</code> | <code>SemiAdmin</code> | <code>Tenant</code></td></tr>
+  <tr><td><code>Role</code></td><td>string (20)</td><td><code>Admin</code> | <code>Tenant</code></td></tr>
   <tr><td><code>IsActive</code></td><td>bool</td><td>Inactive users cannot log in</td></tr>
-  <tr><td><code>IsSuperAdmin</code></td><td>bool</td><td>Marks the initial admin — cannot be deleted or demoted</td></tr>
+  <tr><td><code>IsMainAdmin</code></td><td>bool</td><td>Marks the initial admin — cannot be deleted or demoted</td></tr>
   <tr><td><code>DateCreated</code></td><td>DateTime</td><td>Auto-set on record creation</td></tr>
 </table>
 
@@ -395,7 +395,7 @@ HTTP Response → Browser renders the page</span></div>
   <tr><td><code>Status</code></td><td>string (30)</td><td>Pending | In Progress | Resolved | Cancelled (default: Pending)</td></tr>
   <tr><td><code>DateSubmitted</code></td><td>DateTime</td><td>Auto-set on creation</td></tr>
   <tr><td><code>DateResolved</code></td><td>DateTime?</td><td>Set when status changes to Resolved</td></tr>
-  <tr><td><code>AdminNotes</code></td><td>string? (500)</td><td>Notes added by Admin/SemiAdmin when updating status</td></tr>
+  <tr><td><code>AdminNotes</code></td><td>string? (500)</td><td>Notes added by Admin when updating status</td></tr>
 </table>
 
 <h3 class="sub">tblLostFoundItems — Lost &amp; Found Items</h3>
@@ -455,40 +455,39 @@ HTTP Response → Browser renders the page</span></div>
   <li>Logout clears the cookie via <code>HttpContext.SignOutAsync()</code>.</li>
 </ol>
 
-<h3 class="sub">The Three Roles</h3>
+<h3 class="sub">The Two Roles</h3>
 <table>
   <tr><th>Role</th><th>Who They Are</th><th>Access Level</th></tr>
-  <tr><td><span class="badge-role badge-admin">Admin</span></td><td>Building manager / owner. The first Admin is the Super Admin (marked with a star badge).</td><td>Full access to all modules. Can create/edit/delete staff accounts. Super Admin cannot be deleted.</td></tr>
-  <tr><td><span class="badge-role badge-semi">SemiAdmin</span></td><td>Staff member (e.g. secretary, assistant).</td><td>Can view and manage all modules but cannot manage other staff accounts in most cases.</td></tr>
+  <tr><td><span class="badge-role badge-admin">Admin</span></td><td>Building manager / owner / staff. The first Admin is the Main Admin (marked with a star badge).</td><td>Full access to all modules. Can create/edit/delete staff accounts. Main Admin cannot be deleted.</td></tr>
   <tr><td><span class="badge-role badge-tenant">Tenant</span></td><td>A tenant with a login account linked to their tenant record.</td><td>Can see their own billing, submit maintenance requests, report/claim lost items. Cannot see other tenants' data.</td></tr>
 </table>
 
 <h3 class="sub">Access Control Per Module</h3>
 <table>
-  <tr><th>Module / Action</th><th>Admin</th><th>SemiAdmin</th><th>Tenant</th></tr>
-  <tr><td>View Units list</td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td></tr>
-  <tr><td>Add / Edit / Delete Unit</td><td class="check">✔</td><td class="check">✔</td><td class="cross">✘</td></tr>
-  <tr><td>View all Tenants</td><td class="check">✔</td><td class="check">✔</td><td class="cross">✘</td></tr>
-  <tr><td>Register / Edit / Deactivate Tenant</td><td class="check">✔</td><td class="check">✔</td><td class="cross">✘</td></tr>
-  <tr><td>View all Billing records</td><td class="check">✔</td><td class="check">✔</td><td class="partial">Own only</td></tr>
-  <tr><td>Issue / Edit Billing</td><td class="check">✔</td><td class="check">✔</td><td class="cross">✘</td></tr>
-  <tr><td>View all Maintenance requests</td><td class="check">✔</td><td class="check">✔</td><td class="partial">Own only</td></tr>
-  <tr><td>Submit Maintenance request</td><td class="cross">✘</td><td class="cross">✘</td><td class="check">✔</td></tr>
-  <tr><td>Update Maintenance status / notes</td><td class="check">✔</td><td class="check">✔</td><td class="cross">✘</td></tr>
-  <tr><td>View Lost &amp; Found items</td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td></tr>
-  <tr><td>Report Lost/Found item</td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td></tr>
-  <tr><td>Claim a Found item</td><td class="cross">✘</td><td class="cross">✘</td><td class="check">✔</td></tr>
-  <tr><td>Review / approve claims</td><td class="check">✔</td><td class="check">✔</td><td class="cross">✘</td></tr>
-  <tr><td>View User Management</td><td class="check">✔</td><td class="check">✔</td><td class="cross">✘</td></tr>
-  <tr><td>Create staff accounts</td><td class="check">✔</td><td class="cross">✘</td><td class="cross">✘</td></tr>
-  <tr><td>Change own password</td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td></tr>
+  <tr><th>Module / Action</th><th>Admin</th><th>Tenant</th></tr>
+  <tr><td>View Units list</td><td class="check">✔</td><td class="check">✔</td></tr>
+  <tr><td>Add / Edit / Delete Unit</td><td class="check">✔</td><td class="cross">✘</td></tr>
+  <tr><td>View all Tenants</td><td class="check">✔</td><td class="cross">✘</td></tr>
+  <tr><td>Register / Edit / Deactivate Tenant</td><td class="check">✔</td><td class="cross">✘</td></tr>
+  <tr><td>View all Billing records</td><td class="check">✔</td><td class="partial">Own only</td></tr>
+  <tr><td>Issue / Edit Billing</td><td class="check">✔</td><td class="cross">✘</td></tr>
+  <tr><td>View all Maintenance requests</td><td class="check">✔</td><td class="partial">Own only</td></tr>
+  <tr><td>Submit Maintenance request</td><td class="cross">✘</td><td class="check">✔</td></tr>
+  <tr><td>Update Maintenance status / notes</td><td class="check">✔</td><td class="cross">✘</td></tr>
+  <tr><td>View Lost &amp; Found items</td><td class="check">✔</td><td class="check">✔</td></tr>
+  <tr><td>Report Lost/Found item</td><td class="check">✔</td><td class="check">✔</td></tr>
+  <tr><td>Claim a Found item</td><td class="cross">✘</td><td class="check">✔</td></tr>
+  <tr><td>Review / approve claims</td><td class="check">✔</td><td class="cross">✘</td></tr>
+  <tr><td>View User Management</td><td class="check">✔</td><td class="cross">✘</td></tr>
+  <tr><td>Create staff accounts</td><td class="check">✔</td><td class="cross">✘</td></tr>
+  <tr><td>Change own password</td><td class="check">✔</td><td class="check">✔</td></tr>
 </table>
 
-<div class="box"><strong>How access control is enforced in code</strong>Controller classes are marked with <code>[Authorize]</code> (requires any login) or <code>[Authorize(Roles = "Admin,SemiAdmin")]</code> (requires specific role). Any user trying to access a restricted page is redirected to <code>/Account/AccessDenied</code>.</div>
+<div class="box"><strong>How access control is enforced in code</strong>Controller classes are marked with <code>[Authorize]</code> (requires any login) or <code>[Authorize(Roles = "Admin")]</code> (requires specific role). Any user trying to access a restricted page is redirected to <code>/Account/AccessDenied</code>.</div>
 
 <h3 class="sub">Default Admin Credentials</h3>
 <table>
-  <tr><th>Username</th><th>Password</th><th>Role</th><th>IsSuperAdmin</th></tr>
+  <tr><th>Username</th><th>Password</th><th>Role</th><th>IsMainAdmin</th></tr>
   <tr><td><code>admin</code></td><td><code>Admin@123</code></td><td>Admin</td><td>Yes ⭐</td></tr>
 </table>
 <p>This account is automatically created on first run if no Admin exists (seeded in <code>Program.cs</code>).</p>
@@ -527,9 +526,9 @@ HTTP Response → Browser renders the page</span></div>
 <table>
   <tr><th>Action</th><th>URL</th><th>Who Can</th><th>What It Does</th></tr>
   <tr><td>List units</td><td>GET /Units</td><td>All logged-in</td><td>Shows table of all units with search and status filter</td></tr>
-  <tr><td>Add unit</td><td>GET/POST /Units/Create</td><td>Admin, SemiAdmin</td><td>Form to add a new unit; checks for duplicate unit numbers</td></tr>
-  <tr><td>Edit unit</td><td>GET/POST /Units/Edit/{id}</td><td>Admin, SemiAdmin</td><td>Edit any field of an existing unit</td></tr>
-  <tr><td>Delete unit</td><td>GET/POST /Units/Delete/{id}</td><td>Admin, SemiAdmin</td><td>Permanently deletes unit; <strong>blocked if active tenants exist</strong></td></tr>
+  <tr><td>Add unit</td><td>GET/POST /Units/Create</td><td>Admin</td><td>Form to add a new unit; checks for duplicate unit numbers</td></tr>
+  <tr><td>Edit unit</td><td>GET/POST /Units/Edit/{id}</td><td>Admin</td><td>Edit any field of an existing unit</td></tr>
+  <tr><td>Delete unit</td><td>GET/POST /Units/Delete/{id}</td><td>Admin</td><td>Permanently deletes unit; <strong>blocked if active tenants exist</strong></td></tr>
 </table>
 
 <h3 class="sub">Special Logic</h3>
@@ -576,11 +575,11 @@ HTTP Response → Browser renders the page</span></div>
 <h3 class="sub">Available Actions</h3>
 <table>
   <tr><th>Action</th><th>URL</th><th>Who Can</th><th>What It Does</th></tr>
-  <tr><td>List tenants</td><td>GET /Tenants</td><td>Admin, SemiAdmin</td><td>Shows table of tenants; defaults to Active filter; searchable</td></tr>
-  <tr><td>Register tenant</td><td>GET/POST /Tenants/Create</td><td>Admin, SemiAdmin</td><td>Full form; optionally creates a linked login account</td></tr>
-  <tr><td>Edit tenant</td><td>GET/POST /Tenants/Edit/{id}</td><td>Admin, SemiAdmin</td><td>Edit all details; can update/remove linked account</td></tr>
+  <tr><td>List tenants</td><td>GET /Tenants</td><td>Admin</td><td>Shows table of tenants; defaults to Active filter; searchable</td></tr>
+  <tr><td>Register tenant</td><td>GET/POST /Tenants/Create</td><td>Admin</td><td>Full form; optionally creates a linked login account</td></tr>
+  <tr><td>Edit tenant</td><td>GET/POST /Tenants/Edit/{id}</td><td>Admin</td><td>Edit all details; can update/remove linked account</td></tr>
   <tr><td>View details</td><td>GET /Tenants/Details/{id}</td><td>All logged-in</td><td>Full read-only profile page; Tenant role can only see their own</td></tr>
-  <tr><td>Deactivate tenant</td><td>GET/POST /Tenants/Delete/{id}</td><td>Admin, SemiAdmin</td><td>Sets Status = "Inactive"; record is NEVER deleted from DB</td></tr>
+  <tr><td>Deactivate tenant</td><td>GET/POST /Tenants/Delete/{id}</td><td>Admin</td><td>Sets Status = "Inactive"; record is NEVER deleted from DB</td></tr>
 </table>
 
 <h3 class="sub">Tenant Fields (Create/Edit form)</h3>
@@ -621,7 +620,7 @@ HTTP Response → Browser renders the page</span></div>
 <div class="section-block">
 
 <h3 class="sub">What It Does</h3>
-<p>Issues and tracks monthly rent bills for tenants. Admin/SemiAdmin can issue bills, record payments, and update status. Tenants can view their own billing history. The module also has a feature that suggests the amount due based on the tenant's unit's rent price.</p>
+<p>Issues and tracks monthly rent bills for tenants. Admin can issue bills, record payments, and update status. Tenants can view their own billing history. The module also has a feature that suggests the amount due based on the tenant's unit's rent price.</p>
 
 <h3 class="sub">Where to Find It</h3>
 <table>
@@ -637,9 +636,9 @@ HTTP Response → Browser renders the page</span></div>
 <h3 class="sub">Available Actions</h3>
 <table>
   <tr><th>Action</th><th>Who Can</th><th>What It Does</th></tr>
-  <tr><td>View billing list</td><td>Admin/SemiAdmin see all; Tenant sees own only</td><td>Table with search (by tenant name) and status filter</td></tr>
-  <tr><td>Issue bill</td><td>Admin, SemiAdmin</td><td>Create new billing record for a tenant; amount auto-suggested from unit's rent price</td></tr>
-  <tr><td>Edit billing</td><td>Admin, SemiAdmin</td><td>Update amount, status, payment details, notes</td></tr>
+  <tr><td>View billing list</td><td>Admin see all; Tenant sees own only</td><td>Table with search (by tenant name) and status filter</td></tr>
+  <tr><td>Issue bill</td><td>Admin</td><td>Create new billing record for a tenant; amount auto-suggested from unit's rent price</td></tr>
+  <tr><td>Edit billing</td><td>Admin</td><td>Update amount, status, payment details, notes</td></tr>
   <tr><td>View details</td><td>All; tenants see own only</td><td>Full read-only view of a billing record</td></tr>
 </table>
 
@@ -659,7 +658,7 @@ HTTP Response → Browser renders the page</span></div>
 <h3 class="sub">Special Logic</h3>
 <ul style="margin: 8px 0 8px 20px; font-size: 9.5pt; line-height: 2;">
   <li><strong>AJAX amount suggestion:</strong> The controller exposes a <code>GetSuggestedAmount</code> endpoint. When a tenant is selected on the Create form, JavaScript calls this endpoint to retrieve the unit's <code>RentPrice</code> and pre-fills the Amount Due field.</li>
-  <li><strong>Tenant view:</strong> When a tenant logs in, they only see their own billing records. Admin/SemiAdmin see everyone's.</li>
+  <li><strong>Tenant view:</strong> When a tenant logs in, they only see their own billing records. Admin see everyone's.</li>
   <li><strong>No auto-status update:</strong> The Overdue status is set manually by an admin — the system does not automatically mark bills as Overdue when the due date passes.</li>
   <li><strong>Cascade delete:</strong> If a tenant record is ever hard-deleted (unusual), all their billing records are also deleted.</li>
 </ul>
@@ -702,14 +701,14 @@ HTTP Response → Browser renders the page</span></div>
   <tr><td>Category</td><td>Tenant</td><td>Plumbing | Electrical | Structural | Appliance | Other</td></tr>
   <tr><td>Description</td><td>Tenant</td><td>Required, up to 500 characters</td></tr>
   <tr><td>Priority</td><td>Tenant</td><td>Low | Medium | High</td></tr>
-  <tr><td>Status</td><td>Admin / SemiAdmin</td><td>Pending → In Progress → Resolved | Cancelled</td></tr>
-  <tr><td>Date Resolved</td><td>Admin / SemiAdmin</td><td>Set when marking Resolved</td></tr>
-  <tr><td>Admin Notes</td><td>Admin / SemiAdmin</td><td>Internal notes for communication</td></tr>
+  <tr><td>Status</td><td>Admin</td><td>Pending → In Progress → Resolved | Cancelled</td></tr>
+  <tr><td>Date Resolved</td><td>Admin</td><td>Set when marking Resolved</td></tr>
+  <tr><td>Admin Notes</td><td>Admin</td><td>Internal notes for communication</td></tr>
 </table>
 
 <h3 class="sub">Special Logic</h3>
 <ul style="margin: 8px 0 8px 20px; font-size: 9.5pt; line-height: 2;">
-  <li><strong>Role-based view filtering:</strong> Tenants see only their own requests. Admin/SemiAdmin see all requests with a tenant name and unit column.</li>
+  <li><strong>Role-based view filtering:</strong> Tenants see only their own requests. Admin see all requests with a tenant name and unit column.</li>
   <li><strong>Priority badge colors:</strong> High = red, Medium = yellow, Low = gray.</li>
   <li><strong>Status badge colors:</strong> Resolved = green, In Progress = blue, Cancelled = gray, Pending = yellow.</li>
 </ul>
@@ -774,7 +773,7 @@ HTTP Response → Browser renders the page</span></div>
 <div class="section-block">
 
 <h3 class="sub">What It Does</h3>
-<p>Manages staff login accounts (Admin and SemiAdmin roles). This is separate from tenant accounts — tenant accounts are created inside the Tenants module. The User Management page is only visible to Admin and SemiAdmin roles in the navigation bar.</p>
+<p>Manages staff login accounts (Admin role). This is separate from tenant accounts — tenant accounts are created inside the Tenants module. The User Management page is only visible to Admins in the navigation bar.</p>
 
 <h3 class="sub">Where to Find It</h3>
 <table>
@@ -791,19 +790,19 @@ HTTP Response → Browser renders the page</span></div>
 <h3 class="sub">Available Actions</h3>
 <table>
   <tr><th>Action</th><th>Who Can</th><th>What It Does</th></tr>
-  <tr><td>View list</td><td>Admin, SemiAdmin</td><td>Shows all accounts with role/status badges</td></tr>
-  <tr><td>Add staff account</td><td>Admin only</td><td>Creates SemiAdmin or Admin account with password strength check</td></tr>
-  <tr><td>Edit account</td><td>Admin (all); SemiAdmin (own Tenant accounts only)</td><td>Edit username, role, active status; only Super Admin can reset passwords</td></tr>
-  <tr><td>Delete account</td><td>Admin only; Super Admin is undeletable</td><td>Hard delete; linked tenant's UserID is set to NULL (tenant record preserved)</td></tr>
+  <tr><td>View list</td><td>Admin</td><td>Shows all accounts with role/status badges</td></tr>
+  <tr><td>Add staff account</td><td>Admin only</td><td>Creates an Admin account with password strength check</td></tr>
+  <tr><td>Edit account</td><td>Admin</td><td>Edit username and active status; only the Main Admin can reset passwords</td></tr>
+  <tr><td>Delete account</td><td>Admin only; Main Admin is undeletable</td><td>Hard delete; linked tenant's UserID is set to NULL (tenant record preserved)</td></tr>
 </table>
 
 <h3 class="sub">Special Logic</h3>
 <ul style="margin: 8px 0 8px 20px; font-size: 9.5pt; line-height: 2;">
-  <li><strong>Super Admin protection:</strong> The original admin (IsSuperAdmin = true) cannot be deleted and cannot have their status set to Inactive from the edit form.</li>
-  <li><strong>Password reset:</strong> Only the Super Admin can set another account's password from the Edit form.</li>
+  <li><strong>Main Admin protection:</strong> The original admin (IsMainAdmin = true) cannot be deleted and cannot have their status set to Inactive from the edit form.</li>
+  <li><strong>Password reset:</strong> Only the Main Admin can set another account's password from the Edit form.</li>
   <li><strong>Linked tenants preserved:</strong> When a staff account is deleted, any tenants who had that account linked just lose the link (UserID = NULL). Their tenant records are not deleted.</li>
-  <li><strong>Star badge:</strong> The Super Admin account shows a ⭐ badge next to their username in the list.</li>
-  <li><strong>Tenant accounts not shown here:</strong> The Users index only shows Admin and SemiAdmin accounts. Tenant accounts are managed from the Tenants module.</li>
+  <li><strong>Star badge:</strong> The Main Admin account shows a ⭐ badge next to their username in the list.</li>
+  <li><strong>Tenant accounts not shown here:</strong> The Users index only shows Admin accounts. Tenant accounts are managed from the Tenants module.</li>
 </ul>
 </div>
 </div>
@@ -816,7 +815,7 @@ HTTP Response → Browser renders the page</span></div>
 
 <div class="two-col">
   <div class="pb-avoid">
-    <h4 class="minor">Admin / SemiAdmin Dashboard</h4>
+    <h4 class="minor">Admin Dashboard</h4>
     <p>Shows live summary statistics pulled from the database:</p>
     <ul style="margin: 6px 0 0 18px; font-size: 9.5pt; line-height: 1.9;">
       <li>Total Units</li>
@@ -842,7 +841,7 @@ HTTP Response → Browser renders the page</span></div>
   </div>
 </div>
 
-<div class="box"><strong>How the controller decides which view to show</strong><code>HomeController.Index()</code> checks <code>User.IsInRole("Admin") || User.IsInRole("SemiAdmin")</code> and returns either <code>AdminDashboard</code> or <code>TenantDashboard</code> accordingly.</div>
+<div class="box"><strong>How the controller decides which view to show</strong><code>HomeController.Index()</code> checks <code>User.IsInRole("Admin")</code> and returns either <code>AdminDashboard</code> or <code>TenantDashboard</code> accordingly.</div>
 </div>
 </div>
 
@@ -948,7 +947,7 @@ HTTP Response → Browser renders the page</span></div>
 <h4 class="minor">Step 7 — Add a Staff Account</h4>
 <ol class="steps">
   <li>Click "User Management" → "+ Add Staff Account".</li>
-  <li>Enter username, set a strong password, choose role SemiAdmin. Click Create.</li>
+  <li>Enter username and set a strong password. Staff accounts are created as Admins. Click Create.</li>
 </ol>
 </div>
 </div>
@@ -1020,7 +1019,7 @@ HTTP Response → Browser renders the page</span></div>
 
 <div class="qa-block pb-avoid">
   <div class="qa-q">Q: What are the user roles and what can each do?</div>
-  <div class="qa-a">Admin: full access to everything, including managing staff accounts. SemiAdmin: can manage units, tenants, billing, maintenance, and lost &amp; found, but cannot create or delete staff accounts. Tenant: can view their own billing, submit maintenance requests, and report or claim lost items. They cannot see other tenants' data.</div>
+  <div class="qa-a">Admin: full access to everything, including managing staff accounts. The first Admin is the Main Admin, who cannot be deleted or deactivated and is the only one who can reset another account's password. Tenant: can view their own billing, submit maintenance requests, and report or claim lost items. They cannot see other tenants' data.</div>
 </div>
 
 <div class="qa-block pb-avoid">

@@ -54,7 +54,7 @@
                     <dt class="col-sm-4">Date Resolved</dt>
                     <dd class="col-sm-8">@(Model.DateResolved?.ToString("MMM dd, yyyy") ?? "—")</dd>
 
-                    @if (User.IsInRole("Admin") || User.IsInRole("SemiAdmin"))
+                    @if (User.IsInRole("Admin"))
                     {
                         <dt class="col-sm-4">Admin Notes</dt>
                         <dd class="col-sm-8">@(Model.AdminNotes ?? "—")</dd>
@@ -62,7 +62,7 @@
                 </dl>
 
                 <div class="d-flex gap-2 mt-3">
-                    @if (User.IsInRole("Admin") || User.IsInRole("SemiAdmin"))
+                    @if (User.IsInRole("Admin"))
                     {
                         <a asp-action="Edit" asp-route-id="@Model.RequestID" class="btn btn-primary btn-sm">Edit</a>
                     }

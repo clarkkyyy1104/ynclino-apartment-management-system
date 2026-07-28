@@ -96,7 +96,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // GET: Billing/Create
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create()
         {
             var vm = new BillingViewModel
@@ -109,7 +109,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // POST: Billing/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(BillingViewModel vm)
         {
             var period = new DateTime(vm.BillingPeriod.Year, vm.BillingPeriod.Month, 1);
@@ -144,7 +144,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // GET: Billing/Edit/5
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -175,7 +175,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // POST: Billing/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id, BillingViewModel vm)
         {
             if (id != vm.BillingID) return NotFound();
@@ -218,7 +218,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // GET: Billing/Delete/5
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -234,7 +234,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // POST: Billing/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var billing = await _context.tblBillings.FindAsync(id);
@@ -248,7 +248,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
         // ajax helper - suggests the unit's monthly rent and reports any arrears
         [HttpGet]
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetSuggestedAmount(int tenantId)
         {
             var tenant = await _context.tblTenants

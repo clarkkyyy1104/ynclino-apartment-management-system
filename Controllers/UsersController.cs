@@ -9,7 +9,7 @@ using YnclinoApartmentManagementSystem.Models.ViewModels;
 
 namespace YnclinoApartmentManagementSystem.Controllers
 {
-    [Authorize(Roles = "Admin,SemiAdmin")]
+    [Authorize(Roles = "Admin")]
     public class UsersController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -19,24 +19,24 @@ namespace YnclinoApartmentManagementSystem.Controllers
             _context = context;
         }
 
-        private bool CurrentUserIsSuperAdmin()
+        private bool CurrentUserIsMainAdmin()
         {
             var idStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!int.TryParse(idStr, out int id)) return false;
-            return _context.tblUsers.Any(u => u.UserID == id && u.IsSuperAdmin);
+            return _context.tblUsers.Any(u => u.UserID == id && u.IsMainAdmin);
         }
 
         private int? CurrentUserID() =>
             int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int id) ? id : null;
 
-        // GET: Users — staff accounts only (Admin / SemiAdmin)
+        // GET: Users — staff accounts only (Admins)
         public async Task<IActionResult> Index()
         {
             var users = await _context.tblUsers
                 .Where(u => u.Role != "Tenant")
                 .OrderBy(u => u.Username)
                 .ToListAsync();
-            ViewBag.IsSuperAdmin = CurrentUserIsSuperAdmin();
+            ViewBag.IsMainAdmin = CurrentUserIsMainAdmin();
             ViewBag.IsAdmin = User.IsInRole("Admin");
             return View(users);
         }
@@ -44,16 +44,16 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // GET: Users/Create — staff accounts only
         public IActionResult Create()
         {
-            bool isSuperAdmin = CurrentUserIsSuperAdmin();
+            bool isMainAdmin = CurrentUserIsMainAdmin();
             bool isAdmin = User.IsInRole("Admin");
             if (!isAdmin)
             {
                 TempData["Error"] = "Only Admins can create staff accounts. Register tenants from the Tenants module.";
                 return RedirectToAction(nameof(Index));
             }
-            ViewBag.IsSuperAdmin = isSuperAdmin;
+            ViewBag.IsMainAdmin = isMainAdmin;
             ViewBag.IsAdmin = isAdmin;
-            var vm = new UserViewModel { Role = "SemiAdmin" };
+            var vm = new UserViewModel { Role = "Admin" };
             return View(vm);
         }
 
@@ -62,21 +62,18 @@ namespace YnclinoApartmentManagementSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(UserViewModel vm)
         {
-            bool isSuperAdmin = CurrentUserIsSuperAdmin();
+            bool isMainAdmin = CurrentUserIsMainAdmin();
             bool isAdmin = User.IsInRole("Admin");
 
-            if (vm.Role == "Tenant")
-                ModelState.AddModelError("Role", "Tenant accounts must be created from the Tenants module.");
-
-            if (!isSuperAdmin && vm.Role == "Admin")
-                ModelState.AddModelError("Role", "Only the Super Admin can create Admin accounts.");
+            // staff accounts are always Admins; tenant accounts come from the Tenants module
+            vm.Role = "Admin";
 
             if (string.IsNullOrWhiteSpace(vm.Password))
                 ModelState.AddModelError("Password", "Password is required when creating an account.");
 
             if (!ModelState.IsValid)
             {
-                ViewBag.IsSuperAdmin = isSuperAdmin;
+                ViewBag.IsMainAdmin = isMainAdmin;
                 ViewBag.IsAdmin = isAdmin;
                 return View(vm);
             }
@@ -85,7 +82,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (duplicate)
             {
                 ModelState.AddModelError("Username", "Username already exists.");
-                ViewBag.IsSuperAdmin = isSuperAdmin;
+                ViewBag.IsMainAdmin = isMainAdmin;
                 ViewBag.IsAdmin = isAdmin;
                 return View(vm);
             }
@@ -96,7 +93,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 Password     = PasswordHelper.Hash(vm.Password!),
                 Role         = vm.Role,
                 IsActive     = vm.IsActive,
-                IsSuperAdmin = false,
+                IsMainAdmin = false,
                 DateCreated  = DateTime.Now
             };
 
@@ -114,7 +111,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var user = await _context.tblUsers.FindAsync(id);
             if (user == null) return NotFound();
 
-            bool isSuperAdmin = CurrentUserIsSuperAdmin();
+            bool isMainAdmin = CurrentUserIsMainAdmin();
             bool isAdmin = User.IsInRole("Admin");
 
             if (user.Role == "Tenant")
@@ -126,10 +123,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (!isAdmin)
                 return Forbid();
 
-            ViewBag.IsSuperAdmin = isSuperAdmin;
+            ViewBag.IsMainAdmin = isMainAdmin;
             ViewBag.IsAdmin = isAdmin;
-            ViewBag.TargetIsSuperAdmin = user.IsSuperAdmin;
-            ViewBag.CanResetPassword = isSuperAdmin || (isAdmin && user.Role == "SemiAdmin");
+            ViewBag.TargetIsMainAdmin = user.IsMainAdmin;
+            ViewBag.CanResetPassword = isMainAdmin;
             ViewBag.TargetRole = user.Role;
 
             return View(new UserViewModel
@@ -151,7 +148,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var user = await _context.tblUsers.FindAsync(id);
             if (user == null) return NotFound();
 
-            bool isSuperAdmin = CurrentUserIsSuperAdmin();
+            bool isMainAdmin = CurrentUserIsMainAdmin();
             bool isAdmin = User.IsInRole("Admin");
 
             if (user.Role == "Tenant")
@@ -165,40 +162,29 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             bool isSelf = user.UserID == CurrentUserID();
 
-            // super admin can reset any staff password, a regular admin only semi-admin ones
-            bool canResetPassword = isSuperAdmin || (isAdmin && user.Role == "SemiAdmin");
+            // only the main admin can reset another staff account's password
+            bool canResetPassword = isMainAdmin;
             if (!canResetPassword || string.IsNullOrWhiteSpace(vm.Password))
             {
                 ModelState.Remove("Password");
                 ModelState.Remove("ConfirmPassword");
             }
 
-            // promoting to Admin is super-admin territory; keeping an existing Admin role is fine
-            if (!isSuperAdmin && vm.Role == "Admin" && user.Role != "Admin")
-                ModelState.AddModelError("Role", "Only the Super Admin can assign the Admin role.");
+            // staff accounts stay Admins; only the username, password, and active flag change here
+            vm.Role = "Admin";
 
-            if (vm.Role == "Tenant")
-                ModelState.AddModelError("Role", "Use the Tenants module to manage Tenant accounts.");
+            if (user.IsMainAdmin && !vm.IsActive)
+                ModelState.AddModelError("IsActive", "The Main Admin account cannot be deactivated.");
 
-            if (user.IsSuperAdmin)
-            {
-                if (vm.Role != "Admin")
-                    ModelState.AddModelError("Role", "The Super Admin role cannot be changed.");
-                if (!vm.IsActive)
-                    ModelState.AddModelError("IsActive", "The Super Admin account cannot be deactivated.");
-            }
-
-            // don't let someone demote or deactivate the account they're signed in with
-            if (isSelf && vm.Role != user.Role)
-                ModelState.AddModelError("Role", "You cannot change the role of your own account.");
+            // don't let someone deactivate the account they're signed in with
             if (isSelf && !vm.IsActive)
                 ModelState.AddModelError("IsActive", "You cannot deactivate your own account.");
 
             if (!ModelState.IsValid)
             {
-                ViewBag.IsSuperAdmin = isSuperAdmin;
+                ViewBag.IsMainAdmin = isMainAdmin;
                 ViewBag.IsAdmin = isAdmin;
-                ViewBag.TargetIsSuperAdmin = user.IsSuperAdmin;
+                ViewBag.TargetIsMainAdmin = user.IsMainAdmin;
                 ViewBag.CanResetPassword = canResetPassword;
                 ViewBag.TargetRole = user.Role;
                 return View(vm);
@@ -208,9 +194,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (duplicate)
             {
                 ModelState.AddModelError("Username", "Username already exists.");
-                ViewBag.IsSuperAdmin = isSuperAdmin;
+                ViewBag.IsMainAdmin = isMainAdmin;
                 ViewBag.IsAdmin = isAdmin;
-                ViewBag.TargetIsSuperAdmin = user.IsSuperAdmin;
+                ViewBag.TargetIsMainAdmin = user.IsMainAdmin;
                 ViewBag.CanResetPassword = canResetPassword;
                 ViewBag.TargetRole = user.Role;
                 return View(vm);
@@ -236,9 +222,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var user = await _context.tblUsers.FindAsync(id);
             if (user == null) return NotFound();
 
-            if (user.IsSuperAdmin)
+            if (user.IsMainAdmin)
             {
-                TempData["Error"] = "The Super Admin account cannot be deleted.";
+                TempData["Error"] = "The Main Admin account cannot be deleted.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -268,9 +254,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var user = await _context.tblUsers.FindAsync(id);
             if (user == null) return NotFound();
 
-            if (user.IsSuperAdmin)
+            if (user.IsMainAdmin)
             {
-                TempData["Error"] = "The Super Admin account cannot be deleted.";
+                TempData["Error"] = "The Main Admin account cannot be deleted.";
                 return RedirectToAction(nameof(Index));
             }
 

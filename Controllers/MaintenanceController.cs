@@ -154,7 +154,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // GET: Maintenance/Edit/5
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -185,7 +185,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // POST: Maintenance/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id, MaintenanceViewModel vm)
         {
             if (id != vm.RequestID) return NotFound();
@@ -252,7 +252,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // GET: Maintenance/Delete/5
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -268,7 +268,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // POST: Maintenance/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var request = await _context.tblMaintenanceRequests.FindAsync(id);

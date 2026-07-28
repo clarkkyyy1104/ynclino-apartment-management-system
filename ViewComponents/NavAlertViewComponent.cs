@@ -27,7 +27,7 @@ namespace YnclinoApartmentManagementSystem.ViewComponents
             return View(alert);
         }
 
-        private bool IsStaff() => User.IsInRole("Admin") || User.IsInRole("SemiAdmin");
+        private bool IsStaff() => User.IsInRole("Admin");
 
         private int? CurrentUserId() =>
             int.TryParse(((ClaimsPrincipal)User).FindFirstValue(ClaimTypes.NameIdentifier), out int id) ? id : null;

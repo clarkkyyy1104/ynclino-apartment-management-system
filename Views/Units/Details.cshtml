@@ -1,7 +1,7 @@
 @model YnclinoApartmentManagementSystem.Models.tblUnit
 @{
     ViewData["Title"] = $"Unit {Model.UnitNumber}";
-    bool isStaff = User.IsInRole("Admin") || User.IsInRole("SemiAdmin");
+    bool isStaff = User.IsInRole("Admin");
     var badge = Model.Status switch {
         "Occupied" => "bg-warning text-dark",
         "Vacant" => "bg-success",

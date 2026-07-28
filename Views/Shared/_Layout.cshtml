@@ -24,7 +24,7 @@
                         <li class="nav-item">
                             <a class="nav-link @(activeController == "Units" ? "active" : "")" asp-controller="Units" asp-action="Index">Units</a>
                         </li>
-                        @if (User.IsInRole("Admin") || User.IsInRole("SemiAdmin"))
+                        @if (User.IsInRole("Admin"))
                         {
                             <li class="nav-item">
                                 <a class="nav-link @(activeController == "Tenants" ? "active" : "")" asp-controller="Tenants" asp-action="Index">Tenants</a>
@@ -39,7 +39,7 @@
                         <li class="nav-item">
                             <a class="nav-link @(activeController == "LostFound" ? "active" : "")" asp-controller="LostFound" asp-action="Index">Lost &amp; Found @await Component.InvokeAsync("NavAlert", new { module = "LostFound" })</a>
                         </li>
-                        @if (User.IsInRole("Admin") || User.IsInRole("SemiAdmin"))
+                        @if (User.IsInRole("Admin"))
                         {
                             <li class="nav-item">
                                 <a class="nav-link @(activeController == "Users" ? "active" : "")" asp-controller="Users" asp-action="Index">User Management</a>
@@ -51,8 +51,8 @@
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle text-white-50 small py-1" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 @User.Identity.Name
-                                <span class="badge @(User.IsInRole("Admin") ? "bg-danger" : User.IsInRole("SemiAdmin") ? "bg-warning text-dark" : "bg-secondary") ms-1">
-                                    @(User.IsInRole("Admin") ? "Admin" : User.IsInRole("SemiAdmin") ? "Semi-Admin" : "Tenant")
+                                <span class="badge @(User.IsInRole("Admin") ? "bg-danger" : "bg-secondary") ms-1">
+                                    @(User.IsInRole("Admin") ? "Admin" : "Tenant")
                                 </span>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">

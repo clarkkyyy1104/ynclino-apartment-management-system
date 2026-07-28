@@ -19,7 +19,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
         public async Task<IActionResult> Index()
         {
-            if (User.IsInRole("Admin") || User.IsInRole("SemiAdmin"))
+            if (User.IsInRole("Admin"))
             {
                 ViewBag.TotalUnits = await _context.tblUnits.CountAsync();
                 ViewBag.VacantUnits = await _context.tblUnits.CountAsync(u => u.Status == "Vacant");

@@ -20,11 +20,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
             _context = context;
         }
 
-        private bool CurrentUserIsSuperAdmin()
+        private bool CurrentUserIsMainAdmin()
         {
             var idStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!int.TryParse(idStr, out int id)) return false;
-            return _context.tblUsers.Any(u => u.UserID == id && u.IsSuperAdmin);
+            return _context.tblUsers.Any(u => u.UserID == id && u.IsMainAdmin);
         }
 
         private int? CurrentUserID() =>
@@ -53,7 +53,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // GET: Tenants
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Index(string? statusFilter, string? searchTerm)
         {
             var query = _context.tblTenants.Include(t => t.Unit).Include(t => t.User).AsQueryable();
@@ -94,7 +94,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // GET: Tenants/Create
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create()
         {
             var vm = new TenantViewModel
@@ -107,7 +107,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // POST: Tenants/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(TenantViewModel vm)
         {
             // the username is a school-style ID: registration month + the tenant's initials
@@ -162,7 +162,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 Password = PasswordHelper.Hash(vm.Password!),
                 Role = "Tenant",
                 IsActive = true,
-                IsSuperAdmin = false,
+                IsMainAdmin = false,
                 DateCreated = DateTime.Now
             };
 
@@ -191,7 +191,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // GET: Tenants/Edit/5
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -204,7 +204,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (tenant.UserID.HasValue)
                 linkedUser = await _context.tblUsers.FindAsync(tenant.UserID.Value);
 
-            ViewBag.IsSuperAdmin = CurrentUserIsSuperAdmin();
+            ViewBag.IsMainAdmin = CurrentUserIsMainAdmin();
 
             var vm = new TenantViewModel
             {
@@ -228,15 +228,15 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // POST: Tenants/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id, TenantViewModel vm)
         {
             if (id != vm.TenantID) return NotFound();
 
-            bool isSuperAdmin = CurrentUserIsSuperAdmin();
+            bool isMainAdmin = CurrentUserIsMainAdmin();
 
-            // only super admin can change another user's password
-            if (!isSuperAdmin || string.IsNullOrWhiteSpace(vm.Password))
+            // only the main admin can change another user's password
+            if (!isMainAdmin || string.IsNullOrWhiteSpace(vm.Password))
             {
                 ModelState.Remove("Password");
                 ModelState.Remove("ConfirmPassword");
@@ -247,7 +247,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             if (!ModelState.IsValid)
             {
-                ViewBag.IsSuperAdmin = isSuperAdmin;
+                ViewBag.IsMainAdmin = isMainAdmin;
                 vm.AvailableUnits = await GetAllUnitsAsync();
                 return View(vm);
             }
@@ -277,7 +277,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             if (!ModelState.IsValid)
             {
-                ViewBag.IsSuperAdmin = isSuperAdmin;
+                ViewBag.IsMainAdmin = isMainAdmin;
                 vm.AvailableUnits = await GetAllUnitsAsync();
                 return View(vm);
             }
@@ -288,7 +288,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (duplicateUsername)
             {
                 ModelState.AddModelError("Username", "Username already exists.");
-                ViewBag.IsSuperAdmin = isSuperAdmin;
+                ViewBag.IsMainAdmin = isMainAdmin;
                 vm.AvailableUnits = await GetAllUnitsAsync();
                 return View(vm);
             }
@@ -300,7 +300,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 if (linkedUser != null)
                 {
                     linkedUser.Username = vm.Username!;
-                    if (isSuperAdmin && !string.IsNullOrWhiteSpace(vm.Password))
+                    if (isMainAdmin && !string.IsNullOrWhiteSpace(vm.Password))
                         linkedUser.Password = PasswordHelper.Hash(vm.Password);
 
                     // login follows the tenant's active state
@@ -320,7 +320,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                     Password = PasswordHelper.Hash(password),
                     Role = "Tenant",
                     IsActive = becomingActive,
-                    IsSuperAdmin = false,
+                    IsMainAdmin = false,
                     DateCreated = DateTime.Now
                 };
                 tenant.User = newUser;
@@ -356,7 +356,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // GET: Tenants/Delete/5 (soft delete confirmation)
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -372,7 +372,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // POST: Tenants/Delete/5 (soft delete - sets status to Inactive)
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var tenant = await _context.tblTenants.FindAsync(id);

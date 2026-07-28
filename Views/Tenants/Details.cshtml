@@ -70,7 +70,7 @@
                     <dd class="col-sm-8">@Model.DateRecorded.ToString("MMMM dd, yyyy")</dd>
                 </dl>
             </div>
-            @if (User.IsInRole("Admin") || User.IsInRole("SemiAdmin"))
+            @if (User.IsInRole("Admin"))
             {
                 <div class="card-footer d-flex gap-2">
                     <a asp-action="Edit" asp-route-id="@Model.TenantID" class="btn btn-primary btn-sm">Edit</a>

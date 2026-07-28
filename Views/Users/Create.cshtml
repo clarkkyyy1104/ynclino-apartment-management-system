@@ -52,13 +52,8 @@
 
                     <div class="mb-3">
                         <label asp-for="Role" class="form-label fw-semibold small"></label>
-                        <select asp-for="Role" class="form-select">
-                            <option value="SemiAdmin">Semi-Admin</option>
-                            @if (ViewBag.IsSuperAdmin == true)
-                            {
-                                <option value="Admin">Admin</option>
-                            }
-                        </select>
+                        <input type="text" class="form-control" value="Admin" disabled />
+                        <input asp-for="Role" type="hidden" value="Admin" />
                         <div class="form-text small text-muted">To add a tenant account, go to the Tenants module.</div>
                     </div>
 

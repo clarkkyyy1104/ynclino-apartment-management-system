@@ -1,7 +1,7 @@
 @model IEnumerable<YnclinoApartmentManagementSystem.Models.tblBilling>
 @{
     ViewData["Title"] = "Billing & Payment";
-    bool isAdmin = User.IsInRole("Admin") || User.IsInRole("SemiAdmin");
+    bool isAdmin = User.IsInRole("Admin");
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">

@@ -22,7 +22,7 @@
                         <span asp-validation-for="Username" class="text-danger small"></span>
                     </div>
 
-                    @if (ViewBag.IsSuperAdmin == true)
+                    @if (ViewBag.IsMainAdmin == true)
                     {
                         <div class="mb-2">
                             <label asp-for="Password" class="form-label fw-semibold small"></label>
@@ -56,7 +56,7 @@
                     }
                     else
                     {
-                        <p class="text-muted small mb-4">Only the Super Admin can reset a tenant's password.</p>
+                        <p class="text-muted small mb-4">Only the Main Admin can reset a tenant's password.</p>
                     }
 
                     <h6 class="section-label mb-3">Tenant Profile</h6>
@@ -144,7 +144,7 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/password.js" asp-append-version="true"></script>
-    @if (ViewBag.IsSuperAdmin == true)
+    @if (ViewBag.IsMainAdmin == true)
     {
         <script>
             var pwInput = document.getElementById('pw');

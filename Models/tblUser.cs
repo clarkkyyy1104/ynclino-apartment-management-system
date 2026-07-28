@@ -14,11 +14,11 @@ namespace YnclinoApartmentManagementSystem.Models
         public string Password { get; set; } = string.Empty;
 
         [Required, MaxLength(20)]
-        public string Role { get; set; } = "Tenant"; // Admin | SemiAdmin | Tenant
+        public string Role { get; set; } = "Tenant"; // Admin | Tenant
 
         public bool IsActive { get; set; } = true;
 
-        public bool IsSuperAdmin { get; set; } = false;
+        public bool IsMainAdmin { get; set; } = false;
 
         public DateTime DateCreated { get; set; } = DateTime.Now;
 

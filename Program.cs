@@ -90,7 +90,12 @@ using (var scope = app.Services.CreateScope())
             "ALTER TABLE tblTenants ADD COLUMN EmergencyContactName TEXT",
             "ALTER TABLE tblTenants ADD COLUMN EmergencyContactRelationship TEXT",
             "ALTER TABLE tblTenants ADD COLUMN EmergencyContactNumber TEXT",
-            "ALTER TABLE tblUnits ADD COLUMN Deposit TEXT NOT NULL DEFAULT '0.0'"
+            "ALTER TABLE tblUnits ADD COLUMN Deposit TEXT NOT NULL DEFAULT '0.0'",
+            // the primary-admin flag was renamed IsSuperAdmin -> IsMainAdmin;
+            // rename in place to keep the existing flag, falling back to adding
+            // the column if an older database never had it
+            "ALTER TABLE tblUsers RENAME COLUMN IsSuperAdmin TO IsMainAdmin",
+            "ALTER TABLE tblUsers ADD COLUMN IsMainAdmin INTEGER NOT NULL DEFAULT 0"
         };
         foreach (var sql in patches)
         {
@@ -118,7 +123,7 @@ using (var scope = app.Services.CreateScope())
             Password = PasswordHelper.Hash("Admin@123"),
             Role = "Admin",
             IsActive = true,
-            IsSuperAdmin = true,
+            IsMainAdmin = true,
             DateCreated = DateTime.Now
         });
         db.SaveChanges();

@@ -51,7 +51,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // GET: Units/Create
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create()
         {
             return View(new UnitViewModel { UnitNumber = await NextUnitNumberAsync() });
@@ -62,7 +62,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // and 44 tenants, created through the same logic the forms use.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GenerateSampleData()
         {
             if (await _context.tblUnits.AnyAsync())
@@ -128,7 +128,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                     Password = PasswordHelper.Hash("Tenant@123"),
                     Role = "Tenant",
                     IsActive = true,
-                    IsSuperAdmin = false,
+                    IsMainAdmin = false,
                     DateCreated = regDate
                 };
                 _context.tblUsers.Add(user);
@@ -180,7 +180,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // POST: Units/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(UnitViewModel vm)
         {
             if (!ModelState.IsValid) return View(vm);
@@ -210,7 +210,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // GET: Units/Edit/5
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -234,7 +234,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // POST: Units/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id, UnitViewModel vm)
         {
             if (id != vm.UnitID) return NotFound();
@@ -290,7 +290,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // GET: Units/Delete/5
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -306,7 +306,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // POST: Units/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,SemiAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var unit = await _context.tblUnits.Include(u => u.Tenants).FirstOrDefaultAsync(u => u.UnitID == id);
