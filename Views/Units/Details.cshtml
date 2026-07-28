@@ -19,6 +19,8 @@
                     <dd class="col-sm-8">@Model.UnitType</dd>
                     <dt class="col-sm-4">Rent Price</dt>
                     <dd class="col-sm-8">₱@Model.RentPrice.ToString("N2")</dd>
+                    <dt class="col-sm-4">Deposit</dt>
+                    <dd class="col-sm-8">₱@Model.Deposit.ToString("N2")</dd>
                     <dt class="col-sm-4">Capacity</dt>
                     <dd class="col-sm-8">@Model.Capacity</dd>
                     <dt class="col-sm-4">Status</dt>
@@ -40,18 +42,18 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>Tenant</th>
-                                    <th>Move-In</th>
+                                    <th>Recorded</th>
                                     <th>Move-Out</th>
                                     <th>Status</th>
                                     <th></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var tenant in Model.Tenants.OrderByDescending(t => t.Status == "Active").ThenByDescending(t => t.MoveInDate))
+                                @foreach (var tenant in Model.Tenants.OrderByDescending(t => t.Status == "Active").ThenByDescending(t => t.DateRecorded))
                                 {
                                     <tr>
                                         <td class="fw-semibold">@tenant.LastName, @tenant.FirstName</td>
-                                        <td>@(tenant.MoveInDate?.ToString("MMM dd, yyyy") ?? "—")</td>
+                                        <td>@tenant.DateRecorded.ToString("MMM dd, yyyy")</td>
                                         <td>@(tenant.MoveOutDate?.ToString("MMM dd, yyyy") ?? "—")</td>
                                         <td>
                                             <span class="badge @(tenant.Status == "Active" ? "bg-success" : "bg-secondary")">@tenant.Status</span>

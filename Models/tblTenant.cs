@@ -26,8 +26,16 @@ namespace YnclinoApartmentManagementSystem.Models
         public string? ContactNumber { get; set; }
 
         [MaxLength(100)]
-        [Display(Name = "Emergency Contact")]
-        public string? EmergencyContact { get; set; }
+        [Display(Name = "Emergency Contact Name")]
+        public string? EmergencyContactName { get; set; }
+
+        [MaxLength(50)]
+        [Display(Name = "Relationship")]
+        public string? EmergencyContactRelationship { get; set; }
+
+        [MaxLength(20)]
+        [Display(Name = "Emergency Contact Number")]
+        public string? EmergencyContactNumber { get; set; }
 
         [Display(Name = "Move-In Date")]
         public DateTime? MoveInDate { get; set; }

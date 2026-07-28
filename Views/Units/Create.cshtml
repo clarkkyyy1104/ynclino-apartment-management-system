@@ -20,23 +20,39 @@
 
                     <div class="mb-3">
                         <label asp-for="UnitType" class="form-label fw-semibold"></label>
-                        <select asp-for="UnitType" class="form-select" id="unitTypeSelect">
+                        <select id="roomTypeSelect" class="form-select">
                             <option value="">— Select Unit Type —</option>
-                            <option>Studio</option>
-                            <option>1-Bedroom</option>
-                            <option>2-Bedroom</option>
-                            <option>3-Bedroom</option>
+                            <option value="Studio">Studio</option>
+                            <option value="Bedspacer">Bedspacer</option>
+                            <option value="Custom">Custom (choose bedrooms)</option>
                         </select>
+                        <input asp-for="UnitType" type="hidden" id="unitTypeHidden" />
                         <span asp-validation-for="UnitType" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3" id="bedroomWrap" style="display:none">
+                        <label class="form-label fw-semibold">Number of Bedrooms</label>
+                        <input type="number" id="bedroomCount" class="form-control" min="1" step="1" value="1" />
+                        <div class="form-text text-muted small">Saved as e.g. <em>2-Bedroom</em>.</div>
                     </div>
 
                     <div class="mb-3">
                         <label asp-for="RentPrice" class="form-label fw-semibold"></label>
                         <div class="input-group">
                             <span class="input-group-text">₱</span>
-                            <input asp-for="RentPrice" class="form-control" type="number" min="0.01" step="100" placeholder="0.00" />
+                            <input asp-for="RentPrice" class="form-control" type="number" min="100" step="100" placeholder="0.00" />
                         </div>
                         <span asp-validation-for="RentPrice" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Deposit" class="form-label fw-semibold"></label>
+                        <div class="input-group">
+                            <span class="input-group-text">₱</span>
+                            <input asp-for="Deposit" class="form-control" type="number" min="0" step="100" placeholder="0.00" />
+                        </div>
+                        <div class="form-text text-muted small">1 month advance + 1 month deposit (auto-filled to 2× the rent).</div>
+                        <span asp-validation-for="Deposit" class="text-danger small"></span>
                     </div>
 
                     <div class="mb-3">
@@ -68,13 +84,73 @@
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     <script>
-        var presetPrices = { 'Studio': 3500, '1-Bedroom': 5000, '2-Bedroom': 8000, '3-Bedroom': 12000 };
-        var presetCapacity = { 'Studio': 1, '1-Bedroom': 2, '2-Bedroom': 4, '3-Bedroom': 6 };
-        document.getElementById('unitTypeSelect').addEventListener('change', function () {
-            var price = presetPrices[this.value];
-            if (price) document.getElementById('RentPrice').value = price;
-            var capacity = presetCapacity[this.value];
-            if (capacity) document.getElementById('Capacity').value = capacity;
+        // standard pricing per unit type (deposit = 1 month advance + 1 month deposit = 2x rent)
+        var presets = {
+            'Studio':    { rent: 3000, deposit: 6000, capacity: 2 },
+            'Bedspacer': { rent: 1300, deposit: 2600, capacity: 4 }
+        };
+
+        var roomTypeSelect = document.getElementById('roomTypeSelect');
+        var unitTypeHidden = document.getElementById('unitTypeHidden');
+        var bedroomWrap = document.getElementById('bedroomWrap');
+        var bedroomCount = document.getElementById('bedroomCount');
+        var rentEl = document.getElementById('RentPrice');
+        var depositEl = document.getElementById('Deposit');
+        var capacityEl = document.getElementById('Capacity');
+        var depositTouched = false;
+        depositEl.addEventListener('input', function () { depositTouched = true; });
+
+        function setPricing(rent, deposit, capacity) {
+            rentEl.value = rent;
+            depositEl.value = deposit;
+            capacityEl.value = capacity;
+            depositTouched = false;
+        }
+
+        // custom units keep an auto capacity but set their own price
+        function updateCustom() {
+            var beds = parseInt(bedroomCount.value, 10);
+            if (isNaN(beds) || beds < 1) beds = 1;
+            unitTypeHidden.value = beds + '-Bedroom';
+            capacityEl.value = beds * 2;
+        }
+
+        roomTypeSelect.addEventListener('change', function () {
+            var choice = roomTypeSelect.value;
+            if (choice === 'Custom') {
+                bedroomWrap.style.display = '';
+                updateCustom();
+                rentEl.value = '';
+                depositEl.value = '';
+                depositTouched = false;
+            } else {
+                bedroomWrap.style.display = 'none';
+                unitTypeHidden.value = choice;
+                if (presets[choice]) {
+                    var p = presets[choice];
+                    setPricing(p.rent, p.deposit, p.capacity);
+                }
+            }
         });
+        bedroomCount.addEventListener('input', updateCustom);
+
+        // keep the deposit at twice the rent when a rent is typed by hand
+        rentEl.addEventListener('input', function () {
+            var rent = parseFloat(this.value);
+            if (isNaN(rent)) return;
+            if (!depositTouched) depositEl.value = rent * 2;
+        });
+
+        // re-select the posted unit type after a failed validation round-trip
+        (function initRoomType() {
+            var current = unitTypeHidden.value;
+            if (current === 'Studio' || current === 'Bedspacer') {
+                roomTypeSelect.value = current;
+            } else if (/^\d+-Bedroom$/.test(current)) {
+                roomTypeSelect.value = 'Custom';
+                bedroomWrap.style.display = '';
+                bedroomCount.value = parseInt(current, 10);
+            }
+        })();
     </script>
 }

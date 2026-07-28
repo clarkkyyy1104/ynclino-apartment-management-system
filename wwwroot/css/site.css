@@ -236,3 +236,11 @@ footer {
     margin-left: 3px;
     vertical-align: top;
 }
+
+/* rounded panels for the Contact Number / Emergency Contact pair on the tenant form */
+.contact-box {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px 16px;
+    background: #fff;
+}

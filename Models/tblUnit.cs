@@ -21,6 +21,11 @@ namespace YnclinoApartmentManagementSystem.Models
         [Display(Name = "Rent Price")]
         public decimal RentPrice { get; set; }
 
+        // 1 month advance + 1 month deposit — defaults to twice the rent
+        [Column(TypeName = "decimal(10,2)")]
+        [Display(Name = "Deposit")]
+        public decimal Deposit { get; set; }
+
         [Required]
         public int Capacity { get; set; }
 

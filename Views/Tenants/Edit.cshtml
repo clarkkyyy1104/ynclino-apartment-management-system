@@ -83,39 +83,42 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label asp-for="ContactNumber" class="form-label fw-semibold small"></label>
-                            <input asp-for="ContactNumber" class="form-control" inputmode="numeric" placeholder="e.g. 09171234567" />
+                            <input asp-for="ContactNumber" class="form-control" inputmode="numeric" placeholder="e.g. 09171234567" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
                             <span asp-validation-for="ContactNumber" class="text-danger small"></span>
                         </div>
-                        <div class="col-md-6">
-                            <label asp-for="EmergencyContact" class="form-label fw-semibold small"></label>
-                            <input asp-for="EmergencyContact" class="form-control" inputmode="numeric" placeholder="e.g. 09181234567" />
-                            <span asp-validation-for="EmergencyContact" class="text-danger small"></span>
+                    </div>
+
+                    <label class="form-label fw-semibold small">Emergency Contact</label>
+                    <div class="row mb-3">
+                        <div class="col-md-5">
+                            <input asp-for="EmergencyContactName" class="form-control" placeholder="Full name" />
+                            <span asp-validation-for="EmergencyContactName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <select asp-for="EmergencyContactRelationship" class="form-select">
+                                <option value="">Relationship…</option>
+                                <option>Parent</option>
+                                <option>Spouse</option>
+                                <option>Sibling</option>
+                                <option>Child</option>
+                                <option>Relative</option>
+                                <option>Friend</option>
+                                <option>Guardian</option>
+                                <option>Other</option>
+                            </select>
+                            <span asp-validation-for="EmergencyContactRelationship" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <input asp-for="EmergencyContactNumber" class="form-control" inputmode="numeric" placeholder="e.g. 09181234567" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+                            <span asp-validation-for="EmergencyContactNumber" class="text-danger small"></span>
                         </div>
                     </div>
 
                     <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label asp-for="MoveInDate" class="form-label fw-semibold small"></label>
-                            <input asp-for="MoveInDate" class="form-control" type="date" />
-                            <span asp-validation-for="MoveInDate" class="text-danger small"></span>
-                        </div>
                         <div class="col-md-6">
                             <label asp-for="MoveOutDate" class="form-label fw-semibold small"></label>
                             <input asp-for="MoveOutDate" class="form-control" type="date" />
                             <span asp-validation-for="MoveOutDate" class="text-danger small"></span>
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label asp-for="LeaseStart" class="form-label fw-semibold small"></label>
-                            <input asp-for="LeaseStart" class="form-control" type="date" />
-                            <span asp-validation-for="LeaseStart" class="text-danger small"></span>
-                        </div>
-                        <div class="col-md-6">
-                            <label asp-for="LeaseEnd" class="form-label fw-semibold small"></label>
-                            <input asp-for="LeaseEnd" class="form-control" type="date" />
-                            <span asp-validation-for="LeaseEnd" class="text-danger small"></span>
                         </div>
                     </div>
 

@@ -42,7 +42,20 @@ else
                         <dd class="col-7">@(string.IsNullOrEmpty(Model.ContactNumber) ? "—" : Model.ContactNumber)</dd>
 
                         <dt class="col-5">Emergency Contact</dt>
-                        <dd class="col-7">@(string.IsNullOrEmpty(Model.EmergencyContact) ? "—" : Model.EmergencyContact)</dd>
+                        <dd class="col-7">
+                            @if (string.IsNullOrEmpty(Model.EmergencyContactName))
+                            {
+                                <text>—</text>
+                            }
+                            else
+                            {
+                                @Model.EmergencyContactName
+                                @if (!string.IsNullOrEmpty(Model.EmergencyContactNumber))
+                                {
+                                    <text> — @Model.EmergencyContactNumber</text>
+                                }
+                            }
+                        </dd>
 
                         <dt class="col-5">Status</dt>
                         <dd class="col-7"><span class="badge bg-success">@Model.Status</span></dd>
@@ -90,36 +103,10 @@ else
                     <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
                         <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z"/>
                     </svg>
-                    <span class="fw-semibold small">Lease Details</span>
+                    <span class="fw-semibold small">Tenancy</span>
                 </div>
                 <div class="card-body pb-2">
                     <dl class="row mb-0 info-list">
-                        <dt class="col-5">Move-In Date</dt>
-                        <dd class="col-7">@(Model.MoveInDate?.ToString("MMM dd, yyyy") ?? "—")</dd>
-
-                        <dt class="col-5">Lease Start</dt>
-                        <dd class="col-7">@(Model.LeaseStart?.ToString("MMM dd, yyyy") ?? "—")</dd>
-
-                        <dt class="col-5">Lease End</dt>
-                        <dd class="col-7">
-                            @if (Model.LeaseEnd.HasValue)
-                            {
-                                int daysLeft = (Model.LeaseEnd.Value - DateTime.Today).Days;
-                                <span class="@(daysLeft < 30 ? "text-danger fw-semibold" : "")">
-                                    @Model.LeaseEnd.Value.ToString("MMM dd, yyyy")
-                                    @if (daysLeft >= 0)
-                                    {
-                                        <span class="text-muted small">(@daysLeft days left)</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-danger small">(expired)</span>
-                                    }
-                                </span>
-                            }
-                            else { <span>—</span> }
-                        </dd>
-
                         <dt class="col-5">Date Recorded</dt>
                         <dd class="col-7">@Model.DateRecorded.ToString("MMM dd, yyyy")</dd>
                     </dl>

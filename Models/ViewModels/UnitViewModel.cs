@@ -24,6 +24,12 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         [Display(Name = "Rent Price")]
         public decimal RentPrice { get; set; }
 
+        [Required(ErrorMessage = "Deposit is required.")]
+        [Range(0, 9999999.99, ErrorMessage = "Enter a valid deposit.")]
+        [Column(TypeName = "decimal(10,2)")]
+        [Display(Name = "Deposit")]
+        public decimal Deposit { get; set; }
+
         [Required(ErrorMessage = "Capacity is required.")]
         [Range(1, 100, ErrorMessage = "Capacity must be between 1 and 100.")]
         public int Capacity { get; set; }

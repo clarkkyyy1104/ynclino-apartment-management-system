@@ -47,10 +47,19 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         [Display(Name = "Contact Number")]
         public string? ContactNumber { get; set; }
 
+        [MaxLength(100)]
+        [RegularExpression(@"^[A-Za-zñÑ .'-]+$", ErrorMessage = "Emergency Contact Name may not contain numbers.")]
+        [Display(Name = "Emergency Contact Name")]
+        public string? EmergencyContactName { get; set; }
+
+        [MaxLength(50)]
+        [Display(Name = "Relationship")]
+        public string? EmergencyContactRelationship { get; set; }
+
         [MaxLength(20)]
-        [RegularExpression(@"^[0-9]{7,15}$", ErrorMessage = "Emergency Contact must contain digits only (7–15 digits).")]
-        [Display(Name = "Emergency Contact")]
-        public string? EmergencyContact { get; set; }
+        [RegularExpression(@"^[0-9]{7,15}$", ErrorMessage = "Emergency Contact Number must contain digits only (7–15 digits).")]
+        [Display(Name = "Emergency Contact Number")]
+        public string? EmergencyContactNumber { get; set; }
 
         [Display(Name = "Move-In Date")]
         [DataType(DataType.Date)]

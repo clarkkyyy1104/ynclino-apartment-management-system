@@ -8,7 +8,17 @@
     <h3 class="fw-bold mb-0">Units</h3>
     @if (isStaff)
     {
-        <a asp-action="Create" class="btn btn-primary">+ Add Unit</a>
+        <div class="d-flex gap-2">
+            @if (ViewBag.HasUnits != true)
+            {
+                <form asp-action="GenerateSampleData" method="post"
+                      onsubmit="return confirm('Load the 22 sample units and 44 tenants?')">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-secondary">Load Sample Data</button>
+                </form>
+            }
+            <a asp-action="Create" class="btn btn-primary">+ Add Unit</a>
+        </div>
     }
 </div>
 
@@ -37,6 +47,7 @@
                 <th>Unit Number</th>
                 <th>Unit Type</th>
                 <th>Rent Price</th>
+                <th>Deposit</th>
                 <th>Capacity</th>
                 <th>Status</th>
                 <th>Date Added</th>
@@ -50,6 +61,7 @@
                     <td class="fw-semibold">@unit.UnitNumber</td>
                     <td>@unit.UnitType</td>
                     <td>₱@unit.RentPrice.ToString("N2")</td>
+                    <td>₱@unit.Deposit.ToString("N2")</td>
                     <td>@unit.Capacity</td>
                     <td>
                         @{
@@ -75,7 +87,7 @@
             @if (!Model.Any())
             {
                 <tr>
-                    <td colspan="7" class="text-center text-muted py-4">No units found.</td>
+                    <td colspan="8" class="text-center text-muted py-4">No units found.</td>
                 </tr>
             }
         </tbody>

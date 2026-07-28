@@ -37,46 +37,48 @@
 
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label asp-for="ContactNumber" class="form-label fw-semibold small"></label>
-                            <input asp-for="ContactNumber" id="contactInput" class="form-control" inputmode="numeric" placeholder="e.g. 09171234567" />
-                            <span asp-validation-for="ContactNumber" class="text-danger small"></span>
+                            <div class="contact-box">
+                                <label asp-for="ContactNumber" class="form-label fw-semibold small"></label>
+                                <input asp-for="ContactNumber" id="contactInput" class="form-control" inputmode="numeric" minlength="11" maxlength="11" placeholder="e.g. 09123456789" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+                                <span asp-validation-for="ContactNumber" class="text-danger small"></span>
+                            </div>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="EmergencyContact" class="form-label fw-semibold small"></label>
-                            <input asp-for="EmergencyContact" class="form-control" inputmode="numeric" placeholder="e.g. 09181234567" />
-                            <span asp-validation-for="EmergencyContact" class="text-danger small"></span>
+                            <div class="contact-box">
+                                <label class="form-label fw-semibold small">Emergency Contact</label>
+                                <div class="mb-2">
+                                    <input asp-for="EmergencyContactName" class="form-control" placeholder="Full name" />
+                                    <span asp-validation-for="EmergencyContactName" class="text-danger small"></span>
+                                </div>
+                                <div class="mb-2">
+                                    <select asp-for="EmergencyContactRelationship" class="form-select">
+                                        <option value="">Relationship…</option>
+                                        <option>Parent</option>
+                                        <option>Spouse</option>
+                                        <option>Sibling</option>
+                                        <option>Child</option>
+                                        <option>Relative</option>
+                                        <option>Friend</option>
+                                        <option>Guardian</option>
+                                        <option>Other</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <input asp-for="EmergencyContactNumber" class="form-control" inputmode="numeric" minlength="11" maxlength="11" placeholder="e.g. 09181234567" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+                                    <span asp-validation-for="EmergencyContactNumber" class="text-danger small"></span>
+                                </div>
+                            </div>
                         </div>
                     </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label asp-for="MoveInDate" class="form-label fw-semibold small"></label>
-                            <input asp-for="MoveInDate" id="moveInInput" class="form-control" type="date" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
-                            <span asp-validation-for="MoveInDate" class="text-danger small"></span>
-                        </div>
-                        <div class="col-md-6">
-                            <label asp-for="LeaseStart" class="form-label fw-semibold small"></label>
-                            <input asp-for="LeaseStart" id="leaseStartInput" class="form-control" type="date" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
-                            <span asp-validation-for="LeaseStart" class="text-danger small"></span>
-                        </div>
-                    </div>
-
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <label asp-for="LeaseEnd" class="form-label fw-semibold small"></label>
-                            <input asp-for="LeaseEnd" id="leaseEndInput" class="form-control" type="date" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
-                            <span asp-validation-for="LeaseEnd" class="text-danger small"></span>
-                        </div>
-                    </div>
-
+                    
                     <h6 class="section-label mb-3">Login Account</h6>
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold small">Username <span class="text-muted fw-normal">(auto-generated)</span></label>
                         <input type="text" id="usernameDisplay" class="form-control bg-light" readonly
-                               placeholder="Fill in First Name &amp; Move-In Date below" />
+                               value="@($"{DateTime.Now:yy}-{DateTime.Now:MM}")" />
                         <input asp-for="Username" type="hidden" id="usernameHidden" />
-                        <div class="form-text text-muted small">Format: FirstName + move-in month + move-in day &nbsp;(e.g. <em>John0315</em>)</div>
+                        <div class="form-text text-muted small">Assigned as year-month + name initials &nbsp;(e.g. <em>26-07AC</em>).</div>
                         <span asp-validation-for="Username" class="text-danger small"></span>
                     </div>
 
@@ -110,7 +112,7 @@
                         </div>
                         <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
                     </div>
-                    
+
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary btn-sm">Register Tenant</button>
                         <a asp-action="Index" class="btn btn-secondary btn-sm">Cancel</a>
@@ -125,23 +127,17 @@
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/password.js" asp-append-version="true"></script>
     <script>
+        // preview the username: year-month + the name initials
+        var usernameBase = '@($"{DateTime.Now:yy}-{DateTime.Now:MM}")';
         function updateUsername() {
             var fn = document.getElementById('firstNameInput').value.trim();
-            var moveIn = document.getElementById('moveInInput').value;
-            if (fn && moveIn) {
-                var d = new Date(moveIn);
-                var mm = String(d.getMonth() + 1).padStart(2, '0');
-                var dd = String(d.getDate()).padStart(2, '0');
-                var gen = fn + mm + dd;
-                document.getElementById('usernameDisplay').value = gen;
-                document.getElementById('usernameHidden').value = gen;
-            } else {
-                document.getElementById('usernameDisplay').value = '';
-                document.getElementById('usernameHidden').value = '';
-            }
+            var ln = document.getElementById('lastNameInput').value.trim();
+            var initials = (fn ? fn[0].toUpperCase() : '') + (ln ? ln[0].toUpperCase() : '');
+            document.getElementById('usernameDisplay').value = usernameBase + initials;
+            document.getElementById('usernameHidden').value = usernameBase + initials;
         }
         document.getElementById('firstNameInput').addEventListener('input', updateUsername);
-        document.getElementById('moveInInput').addEventListener('change', updateUsername);
+        document.getElementById('lastNameInput').addEventListener('input', updateUsername);
 
         // auto-generate a password from the name + contact
         var pwAutoGenerated = '';
@@ -170,25 +166,6 @@
         document.getElementById('firstNameInput').addEventListener('input', updatePassword);
         document.getElementById('lastNameInput').addEventListener('input', updatePassword);
         document.getElementById('contactInput').addEventListener('input', updatePassword);
-
-        // default the lease dates off the move-in date
-        document.getElementById('moveInInput').addEventListener('change', function() {
-            var moveIn = this.value;
-            var leaseStart = document.getElementById('leaseStartInput');
-            var leaseEnd = document.getElementById('leaseEndInput');
-            if (moveIn) {
-                if (!leaseStart.value) leaseStart.value = moveIn;
-                if (!leaseEnd.value) {
-                    // same day, one month after the move-in date
-                    var parts = moveIn.split('-');
-                    var d = new Date(parts[0], parts[1] - 1, parts[2]);
-                    d.setMonth(d.getMonth() + 1);
-                    var mm = String(d.getMonth() + 1).padStart(2, '0');
-                    var dd = String(d.getDate()).padStart(2, '0');
-                    leaseEnd.value = d.getFullYear() + '-' + mm + '-' + dd;
-                }
-            }
-        });
 
         document.getElementById('tenantForm').addEventListener('submit', function (e) {
             var pw = document.getElementById('pw').value;

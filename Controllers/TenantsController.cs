@@ -30,22 +30,33 @@ namespace YnclinoApartmentManagementSystem.Controllers
         private int? CurrentUserID() =>
             int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int id) ? id : null;
 
-        // Re-derive a unit's occupancy from its active tenants. A unit under
-        // maintenance keeps that status until an admin clears it by hand.
+        // Re-derive a unit's occupancy from its active tenants: the unit only
+        // reads "Occupied" once it is at full capacity, so partially filled
+        // bedspacers stay available. A unit under maintenance keeps that
+        // status until an admin clears it by hand.
         private async Task SyncUnitStatusAsync(int unitId)
         {
             var unit = await _context.tblUnits.FindAsync(unitId);
             if (unit == null || unit.Status == "Under Maintenance") return;
 
-            bool hasActive = await _context.tblTenants.AnyAsync(t => t.UnitID == unitId && t.Status == "Active");
-            unit.Status = hasActive ? "Occupied" : "Vacant";
+            int active = await _context.tblTenants.CountAsync(t => t.UnitID == unitId && t.Status == "Active");
+            unit.Status = active >= unit.Capacity ? "Occupied" : "Vacant";
+        }
+
+        // school-style login username: [2-digit year]-[2-digit month] + the uppercase
+        // initials of the first and last name, e.g. Ana Cruz in July 2026 -> "26-07AC"
+        private static string GenerateUsername(string firstName, string lastName)
+        {
+            var now = DateTime.Now;
+            string initials = $"{char.ToUpper(firstName.Trim()[0])}{char.ToUpper(lastName.Trim()[0])}";
+            return $"{now:yy}-{now:MM}{initials}";
         }
 
         // GET: Tenants
         [Authorize(Roles = "Admin,SemiAdmin")]
         public async Task<IActionResult> Index(string? statusFilter, string? searchTerm)
         {
-            var query = _context.tblTenants.Include(t => t.Unit).AsQueryable();
+            var query = _context.tblTenants.Include(t => t.Unit).Include(t => t.User).AsQueryable();
 
             // default view is Active; "All" is an explicit choice that skips filtering
             statusFilter ??= "Active";
@@ -58,7 +69,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
             ViewBag.StatusFilter = statusFilter;
             ViewBag.SearchTerm = searchTerm;
 
-            var tenants = await query.OrderBy(t => t.LastName).ThenBy(t => t.FirstName).ToListAsync();
+            // list in username order (the school-style ID) rather than by name
+            var tenants = await query.OrderBy(t => t.User!.Username).ToListAsync();
             return View(tenants);
         }
 
@@ -98,17 +110,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
         [Authorize(Roles = "Admin,SemiAdmin")]
         public async Task<IActionResult> Create(TenantViewModel vm)
         {
-            // build a username from first name + move-in MMdd, bump a suffix if taken
-            if (!string.IsNullOrWhiteSpace(vm.FirstName) && vm.MoveInDate.HasValue)
-            {
-                string baseUsername = vm.FirstName.Trim()
-                    + vm.MoveInDate.Value.ToString("MMdd");
-                string generated = baseUsername;
-                int suffix = 2;
-                while (await _context.tblUsers.AnyAsync(u => u.Username.ToLower() == generated.ToLower()))
-                    generated = baseUsername + "_" + suffix++;
-                vm.Username = generated;
-            }
+            // the username is a school-style ID: registration month + the tenant's initials
+            if (!string.IsNullOrWhiteSpace(vm.FirstName) && !string.IsNullOrWhiteSpace(vm.LastName))
+                vm.Username = GenerateUsername(vm.FirstName, vm.LastName);
 
             // fall back to a generated password from contact number + initials
             if (string.IsNullOrWhiteSpace(vm.Password)
@@ -126,16 +130,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             // account fields are required on create
             if (string.IsNullOrWhiteSpace(vm.Username))
-                ModelState.AddModelError("Username", "Username could not be generated. Ensure First Name and Move-In Date are filled.");
+                ModelState.AddModelError("Username", "Username could not be generated. Ensure First Name and Last Name are filled.");
+            else if (await _context.tblUsers.AnyAsync(u => u.Username.ToLower() == vm.Username.ToLower()))
+                ModelState.AddModelError(string.Empty, $"Username '{vm.Username}' is already taken (same month and initials). Adjust the name.");
             if (string.IsNullOrWhiteSpace(vm.Password))
                 ModelState.AddModelError("Password", "Password is required. Enter a password or fill in Contact Number and Name.");
-
-            // can't set move-in or lease start in the past
-            var today = DateTime.Today;
-            if (vm.MoveInDate.HasValue && vm.MoveInDate.Value.Date < today)
-                ModelState.AddModelError("MoveInDate", "Move-In Date cannot be in the past.");
-            if (vm.LeaseStart.HasValue && vm.LeaseStart.Value.Date < today)
-                ModelState.AddModelError("LeaseStart", "Lease Start cannot be in the past.");
 
             // the posted unit must exist and still have room
             var unit = await _context.tblUnits.FindAsync(vm.UnitID);
@@ -174,19 +173,19 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 FirstName = vm.FirstName,
                 LastName = vm.LastName,
                 ContactNumber = vm.ContactNumber,
-                EmergencyContact = vm.EmergencyContact,
-                MoveInDate = vm.MoveInDate,
-                MoveOutDate = vm.MoveOutDate,
-                LeaseStart = vm.LeaseStart,
-                LeaseEnd = vm.LeaseEnd,
+                EmergencyContactName = vm.EmergencyContactName,
+                EmergencyContactRelationship = vm.EmergencyContactRelationship,
+                EmergencyContactNumber = vm.EmergencyContactNumber,
                 Status = "Active",
                 DateRecorded = DateTime.Now
             };
             _context.tblTenants.Add(tenant);
-
-            if (unit!.Status == "Vacant") unit.Status = "Occupied";
-
             await _context.SaveChangesAsync();
+
+            // a unit only reads "Occupied" once it's full
+            await SyncUnitStatusAsync(vm.UnitID);
+            await _context.SaveChangesAsync();
+
             TempData["Success"] = $"Tenant {tenant.FullName} has been registered with account '{user.Username}'.";
             return RedirectToAction(nameof(Index));
         }
@@ -216,11 +215,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 FirstName = tenant.FirstName,
                 LastName = tenant.LastName,
                 ContactNumber = tenant.ContactNumber,
-                EmergencyContact = tenant.EmergencyContact,
-                MoveInDate = tenant.MoveInDate,
+                EmergencyContactName = tenant.EmergencyContactName,
+                EmergencyContactRelationship = tenant.EmergencyContactRelationship,
+                EmergencyContactNumber = tenant.EmergencyContactNumber,
                 MoveOutDate = tenant.MoveOutDate,
-                LeaseStart = tenant.LeaseStart,
-                LeaseEnd = tenant.LeaseEnd,
                 Status = tenant.Status,
                 AvailableUnits = await GetAllUnitsAsync()
             };
@@ -332,10 +330,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
             tenant.FirstName = vm.FirstName;
             tenant.LastName = vm.LastName;
             tenant.ContactNumber = vm.ContactNumber;
-            tenant.EmergencyContact = vm.EmergencyContact;
-            tenant.MoveInDate = vm.MoveInDate;
-            tenant.LeaseStart = vm.LeaseStart;
-            tenant.LeaseEnd = vm.LeaseEnd;
+            tenant.EmergencyContactName = vm.EmergencyContactName;
+            tenant.EmergencyContactRelationship = vm.EmergencyContactRelationship;
+            tenant.EmergencyContactNumber = vm.EmergencyContactNumber;
             tenant.Status = vm.Status;
 
             // stamp a move-out when deactivating, clear it when bringing the tenant back

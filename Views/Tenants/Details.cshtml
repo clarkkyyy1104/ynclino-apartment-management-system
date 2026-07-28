@@ -22,19 +22,27 @@
                     <dd class="col-sm-8">@(Model.ContactNumber ?? "—")</dd>
 
                     <dt class="col-sm-4">Emergency Contact</dt>
-                    <dd class="col-sm-8">@(Model.EmergencyContact ?? "—")</dd>
-
-                    <dt class="col-sm-4">Move-In Date</dt>
-                    <dd class="col-sm-8">@(Model.MoveInDate?.ToString("MMMM dd, yyyy") ?? "—")</dd>
+                    <dd class="col-sm-8">
+                        @if (string.IsNullOrEmpty(Model.EmergencyContactName))
+                        {
+                            <text>—</text>
+                        }
+                        else
+                        {
+                            @Model.EmergencyContactName
+                            @if (!string.IsNullOrEmpty(Model.EmergencyContactRelationship))
+                            {
+                                <text> (@Model.EmergencyContactRelationship)</text>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.EmergencyContactNumber))
+                            {
+                                <text> — @Model.EmergencyContactNumber</text>
+                            }
+                        }
+                    </dd>
 
                     <dt class="col-sm-4">Move-Out Date</dt>
                     <dd class="col-sm-8">@(Model.MoveOutDate?.ToString("MMMM dd, yyyy") ?? "—")</dd>
-
-                    <dt class="col-sm-4">Lease Start</dt>
-                    <dd class="col-sm-8">@(Model.LeaseStart?.ToString("MMMM dd, yyyy") ?? "—")</dd>
-
-                    <dt class="col-sm-4">Lease End</dt>
-                    <dd class="col-sm-8">@(Model.LeaseEnd?.ToString("MMMM dd, yyyy") ?? "—")</dd>
 
                     <dt class="col-sm-4">Status</dt>
                     <dd class="col-sm-8">

@@ -44,7 +44,9 @@ namespace YnclinoApartmentManagementSystem.Data
                 entity.Property(e => e.FirstName).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.LastName).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.ContactNumber).HasMaxLength(20);
-                entity.Property(e => e.EmergencyContact).HasMaxLength(100);
+                entity.Property(e => e.EmergencyContactName).HasMaxLength(100);
+                entity.Property(e => e.EmergencyContactRelationship).HasMaxLength(50);
+                entity.Property(e => e.EmergencyContactNumber).HasMaxLength(20);
                 entity.Property(e => e.Status).IsRequired().HasMaxLength(20).HasDefaultValue("Active");
 
                 entity.HasOne(t => t.User)

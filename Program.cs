@@ -63,7 +63,51 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate();
+    db.Database.EnsureCreated();
+
+    // If an older database is missing columns that the models now expect,
+    // patch it in place so existing data survives; only rebuild from scratch
+    // when patching isn't enough. Normal runs are untouched.
+    void ProbeSchema()
+    {
+        db.tblTenants.FirstOrDefault();
+        db.tblUnits.FirstOrDefault();
+        db.tblUsers.FirstOrDefault();
+        db.tblBillings.FirstOrDefault();
+        db.tblMaintenanceRequests.FirstOrDefault();
+        db.tblLostFoundItems.FirstOrDefault();
+        db.tblClaimRequests.FirstOrDefault();
+    }
+
+    try
+    {
+        ProbeSchema();
+    }
+    catch (Microsoft.Data.Sqlite.SqliteException)
+    {
+        var patches = new[]
+        {
+            "ALTER TABLE tblTenants ADD COLUMN EmergencyContactName TEXT",
+            "ALTER TABLE tblTenants ADD COLUMN EmergencyContactRelationship TEXT",
+            "ALTER TABLE tblTenants ADD COLUMN EmergencyContactNumber TEXT",
+            "ALTER TABLE tblUnits ADD COLUMN Deposit TEXT NOT NULL DEFAULT '0.0'"
+        };
+        foreach (var sql in patches)
+        {
+            try { db.Database.ExecuteSqlRaw(sql); }
+            catch (Microsoft.Data.Sqlite.SqliteException) { /* column already exists */ }
+        }
+
+        try
+        {
+            ProbeSchema();
+        }
+        catch (Microsoft.Data.Sqlite.SqliteException)
+        {
+            db.Database.EnsureDeleted();
+            db.Database.EnsureCreated();
+        }
+    }
 
     // create a default admin the first time the app runs
     if (!db.tblUsers.Any(u => u.Role == "Admin"))
