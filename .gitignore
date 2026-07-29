@@ -33,3 +33,6 @@ Thumbs.db
 /wwwroot/uploads/maintenance/*
 !/wwwroot/uploads/lostfound/.gitkeep
 !/wwwroot/uploads/maintenance/.gitkeep
+
+# per-developer local config (contains DB password) — never commit
+appsettings.Local.json

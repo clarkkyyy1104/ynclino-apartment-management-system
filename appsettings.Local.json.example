@@ -1,0 +1,6 @@
+{
+  "_comment": "Copy this file to 'appsettings.Local.json' (same folder) and put YOUR OWN local MySQL password below. appsettings.Local.json is git-ignored, so your password is never committed or pushed.",
+  "ConnectionStrings": {
+    "DefaultConnection": "server=localhost;port=3306;database=YnclinoApartmentManagementSystemDb;user=root;password=YOUR_MYSQL_PASSWORD;"
+  }
+}

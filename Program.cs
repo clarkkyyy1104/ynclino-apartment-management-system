@@ -8,6 +8,10 @@ using YnclinoApartmentManagementSystem.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Per-developer overrides (e.g. your local MySQL password) live in appsettings.Local.json,
+// which is git-ignored so secrets never get committed. It overrides appsettings.json when present.
+builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
+
 builder.Services.AddControllersWithViews();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
