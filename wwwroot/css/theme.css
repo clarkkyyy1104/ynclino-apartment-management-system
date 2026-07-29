@@ -4,11 +4,14 @@
    ══════════════════════════════════════════════════════════════ */
 
 :root {
-    --ynk-navy:       #16233d;
-    --ynk-navy-deep:  #101a2e;
-    --ynk-orange:     #e1641e;
-    --ynk-orange-dk:  #c8551360;
-    --ynk-blue:       #1b4c9e;
+    /* Brand palette taken from the Ynclino logo: orange #ff8235, charcoal #37383a, white */
+    --ynk-dark:       #37383a;   /* logo charcoal — sidebar / table headers */
+    --ynk-dark-deep:  #2b2c2e;
+    --ynk-navy:       #37383a;   /* legacy name, now the brand charcoal */
+    --ynk-navy-deep:  #2b2c2e;
+    --ynk-orange:     #ff8235;   /* logo orange — primary accent */
+    --ynk-orange-dk:  #e5701f;   /* darker orange for hover/active */
+    --ynk-blue:       #1b4c9e;   /* secondary accent (headers where white text needs contrast) */
     --ynk-blue-dk:    #163f83;
     --ynk-ink:        #1b1b1b;
     --ynk-muted:      #6b7280;
@@ -80,6 +83,9 @@ body {
     text-decoration: none;
 }
 
+/* full logo lockup (icon + wordmark) for the dark sidebar */
+.sb-brand .sb-logo { height: 40px; width: auto; max-width: 100%; display: block; }
+
 .sb-brand .sb-mark { width: 42px; height: 42px; flex-shrink: 0; }
 
 .sb-brand .sb-word {
@@ -134,10 +140,10 @@ body {
     background: var(--ynk-orange);
     color: #fff;
     font-weight: 600;
-    box-shadow: 0 3px 10px rgba(225,100,30,.35);
+    box-shadow: 0 3px 10px rgba(255,130,53,.35);
 }
 
-.sb-link.sb-logout:hover { background: rgba(225,100,30,.20); color: #fff; }
+.sb-link.sb-logout:hover { background: rgba(255,130,53,.20); color: #fff; }
 
 /* ── Topbar: profile pill ──────────────────────────────────── */
 .profile-pill {
@@ -196,26 +202,26 @@ body {
 
 /* ── Buttons ───────────────────────────────────────────────── */
 .btn-primary {
-    --bs-btn-bg: #e1641e;
-    --bs-btn-border-color: #e1641e;
-    --bs-btn-hover-bg: #c85513;
-    --bs-btn-hover-border-color: #c85513;
-    --bs-btn-active-bg: #b04711;
-    --bs-btn-active-border-color: #b04711;
-    --bs-btn-disabled-bg: #e1641e;
-    --bs-btn-disabled-border-color: #e1641e;
-    --bs-btn-focus-shadow-rgb: 225, 100, 30;
+    --bs-btn-bg: #ff8235;
+    --bs-btn-border-color: #ff8235;
+    --bs-btn-hover-bg: #e5701f;
+    --bs-btn-hover-border-color: #e5701f;
+    --bs-btn-active-bg: #cc6118;
+    --bs-btn-active-border-color: #cc6118;
+    --bs-btn-disabled-bg: #ff8235;
+    --bs-btn-disabled-border-color: #ff8235;
+    --bs-btn-focus-shadow-rgb: 255, 130, 53;
     font-weight: 600;
 }
 
 .btn-outline-primary {
-    --bs-btn-color: #e1641e;
-    --bs-btn-border-color: #e1641e;
-    --bs-btn-hover-bg: #e1641e;
-    --bs-btn-hover-border-color: #e1641e;
-    --bs-btn-active-bg: #c85513;
-    --bs-btn-active-border-color: #c85513;
-    --bs-btn-focus-shadow-rgb: 225, 100, 30;
+    --bs-btn-color: #d5651a;
+    --bs-btn-border-color: #ff8235;
+    --bs-btn-hover-bg: #ff8235;
+    --bs-btn-hover-border-color: #ff8235;
+    --bs-btn-active-bg: #e5701f;
+    --bs-btn-active-border-color: #e5701f;
+    --bs-btn-focus-shadow-rgb: 255, 130, 53;
 }
 
 /* ── Cards ─────────────────────────────────────────────────── */
@@ -240,11 +246,11 @@ body {
 .table-responsive > .table { margin-bottom: 0; }
 
 .table > thead th {
-    background: #2b2f36;
+    background: var(--ynk-dark);
     color: #fff;
     font-weight: 600;
     white-space: nowrap;
-    border-color: #2b2f36;
+    border-color: var(--ynk-dark);
     vertical-align: middle;
 }
 
