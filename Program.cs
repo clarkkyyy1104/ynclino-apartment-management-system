@@ -10,8 +10,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -63,11 +64,14 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+    // Create the database and schema if it doesn't exist yet. On a brand-new
+    // MySQL server this builds every table from the current models.
     db.Database.EnsureCreated();
 
-    // If an older database is missing columns that the models now expect,
-    // patch it in place so existing data survives; only rebuild from scratch
-    // when patching isn't enough. Normal runs are untouched.
+    // Guard against a leftover database whose schema predates the current
+    // models: probe every table, and if the shape no longer matches, rebuild
+    // it from scratch. A fresh, matching database never triggers this.
     void ProbeSchema()
     {
         db.tblTenants.FirstOrDefault();
@@ -83,35 +87,10 @@ using (var scope = app.Services.CreateScope())
     {
         ProbeSchema();
     }
-    catch (Microsoft.Data.Sqlite.SqliteException)
+    catch (Exception)
     {
-        var patches = new[]
-        {
-            "ALTER TABLE tblTenants ADD COLUMN EmergencyContactName TEXT",
-            "ALTER TABLE tblTenants ADD COLUMN EmergencyContactRelationship TEXT",
-            "ALTER TABLE tblTenants ADD COLUMN EmergencyContactNumber TEXT",
-            "ALTER TABLE tblUnits ADD COLUMN Deposit TEXT NOT NULL DEFAULT '0.0'",
-            // the primary-admin flag was renamed IsSuperAdmin -> IsMainAdmin;
-            // rename in place to keep the existing flag, falling back to adding
-            // the column if an older database never had it
-            "ALTER TABLE tblUsers RENAME COLUMN IsSuperAdmin TO IsMainAdmin",
-            "ALTER TABLE tblUsers ADD COLUMN IsMainAdmin INTEGER NOT NULL DEFAULT 0"
-        };
-        foreach (var sql in patches)
-        {
-            try { db.Database.ExecuteSqlRaw(sql); }
-            catch (Microsoft.Data.Sqlite.SqliteException) { /* column already exists */ }
-        }
-
-        try
-        {
-            ProbeSchema();
-        }
-        catch (Microsoft.Data.Sqlite.SqliteException)
-        {
-            db.Database.EnsureDeleted();
-            db.Database.EnsureCreated();
-        }
+        db.Database.EnsureDeleted();
+        db.Database.EnsureCreated();
     }
 
     // create a default admin the first time the app runs
