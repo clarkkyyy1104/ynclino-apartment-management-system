@@ -30,6 +30,12 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         [Display(Name = "Deposit")]
         public decimal Deposit { get; set; }
 
+        [Required(ErrorMessage = "One month advance is required.")]
+        [Range(0, 9999999.99, ErrorMessage = "Enter a valid advance amount.")]
+        [Column(TypeName = "decimal(10,2)")]
+        [Display(Name = "One Month Advance")]
+        public decimal AdvancePayment { get; set; }
+
         [Required(ErrorMessage = "Capacity is required.")]
         [Range(1, 100, ErrorMessage = "Capacity must be between 1 and 100.")]
         public int Capacity { get; set; }

@@ -34,6 +34,10 @@ namespace YnclinoApartmentManagementSystem.Models
         [MaxLength(500)]
         public string? Notes { get; set; }
 
+        [MaxLength(260)]
+        [Display(Name = "Photo")]
+        public string? ImagePath { get; set; }
+
         [ForeignKey("ReportedByUserID")]
         public tblUser? ReportedBy { get; set; }
     }

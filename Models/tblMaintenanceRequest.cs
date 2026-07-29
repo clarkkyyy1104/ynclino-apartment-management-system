@@ -33,6 +33,10 @@ namespace YnclinoApartmentManagementSystem.Models
         [Display(Name = "Admin Notes")]
         public string? AdminNotes { get; set; }
 
+        [MaxLength(260)]
+        [Display(Name = "Photo")]
+        public string? ImagePath { get; set; }
+
         [ForeignKey("TenantID")]
         public tblTenant? Tenant { get; set; }
     }

@@ -17,18 +17,29 @@
                     <dt class="col-sm-4">Unit</dt>
                     <dd class="col-sm-8">@(Model.Tenant?.Unit?.UnitNumber ?? "—")</dd>
 
-                    <dt class="col-sm-4">Category</dt>
+                    <dt class="col-sm-4">Issue Type</dt>
                     <dd class="col-sm-8">@Model.Category</dd>
 
                     <dt class="col-sm-4">Description</dt>
                     <dd class="col-sm-8">@Model.Description</dd>
 
+                    @if (!string.IsNullOrEmpty(Model.ImagePath))
+                    {
+                        <dt class="col-sm-4">Photo</dt>
+                        <dd class="col-sm-8">
+                            <a href="@Model.ImagePath" target="_blank">
+                                <img src="@Model.ImagePath" alt="Maintenance photo" class="img-fluid rounded border" style="max-height:220px" />
+                            </a>
+                        </dd>
+                    }
+
                     <dt class="col-sm-4">Priority</dt>
                     <dd class="col-sm-8">
                         @{
                             var pbadge = Model.Priority switch {
-                                "High"   => "bg-danger",
-                                "Medium" => "bg-warning text-dark",
+                                "Urgent" => "bg-danger",
+                                "High"   => "bg-warning text-dark",
+                                "Medium" => "bg-info text-dark",
                                 _        => "bg-secondary"
                             };
                         }
@@ -62,11 +73,7 @@
                 </dl>
 
                 <div class="d-flex gap-2 mt-3">
-                    @if (User.IsInRole("Admin"))
-                    {
-                        <a asp-action="Edit" asp-route-id="@Model.RequestID" class="btn btn-primary btn-sm">Edit</a>
-                    }
-                    else if (Model.Status == "Pending")
+                    @if (!User.IsInRole("Admin") && Model.Status == "Pending")
                     {
                         <form asp-action="Cancel" asp-route-id="@Model.RequestID" method="post" class="d-inline"
                               onsubmit="return confirm('Cancel this request?')">

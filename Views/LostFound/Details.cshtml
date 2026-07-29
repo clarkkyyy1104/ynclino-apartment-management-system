@@ -24,6 +24,16 @@
                     <dt class="col-sm-4">Description</dt>
                     <dd class="col-sm-8">@(Model.Description ?? "—")</dd>
 
+                    @if (!string.IsNullOrEmpty(Model.ImagePath))
+                    {
+                        <dt class="col-sm-4">Photo</dt>
+                        <dd class="col-sm-8">
+                            <a href="@Model.ImagePath" target="_blank">
+                                <img src="@Model.ImagePath" alt="Item photo" class="img-fluid rounded border" style="max-height:220px" />
+                            </a>
+                        </dd>
+                    }
+
                     <dt class="col-sm-4">Location</dt>
                     <dd class="col-sm-8">@(Model.Location ?? "—")</dd>
 
@@ -114,7 +124,6 @@
                 <div class="d-flex gap-2 mt-3">
                     @if (User.IsInRole("Admin"))
                     {
-                        <a asp-action="Edit" asp-route-id="@Model.ItemID" class="btn btn-primary btn-sm">Edit</a>
                         @if (Model.Status == "Claimed")
                         {
                             <form asp-action="Resolve" asp-route-id="@Model.ItemID" method="post" class="d-inline">

@@ -51,8 +51,18 @@
                             <span class="input-group-text">₱</span>
                             <input asp-for="Deposit" class="form-control" type="number" min="0" step="100" placeholder="0.00" />
                         </div>
-                        <div class="form-text text-muted small">1 month advance + 1 month deposit (auto-filled to 2× the rent).</div>
+                        <div class="form-text text-muted small">1 month security deposit (auto-filled to 1 month's rent).</div>
                         <span asp-validation-for="Deposit" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="AdvancePayment" class="form-label fw-semibold"></label>
+                        <div class="input-group">
+                            <span class="input-group-text">₱</span>
+                            <input asp-for="AdvancePayment" class="form-control" type="number" min="0" step="100" placeholder="0.00" />
+                        </div>
+                        <div class="form-text text-muted small">1 month advance payment (auto-filled to 1 month's rent).</div>
+                        <span asp-validation-for="AdvancePayment" class="text-danger small"></span>
                     </div>
 
                     <div class="mb-3">
@@ -84,10 +94,10 @@
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     <script>
-        // standard pricing per unit type (deposit = 1 month advance + 1 month deposit = 2x rent)
+        // standard pricing per unit type (deposit = 1 month, advance = 1 month)
         var presets = {
-            'Studio':    { rent: 3000, deposit: 6000, capacity: 2 },
-            'Bedspacer': { rent: 1300, deposit: 2600, capacity: 4 }
+            'Studio':    { rent: 3000, deposit: 3000, advance: 3000, capacity: 2 },
+            'Bedspacer': { rent: 1300, deposit: 1300, advance: 1300, capacity: 4 }
         };
 
         var roomTypeSelect = document.getElementById('roomTypeSelect');
@@ -96,15 +106,20 @@
         var bedroomCount = document.getElementById('bedroomCount');
         var rentEl = document.getElementById('RentPrice');
         var depositEl = document.getElementById('Deposit');
+        var advanceEl = document.getElementById('AdvancePayment');
         var capacityEl = document.getElementById('Capacity');
         var depositTouched = false;
+        var advanceTouched = false;
         depositEl.addEventListener('input', function () { depositTouched = true; });
+        advanceEl.addEventListener('input', function () { advanceTouched = true; });
 
-        function setPricing(rent, deposit, capacity) {
+        function setPricing(rent, deposit, advance, capacity) {
             rentEl.value = rent;
             depositEl.value = deposit;
+            advanceEl.value = advance;
             capacityEl.value = capacity;
             depositTouched = false;
+            advanceTouched = false;
         }
 
         // custom units keep an auto capacity but set their own price
@@ -122,23 +137,26 @@
                 updateCustom();
                 rentEl.value = '';
                 depositEl.value = '';
+                advanceEl.value = '';
                 depositTouched = false;
+                advanceTouched = false;
             } else {
                 bedroomWrap.style.display = 'none';
                 unitTypeHidden.value = choice;
                 if (presets[choice]) {
                     var p = presets[choice];
-                    setPricing(p.rent, p.deposit, p.capacity);
+                    setPricing(p.rent, p.deposit, p.advance, p.capacity);
                 }
             }
         });
         bedroomCount.addEventListener('input', updateCustom);
 
-        // keep the deposit at twice the rent when a rent is typed by hand
+        // deposit and advance each default to one month's rent when rent is typed by hand
         rentEl.addEventListener('input', function () {
             var rent = parseFloat(this.value);
             if (isNaN(rent)) return;
-            if (!depositTouched) depositEl.value = rent * 2;
+            if (!depositTouched) depositEl.value = rent;
+            if (!advanceTouched) advanceEl.value = rent;
         });
 
         // re-select the posted unit type after a failed validation round-trip

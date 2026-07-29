@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace YnclinoApartmentManagementSystem.Models.ViewModels
 {
@@ -32,8 +33,12 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         [Display(Name = "Additional Notes")]
         public string? Notes { get; set; }
 
+        [Display(Name = "Photo (optional)")]
+        public IFormFile? ImageUpload { get; set; }
+
         // for display only
         public string? ReportedByName { get; set; }
         public DateTime DateReported { get; set; } = DateTime.Now;
+        public string? ImagePath { get; set; }
     }
 }

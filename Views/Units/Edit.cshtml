@@ -52,8 +52,18 @@
                             <span class="input-group-text">₱</span>
                             <input asp-for="Deposit" class="form-control" type="number" min="0" step="100" />
                         </div>
-                        <div class="form-text text-muted small">1 month advance + 1 month deposit.</div>
+                        <div class="form-text text-muted small">1 month security deposit.</div>
                         <span asp-validation-for="Deposit" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="AdvancePayment" class="form-label fw-semibold"></label>
+                        <div class="input-group">
+                            <span class="input-group-text">₱</span>
+                            <input asp-for="AdvancePayment" class="form-control" type="number" min="0" step="100" />
+                        </div>
+                        <div class="form-text text-muted small">1 month advance payment.</div>
+                        <span asp-validation-for="AdvancePayment" class="text-danger small"></span>
                     </div>
 
                     <div class="mb-3">
@@ -86,8 +96,8 @@
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     <script>
         var presets = {
-            'Studio':    { rent: 3000, deposit: 6000, capacity: 2 },
-            'Bedspacer': { rent: 1300, deposit: 2600, capacity: 4 }
+            'Studio':    { rent: 3000, deposit: 3000, advance: 3000, capacity: 2 },
+            'Bedspacer': { rent: 1300, deposit: 1300, advance: 1300, capacity: 4 }
         };
 
         var roomTypeSelect = document.getElementById('roomTypeSelect');
@@ -96,17 +106,22 @@
         var bedroomCount = document.getElementById('bedroomCount');
         var rentEl = document.getElementById('RentPrice');
         var depositEl = document.getElementById('Deposit');
+        var advanceEl = document.getElementById('AdvancePayment');
         var capacityEl = document.getElementById('Capacity');
-        // start "touched" so editing the rent doesn't clobber the stored deposit;
+        // start "touched" so editing the rent doesn't clobber the stored amounts;
         // picking a preset type below re-enables the auto-fill
         var depositTouched = true;
+        var advanceTouched = true;
         depositEl.addEventListener('input', function () { depositTouched = true; });
+        advanceEl.addEventListener('input', function () { advanceTouched = true; });
 
-        function setPricing(rent, deposit, capacity) {
+        function setPricing(rent, deposit, advance, capacity) {
             rentEl.value = rent;
             depositEl.value = deposit;
+            advanceEl.value = advance;
             capacityEl.value = capacity;
             depositTouched = false;
+            advanceTouched = false;
         }
 
         function updateCustom() {
@@ -123,13 +138,15 @@
                 updateCustom();
                 rentEl.value = '';
                 depositEl.value = '';
+                advanceEl.value = '';
                 depositTouched = false;
+                advanceTouched = false;
             } else {
                 bedroomWrap.style.display = 'none';
                 unitTypeHidden.value = choice;
                 if (presets[choice]) {
                     var p = presets[choice];
-                    setPricing(p.rent, p.deposit, p.capacity);
+                    setPricing(p.rent, p.deposit, p.advance, p.capacity);
                 }
             }
         });
@@ -138,7 +155,8 @@
         rentEl.addEventListener('input', function () {
             var rent = parseFloat(this.value);
             if (isNaN(rent)) return;
-            if (!depositTouched) depositEl.value = rent * 2;
+            if (!depositTouched) depositEl.value = rent;
+            if (!advanceTouched) advanceEl.value = rent;
         });
 
         // reflect the stored unit type in the dropdown without touching the saved pricing

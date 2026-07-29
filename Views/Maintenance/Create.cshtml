@@ -9,7 +9,7 @@
         <div class="card shadow-sm border-0">
             <div class="card-header bg-primary text-white fw-semibold">New Maintenance Request</div>
             <div class="card-body">
-                <form asp-action="Create" method="post">
+                <form asp-action="Create" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
 
@@ -36,7 +36,7 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label asp-for="Category" class="form-label fw-semibold small"></label>
-                            <select asp-for="Category" class="form-select">
+                            <select asp-for="Category" id="categorySelect" class="form-select">
                                 <option>Plumbing</option>
                                 <option>Electrical</option>
                                 <option>Structural</option>
@@ -51,16 +51,24 @@
                                 <option>Low</option>
                                 <option selected>Medium</option>
                                 <option>High</option>
+                                <option>Urgent</option>
                             </select>
                             <span asp-validation-for="Priority" class="text-danger small"></span>
                         </div>
                     </div>
 
-                    <div class="mb-4">
+                    <div class="mb-4" id="descWrap" style="display:none">
                         <label asp-for="Description" class="form-label fw-semibold small"></label>
                         <textarea asp-for="Description" class="form-control" rows="3"
                                   placeholder="Describe the issue in detail…"></textarea>
                         <span asp-validation-for="Description" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="ImageUpload" class="form-label fw-semibold small"></label>
+                        <input asp-for="ImageUpload" class="form-control" type="file" accept="image/*" />
+                        <div class="form-text text-muted small">Optional — attach a photo of the issue. JPG, PNG, GIF, or WEBP, up to 5 MB.</div>
+                        <span asp-validation-for="ImageUpload" class="text-danger small"></span>
                     </div>
 
                     <div class="d-flex gap-2">
@@ -75,4 +83,14 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        // the description box only matters when the issue type is "Other"
+        var catSel = document.getElementById('categorySelect');
+        var descWrap = document.getElementById('descWrap');
+        function toggleDesc() {
+            descWrap.style.display = (catSel.value === 'Other') ? '' : 'none';
+        }
+        catSel.addEventListener('change', toggleDesc);
+        toggleDesc();
+    </script>
 }

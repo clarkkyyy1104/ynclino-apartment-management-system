@@ -92,9 +92,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var studios = new List<tblUnit>();
             int number = 101;
             for (int i = 0; i < 13; i++)
-                bedspacers.Add(new tblUnit { UnitNumber = (number++).ToString(), UnitType = "Bedspacer", RentPrice = 1300m, Deposit = 2600m, Capacity = 4, Status = "Vacant", DateAdded = NextAddedDate() });
+                bedspacers.Add(new tblUnit { UnitNumber = (number++).ToString(), UnitType = "Bedspacer", RentPrice = 1300m, Deposit = 1300m, AdvancePayment = 1300m, Capacity = 4, Status = "Vacant", DateAdded = NextAddedDate() });
             for (int i = 0; i < 9; i++)
-                studios.Add(new tblUnit { UnitNumber = (number++).ToString(), UnitType = "Studio", RentPrice = 3000m, Deposit = 6000m, Capacity = 2, Status = "Vacant", DateAdded = NextAddedDate() });
+                studios.Add(new tblUnit { UnitNumber = (number++).ToString(), UnitType = "Studio", RentPrice = 3000m, Deposit = 3000m, AdvancePayment = 3000m, Capacity = 2, Status = "Vacant", DateAdded = NextAddedDate() });
             _context.tblUnits.AddRange(bedspacers);
             _context.tblUnits.AddRange(studios);
             await _context.SaveChangesAsync();
@@ -198,6 +198,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 UnitType = vm.UnitType,
                 RentPrice = vm.RentPrice,
                 Deposit = vm.Deposit,
+                AdvancePayment = vm.AdvancePayment,
                 Capacity = vm.Capacity,
                 Status = vm.Status,
                 DateAdded = DateTime.Now
@@ -225,6 +226,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 UnitType = unit.UnitType,
                 RentPrice = unit.RentPrice,
                 Deposit = unit.Deposit,
+                AdvancePayment = unit.AdvancePayment,
                 Capacity = unit.Capacity,
                 Status = unit.Status
             };
@@ -268,6 +270,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             unit.UnitType = vm.UnitType;
             unit.RentPrice = vm.RentPrice;
             unit.Deposit = vm.Deposit;
+            unit.AdvancePayment = vm.AdvancePayment;
             unit.Capacity = vm.Capacity;
             unit.Status = vm.Status;
 

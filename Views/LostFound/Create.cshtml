@@ -8,7 +8,7 @@
         <div class="card shadow-sm border-0">
             <div class="card-header bg-primary text-white fw-semibold">Report Lost or Found Item</div>
             <div class="card-body">
-                <form asp-action="Create" method="post">
+                <form asp-action="Create" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
 
@@ -40,11 +40,18 @@
                         <span asp-validation-for="Location" class="text-danger small"></span>
                     </div>
 
-                    <div class="mb-4">
+                    <div class="mb-3">
                         <label asp-for="Notes" class="form-label fw-semibold small"></label>
                         <textarea asp-for="Notes" class="form-control" rows="2"
                                   placeholder="Any other details…"></textarea>
                         <span asp-validation-for="Notes" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="ImageUpload" class="form-label fw-semibold small"></label>
+                        <input asp-for="ImageUpload" class="form-control" type="file" accept="image/*" />
+                        <div class="form-text text-muted small">JPG, PNG, GIF, or WEBP — up to 5 MB.</div>
+                        <span asp-validation-for="ImageUpload" class="text-danger small"></span>
                     </div>
 
                     <div class="d-flex gap-2">

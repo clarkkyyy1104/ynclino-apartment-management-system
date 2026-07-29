@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using YnclinoApartmentManagementSystem.Data;
+using YnclinoApartmentManagementSystem.Helpers;
 using YnclinoApartmentManagementSystem.Models;
 using YnclinoApartmentManagementSystem.Models.ViewModels;
 
@@ -13,10 +14,12 @@ namespace YnclinoApartmentManagementSystem.Controllers
     public class MaintenanceController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _env;
 
-        public MaintenanceController(ApplicationDbContext context)
+        public MaintenanceController(ApplicationDbContext context, IWebHostEnvironment env)
         {
             _context = context;
+            _env = env;
         }
 
         private int? CurrentUserID() =>
@@ -32,11 +35,13 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         private static readonly string[] Categories = { "Plumbing", "Electrical", "Structural", "Appliance", "Other" };
-        private static readonly string[] Priorities = { "Low", "Medium", "High" };
+        private static readonly string[] Priorities = { "Low", "Medium", "High", "Urgent" };
         private static readonly string[] Statuses = { "Pending", "In Progress", "Resolved", "Cancelled" };
+        // resolved/cancelled requests move out of the active list into the archive
+        private static readonly string[] ArchivedStatuses = { "Resolved", "Cancelled" };
 
         // GET: Maintenance
-        public async Task<IActionResult> Index(string? statusFilter, string? searchTerm)
+        public async Task<IActionResult> Index(string? statusFilter, string? searchTerm, bool archived = false)
         {
             IQueryable<tblMaintenanceRequest> query = _context.tblMaintenanceRequests
                 .Include(m => m.Tenant).ThenInclude(t => t!.Unit);
@@ -47,6 +52,12 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 if (tenant == null) return View(new List<tblMaintenanceRequest>());
                 query = query.Where(m => m.TenantID == tenant.TenantID);
             }
+
+            // the archive holds resolved/cancelled requests; the main list holds active ones
+            if (archived)
+                query = query.Where(m => ArchivedStatuses.Contains(m.Status));
+            else
+                query = query.Where(m => !ArchivedStatuses.Contains(m.Status));
 
             if (!string.IsNullOrEmpty(statusFilter))
                 query = query.Where(m => m.Status == statusFilter);
@@ -59,6 +70,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             ViewBag.StatusFilter = statusFilter;
             ViewBag.SearchTerm = searchTerm;
+            ViewBag.Archived = archived;
 
             return View(await query.OrderByDescending(m => m.DateSubmitted).ToListAsync());
         }
@@ -114,9 +126,16 @@ namespace YnclinoApartmentManagementSystem.Controllers
         public async Task<IActionResult> Create(MaintenanceViewModel vm)
         {
             if (!Categories.Contains(vm.Category))
-                ModelState.AddModelError("Category", "Select a valid category.");
+                ModelState.AddModelError("Category", "Select a valid issue type.");
             if (!Priorities.Contains(vm.Priority))
                 ModelState.AddModelError("Priority", "Select a valid priority.");
+
+            // a description is only required when the issue type is "Other";
+            // for the preset types we fall back to the type itself
+            NormalizeDescription(vm);
+
+            if (vm.ImageUpload != null && !ImageUploadHelper.IsValid(vm.ImageUpload, out var imgErr))
+                ModelState.AddModelError(nameof(vm.ImageUpload), imgErr);
 
             // tenants can only submit for themselves
             if (User.IsInRole("Tenant"))
@@ -137,14 +156,19 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 return View(vm);
             }
 
+            string? imagePath = null;
+            if (vm.ImageUpload != null)
+                imagePath = await ImageUploadHelper.SaveAsync(vm.ImageUpload, "maintenance", _env);
+
             var request = new tblMaintenanceRequest
             {
                 TenantID = vm.TenantID,
                 Category = vm.Category,
-                Description = vm.Description,
+                Description = vm.Description ?? string.Empty,
                 Priority = vm.Priority,
                 Status = "Pending",
-                DateSubmitted = DateTime.Now
+                DateSubmitted = DateTime.Now,
+                ImagePath = imagePath
             };
 
             _context.tblMaintenanceRequests.Add(request);
@@ -177,7 +201,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 Status = request.Status,
                 DateSubmitted = request.DateSubmitted,
                 DateResolved = request.DateResolved,
-                AdminNotes = request.AdminNotes
+                AdminNotes = request.AdminNotes,
+                ImagePath = request.ImagePath
             };
             return View(vm);
         }
@@ -191,11 +216,16 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (id != vm.RequestID) return NotFound();
 
             if (!Categories.Contains(vm.Category))
-                ModelState.AddModelError("Category", "Select a valid category.");
+                ModelState.AddModelError("Category", "Select a valid issue type.");
             if (!Priorities.Contains(vm.Priority))
                 ModelState.AddModelError("Priority", "Select a valid priority.");
             if (!Statuses.Contains(vm.Status))
                 ModelState.AddModelError("Status", "Select a valid status.");
+
+            NormalizeDescription(vm);
+
+            if (vm.ImageUpload != null && !ImageUploadHelper.IsValid(vm.ImageUpload, out var imgErr))
+                ModelState.AddModelError(nameof(vm.ImageUpload), imgErr);
 
             var request = await _context.tblMaintenanceRequests
                 .Include(m => m.Tenant).ThenInclude(t => t!.Unit)
@@ -206,14 +236,18 @@ namespace YnclinoApartmentManagementSystem.Controllers
             {
                 vm.TenantName = request.Tenant?.FullName;
                 vm.UnitNumber = request.Tenant?.Unit?.UnitNumber;
+                vm.ImagePath = request.ImagePath;
                 return View(vm);
             }
 
             request.Category = vm.Category;
-            request.Description = vm.Description;
+            request.Description = vm.Description ?? string.Empty;
             request.Priority = vm.Priority;
             request.Status = vm.Status;
             request.AdminNotes = vm.AdminNotes;
+
+            if (vm.ImageUpload != null)
+                request.ImagePath = await ImageUploadHelper.SaveAsync(vm.ImageUpload, "maintenance", _env);
 
             if (vm.Status == "Resolved" && request.DateResolved == null)
                 request.DateResolved = DateTime.Now;
@@ -278,6 +312,20 @@ namespace YnclinoApartmentManagementSystem.Controllers
             await _context.SaveChangesAsync();
             TempData["Success"] = "Maintenance request deleted.";
             return RedirectToAction(nameof(Index));
+        }
+
+        // A description is only mandatory when the issue type is "Other". For the
+        // preset types, an empty description falls back to the type name so the
+        // record is never blank.
+        private void NormalizeDescription(MaintenanceViewModel vm)
+        {
+            if (string.IsNullOrWhiteSpace(vm.Description))
+            {
+                if (vm.Category == "Other")
+                    ModelState.AddModelError(nameof(vm.Description), "Please describe the issue.");
+                else
+                    vm.Description = vm.Category;
+            }
         }
 
         private async Task<IEnumerable<SelectListItem>> GetActiveTenantListAsync()

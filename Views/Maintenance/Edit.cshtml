@@ -10,7 +10,7 @@
                 Edit Request #@Model.RequestID — @Model.TenantName
             </div>
             <div class="card-body">
-                <form asp-action="Edit" method="post">
+                <form asp-action="Edit" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="RequestID" />
                     <input type="hidden" asp-for="TenantID" />
@@ -23,7 +23,7 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label asp-for="Category" class="form-label fw-semibold small"></label>
-                            <select asp-for="Category" class="form-select">
+                            <select asp-for="Category" id="categorySelect" class="form-select">
                                 <option>Plumbing</option>
                                 <option>Electrical</option>
                                 <option>Structural</option>
@@ -37,14 +37,28 @@
                                 <option>Low</option>
                                 <option>Medium</option>
                                 <option>High</option>
+                                <option>Urgent</option>
                             </select>
                         </div>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-3" id="descWrap">
                         <label asp-for="Description" class="form-label fw-semibold small"></label>
                         <textarea asp-for="Description" class="form-control" rows="3"></textarea>
                         <span asp-validation-for="Description" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ImageUpload" class="form-label fw-semibold small"></label>
+                        @if (!string.IsNullOrEmpty(Model.ImagePath))
+                        {
+                            <div class="mb-2">
+                                <img src="@Model.ImagePath" alt="Current photo" class="img-fluid rounded border" style="max-height:160px" />
+                            </div>
+                        }
+                        <input asp-for="ImageUpload" class="form-control" type="file" accept="image/*" />
+                        <div class="form-text text-muted small">Upload to replace the current photo. JPG, PNG, GIF, or WEBP — up to 5 MB.</div>
+                        <span asp-validation-for="ImageUpload" class="text-danger small"></span>
                     </div>
 
                     <div class="mb-3">
@@ -75,4 +89,14 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        // the description box only matters when the issue type is "Other"
+        var catSel = document.getElementById('categorySelect');
+        var descWrap = document.getElementById('descWrap');
+        function toggleDesc() {
+            descWrap.style.display = (catSel.value === 'Other') ? '' : 'none';
+        }
+        catSel.addEventListener('change', toggleDesc);
+        toggleDesc();
+    </script>
 }

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using YnclinoApartmentManagementSystem.Data;
+using YnclinoApartmentManagementSystem.Helpers;
 using YnclinoApartmentManagementSystem.Models;
 using YnclinoApartmentManagementSystem.Models.ViewModels;
 
@@ -12,10 +13,12 @@ namespace YnclinoApartmentManagementSystem.Controllers
     public class LostFoundController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _env;
 
-        public LostFoundController(ApplicationDbContext context)
+        public LostFoundController(ApplicationDbContext context, IWebHostEnvironment env)
         {
             _context = context;
+            _env = env;
         }
 
         private int? CurrentUserID() =>
@@ -98,10 +101,17 @@ namespace YnclinoApartmentManagementSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(LostFoundViewModel vm)
         {
+            if (vm.ImageUpload != null && !ImageUploadHelper.IsValid(vm.ImageUpload, out var imgErr))
+                ModelState.AddModelError(nameof(vm.ImageUpload), imgErr);
+
             if (!ModelState.IsValid) return View(vm);
 
             var uid = CurrentUserID();
             if (uid == null) return Forbid();
+
+            string? imagePath = null;
+            if (vm.ImageUpload != null)
+                imagePath = await ImageUploadHelper.SaveAsync(vm.ImageUpload, "lostfound", _env);
 
             var item = new tblLostFoundItem
             {
@@ -112,7 +122,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 Location = vm.Location,
                 Status = "Reported",
                 DateReported = DateTime.Now,
-                Notes = vm.Notes
+                Notes = vm.Notes,
+                ImagePath = imagePath
             };
 
             _context.tblLostFoundItems.Add(item);
@@ -144,7 +155,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 Location = item.Location,
                 Status = item.Status,
                 DateReported = item.DateReported,
-                Notes = item.Notes
+                Notes = item.Notes,
+                ImagePath = item.ImagePath
             };
             return View(vm);
         }
@@ -156,6 +168,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
         public async Task<IActionResult> Edit(int id, LostFoundViewModel vm)
         {
             if (id != vm.ItemID) return NotFound();
+
+            if (vm.ImageUpload != null && !ImageUploadHelper.IsValid(vm.ImageUpload, out var imgErr))
+                ModelState.AddModelError(nameof(vm.ImageUpload), imgErr);
+
             if (!ModelState.IsValid)
             {
                 vm.ReportedByName = (await _context.tblUsers.FindAsync(vm.ReportedByUserID))?.Username;
@@ -171,6 +187,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
             item.Location = vm.Location;
             item.Status = vm.Status;
             item.Notes = vm.Notes;
+
+            if (vm.ImageUpload != null)
+                item.ImagePath = await ImageUploadHelper.SaveAsync(vm.ImageUpload, "lostfound", _env);
 
             await _context.SaveChangesAsync();
             TempData["Success"] = "Item record updated.";

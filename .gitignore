@@ -27,3 +27,9 @@ publish/
 ## OS
 .DS_Store
 Thumbs.db
+
+# runtime-uploaded images (keep folder placeholders only)
+/wwwroot/uploads/lostfound/*
+/wwwroot/uploads/maintenance/*
+!/wwwroot/uploads/lostfound/.gitkeep
+!/wwwroot/uploads/maintenance/.gitkeep

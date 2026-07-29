@@ -4,7 +4,7 @@
 }
 
 <div class="mb-4">
-    <h4 class="fw-semibold mb-0">Welcome, @User.Identity?.Name</h4>
+    <h4 class="fw-semibold mb-0">Welcome, @(Model?.FullName ?? User.Identity?.Name)</h4>
     <p class="text-muted small mb-0">Your current tenancy information is shown below.</p>
 </div>
 
@@ -84,6 +84,12 @@ else
 
                             <dt class="col-5">Monthly Rent</dt>
                             <dd class="col-7">&#x20B1;@Model.Unit.RentPrice.ToString("N2")</dd>
+
+                            <dt class="col-5">Deposit</dt>
+                            <dd class="col-7">&#x20B1;@Model.Unit.Deposit.ToString("N2")</dd>
+
+                            <dt class="col-5">One Month Advance</dt>
+                            <dd class="col-7">&#x20B1;@Model.Unit.AdvancePayment.ToString("N2")</dd>
 
                             <dt class="col-5">Capacity</dt>
                             <dd class="col-7">@Model.Unit.Capacity person(s)</dd>
