@@ -11,16 +11,14 @@
     --ynk-navy-deep:  #2b2c2e;
     --ynk-orange:     #ff8235;   /* logo orange — primary accent */
     --ynk-orange-dk:  #e5701f;   /* darker orange for hover/active */
-    --ynk-blue:       #1b4c9e;   /* secondary accent (headers where white text needs contrast) */
-    --ynk-blue-dk:    #163f83;
     --ynk-ink:        #1b1b1b;
     --ynk-muted:      #6b7280;
     --ynk-line:       #e3e7ee;
     --ynk-page:       #f6f8fb;
 
-    /* keep Bootstrap "primary" semantics blue (links, blue card headers, login) */
-    --bs-primary: #1b4c9e;
-    --bs-primary-rgb: 27, 76, 158;
+    /* Figma uses no blue: panel headers and other "primary" fills are charcoal */
+    --bs-primary: #37383a;
+    --bs-primary-rgb: 55, 56, 58;
 }
 
 body {
@@ -231,7 +229,7 @@ body {
     box-shadow: 0 2px 10px rgba(16,32,60,.05);
 }
 
-.stat-card { border-top: 4px solid var(--ynk-blue); }
+.stat-card { border-top: 4px solid var(--ynk-dark); }
 
 /* ── Tables — panel with charcoal header (per prototype) ────── */
 .table-responsive {
