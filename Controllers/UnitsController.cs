@@ -249,7 +249,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             // maintenance requests across a mix of statuses/priorities
             string[] mCats = { "Plumbing", "Electrical", "Structural", "Appliance", "Other" };
-            string[] mPrio = { "Low", "Medium", "High", "Urgent" };
+            string[] mPrio = { "Minor", "Moderate", "Major", "Urgent" };
             string Describe(string c) => c switch
             {
                 "Plumbing"   => "Leaking faucet in the bathroom.",

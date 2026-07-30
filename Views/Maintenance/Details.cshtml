@@ -37,10 +37,10 @@
                     <dd class="col-sm-8">
                         @{
                             var pbadge = Model.Priority switch {
-                                "Urgent" => "bg-danger",
-                                "High"   => "bg-warning text-dark",
-                                "Medium" => "bg-info text-dark",
-                                _        => "bg-secondary"
+                                "Urgent"   => "bg-danger",
+                                "Major"    => "bg-warning text-dark",
+                                "Moderate" => "bg-info text-dark",
+                                _          => "bg-secondary"
                             };
                         }
                         <span class="badge @pbadge">@Model.Priority</span>

@@ -117,6 +117,15 @@ using (var scope = app.Services.CreateScope())
         });
         db.SaveChanges();
     }
+
+    // migrate any maintenance rows still using the old priority labels to the
+    // current vocabulary (Low->Minor, Medium->Moderate, High->Major; Urgent kept)
+    if (db.tblMaintenanceRequests.Any(m => m.Priority == "Low" || m.Priority == "Medium" || m.Priority == "High"))
+    {
+        db.tblMaintenanceRequests.Where(m => m.Priority == "Low").ExecuteUpdate(s => s.SetProperty(m => m.Priority, "Minor"));
+        db.tblMaintenanceRequests.Where(m => m.Priority == "Medium").ExecuteUpdate(s => s.SetProperty(m => m.Priority, "Moderate"));
+        db.tblMaintenanceRequests.Where(m => m.Priority == "High").ExecuteUpdate(s => s.SetProperty(m => m.Priority, "Major"));
+    }
 }
 
 if (!app.Environment.IsDevelopment())

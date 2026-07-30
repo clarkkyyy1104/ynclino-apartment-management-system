@@ -24,7 +24,7 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
 
         [Required(ErrorMessage = "Priority is required.")]
         [Display(Name = "Priority")]
-        public string Priority { get; set; } = "Medium";
+        public string Priority { get; set; } = "Moderate";
 
         [Display(Name = "Status")]
         public string Status { get; set; } = "Pending";

@@ -18,7 +18,7 @@ namespace YnclinoApartmentManagementSystem.Models
         public string Description { get; set; } = string.Empty;
 
         [Required, MaxLength(20)]
-        public string Priority { get; set; } = "Medium";   // Low | Medium | High
+        public string Priority { get; set; } = "Moderate";   // Minor | Moderate | Major | Urgent
 
         [Required, MaxLength(30)]
         public string Status { get; set; } = "Pending";   // Pending | In Progress | Resolved | Cancelled

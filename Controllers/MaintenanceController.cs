@@ -35,7 +35,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         private static readonly string[] Categories = { "Plumbing", "Electrical", "Structural", "Appliance", "Other" };
-        private static readonly string[] Priorities = { "Low", "Medium", "High", "Urgent" };
+        private static readonly string[] Priorities = { "Minor", "Moderate", "Major", "Urgent" };
         private static readonly string[] Statuses = { "Pending", "In Progress", "Resolved", "Cancelled" };
         // resolved/cancelled requests move out of the active list into the archive
         private static readonly string[] ArchivedStatuses = { "Resolved", "Cancelled" };
