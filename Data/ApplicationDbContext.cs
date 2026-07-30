@@ -15,6 +15,7 @@ namespace YnclinoApartmentManagementSystem.Data
         public DbSet<tblMaintenanceRequest> tblMaintenanceRequests { get; set; }
         public DbSet<tblLostFoundItem> tblLostFoundItems { get; set; }
         public DbSet<tblClaimRequest> tblClaimRequests { get; set; }
+        public DbSet<tblUnitTransferRequest> tblUnitTransferRequests { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -118,6 +119,30 @@ namespace YnclinoApartmentManagementSystem.Data
                 entity.HasOne(c => c.Claimant)
                       .WithMany()
                       .HasForeignKey(c => c.ClaimantUserID)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<tblUnitTransferRequest>(entity =>
+            {
+                entity.HasKey(e => e.TransferID);
+                entity.Property(e => e.Reason).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(20).HasDefaultValue("Pending");
+                entity.Property(e => e.AdminNotes).HasMaxLength(500);
+
+                entity.HasOne(r => r.Tenant)
+                      .WithMany()
+                      .HasForeignKey(r => r.TenantID)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                // two FKs into tblUnits — keep them non-cascading to avoid multiple cascade paths
+                entity.HasOne(r => r.CurrentUnit)
+                      .WithMany()
+                      .HasForeignKey(r => r.CurrentUnitID)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(r => r.RequestedUnit)
+                      .WithMany()
+                      .HasForeignKey(r => r.RequestedUnitID)
                       .OnDelete(DeleteBehavior.Restrict);
             });
         }

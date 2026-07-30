@@ -87,16 +87,14 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 return d;
             }
 
-            // 22 units: 13 bedspacers (4 beds each), 9 studios (good for 2)
-            var bedspacers = new List<tblUnit>();
-            var studios = new List<tblUnit>();
+            // 32 units, all 2-person rooms at ₱6,000/month (deposit + one-month advance
+            // each equal to one month's rent). 22 will be filled by the 44 tenants below,
+            // leaving 10 vacant so transfers and new registrations have somewhere to go.
+            var units = new List<tblUnit>();
             int number = 101;
-            for (int i = 0; i < 13; i++)
-                bedspacers.Add(new tblUnit { UnitNumber = (number++).ToString(), UnitType = "Bedspacer", RentPrice = 1300m, Deposit = 1300m, AdvancePayment = 1300m, Capacity = 4, Status = "Vacant", DateAdded = NextAddedDate() });
-            for (int i = 0; i < 9; i++)
-                studios.Add(new tblUnit { UnitNumber = (number++).ToString(), UnitType = "Studio", RentPrice = 3000m, Deposit = 3000m, AdvancePayment = 3000m, Capacity = 2, Status = "Vacant", DateAdded = NextAddedDate() });
-            _context.tblUnits.AddRange(bedspacers);
-            _context.tblUnits.AddRange(studios);
+            for (int i = 0; i < 32; i++)
+                units.Add(new tblUnit { UnitNumber = (number++).ToString(), UnitType = "Studio", RentPrice = 6000m, Deposit = 6000m, AdvancePayment = 6000m, Capacity = 2, Status = "Vacant", DateAdded = NextAddedDate() });
+            _context.tblUnits.AddRange(units);
             await _context.SaveChangesAsync();
 
             // names chosen so every tenant's initials (and therefore username) are unique
@@ -108,12 +106,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
             for (int k = 0; k < 26; k++) pairs.Add((k, k));               // AA, BB, ... ZZ
             for (int k = 0; pairs.Count < 44; k++) pairs.Add((k, k + 1)); // AB, BC, ...
 
-            // where each tenant goes: fill 10 bedspacers (x4) and 2 studios (x2) = 44,
-            // leaving 3 bedspacers and 7 studios open
+            // fill the first 22 units (2 tenants each = 44), leaving the last 10 vacant
             var slots = new List<tblUnit>();
-            for (int i = 0; i < 10; i++) for (int s = 0; s < 4; s++) slots.Add(bedspacers[i]);
-            for (int i = 0; i < 2; i++) for (int s = 0; s < 2; s++) slots.Add(studios[i]);
+            for (int i = 0; i < 22; i++) for (int s = 0; s < 2; s++) slots.Add(units[i]);
 
+            var createdTenants = new List<tblTenant>();
             for (int t = 0; t < 44; t++)
             {
                 string first = firsts[pairs[t].f];
@@ -134,7 +131,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 _context.tblUsers.Add(user);
                 await _context.SaveChangesAsync();
 
-                _context.tblTenants.Add(new tblTenant
+                var tenant = new tblTenant
                 {
                     UserID = user.UserID,
                     UnitID = slots[t].UnitID,
@@ -146,19 +143,128 @@ namespace YnclinoApartmentManagementSystem.Controllers
                     EmergencyContactNumber = "09181234567",
                     Status = "Active",
                     DateRecorded = regDate
-                });
+                };
+                _context.tblTenants.Add(tenant);
+                createdTenants.Add(tenant);
             }
             await _context.SaveChangesAsync();
 
             // mark the fully-filled units Occupied; the rest stay Vacant
-            foreach (var unit in bedspacers.Concat(studios))
+            foreach (var unit in units)
             {
                 int active = await _context.tblTenants.CountAsync(t => t.UnitID == unit.UnitID && t.Status == "Active");
                 unit.Status = active >= unit.Capacity ? "Occupied" : "Vacant";
             }
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Loaded 22 units and 44 tenants. Sample tenants log in with password 'Tenant@123'.";
+            // ── Connected transactions ──────────────────────────────────────
+            // so the demo has real history to browse: past bills, maintenance
+            // requests, and lost & found items tied to the sample tenants.
+            var firstOfThisMonth = new DateTime(now.Year, now.Month, 1);
+            foreach (var (tenant, idx) in createdTenants.Select((t, i) => (t, i)))
+            {
+                // three months of bills: the two older months paid, the most
+                // recent month paid for most tenants and overdue for the rest
+                for (int m = 3; m >= 1; m--)
+                {
+                    var period = firstOfThisMonth.AddMonths(-m);
+                    var due = period.AddDays(9);           // due on the 10th
+                    bool paid = m >= 2 || (idx % 5 != 0);  // ~80% of last month paid
+                    var bill = new tblBilling
+                    {
+                        TenantID = tenant.TenantID,
+                        BillingPeriod = period,
+                        AmountDue = 6000m,
+                        DueDate = due,
+                        DateIssued = period
+                    };
+                    if (paid)
+                    {
+                        bill.Status = "Paid";
+                        bill.AmountPaid = 6000m;
+                        bill.DatePaid = due.AddDays(-rng.Next(0, 6));
+                    }
+                    else
+                    {
+                        bill.Status = due < now ? "Overdue" : "Unpaid";
+                    }
+                    _context.tblBillings.Add(bill);
+                }
+            }
+
+            // maintenance requests across a mix of statuses/priorities
+            string[] mCats = { "Plumbing", "Electrical", "Structural", "Appliance", "Other" };
+            string[] mPrio = { "Low", "Medium", "High", "Urgent" };
+            string Describe(string c) => c switch
+            {
+                "Plumbing"   => "Leaking faucet in the bathroom.",
+                "Electrical" => "Flickering lights in the room.",
+                "Structural" => "Crack on the wall near the window.",
+                "Appliance"  => "Air-conditioner is not cooling properly.",
+                _            => "General upkeep request."
+            };
+            for (int i = 0; i < 14; i++)
+            {
+                var tenant = createdTenants[rng.Next(createdTenants.Count)];
+                var cat = mCats[i % mCats.Length];
+                var status = (i % 5) switch { 0 => "Pending", 1 => "In Progress", 4 => "Cancelled", _ => "Resolved" };
+                var submitted = now.AddDays(-rng.Next(3, 120));
+                _context.tblMaintenanceRequests.Add(new tblMaintenanceRequest
+                {
+                    TenantID = tenant.TenantID,
+                    Category = cat,
+                    Description = Describe(cat),
+                    Priority = mPrio[i % mPrio.Length],
+                    Status = status,
+                    DateSubmitted = submitted,
+                    DateResolved = status == "Resolved" ? submitted.AddDays(rng.Next(1, 10)) : (DateTime?)null,
+                    AdminNotes = status == "Resolved" ? "Handled by maintenance staff." : null
+                });
+            }
+
+            // lost & found: "Found" items are logged by the admin (front desk) so any
+            // tenant can file a claim on them; "Lost" items are reported by tenants
+            var adminId = (await _context.tblUsers.FirstOrDefaultAsync(u => u.Role == "Admin"))?.UserID
+                          ?? createdTenants[0].UserID!.Value;
+
+            var foundItems = new List<tblLostFoundItem>
+            {
+                new() { ReportedByUserID = adminId, ItemName = "Black Leather Wallet", ItemType = "Found", Location = "Lobby",        Status = "Reported", Description = "Found near the front desk.", DateReported = now.AddDays(-6) },
+                new() { ReportedByUserID = adminId, ItemName = "iPhone 13 (blue case)", ItemType = "Found", Location = "2nd floor hall", Status = "Reported", Description = "Turned in by a resident.",    DateReported = now.AddDays(-4) },
+                new() { ReportedByUserID = adminId, ItemName = "Silver House Keys",     ItemType = "Found", Location = "Parking area", Status = "Reported", Description = "Set of three keys on a ring.",  DateReported = now.AddDays(-2) },
+                new() { ReportedByUserID = adminId, ItemName = "Umbrella (red)",         ItemType = "Found", Location = "Stairwell",    Status = "Resolved", Description = "Claimed and returned.",       DateReported = now.AddDays(-20) },
+            };
+            var lostItems = new List<tblLostFoundItem>
+            {
+                new() { ReportedByUserID = createdTenants[3].UserID!.Value,  ItemName = "Student ID Card",   ItemType = "Lost", Location = "Around the building", Status = "Reported", Description = "Lost my school ID.",       DateReported = now.AddDays(-5) },
+                new() { ReportedByUserID = createdTenants[8].UserID!.Value,  ItemName = "Laptop Charger",    ItemType = "Lost", Location = "Study area",         Status = "Reported", Description = "65W USB-C charger.",       DateReported = now.AddDays(-3) },
+                new() { ReportedByUserID = createdTenants[15].UserID!.Value, ItemName = "Silver Ring",       ItemType = "Lost", Location = "Laundry room",       Status = "Resolved", Description = "Already recovered.",       DateReported = now.AddDays(-25) },
+            };
+            _context.tblLostFoundItems.AddRange(foundItems);
+            _context.tblLostFoundItems.AddRange(lostItems);
+            await _context.SaveChangesAsync();
+
+            // a couple of ownership claims on the found items (one pending, one approved)
+            _context.tblClaimRequests.Add(new tblClaimRequest
+            {
+                ItemID = foundItems[0].ItemID,
+                ClaimantUserID = createdTenants[5].UserID!.Value,
+                VerificationDetails = "It's my wallet — brown card holder inside with my ID.",
+                Status = "Pending",
+                SubmittedAt = now.AddDays(-3)
+            });
+            _context.tblClaimRequests.Add(new tblClaimRequest
+            {
+                ItemID = foundItems[1].ItemID,
+                ClaimantUserID = createdTenants[9].UserID!.Value,
+                VerificationDetails = "That's my phone, lock screen is a photo of a dog.",
+                Status = "Pending",
+                SubmittedAt = now.AddDays(-1)
+            });
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Loaded 32 units and 44 tenants with sample bills, maintenance requests, and lost & found items. Sample tenants log in with password 'Tenant@123'.";
             return RedirectToAction(nameof(Index));
         }
 

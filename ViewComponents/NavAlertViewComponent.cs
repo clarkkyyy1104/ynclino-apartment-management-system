@@ -22,6 +22,7 @@ namespace YnclinoApartmentManagementSystem.ViewComponents
             {
                 "Billing"   => await HasBillingAlertAsync(),
                 "LostFound" => await HasLostFoundAlertAsync(),
+                "Transfer"  => await HasTransferAlertAsync(),
                 _           => false
             };
             return View(alert);
@@ -61,6 +62,14 @@ namespace YnclinoApartmentManagementSystem.ViewComponents
                 l.ItemType == "Found" &&
                 l.Status == "Reported" &&
                 l.ReportedByUserID != uid);
+        }
+
+        // Staff: there are unit-transfer requests waiting to be reviewed.
+        // Tenant: no alert (they can see their own request status on the page).
+        private async Task<bool> HasTransferAlertAsync()
+        {
+            if (!IsStaff()) return false;
+            return await _context.tblUnitTransferRequests.AnyAsync(r => r.Status == "Pending");
         }
     }
 }

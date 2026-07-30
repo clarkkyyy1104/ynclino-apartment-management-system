@@ -85,6 +85,7 @@ using (var scope = app.Services.CreateScope())
         db.tblMaintenanceRequests.FirstOrDefault();
         db.tblLostFoundItems.FirstOrDefault();
         db.tblClaimRequests.FirstOrDefault();
+        db.tblUnitTransferRequests.FirstOrDefault();
     }
 
     try
