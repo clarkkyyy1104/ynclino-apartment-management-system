@@ -76,16 +76,19 @@ using (var scope = app.Services.CreateScope())
     // Guard against a leftover database whose schema predates the current
     // models: probe every table, and if the shape no longer matches, rebuild
     // it from scratch. A fresh, matching database never triggers this.
+    // AsNoTracking: probing must not leave stale entities in the change tracker.
+    // If a probe fails partway and we rebuild below, any rows already read would
+    // otherwise collide (same key) with the freshly-seeded rows on SaveChanges.
     void ProbeSchema()
     {
-        db.tblTenants.FirstOrDefault();
-        db.tblUnits.FirstOrDefault();
-        db.tblUsers.FirstOrDefault();
-        db.tblBillings.FirstOrDefault();
-        db.tblMaintenanceRequests.FirstOrDefault();
-        db.tblLostFoundItems.FirstOrDefault();
-        db.tblClaimRequests.FirstOrDefault();
-        db.tblUnitTransferRequests.FirstOrDefault();
+        db.tblTenants.AsNoTracking().FirstOrDefault();
+        db.tblUnits.AsNoTracking().FirstOrDefault();
+        db.tblUsers.AsNoTracking().FirstOrDefault();
+        db.tblBillings.AsNoTracking().FirstOrDefault();
+        db.tblMaintenanceRequests.AsNoTracking().FirstOrDefault();
+        db.tblLostFoundItems.AsNoTracking().FirstOrDefault();
+        db.tblClaimRequests.AsNoTracking().FirstOrDefault();
+        db.tblUnitTransferRequests.AsNoTracking().FirstOrDefault();
     }
 
     try
@@ -96,6 +99,8 @@ using (var scope = app.Services.CreateScope())
     {
         db.Database.EnsureDeleted();
         db.Database.EnsureCreated();
+        // drop anything the failed probe may have tracked before it threw
+        db.ChangeTracker.Clear();
     }
 
     // create a default admin the first time the app runs
