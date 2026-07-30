@@ -74,26 +74,25 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var now = DateTime.Now;
             var rng = new Random();
 
-            // random past date for tenants (never today)
-            DateTime RandomPastDate() => now.AddDays(-rng.Next(30, 730));
-
-            // unit "Date Added" climbs with the unit number: the earliest unit is ~2.5
-            // years back and each following unit is a little newer, all still in the past
-            var addedDate = now.AddDays(-900);
-            DateTime NextAddedDate()
-            {
-                var d = addedDate;
-                addedDate = addedDate.AddDays(rng.Next(15, 41));
-                return d;
-            }
+            // the property came online at the start of 2023; every sample date is drawn
+            // from that window — 2023 up to the present — and never lands in the future
+            var seedStart = new DateTime(2023, 1, 15);
+            var unitEnd = now.AddDays(-20);
+            double unitSpan = (unitEnd - seedStart).TotalDays;
 
             // 32 units, all 2-person rooms at ₱6,000/month (deposit + one-month advance
             // each equal to one month's rent). 22 will be filled by the 44 tenants below,
             // leaving 10 vacant so transfers and new registrations have somewhere to go.
+            // "Date Added" climbs from early 2023 to a few weeks ago, with light jitter.
             var units = new List<tblUnit>();
             int number = 101;
             for (int i = 0; i < 32; i++)
-                units.Add(new tblUnit { UnitNumber = (number++).ToString(), UnitType = "Studio", RentPrice = 6000m, Deposit = 6000m, AdvancePayment = 6000m, Capacity = 2, Status = "Vacant", DateAdded = NextAddedDate() });
+            {
+                var added = seedStart.AddDays(unitSpan * i / 31 + rng.Next(-4, 5));
+                if (added > unitEnd) added = unitEnd;
+                if (added < seedStart.AddDays(-6)) added = seedStart;
+                units.Add(new tblUnit { UnitNumber = (number++).ToString(), UnitType = "Studio", RentPrice = 6000m, Deposit = 6000m, AdvancePayment = 6000m, Capacity = 2, Status = "Vacant", DateAdded = added });
+            }
             _context.tblUnits.AddRange(units);
             await _context.SaveChangesAsync();
 
@@ -115,8 +114,15 @@ namespace YnclinoApartmentManagementSystem.Controllers
             {
                 string first = firsts[pairs[t].f];
                 string last = lasts[pairs[t].l];
-                // a random past registration date so the username month varies too
-                var regDate = RandomPastDate();
+                // registered sometime after their unit came online, up to the present,
+                // so the username month (and the whole timeline) spans 2023 → now
+                var unitAdded = slots[t].DateAdded;
+                int regSpan = Math.Max(20, (int)(now - unitAdded).TotalDays - 3);
+                var regDate = unitAdded.AddDays(rng.Next(3, regSpan));
+                if (regDate > now.AddDays(-1)) regDate = now.AddDays(-1);
+                // annual lease that has been renewed as needed, so it ends within the next year
+                var leaseEnd = regDate.AddYears(1);
+                while (leaseEnd < now) leaseEnd = leaseEnd.AddYears(1);
                 string username = $"{regDate:yy}-{regDate:MM}{char.ToUpper(first[0])}{char.ToUpper(last[0])}";
 
                 var user = new tblUser
@@ -141,6 +147,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
                     EmergencyContactName = "Guardian " + last,
                     EmergencyContactRelationship = "Parent",
                     EmergencyContactNumber = "09181234567",
+                    MoveInDate = regDate,
+                    LeaseStart = leaseEnd.AddYears(-1),
+                    LeaseEnd = leaseEnd,
                     Status = "Active",
                     DateRecorded = regDate
                 };
@@ -163,9 +172,13 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var firstOfThisMonth = new DateTime(now.Year, now.Month, 1);
             foreach (var (tenant, idx) in createdTenants.Select((t, i) => (t, i)))
             {
-                // three months of bills: the two older months paid, the most
-                // recent month paid for most tenants and overdue for the rest
-                for (int m = 3; m >= 1; m--)
+                // one bill per completed month the tenant has lived here, capped at the
+                // last 6 so the history reads real without ballooning the table; older
+                // months are paid, the most recent is paid for most and overdue for the rest
+                var moveMonth = new DateTime(tenant.MoveInDate!.Value.Year, tenant.MoveInDate.Value.Month, 1);
+                int monthsHere = ((firstOfThisMonth.Year - moveMonth.Year) * 12) + firstOfThisMonth.Month - moveMonth.Month;
+                int months = Math.Min(6, monthsHere);
+                for (int m = months; m >= 1; m--)
                 {
                     var period = firstOfThisMonth.AddMonths(-m);
                     var due = period.AddDays(9);           // due on the 10th
@@ -208,7 +221,13 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 var tenant = createdTenants[rng.Next(createdTenants.Count)];
                 var cat = mCats[i % mCats.Length];
                 var status = (i % 5) switch { 0 => "Pending", 1 => "In Progress", 4 => "Cancelled", _ => "Resolved" };
-                var submitted = now.AddDays(-rng.Next(3, 120));
+                // submitted sometime during this tenant's stay (so it never predates move-in)
+                var moveIn = tenant.MoveInDate ?? now.AddMonths(-6);
+                int daysHere = Math.Max(15, (int)(now - moveIn).TotalDays);
+                var submitted = moveIn.AddDays(rng.Next(10, daysHere));
+                if (submitted > now.AddDays(-1)) submitted = now.AddDays(-1);
+                var resolved = submitted.AddDays(rng.Next(1, 10));
+                if (resolved > now) resolved = now;
                 _context.tblMaintenanceRequests.Add(new tblMaintenanceRequest
                 {
                     TenantID = tenant.TenantID,
@@ -217,7 +236,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                     Priority = mPrio[i % mPrio.Length],
                     Status = status,
                     DateSubmitted = submitted,
-                    DateResolved = status == "Resolved" ? submitted.AddDays(rng.Next(1, 10)) : (DateTime?)null,
+                    DateResolved = status == "Resolved" ? resolved : (DateTime?)null,
                     AdminNotes = status == "Resolved" ? "Handled by maintenance staff." : null
                 });
             }
