@@ -178,10 +178,14 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 var moveMonth = new DateTime(tenant.MoveInDate!.Value.Year, tenant.MoveInDate.Value.Month, 1);
                 int monthsHere = ((firstOfThisMonth.Year - moveMonth.Year) * 12) + firstOfThisMonth.Month - moveMonth.Month;
                 int months = Math.Min(6, monthsHere);
+                // each tenant's rent falls due on their own billing day — the day of the
+                // month they moved in (clamped to 28) — so schedules differ across tenants
+                int billingDay = Math.Min(tenant.MoveInDate.Value.Day, 28);
                 for (int m = months; m >= 1; m--)
                 {
                     var period = firstOfThisMonth.AddMonths(-m);
-                    var due = period.AddDays(9);           // due on the 10th
+                    var due = new DateTime(period.Year, period.Month, billingDay);
+                    var issued = due.AddDays(-7);          // billed about a week ahead
                     bool paid = m >= 2 || (idx % 5 != 0);  // ~80% of last month paid
                     var bill = new tblBilling
                     {
@@ -189,13 +193,15 @@ namespace YnclinoApartmentManagementSystem.Controllers
                         BillingPeriod = period,
                         AmountDue = 6000m,
                         DueDate = due,
-                        DateIssued = period
+                        DateIssued = issued
                     };
                     if (paid)
                     {
                         bill.Status = "Paid";
                         bill.AmountPaid = 6000m;
-                        bill.DatePaid = due.AddDays(-rng.Next(0, 6));
+                        // paid a few days on either side of the due date, never in the future
+                        var datePaid = due.AddDays(rng.Next(-4, 4));
+                        bill.DatePaid = datePaid > now ? now : datePaid;
                     }
                     else
                     {
