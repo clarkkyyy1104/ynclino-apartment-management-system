@@ -2,20 +2,30 @@
 @{
     ViewData["Title"] = "Unit Transfer Requests";
     bool isAdmin = User.IsInRole("Admin");
+    bool archived = ViewBag.Archived == true;
+    string title = isAdmin
+        ? (archived ? "Transfer Archive" : "Unit Transfer Requests")
+        : (archived ? "My Past Requests" : "My Transfer Requests");
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="fw-bold mb-0">@(isAdmin ? "Unit Transfer Requests" : "My Transfer Requests")</h3>
-    @if (!isAdmin)
-    {
-        <a asp-action="Create" class="btn btn-primary">+ Request Transfer</a>
-    }
+    <h3 class="fw-bold mb-0">@title</h3>
+    <div class="d-flex gap-2">
+        <div class="btn-group">
+            <a asp-action="Index" class="btn btn-sm @(archived ? "btn-outline-secondary" : "btn-secondary")">Active</a>
+            <a asp-action="Index" asp-route-archived="true" class="btn btn-sm @(archived ? "btn-secondary" : "btn-outline-secondary")">Archive</a>
+        </div>
+        @if (!isAdmin && !archived)
+        {
+            <a asp-action="Create" class="btn btn-primary">+ Request Transfer</a>
+        }
+    </div>
 </div>
 
 @if (!Model.Any())
 {
     <div class="card"><div class="card-body text-center text-muted py-5">
-        No transfer requests@(isAdmin ? "" : " yet").
+        @(archived ? "Nothing in the archive yet." : (isAdmin ? "No pending transfer requests." : "No transfer requests yet."))
     </div></div>
 }
 else

@@ -30,8 +30,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 .FirstOrDefaultAsync(t => t.UserID == uid && t.Status == "Active");
         }
 
+        // reviewed requests move out of the active list into the archive
+        private static readonly string[] ArchivedStatuses = { "Approved", "Rejected" };
+
         // GET: Transfers
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(bool archived = false)
         {
             IQueryable<tblUnitTransferRequest> query = _context.tblUnitTransferRequests
                 .Include(r => r.Tenant).ThenInclude(t => t!.Unit)
@@ -41,15 +44,24 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (User.IsInRole("Tenant"))
             {
                 var tenant = await GetCurrentTenantAsync();
-                if (tenant == null) return View(new List<tblUnitTransferRequest>());
+                if (tenant == null)
+                {
+                    ViewBag.Archived = archived;
+                    return View(new List<tblUnitTransferRequest>());
+                }
                 query = query.Where(r => r.TenantID == tenant.TenantID);
             }
 
-            // pending first, then most recent
+            // the archive holds reviewed requests; the main list holds pending ones
+            if (archived)
+                query = query.Where(r => ArchivedStatuses.Contains(r.Status));
+            else
+                query = query.Where(r => !ArchivedStatuses.Contains(r.Status));
+
             var list = await query
-                .OrderBy(r => r.Status == "Pending" ? 0 : 1)
-                .ThenByDescending(r => r.DateRequested)
+                .OrderByDescending(r => archived ? r.DateReviewed : r.DateRequested)
                 .ToListAsync();
+            ViewBag.Archived = archived;
             return View(list);
         }
 
