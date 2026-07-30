@@ -81,6 +81,13 @@
                             <a asp-action="Edit" asp-route-id="@unit.UnitID" class="btn btn-sm btn-outline-primary">Edit</a>
                             <a asp-action="Delete" asp-route-id="@unit.UnitID" class="btn btn-sm btn-outline-danger">Delete</a>
                         }
+                        else if (!isStaff && unit.Status == "Vacant"
+                            && ViewBag.TenantUnitID != null && unit.UnitID != (int)ViewBag.TenantUnitID
+                            && ViewBag.HasPendingTransfer != true)
+                        {
+                            <a asp-controller="Transfers" asp-action="Create" asp-route-unitId="@unit.UnitID"
+                               class="btn btn-sm btn-outline-success">Request Transfer</a>
+                        }
                     </td>
                 </tr>
             }

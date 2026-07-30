@@ -65,11 +65,30 @@ footer {
 /* ── Dashboard — stat cards ── */
 .stat-card {
     border-radius: .5rem;
-    transition: box-shadow .15s ease;
+    transition: box-shadow .15s ease, transform .15s ease;
 }
 
 .stat-card:hover {
-    box-shadow: 0 4px 14px rgba(0,0,0,0.09) !important;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.10) !important;
+    transform: translateY(-3px);
+}
+
+/* clickable stat/info cards keep normal text styling */
+a.stat-card,
+a.hover-lift {
+    display: block;
+    cursor: pointer;
+    color: inherit;
+}
+
+/* reusable lift-on-hover for dashboard info boxes */
+.hover-lift {
+    transition: box-shadow .15s ease, transform .15s ease;
+}
+
+.hover-lift:hover {
+    box-shadow: 0 6px 18px rgba(0,0,0,0.10) !important;
+    transform: translateY(-3px);
 }
 
 .stat-icon {

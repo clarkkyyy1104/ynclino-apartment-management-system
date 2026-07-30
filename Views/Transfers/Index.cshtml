@@ -15,12 +15,16 @@
             <a asp-action="Index" class="btn btn-sm @(archived ? "btn-outline-secondary" : "btn-secondary")">Active</a>
             <a asp-action="Index" asp-route-archived="true" class="btn btn-sm @(archived ? "btn-secondary" : "btn-outline-secondary")">Archive</a>
         </div>
-        @if (!isAdmin && !archived)
-        {
-            <a asp-action="Create" class="btn btn-primary">+ Request Transfer</a>
-        }
     </div>
 </div>
+
+@if (!isAdmin && !archived)
+{
+    <p class="text-muted small mb-3">
+        To request a transfer, open <a asp-controller="Units" asp-action="Index">Units</a> and use
+        <strong>Request Transfer</strong> on any vacant unit. Your requests and their status show here.
+    </p>
+}
 
 @if (!Model.Any())
 {

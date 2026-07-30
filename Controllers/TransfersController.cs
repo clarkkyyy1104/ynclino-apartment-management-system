@@ -65,9 +65,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return View(list);
         }
 
-        // GET: Transfers/Create  (tenant files a request)
+        // GET: Transfers/Create?unitId=5  (tenant confirms a move to a vacant unit
+        // they picked from the Units page)
         [Authorize(Roles = "Tenant")]
-        public async Task<IActionResult> Create()
+        public async Task<IActionResult> Create(int? unitId)
         {
             var tenant = await GetCurrentTenantAsync();
             if (tenant == null)
@@ -76,15 +77,27 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            if (await _context.tblUnitTransferRequests.AnyAsync(r => r.TenantID == tenant.TenantID && r.Status == "Pending"))
+            if (await HasPendingAsync(tenant.TenantID))
             {
                 TempData["Error"] = "You already have a pending transfer request. Please wait for it to be reviewed.";
                 return RedirectToAction(nameof(Index));
             }
 
-            await PopulateVacantUnitsAsync(tenant);
+            if (unitId == null)
+            {
+                TempData["Error"] = "Choose a vacant unit from the Units page to request a transfer.";
+                return RedirectToAction("Index", "Units");
+            }
+
+            var target = await _context.tblUnits.FindAsync(unitId.Value);
+            if (target == null || target.UnitID == tenant.UnitID || !await UnitHasRoomAsync(target))
+            {
+                TempData["Error"] = "That unit isn't available for a transfer. Please pick another vacant unit.";
+                return RedirectToAction("Index", "Units");
+            }
+
             ViewBag.CurrentUnit = tenant.Unit?.UnitNumber;
-            return View();
+            return View(target);
         }
 
         // POST: Transfers/Create
@@ -96,26 +109,24 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var tenant = await GetCurrentTenantAsync();
             if (tenant == null) return Forbid();
 
-            if (await _context.tblUnitTransferRequests.AnyAsync(r => r.TenantID == tenant.TenantID && r.Status == "Pending"))
+            if (await HasPendingAsync(tenant.TenantID))
             {
                 TempData["Error"] = "You already have a pending transfer request.";
                 return RedirectToAction(nameof(Index));
             }
 
-            if (string.IsNullOrWhiteSpace(reason))
-                ModelState.AddModelError("reason", "Please give a reason for the transfer.");
-
             var target = await _context.tblUnits.FindAsync(requestedUnitID);
-            if (target == null || requestedUnitID == tenant.UnitID)
-                ModelState.AddModelError("requestedUnitID", "Choose a different, available unit.");
-            else if (!await UnitHasRoomAsync(target))
-                ModelState.AddModelError("requestedUnitID", "That unit is no longer available.");
-
-            if (!ModelState.IsValid)
+            if (target == null || target.UnitID == tenant.UnitID || !await UnitHasRoomAsync(target))
             {
-                await PopulateVacantUnitsAsync(tenant);
+                TempData["Error"] = "That unit is no longer available. Please pick another vacant unit.";
+                return RedirectToAction("Index", "Units");
+            }
+
+            if (string.IsNullOrWhiteSpace(reason))
+            {
+                ModelState.AddModelError("reason", "Please give a reason for the transfer.");
                 ViewBag.CurrentUnit = tenant.Unit?.UnitNumber;
-                return View();
+                return View(target);
             }
 
             _context.tblUnitTransferRequests.Add(new tblUnitTransferRequest
@@ -197,6 +208,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        private async Task<bool> HasPendingAsync(int tenantId) =>
+            await _context.tblUnitTransferRequests.AnyAsync(r => r.TenantID == tenantId && r.Status == "Pending");
+
         // a unit can take the tenant if it isn't full and isn't under maintenance
         private async Task<bool> UnitHasRoomAsync(tblUnit unit)
         {
@@ -211,28 +225,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (unit == null || unit.Status == "Under Maintenance") return;
             int active = await _context.tblTenants.CountAsync(t => t.UnitID == unitID && t.Status == "Active");
             unit.Status = active >= unit.Capacity ? "Occupied" : "Vacant";
-        }
-
-        // vacant units (with room) other than the tenant's current one
-        private async Task PopulateVacantUnitsAsync(tblTenant tenant)
-        {
-            var units = await _context.tblUnits
-                .Where(u => u.UnitID != tenant.UnitID && u.Status != "Under Maintenance")
-                .OrderBy(u => u.UnitNumber)
-                .ToListAsync();
-
-            var options = new List<SelectListItem>();
-            foreach (var u in units)
-            {
-                int active = await _context.tblTenants.CountAsync(t => t.UnitID == u.UnitID && t.Status == "Active");
-                if (active < u.Capacity)
-                    options.Add(new SelectListItem
-                    {
-                        Value = u.UnitID.ToString(),
-                        Text = $"Unit {u.UnitNumber} — {u.UnitType} (₱{u.RentPrice:N0}/mo, {u.Capacity - active} slot(s) open)"
-                    });
-            }
-            ViewBag.VacantUnits = options;
         }
     }
 }
