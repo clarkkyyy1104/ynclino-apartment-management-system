@@ -17,14 +17,6 @@
                     <button type="submit" class="btn btn-outline-secondary">Load Sample Data</button>
                 </form>
             }
-            else
-            {
-                <form asp-action="ReloadSampleData" method="post"
-                      onsubmit="return confirm('This DELETES all current units, tenants, and records, then loads a fresh sample set. Continue?')">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="btn btn-outline-danger">Reload Sample Data</button>
-                </form>
-            }
             <a asp-action="Create" class="btn btn-primary">+ Add Unit</a>
         </div>
     }
