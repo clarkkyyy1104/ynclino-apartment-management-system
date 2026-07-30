@@ -335,13 +335,12 @@ namespace YnclinoApartmentManagementSystem.Controllers
             tenant.EmergencyContactNumber = vm.EmergencyContactNumber;
             tenant.Status = vm.Status;
 
-            // stamp a move-out when deactivating, clear it when bringing the tenant back
+            // stamp a move-out when deactivating, clear it when bringing the tenant back,
+            // and otherwise leave any existing move-out date untouched
             if (previousStatus == "Active" && !becomingActive)
-                tenant.MoveOutDate = vm.MoveOutDate ?? DateTime.Now;
+                tenant.MoveOutDate = DateTime.Now;
             else if (becomingActive)
                 tenant.MoveOutDate = null;
-            else
-                tenant.MoveOutDate = vm.MoveOutDate;
 
             await _context.SaveChangesAsync();
 

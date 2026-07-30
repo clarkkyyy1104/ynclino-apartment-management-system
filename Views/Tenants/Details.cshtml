@@ -41,8 +41,11 @@
                         }
                     </dd>
 
-                    <dt class="col-sm-4">Move-Out Date</dt>
-                    <dd class="col-sm-8">@(Model.MoveOutDate?.ToString("MMMM dd, yyyy") ?? "—")</dd>
+                    @if (Model.MoveOutDate.HasValue)
+                    {
+                        <dt class="col-sm-4">Move-Out Date</dt>
+                        <dd class="col-sm-8">@Model.MoveOutDate.Value.ToString("MMMM dd, yyyy")</dd>
+                    }
 
                     <dt class="col-sm-4">Status</dt>
                     <dd class="col-sm-8">
