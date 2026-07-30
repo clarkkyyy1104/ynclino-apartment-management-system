@@ -1,117 +1,165 @@
 # Ynclino Apartment Management System
 
-An ASP.NET Core MVC application for managing apartment units, tenants, and day-to-day operations.
+An ASP.NET Core MVC application for managing apartment units, tenants, billing,
+maintenance, and lost & found.
 
 ---
 
 ## Tech Stack
 
 - **Framework:** ASP.NET Core MVC 8.0
-- **Database:** Microsoft SQL Server (LocalDB for dev, SQL Server Express / Standard for production)
-- **ORM:** Entity Framework Core 8.0 (Code-First with Migrations)
-- **UI:** Bootstrap 5.3 (via CDN)
+- **Database:** MySQL 8.0 (or MariaDB 10.4+)
+- **ORM:** Entity Framework Core 8.0 with the Pomelo MySQL provider
+  (schema is created automatically on first run — no migrations to apply)
+- **UI:** Bootstrap 5.3 with a custom Ynclino theme
 
 ---
 
 ## Features
 
-### Master File
-- **Units** — Full CRUD with status tracking (Vacant / Occupied / Under Maintenance)
-- **Tenants** — Full CRUD with soft-delete (history preserved)
-
-### Transactions
-- Billing & Payment Monitoring *(scaffold)*
-- Maintenance Request *(scaffold)*
-- Lost & Found *(scaffold)*
-
-### Built-in Business Rules
-- Unit status auto-updates when a tenant is assigned or deactivated
-- Tenant deactivation preserves billing & maintenance history
-- Cannot delete a unit that still has active tenants
-- Unique constraint on unit numbers and usernames
+- **Units** — full CRUD; separate Deposit and One-Month-Advance (each auto-fills to one month's rent); status tracking (Vacant / Occupied / Under Maintenance)
+- **Tenants** — full CRUD with soft-delete (history preserved), emergency contact details
+- **Billing & Payment** — issue and track bills
+- **Maintenance** — requests with Low/Medium/High/Urgent priority, issue types, photo attachments, and an Active/Archive view
+- **Lost & Found** — report items with photos and handle claims
+- **Roles** — Admin and Tenant, each with a tailored dashboard
 
 ---
 
-## Local Development Setup
+## Prerequisites
 
-### Requirements
-- Visual Studio 2022 (or VS Code with C# Dev Kit)
-- .NET 8 SDK
-- SQL Server LocalDB *(included with Visual Studio)*
+- Visual Studio 2022 (or VS Code with the C# Dev Kit)
+- **.NET 8 SDK**
+- **MySQL Server 8.0** (installed via the *MySQL Installer for Windows*) and,
+  optionally, **MySQL Workbench** for browsing the database
 
-### Steps
-1. Clone the repository
-2. Open `YnclinoAMS.csproj` in Visual Studio
-3. Press **F5**
-
-That's it. On first run the app will automatically:
-- Create the `YnclinoAMSDb` database in LocalDB
-- Apply all EF Core migrations
-- Open the browser at `https://localhost:7198`
+> ⚠️ MySQL **Workbench** is only a GUI — it is not the database. You must have
+> **MySQL Server** installed and its Windows service (`MySQL80`) **running**.
 
 ---
 
-## Production Deployment (On-Premise)
+## Database Setup
 
-### Requirements on the target machine
-- Windows Server / Windows 10 or 11
-- .NET 8 Runtime (ASP.NET Core Hosting Bundle)
-- SQL Server Express (free) or SQL Server Standard
-- IIS *(optional but recommended)*
+The app **creates the database and all tables automatically** on first run, so
+you do not need to create anything by hand. You only need a running MySQL server
+and your password in a local config file.
 
-### Deployment Steps
+### 1. Make sure MySQL Server is running
+`Win + R` → `services.msc` → find **MySQL80** → its status should be **Running**
+(set *Startup type* to **Automatic** so it always starts). Note the **root
+password** you set when installing MySQL.
 
-1. **Install SQL Server Express** on the server machine
+### 2. Create `appsettings.Local.json` (your private config)
+In the project root, copy `appsettings.Local.json.example` to
+**`appsettings.Local.json`** and put your own MySQL password in it:
 
-2. **Update the connection string** in `appsettings.json`:
-   ```json
-   "DefaultConnection": "Server=.\\SQLEXPRESS;Database=YnclinoAMSDb;Trusted_Connection=True;TrustServerCertificate=True"
-   ```
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "server=localhost;port=3306;database=YnclinoApartmentManagementSystemDb;user=root;password=YOUR_PASSWORD_HERE;"
+  }
+}
+```
 
-3. **Publish the project** from Visual Studio:
-   ```
-   Build → Publish → Folder → publish/
-   ```
+- This file is **git-ignored** — your password is never committed or pushed.
+- **Do not** put your real password in `appsettings.json`; leave its
+  `YOUR_MYSQL_PASSWORD` placeholder untouched.
+- Each teammate creates their own `appsettings.Local.json` with their own password.
 
-4. **Deploy** by copying the `publish/` folder to the server. Run either:
-   - As a Windows Service via `dotnet YnclinoAMS.dll`, or
-   - Hosted in IIS (recommended for production)
+### 3. Run the app
+Press **F5** in Visual Studio (or `dotnet run`). On first launch it:
+- creates the `YnclinoApartmentManagementSystemDb` database and tables,
+- seeds the default admin account,
+- opens at **https://localhost:7251**.
 
-5. On first launch, migrations apply automatically — no manual database setup required.
+### 4. Log in and load demo data
+- Default admin login: **`admin`** / **`Admin@123`**
+- On the **Units** page, click **Load Sample Data** to populate demo units and tenants.
+
+> **Resetting the database:** because the schema is created (not migrated), the
+> quickest way to start fresh is to drop it and re-run the app:
+> ```sql
+> DROP DATABASE YnclinoApartmentManagementSystemDb;
+> ```
+
+### Forgot your MySQL root password?
+Stop the `MySQL80` service, create `C:\mysql-init.txt` containing
+`ALTER USER 'root'@'localhost' IDENTIFIED BY 'NewPass@2026';`, then from an
+**Administrator** Command Prompt run:
+```
+"C:\Program Files\MySQL\MySQL Server 8.0\bin\mysqld" --defaults-file="C:\ProgramData\MySQL\MySQL Server 8.0\my.ini" --init-file="C:\mysql-init.txt" --console
+```
+Press `Ctrl+C` after it starts, restart the service, delete the init file, and
+update `appsettings.Local.json` with the new password.
+
+---
+
+## Brand & Theme
+
+The Ynclino visual identity is derived from the logo.
+
+### Colors
+
+| Role | Hex | Used for |
+|------|-----|----------|
+| **Brand orange** | `#ff8235` | Buttons, active nav item, table/card top borders, profile pill, login accents |
+| **Orange (hover/active)** | `#e5701f` | Button hover/active states |
+| **Charcoal** | `#37383a` | Sidebar, table headers, panel/card headers, stat-card caps |
+| **Cream / off-white** | `#ecebe4` | Text on dark (login, sidebar wordmark) |
+| Page background | `#f6f8fb` | App content area |
+
+There is **no blue** in the palette. Brand tokens live as CSS variables in
+`wwwroot/css/theme.css` (`--ynk-orange`, `--ynk-dark`, etc.); Bootstrap's
+`primary` is mapped to charcoal so all default "primary" fills stay on-brand.
+
+### Logos
+
+Source SVGs are in `Logos/`; web-ready copies used by the app are in
+`wwwroot/images/`:
+
+| File | Variant | Where it's used |
+|------|---------|-----------------|
+| `ynclino-logo-text-light.svg` | Wordmark, light | Sidebar and login (dark backgrounds) |
+| `ynclino-logo-light.svg` | Icon only, light | For dark backgrounds |
+| `ynclino-logo-dark.svg` | Icon only, dark | Browser favicon (light backgrounds) |
+
+> A dark-background **wordmark** (icon + text) is not yet available; when it is,
+> drop it into `wwwroot/images/` and it can be used on any light surface.
 
 ---
 
 ## Project Structure
 
 ```
-YnclinoAMS/
-├── Controllers/         MVC controllers (Units, Tenants, Billing, etc.)
+ynclino-apartment-management-system/
+├── Controllers/         MVC controllers (Units, Tenants, Billing, Maintenance, LostFound, ...)
 ├── Data/                ApplicationDbContext (EF Core)
-├── Migrations/          Database schema history
-├── Models/              Entity classes (tblUnit, tblTenant, tblUser)
+├── Helpers/             Password hashing, image upload helper
+├── Logos/               Source logo SVGs
+├── Models/              Entity classes (tblUnit, tblTenant, ...)
 │   └── ViewModels/      Form-binding view models
-├── Properties/          launchSettings.json
 ├── Views/               Razor views (one folder per controller)
-│   └── Shared/          Layout, partials, error page
-├── wwwroot/             Static assets (CSS, JS)
-├── appsettings.json     Connection string + logging config
-├── Program.cs           App entry point
-└── YnclinoAMS.csproj    Project file
+│   └── Shared/          Layout, partials
+├── wwwroot/
+│   ├── css/             site.css, theme.css (brand theme)
+│   ├── images/          Logos
+│   └── uploads/         Runtime-uploaded photos (git-ignored)
+├── appsettings.json              Config with a password placeholder (committed)
+├── appsettings.Local.json        Your private DB password (git-ignored — you create this)
+├── appsettings.Local.json.example  Template to copy
+├── Program.cs                    App entry point
+└── YnclinoApartmentManagementSystem.csproj
 ```
 
 ---
 
-## Backup & Maintenance
+## Notes for the team
 
-The database is a single SQL Server database called `YnclinoAMSDb`. Standard backup methods apply:
-
-```sql
-BACKUP DATABASE YnclinoAMSDb
-TO DISK = 'C:\Backups\YnclinoAMSDb.bak'
-WITH FORMAT, INIT, COMPRESSION;
-```
-
-Schedule via SQL Server Agent or Windows Task Scheduler for automated backups.
+- **Never commit your database password.** It belongs only in
+  `appsettings.Local.json` (git-ignored). If you accidentally commit it, change
+  your MySQL password and remove it from the tracked file.
+- Uploaded photos are stored under `wwwroot/uploads/` and are git-ignored, so
+  they stay on each person's machine.
 
 ---
 
