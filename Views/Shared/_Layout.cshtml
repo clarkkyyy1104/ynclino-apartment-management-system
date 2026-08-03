@@ -62,7 +62,6 @@
                     <li class="nav-item"><a class="nav-link @Active("Transfers")" asp-controller="Transfers" asp-action="Index">@(User.IsInRole("Admin") ? "Transfer Requests" : "Unit Transfer") @await Component.InvokeAsync("NavAlert", new { module = "Transfer" })</a></li>
                 </ul>
                 <ul class="navbar-nav">
-                    <li class="nav-item"><a class="nav-link @Active("Notifications")" asp-controller="Notifications" asp-action="Index">Notifications @await Component.InvokeAsync("NavAlert", new { module = "All" })</a></li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             @User.Identity.Name (@(User.IsInRole("Admin") ? "Admin" : "Tenant"))
