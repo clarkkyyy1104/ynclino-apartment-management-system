@@ -37,7 +37,8 @@
                         @{
                             var badge = Model.Status switch {
                                 "Paid"    => "bg-success",
-                                "Overdue" => "bg-danger",
+                                "Partial" => "bg-info text-dark",
+                                "Late"    => "bg-danger",
                                 _         => "bg-warning text-dark"
                             };
                         }

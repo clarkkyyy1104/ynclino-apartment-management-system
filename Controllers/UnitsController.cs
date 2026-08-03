@@ -222,28 +222,55 @@ namespace YnclinoApartmentManagementSystem.Controllers
                     var period = firstOfThisMonth.AddMonths(-m);
                     var due = new DateTime(period.Year, period.Month, billingDay);
                     var issued = due.AddDays(-7);          // billed about a week ahead
-                    bool paid = m >= 2 || (idx % 5 != 0);  // ~80% of last month paid
+
+                    // payment mix: older months fully paid; recent months are mostly paid
+                    // with a few partial and a few unpaid — the status is derived from these
+                    decimal? amountPaid;
+                    if (m >= 3) amountPaid = 6000m;
+                    else amountPaid = ((idx + m) % 6) switch
+                    {
+                        0 => (decimal?)null,   // nothing paid
+                        1 => 3000m,            // partial
+                        _ => 6000m             // paid in full
+                    };
+
                     var bill = new tblBilling
                     {
                         TenantID = tenant.TenantID,
                         BillingPeriod = period,
                         AmountDue = 6000m,
                         DueDate = due,
-                        DateIssued = issued
+                        DateIssued = issued,
+                        AmountPaid = amountPaid,
+                        Status = BillingController.DeriveStatus(6000m, amountPaid, due)
                     };
-                    if (paid)
+                    if (amountPaid.HasValue && amountPaid.Value > 0)
                     {
-                        bill.Status = "Paid";
-                        bill.AmountPaid = 6000m;
                         // paid a few days on either side of the due date, never in the future
                         var datePaid = due.AddDays(rng.Next(-4, 4));
                         bill.DatePaid = datePaid > now ? now : datePaid;
                     }
-                    else
-                    {
-                        bill.Status = due < now ? "Overdue" : "Unpaid";
-                    }
                     _context.tblBillings.Add(bill);
+                }
+
+                // a current bill that is not yet past due, so Unpaid and Partial show up
+                // alongside Paid and Late in the demo
+                if (monthsHere >= 0)
+                {
+                    var curDue = now.Date.AddDays(7);
+                    decimal? curPaid = (idx % 3) switch { 0 => (decimal?)null, 1 => 3000m, _ => 6000m };
+                    var curBill = new tblBilling
+                    {
+                        TenantID = tenant.TenantID,
+                        BillingPeriod = firstOfThisMonth,
+                        AmountDue = 6000m,
+                        DueDate = curDue,
+                        DateIssued = now.Date.AddDays(-2),
+                        AmountPaid = curPaid,
+                        Status = BillingController.DeriveStatus(6000m, curPaid, curDue),
+                        DatePaid = (curPaid.HasValue && curPaid.Value > 0) ? now.Date : (DateTime?)null
+                    };
+                    _context.tblBillings.Add(curBill);
                 }
             }
 

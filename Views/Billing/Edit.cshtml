@@ -61,13 +61,13 @@
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="Status" class="form-label fw-semibold small"></label>
-                        <select asp-for="Status" class="form-select">
-                            <option>Unpaid</option>
-                            <option>Paid</option>
-                            <option>Overdue</option>
-                        </select>
-                        <span asp-validation-for="Status" class="text-danger small"></span>
+                        <label class="form-label fw-semibold small">Status</label>
+                        <p class="form-text mb-0">
+                            The status is set automatically from the amount paid and the due date —
+                            <strong>Paid</strong> (paid in full), <strong>Partial</strong> (part paid),
+                            <strong>Unpaid</strong> (nothing paid, not yet due), or
+                            <strong>Late</strong> (past due and not fully paid).
+                        </p>
                     </div>
 
                     <div class="mb-4">

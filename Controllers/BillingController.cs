@@ -29,25 +29,41 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return await _context.tblTenants.FirstOrDefaultAsync(t => t.UserID == uid && t.Status == "Active");
         }
 
-        private static readonly string[] AllowedStatuses = { "Unpaid", "Paid", "Overdue" };
-
-        // flip any unpaid bill whose due date has passed to Overdue
-        private async Task MarkOverdueBillsAsync()
+        // the billing status is derived from how much has been paid and the due date:
+        //   Paid    – paid in full
+        //   Partial – part paid, balance remains, not yet past due
+        //   Unpaid  – nothing paid, not yet past due
+        //   Late    – past the due date and not paid in full
+        public static string DeriveStatus(decimal amountDue, decimal? amountPaid, DateTime dueDate)
         {
-            var overdue = await _context.tblBillings
-                .Where(b => b.Status == "Unpaid" && b.DueDate < DateTime.Today)
-                .ToListAsync();
-            if (overdue.Count == 0) return;
+            decimal paid = amountPaid ?? 0m;
+            if (paid >= amountDue) return "Paid";
+            if (dueDate.Date < DateTime.Today) return "Late";
+            if (paid > 0m) return "Partial";
+            return "Unpaid";
+        }
 
-            foreach (var bill in overdue)
-                bill.Status = "Overdue";
-            await _context.SaveChangesAsync();
+        // recompute the status of every not-fully-paid bill so "Late" stays current
+        private async Task RefreshStatusesAsync(int? tenantId = null)
+        {
+            var open = await _context.tblBillings
+                .Where(b => (b.AmountPaid == null || b.AmountPaid < b.AmountDue)
+                            && (tenantId == null || b.TenantID == tenantId))
+                .ToListAsync();
+
+            bool changed = false;
+            foreach (var bill in open)
+            {
+                var status = DeriveStatus(bill.AmountDue, bill.AmountPaid, bill.DueDate);
+                if (bill.Status != status) { bill.Status = status; changed = true; }
+            }
+            if (changed) await _context.SaveChangesAsync();
         }
 
         // GET: Billing
         public async Task<IActionResult> Index(string? statusFilter, string? searchTerm)
         {
-            await MarkOverdueBillsAsync();
+            await RefreshStatusesAsync();
 
             IQueryable<tblBilling> query = _context.tblBillings
                 .Include(b => b.Tenant).ThenInclude(t => t!.Unit);
@@ -132,7 +148,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 BillingPeriod = period,
                 AmountDue = vm.AmountDue,
                 DueDate = vm.DueDate,
-                Status = "Unpaid",
+                Status = DeriveStatus(vm.AmountDue, null, vm.DueDate),
                 Notes = vm.Notes,
                 DateIssued = DateTime.Now
             };
@@ -180,12 +196,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             if (id != vm.BillingID) return NotFound();
 
-            if (!AllowedStatuses.Contains(vm.Status))
-                ModelState.AddModelError("Status", "Select a valid status.");
-
-            // keep payment fields consistent with the recorded amount
-            if (vm.Status == "Paid" && (vm.AmountPaid == null || vm.AmountPaid < vm.AmountDue))
-                ModelState.AddModelError("AmountPaid", "A paid bill must record a payment of at least the amount due.");
             if (vm.AmountPaid != null && vm.AmountPaid < 0)
                 ModelState.AddModelError("AmountPaid", "Amount paid cannot be negative.");
 
@@ -203,14 +213,13 @@ namespace YnclinoApartmentManagementSystem.Controllers
             billing.AmountDue = vm.AmountDue;
             billing.DueDate = vm.DueDate;
             billing.AmountPaid = vm.AmountPaid;
-            billing.Status = vm.Status;
+            billing.Status = DeriveStatus(vm.AmountDue, vm.AmountPaid, vm.DueDate);
             billing.Notes = vm.Notes;
 
-            // stamp the payment date automatically when a bill is marked paid
-            if (vm.Status == "Paid")
-                billing.DatePaid = vm.DatePaid ?? DateTime.Today;
-            else
-                billing.DatePaid = null;
+            // record a payment date when something has been paid, clear it otherwise
+            billing.DatePaid = (vm.AmountPaid.HasValue && vm.AmountPaid.Value > 0)
+                ? (vm.DatePaid ?? DateTime.Today)
+                : null;
 
             await _context.SaveChangesAsync();
             TempData["Success"] = "Billing record updated.";
@@ -258,7 +267,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 return Json(new { suggestedAmount = 0m, unpaidMonths = 0 });
 
             var unpaidCount = await _context.tblBillings
-                .CountAsync(b => b.TenantID == tenantId && (b.Status == "Unpaid" || b.Status == "Overdue"));
+                .CountAsync(b => b.TenantID == tenantId && (b.AmountPaid == null || b.AmountPaid < b.AmountDue));
 
             // each month is its own bill, so suggest one month's rent
             return Json(new {

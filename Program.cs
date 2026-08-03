@@ -126,6 +126,10 @@ using (var scope = app.Services.CreateScope())
         db.tblMaintenanceRequests.Where(m => m.Priority == "Medium").ExecuteUpdate(s => s.SetProperty(m => m.Priority, "Moderate"));
         db.tblMaintenanceRequests.Where(m => m.Priority == "High").ExecuteUpdate(s => s.SetProperty(m => m.Priority, "Major"));
     }
+
+    // migrate the old billing status "Overdue" to the current "Late" label
+    if (db.tblBillings.Any(b => b.Status == "Overdue"))
+        db.tblBillings.Where(b => b.Status == "Overdue").ExecuteUpdate(s => s.SetProperty(b => b.Status, "Late"));
 }
 
 if (!app.Environment.IsDevelopment())

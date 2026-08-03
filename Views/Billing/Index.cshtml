@@ -23,9 +23,10 @@
     <div class="col-auto">
         <select name="statusFilter" class="form-select" style="width:229px" onchange="this.form.submit()">
             <option value="">All Statuses</option>
-            <option value="Unpaid"  selected="@(ViewBag.StatusFilter == "Unpaid")">Unpaid</option>
             <option value="Paid"    selected="@(ViewBag.StatusFilter == "Paid")">Paid</option>
-            <option value="Overdue" selected="@(ViewBag.StatusFilter == "Overdue")">Overdue</option>
+            <option value="Unpaid"  selected="@(ViewBag.StatusFilter == "Unpaid")">Unpaid</option>
+            <option value="Partial" selected="@(ViewBag.StatusFilter == "Partial")">Partial</option>
+            <option value="Late"    selected="@(ViewBag.StatusFilter == "Late")">Late</option>
         </select>
     </div>
     <div class="col-auto">
@@ -63,7 +64,8 @@
                         @{
                             var badge = b.Status switch {
                                 "Paid"    => "bg-success",
-                                "Overdue" => "bg-danger",
+                                "Partial" => "bg-info text-dark",
+                                "Late"    => "bg-danger",
                                 _         => "bg-warning text-dark"
                             };
                         }
