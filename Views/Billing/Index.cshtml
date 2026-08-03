@@ -2,6 +2,8 @@
 @{
     ViewData["Title"] = "Billing & Payment";
     bool isAdmin = User.IsInRole("Admin");
+    var unreadIds = ViewBag.UnreadIds as HashSet<int> ?? new HashSet<int>();
+    var readIds = ViewBag.ReadIds as HashSet<int> ?? new HashSet<int>();
 }
 
 @await Component.InvokeAsync("ModuleNotifications", new { module = "Billing" })
@@ -52,7 +54,9 @@
         <tbody>
             @foreach (var b in Model)
             {
-                <tr>
+                var rowCls = unreadIds.Contains(b.BillingID) ? "fw-bold text-dark"
+                             : readIds.Contains(b.BillingID) ? "text-secondary" : "";
+                <tr class="@rowCls">
                     @if (isAdmin)
                     {
                         <td class="fw-semibold">@b.Tenant?.FullName</td>

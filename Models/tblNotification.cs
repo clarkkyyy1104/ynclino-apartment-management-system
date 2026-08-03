@@ -26,6 +26,10 @@ namespace YnclinoApartmentManagementSystem.Models
         [MaxLength(300)]
         public string? Link { get; set; }
 
+        // the specific record this notification is about (bill/request/item id),
+        // so its row can be shown as unread until the user opens it
+        public int? TargetId { get; set; }
+
         public bool IsRead { get; set; } = false;
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;

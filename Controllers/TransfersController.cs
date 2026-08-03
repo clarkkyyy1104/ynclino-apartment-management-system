@@ -63,6 +63,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 .OrderByDescending(r => archived ? r.DateReviewed : r.DateRequested)
                 .ToListAsync();
             ViewBag.Archived = archived;
+            var meId = CurrentUserID();
+            ViewBag.UnreadIds = meId == null ? new HashSet<int>() : await NotificationHelper.UnreadTargetIdsAsync(_context, meId.Value, "Transfer");
+            ViewBag.ReadIds = meId == null ? new HashSet<int>() : await NotificationHelper.ReadTargetIdsAsync(_context, meId.Value, "Transfer");
             return View(list);
         }
 
@@ -119,7 +122,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 return View();
             }
 
-            _context.tblUnitTransferRequests.Add(new tblUnitTransferRequest
+            var newRequest = new tblUnitTransferRequest
             {
                 TenantID = tenant.TenantID,
                 CurrentUnitID = tenant.UnitID,
@@ -127,11 +130,12 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 Reason = reason.Trim(),
                 Status = "Pending",
                 DateRequested = DateTime.Now
-            });
+            };
+            _context.tblUnitTransferRequests.Add(newRequest);
             await _context.SaveChangesAsync();
 
             await NotificationHelper.NotifyAdminsAsync(_context, "Transfer",
-                $"{tenant.FullName} requested a unit transfer.", "/Transfers");
+                $"{tenant.FullName} requested a unit transfer.", "/Transfers", newRequest.TransferID);
 
             TempData["Success"] = "Your unit transfer request has been submitted.";
             return RedirectToAction(nameof(Index));
@@ -205,7 +209,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             if (tenant.UserID != null)
                 await NotificationHelper.CreateAsync(_context, tenant.UserID.Value, "Transfer",
-                    $"Your transfer request was approved — you've been moved to unit {target.UnitNumber}.", "/Transfers");
+                    $"Your transfer request was approved — you've been moved to unit {target.UnitNumber}.", "/Transfers", req.TransferID);
+
+            var approverId = CurrentUserID();
+            if (approverId != null) await NotificationHelper.MarkRecordReadAsync(_context, approverId.Value, "Transfer", req.TransferID);
 
             TempData["Success"] = $"{tenant.FullName} was moved to unit {target.UnitNumber}.";
             return RedirectToAction(nameof(Index));
@@ -233,7 +240,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var rejectedTenant = await _context.tblTenants.FindAsync(req.TenantID);
             if (rejectedTenant?.UserID != null)
                 await NotificationHelper.CreateAsync(_context, rejectedTenant.UserID.Value, "Transfer",
-                    "Your unit transfer request was rejected." + (string.IsNullOrEmpty(adminNotes) ? "" : $" Note: {adminNotes}"), "/Transfers");
+                    "Your unit transfer request was rejected." + (string.IsNullOrEmpty(adminNotes) ? "" : $" Note: {adminNotes}"), "/Transfers", req.TransferID);
+
+            var reviewerId = CurrentUserID();
+            if (reviewerId != null) await NotificationHelper.MarkRecordReadAsync(_context, reviewerId.Value, "Transfer", req.TransferID);
 
             TempData["Success"] = "Transfer request rejected.";
             return RedirectToAction(nameof(Index));

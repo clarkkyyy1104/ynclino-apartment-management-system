@@ -6,6 +6,8 @@
     string title = isAdmin
         ? (archived ? "Transfer Archive" : "Unit Transfer Requests")
         : (archived ? "My Past Requests" : "My Transfer Requests");
+    var unreadIds = ViewBag.UnreadIds as HashSet<int> ?? new HashSet<int>();
+    var readIds = ViewBag.ReadIds as HashSet<int> ?? new HashSet<int>();
 }
 
 @await Component.InvokeAsync("ModuleNotifications", new { module = "Transfer" })
@@ -54,7 +56,9 @@ else
                         "Cancelled" => "bg-secondary",
                         _           => "bg-warning text-dark"
                     };
-                    <tr>
+                    var rowCls = unreadIds.Contains(r.TransferID) ? "fw-bold text-dark"
+                                 : readIds.Contains(r.TransferID) ? "text-secondary" : "";
+                    <tr class="@rowCls">
                         @if (isAdmin) { <td>@r.Tenant?.FullName</td> }
                         <td>@r.CurrentUnit?.UnitNumber</td>
                         <td>@r.RequestedUnit?.UnitNumber</td>

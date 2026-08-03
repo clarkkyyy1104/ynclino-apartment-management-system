@@ -87,6 +87,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             ViewBag.StatusFilter = statusFilter;
             ViewBag.SearchTerm = searchTerm;
+            var uid = CurrentUserID();
+            ViewBag.UnreadIds = uid == null ? new HashSet<int>()
+                : await NotificationHelper.UnreadTargetIdsAsync(_context, uid.Value, "Billing");
+            ViewBag.ReadIds = uid == null ? new HashSet<int>()
+                : await NotificationHelper.ReadTargetIdsAsync(_context, uid.Value, "Billing");
 
             return View(await query.OrderByDescending(b => b.BillingPeriod).ToListAsync());
         }
@@ -108,6 +113,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 var tenant = await GetCurrentTenantAsync();
                 if (tenant == null || billing.TenantID != tenant.TenantID) return Forbid();
             }
+
+            var uid = CurrentUserID();
+            if (uid != null) await NotificationHelper.MarkRecordReadAsync(_context, uid.Value, "Billing", billing.BillingID);
 
             return View(billing);
         }
@@ -162,7 +170,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (billedTenant?.UserID != null)
                 await NotificationHelper.CreateAsync(_context, billedTenant.UserID.Value, "Billing",
                     $"A bill of ₱{billing.AmountDue:N2} for {period:MMMM yyyy} was issued (due {billing.DueDate:MMM dd}).",
-                    "/Billing");
+                    $"/Billing/Details/{billing.BillingID}", billing.BillingID);
 
             TempData["Success"] = "Billing record created.";
             return RedirectToAction(nameof(Index));

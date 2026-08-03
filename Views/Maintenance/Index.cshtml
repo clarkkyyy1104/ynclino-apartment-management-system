@@ -3,6 +3,8 @@
     ViewData["Title"] = "Maintenance Requests";
     bool isAdmin = User.IsInRole("Admin");
     bool archived = ViewBag.Archived == true;
+    var unreadIds = ViewBag.UnreadIds as HashSet<int> ?? new HashSet<int>();
+    var readIds = ViewBag.ReadIds as HashSet<int> ?? new HashSet<int>();
 }
 
 @await Component.InvokeAsync("ModuleNotifications", new { module = "Maintenance" })
@@ -60,7 +62,9 @@
         <tbody>
             @foreach (var r in Model)
             {
-                <tr>
+                var rowCls = unreadIds.Contains(r.RequestID) ? "fw-bold text-dark"
+                             : readIds.Contains(r.RequestID) ? "text-secondary" : "";
+                <tr class="@rowCls">
                     @if (isAdmin)
                     {
                         <td class="fw-semibold">@r.Tenant?.FullName</td>

@@ -71,6 +71,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
             ViewBag.StatusFilter = statusFilter;
             ViewBag.SearchTerm = searchTerm;
             ViewBag.Archived = archived;
+            var uid = CurrentUserID();
+            ViewBag.UnreadIds = uid == null ? new HashSet<int>() : await NotificationHelper.UnreadTargetIdsAsync(_context, uid.Value, "Maintenance");
+            ViewBag.ReadIds = uid == null ? new HashSet<int>() : await NotificationHelper.ReadTargetIdsAsync(_context, uid.Value, "Maintenance");
 
             return View(await query.OrderByDescending(m => m.DateSubmitted).ToListAsync());
         }
@@ -91,6 +94,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 var tenant = await GetCurrentTenantAsync();
                 if (tenant == null || request.TenantID != tenant.TenantID) return Forbid();
             }
+
+            var uid = CurrentUserID();
+            if (uid != null) await NotificationHelper.MarkRecordReadAsync(_context, uid.Value, "Maintenance", request.RequestID);
 
             return View(request);
         }
@@ -179,7 +185,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
             {
                 var submitter = await _context.tblTenants.FirstOrDefaultAsync(t => t.TenantID == vm.TenantID);
                 await NotificationHelper.NotifyAdminsAsync(_context, "Maintenance",
-                    $"New {vm.Category} maintenance request from {submitter?.FullName}.", "/Maintenance");
+                    $"New {vm.Category} maintenance request from {submitter?.FullName}.",
+                    $"/Maintenance/Details/{request.RequestID}", request.RequestID);
             }
 
             TempData["Success"] = "Maintenance request submitted.";
@@ -270,7 +277,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
             // tell the tenant when staff change the status of their request
             if (request.Tenant?.UserID != null && previousStatus != request.Status)
                 await NotificationHelper.CreateAsync(_context, request.Tenant.UserID.Value, "Maintenance",
-                    $"Your {request.Category} request was updated to \"{request.Status}\".", "/Maintenance");
+                    $"Your {request.Category} request was updated to \"{request.Status}\".",
+                    $"/Maintenance/Details/{request.RequestID}", request.RequestID);
 
             TempData["Success"] = "Maintenance request updated.";
             return RedirectToAction(nameof(Index));

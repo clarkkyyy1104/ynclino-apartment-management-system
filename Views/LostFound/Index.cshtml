@@ -2,6 +2,8 @@
 @{
     ViewData["Title"] = "Lost & Found";
     bool isAdmin = User.IsInRole("Admin");
+    var unreadIds = ViewBag.UnreadIds as HashSet<int> ?? new HashSet<int>();
+    var readIds = ViewBag.ReadIds as HashSet<int> ?? new HashSet<int>();
 }
 
 @await Component.InvokeAsync("ModuleNotifications", new { module = "LostFound" })
@@ -52,7 +54,9 @@
         <tbody>
             @foreach (var item in Model)
             {
-                <tr>
+                var rowCls = unreadIds.Contains(item.ItemID) ? "fw-bold text-dark"
+                             : readIds.Contains(item.ItemID) ? "text-secondary" : "";
+                <tr class="@rowCls">
                     <td>
                         <span class="badge @(item.ItemType == "Lost" ? "bg-danger" : "bg-info text-dark")">
                             @item.ItemType
