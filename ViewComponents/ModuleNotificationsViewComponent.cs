@@ -24,9 +24,12 @@ namespace YnclinoApartmentManagementSystem.ViewComponents
             var list = new List<tblNotification>();
             if (int.TryParse(((ClaimsPrincipal)User).FindFirstValue(ClaimTypes.NameIdentifier), out int uid))
             {
+                // recent notifications for this module — read and unread — so the
+                // panel shows the read/unread contrast (unread bold, read greyed)
                 list = await _context.tblNotifications
-                    .Where(n => n.UserID == uid && n.Module == module && !n.IsRead)
+                    .Where(n => n.UserID == uid && n.Module == module)
                     .OrderByDescending(n => n.CreatedAt)
+                    .Take(6)
                     .ToListAsync();
             }
             return View(list);
