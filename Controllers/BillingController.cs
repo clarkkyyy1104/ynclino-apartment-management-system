@@ -65,8 +65,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
         public async Task<IActionResult> Index(string? statusFilter, string? searchTerm)
         {
             await RefreshStatusesAsync();
-            var meId = CurrentUserID();
-            if (meId != null) await NotificationHelper.MarkModuleReadAsync(_context, meId.Value, "Billing");
 
             IQueryable<tblBilling> query = _context.tblBillings
                 .Include(b => b.Tenant).ThenInclude(t => t!.Unit);

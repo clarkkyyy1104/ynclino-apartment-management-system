@@ -26,6 +26,10 @@ namespace YnclinoApartmentManagementSystem.Models
         [MaxLength(500)]
         public string? AdminNotes { get; set; }
 
+        // optional photo the claimant uploads as proof of ownership
+        [MaxLength(300)]
+        public string? ImagePath { get; set; }
+
         [ForeignKey("ItemID")]
         public tblLostFoundItem? Item { get; set; }
 

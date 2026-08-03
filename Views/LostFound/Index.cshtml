@@ -4,6 +4,8 @@
     bool isAdmin = User.IsInRole("Admin");
 }
 
+@await Component.InvokeAsync("ModuleNotifications", new { module = "LostFound" })
+
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3 class="fw-bold mb-0">Lost &amp; Found</h3>
     <a asp-action="Create" class="btn btn-primary">+ Report Item</a>

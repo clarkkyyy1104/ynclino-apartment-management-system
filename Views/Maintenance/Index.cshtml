@@ -5,6 +5,8 @@
     bool archived = ViewBag.Archived == true;
 }
 
+@await Component.InvokeAsync("ModuleNotifications", new { module = "Maintenance" })
+
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3 class="fw-bold mb-0">@(archived ? "Maintenance Archive" : "Maintenance Requests")</h3>
     <div class="d-flex gap-2">

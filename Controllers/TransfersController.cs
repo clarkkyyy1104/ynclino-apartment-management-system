@@ -37,9 +37,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // GET: Transfers
         public async Task<IActionResult> Index(bool archived = false)
         {
-            var meId = CurrentUserID();
-            if (meId != null) await NotificationHelper.MarkModuleReadAsync(_context, meId.Value, "Transfer");
-
             IQueryable<tblUnitTransferRequest> query = _context.tblUnitTransferRequests
                 .Include(r => r.Tenant).ThenInclude(t => t!.Unit)
                 .Include(r => r.CurrentUnit)

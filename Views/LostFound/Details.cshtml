@@ -74,6 +74,12 @@
                                     <span class="badge @(claim.Status == "Pending" ? "bg-warning text-dark" : claim.Status == "Approved" ? "bg-success" : "bg-secondary")">@claim.Status</span>
                                 </div>
                                 <p class="small mb-1">@claim.VerificationDetails</p>
+                                @if (!string.IsNullOrEmpty(claim.ImagePath))
+                                {
+                                    <a href="@claim.ImagePath" target="_blank">
+                                        <img src="@claim.ImagePath" alt="Proof photo" class="img-fluid rounded border mb-2" style="max-height:160px" />
+                                    </a>
+                                }
                                 <p class="text-muted small mb-2">Submitted: @claim.SubmittedAt.ToString("MMM dd, yyyy hh:mm tt")</p>
                                 @if (claim.Status == "Pending")
                                 {
@@ -112,6 +118,12 @@
                                     <span class="badge @(claim.Status == "Pending" ? "bg-warning text-dark" : claim.Status == "Approved" ? "bg-success" : "bg-secondary")">@claim.Status</span>
                                 </div>
                                 <p class="small mb-1">@claim.VerificationDetails</p>
+                                @if (!string.IsNullOrEmpty(claim.ImagePath))
+                                {
+                                    <a href="@claim.ImagePath" target="_blank">
+                                        <img src="@claim.ImagePath" alt="Proof photo" class="img-fluid rounded border mb-2" style="max-height:140px" />
+                                    </a>
+                                }
                                 @if (!string.IsNullOrEmpty(claim.AdminNotes))
                                 {
                                     <p class="text-muted small mb-0">Admin note: @claim.AdminNotes</p>

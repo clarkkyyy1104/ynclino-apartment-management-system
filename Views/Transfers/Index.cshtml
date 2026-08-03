@@ -8,6 +8,8 @@
         : (archived ? "My Past Requests" : "My Transfer Requests");
 }
 
+@await Component.InvokeAsync("ModuleNotifications", new { module = "Transfer" })
+
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3 class="fw-bold mb-0">@title</h3>
     <div class="d-flex gap-2">

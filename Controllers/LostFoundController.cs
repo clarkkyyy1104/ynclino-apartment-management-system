@@ -27,9 +27,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // GET: LostFound
         public async Task<IActionResult> Index(string? typeFilter, string? statusFilter, string? searchTerm)
         {
-            var meId = CurrentUserID();
-            if (meId != null) await NotificationHelper.MarkModuleReadAsync(_context, meId.Value, "LostFound");
-
             IQueryable<tblLostFoundItem> query = _context.tblLostFoundItems
                 .Include(l => l.ReportedBy);
 
@@ -263,7 +260,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Tenant")]
-        public async Task<IActionResult> Claim(int id, string verificationDetails)
+        public async Task<IActionResult> Claim(int id, string verificationDetails, IFormFile? proofImage)
         {
             var item = await _context.tblLostFoundItems.FindAsync(id);
             if (item == null || item.ItemType != "Found" || item.Status != "Reported")
@@ -284,6 +281,12 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 return RedirectToAction(nameof(Claim), new { id });
             }
 
+            if (proofImage != null && !ImageUploadHelper.IsValid(proofImage, out var imgErr))
+            {
+                TempData["Error"] = imgErr;
+                return RedirectToAction(nameof(Claim), new { id });
+            }
+
             // re-check for a pending duplicate in case of a double submit
             bool alreadyClaimed = await _context.tblClaimRequests
                 .AnyAsync(c => c.ItemID == id && c.ClaimantUserID == uid && c.Status == "Pending");
@@ -293,13 +296,18 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            string? proofPath = null;
+            if (proofImage != null)
+                proofPath = await ImageUploadHelper.SaveAsync(proofImage, "claims", _env);
+
             var claim = new tblClaimRequest
             {
                 ItemID = id,
                 ClaimantUserID = uid.Value,
                 VerificationDetails = verificationDetails,
                 SubmittedAt = DateTime.Now,
-                Status = "Pending"
+                Status = "Pending",
+                ImagePath = proofPath
             };
             _context.tblClaimRequests.Add(claim);
             await _context.SaveChangesAsync();

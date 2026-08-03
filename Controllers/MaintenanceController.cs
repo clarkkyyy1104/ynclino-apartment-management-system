@@ -43,9 +43,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // GET: Maintenance
         public async Task<IActionResult> Index(string? statusFilter, string? searchTerm, bool archived = false)
         {
-            var meId = CurrentUserID();
-            if (meId != null) await NotificationHelper.MarkModuleReadAsync(_context, meId.Value, "Maintenance");
-
             IQueryable<tblMaintenanceRequest> query = _context.tblMaintenanceRequests
                 .Include(m => m.Tenant).ThenInclude(t => t!.Unit);
 
