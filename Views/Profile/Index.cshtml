@@ -43,7 +43,6 @@
                 <h4 class="fw-bold mb-0">@Model.FullName</h4>
                 <div class="text-muted small">
                     Unit @(Model.Unit?.UnitNumber ?? "—")
-                    <span class="badge @(Model.Status == "Active" ? "bg-success" : "bg-secondary") ms-1">@Model.Status</span>
                 </div>
             </div>
             <div class="ms-auto pb-1 d-flex gap-2">
