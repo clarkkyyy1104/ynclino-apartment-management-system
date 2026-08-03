@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using YnclinoApartmentManagementSystem.Data;
+using YnclinoApartmentManagementSystem.Helpers;
 using YnclinoApartmentManagementSystem.Models;
 
 namespace YnclinoApartmentManagementSystem.Controllers
@@ -36,6 +37,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // GET: Transfers
         public async Task<IActionResult> Index(bool archived = false)
         {
+            var meId = CurrentUserID();
+            if (meId != null) await NotificationHelper.MarkModuleReadAsync(_context, meId.Value, "Transfer");
+
             IQueryable<tblUnitTransferRequest> query = _context.tblUnitTransferRequests
                 .Include(r => r.Tenant).ThenInclude(t => t!.Unit)
                 .Include(r => r.CurrentUnit)
@@ -128,6 +132,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 DateRequested = DateTime.Now
             });
             await _context.SaveChangesAsync();
+
+            await NotificationHelper.NotifyAdminsAsync(_context, "Transfer",
+                $"{tenant.FullName} requested a unit transfer.", "/Transfers");
+
             TempData["Success"] = "Your unit transfer request has been submitted.";
             return RedirectToAction(nameof(Index));
         }
@@ -198,6 +206,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
             await RefreshUnitStatusAsync(req.RequestedUnitID);
             await _context.SaveChangesAsync();
 
+            if (tenant.UserID != null)
+                await NotificationHelper.CreateAsync(_context, tenant.UserID.Value, "Transfer",
+                    $"Your transfer request was approved — you've been moved to unit {target.UnitNumber}.", "/Transfers");
+
             TempData["Success"] = $"{tenant.FullName} was moved to unit {target.UnitNumber}.";
             return RedirectToAction(nameof(Index));
         }
@@ -220,6 +232,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
             req.DateReviewed = DateTime.Now;
             req.AdminNotes = adminNotes;
             await _context.SaveChangesAsync();
+
+            var rejectedTenant = await _context.tblTenants.FindAsync(req.TenantID);
+            if (rejectedTenant?.UserID != null)
+                await NotificationHelper.CreateAsync(_context, rejectedTenant.UserID.Value, "Transfer",
+                    "Your unit transfer request was rejected." + (string.IsNullOrEmpty(adminNotes) ? "" : $" Note: {adminNotes}"), "/Transfers");
 
             TempData["Success"] = "Transfer request rejected.";
             return RedirectToAction(nameof(Index));

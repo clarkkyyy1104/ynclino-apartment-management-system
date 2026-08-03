@@ -43,6 +43,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // GET: Maintenance
         public async Task<IActionResult> Index(string? statusFilter, string? searchTerm, bool archived = false)
         {
+            var meId = CurrentUserID();
+            if (meId != null) await NotificationHelper.MarkModuleReadAsync(_context, meId.Value, "Maintenance");
+
             IQueryable<tblMaintenanceRequest> query = _context.tblMaintenanceRequests
                 .Include(m => m.Tenant).ThenInclude(t => t!.Unit);
 
@@ -173,6 +176,15 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             _context.tblMaintenanceRequests.Add(request);
             await _context.SaveChangesAsync();
+
+            // a tenant-submitted request alerts the administrators
+            if (User.IsInRole("Tenant"))
+            {
+                var submitter = await _context.tblTenants.FirstOrDefaultAsync(t => t.TenantID == vm.TenantID);
+                await NotificationHelper.NotifyAdminsAsync(_context, "Maintenance",
+                    $"New {vm.Category} maintenance request from {submitter?.FullName}.", "/Maintenance");
+            }
+
             TempData["Success"] = "Maintenance request submitted.";
             return RedirectToAction(nameof(Index));
         }
@@ -240,6 +252,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 return View(vm);
             }
 
+            var previousStatus = request.Status;
+
             request.Category = vm.Category;
             request.Description = vm.Description ?? string.Empty;
             request.Priority = vm.Priority;
@@ -255,6 +269,12 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 request.DateResolved = null;
 
             await _context.SaveChangesAsync();
+
+            // tell the tenant when staff change the status of their request
+            if (request.Tenant?.UserID != null && previousStatus != request.Status)
+                await NotificationHelper.CreateAsync(_context, request.Tenant.UserID.Value, "Maintenance",
+                    $"Your {request.Category} request was updated to \"{request.Status}\".", "/Maintenance");
+
             TempData["Success"] = "Maintenance request updated.";
             return RedirectToAction(nameof(Index));
         }

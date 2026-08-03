@@ -16,6 +16,7 @@ namespace YnclinoApartmentManagementSystem.Data
         public DbSet<tblLostFoundItem> tblLostFoundItems { get; set; }
         public DbSet<tblClaimRequest> tblClaimRequests { get; set; }
         public DbSet<tblUnitTransferRequest> tblUnitTransferRequests { get; set; }
+        public DbSet<tblNotification> tblNotifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -144,6 +145,20 @@ namespace YnclinoApartmentManagementSystem.Data
                       .WithMany()
                       .HasForeignKey(r => r.RequestedUnitID)
                       .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<tblNotification>(entity =>
+            {
+                entity.HasKey(e => e.NotificationID);
+                entity.Property(e => e.Module).IsRequired().HasMaxLength(30);
+                entity.Property(e => e.Message).IsRequired().HasMaxLength(300);
+                entity.Property(e => e.Link).HasMaxLength(300);
+                entity.HasIndex(e => new { e.UserID, e.IsRead });
+
+                entity.HasOne(n => n.User)
+                      .WithMany()
+                      .HasForeignKey(n => n.UserID)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

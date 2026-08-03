@@ -27,6 +27,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // GET: LostFound
         public async Task<IActionResult> Index(string? typeFilter, string? statusFilter, string? searchTerm)
         {
+            var meId = CurrentUserID();
+            if (meId != null) await NotificationHelper.MarkModuleReadAsync(_context, meId.Value, "LostFound");
+
             IQueryable<tblLostFoundItem> query = _context.tblLostFoundItems
                 .Include(l => l.ReportedBy);
 
@@ -300,6 +303,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
             };
             _context.tblClaimRequests.Add(claim);
             await _context.SaveChangesAsync();
+
+            await NotificationHelper.NotifyAdminsAsync(_context, "LostFound",
+                $"New ownership claim on \"{item.ItemName}\".", "/LostFound");
+
             TempData["Success"] = "Your claim has been submitted. An admin will review it.";
             return RedirectToAction(nameof(Index));
         }
@@ -343,6 +350,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
             }
 
             await _context.SaveChangesAsync();
+
+            await NotificationHelper.CreateAsync(_context, claim.ClaimantUserID, "LostFound",
+                $"Your claim on \"{claim.Item?.ItemName}\" was {decision.ToLower()}." + (string.IsNullOrEmpty(adminNotes) ? "" : $" Note: {adminNotes}"),
+                "/LostFound");
+
             TempData["Success"] = $"Claim has been {decision.ToLower()}.";
             return RedirectToAction(nameof(Details), new { id = claim.ItemID });
         }

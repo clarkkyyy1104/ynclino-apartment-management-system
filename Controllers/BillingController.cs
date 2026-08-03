@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using YnclinoApartmentManagementSystem.Data;
+using YnclinoApartmentManagementSystem.Helpers;
 using YnclinoApartmentManagementSystem.Models;
 using YnclinoApartmentManagementSystem.Models.ViewModels;
 
@@ -64,6 +65,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
         public async Task<IActionResult> Index(string? statusFilter, string? searchTerm)
         {
             await RefreshStatusesAsync();
+            var meId = CurrentUserID();
+            if (meId != null) await NotificationHelper.MarkModuleReadAsync(_context, meId.Value, "Billing");
 
             IQueryable<tblBilling> query = _context.tblBillings
                 .Include(b => b.Tenant).ThenInclude(t => t!.Unit);
@@ -155,6 +158,14 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             _context.tblBillings.Add(billing);
             await _context.SaveChangesAsync();
+
+            // let the tenant know a new bill was issued
+            var billedTenant = await _context.tblTenants.FirstOrDefaultAsync(t => t.TenantID == vm.TenantID);
+            if (billedTenant?.UserID != null)
+                await NotificationHelper.CreateAsync(_context, billedTenant.UserID.Value, "Billing",
+                    $"A bill of ₱{billing.AmountDue:N2} for {period:MMMM yyyy} was issued (due {billing.DueDate:MMM dd}).",
+                    "/Billing");
+
             TempData["Success"] = "Billing record created.";
             return RedirectToAction(nameof(Index));
         }
