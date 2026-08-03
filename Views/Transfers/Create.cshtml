@@ -1,6 +1,7 @@
-@model YnclinoApartmentManagementSystem.Models.tblUnit
 @{
     ViewData["Title"] = "Request Unit Transfer";
+    var vacantUnits = ViewBag.VacantUnits as IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>
+                      ?? Enumerable.Empty<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>();
 }
 
 <div class="row justify-content-center">
@@ -14,35 +15,43 @@
                 }
 
                 <p class="text-muted small mb-3">
-                    You are currently in <strong>Unit @ViewBag.CurrentUnit</strong>. You're requesting a
-                    move to the unit below. An administrator will review your request.
+                    You are currently in <strong>Unit @ViewBag.CurrentUnit</strong>. Choose an available
+                    unit you'd like to move to and tell us why. An administrator will review your request.
                 </p>
 
-                <div class="border rounded p-3 mb-3 bg-light">
-                    <div class="fw-semibold mb-1">Unit @Model.UnitNumber <span class="text-muted">— @Model.UnitType</span></div>
-                    <div class="row small text-muted g-1">
-                        <div class="col-6">Monthly Rent: <strong class="text-dark">₱@Model.RentPrice.ToString("N0")</strong></div>
-                        <div class="col-6">Capacity: <strong class="text-dark">@Model.Capacity person(s)</strong></div>
-                        <div class="col-6">Deposit: <strong class="text-dark">₱@Model.Deposit.ToString("N0")</strong></div>
-                        <div class="col-6">Advance: <strong class="text-dark">₱@Model.AdvancePayment.ToString("N0")</strong></div>
-                    </div>
-                </div>
+                @if (!vacantUnits.Any())
+                {
+                    <div class="alert alert-warning small">There are no available units to transfer to right now.</div>
+                    <a asp-action="Index" class="btn btn-secondary btn-sm">Back</a>
+                }
+                else
+                {
+                    <form asp-action="Create" method="post">
+                        @Html.AntiForgeryToken()
 
-                <form asp-action="Create" method="post">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="requestedUnitID" value="@Model.UnitID" />
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Preferred Unit</label>
+                            <select name="requestedUnitID" class="form-select" required>
+                                <option value="">— Select an available unit —</option>
+                                @foreach (var u in vacantUnits)
+                                {
+                                    <option value="@u.Value">@u.Text</option>
+                                }
+                            </select>
+                        </div>
 
-                    <div class="mb-4">
-                        <label class="form-label fw-semibold small">Reason for Transfer</label>
-                        <textarea name="reason" class="form-control" rows="3" maxlength="500" required
-                                  placeholder="e.g. I'd prefer a unit closer to the entrance…">@ViewBag.Reason</textarea>
-                    </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold small">Reason for Transfer</label>
+                            <textarea name="reason" class="form-control" rows="3" maxlength="500" required
+                                      placeholder="e.g. I'd prefer a unit closer to the entrance…"></textarea>
+                        </div>
 
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary btn-sm">Submit Request</button>
-                        <a asp-controller="Units" asp-action="Index" class="btn btn-secondary btn-sm">Cancel</a>
-                    </div>
-                </form>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary btn-sm">Submit Request</button>
+                            <a asp-action="Index" class="btn btn-secondary btn-sm">Cancel</a>
+                        </div>
+                    </form>
+                }
             </div>
         </div>
     </div>

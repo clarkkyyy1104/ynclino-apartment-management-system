@@ -15,16 +15,12 @@
             <a asp-action="Index" class="btn btn-sm @(archived ? "btn-outline-secondary" : "btn-secondary")">Active</a>
             <a asp-action="Index" asp-route-archived="true" class="btn btn-sm @(archived ? "btn-secondary" : "btn-outline-secondary")">Archive</a>
         </div>
+        @if (!isAdmin && !archived)
+        {
+            <a asp-action="Create" class="btn btn-primary btn-sm">+ Request Transfer</a>
+        }
     </div>
 </div>
-
-@if (!isAdmin && !archived)
-{
-    <p class="text-muted small mb-3">
-        To request a transfer, open <a asp-controller="Units" asp-action="Index">Units</a> and use
-        <strong>Request Transfer</strong> on any vacant unit. Your requests and their status show here.
-    </p>
-}
 
 @if (!Model.Any())
 {
@@ -44,16 +40,17 @@ else
                     <th>Reason</th>
                     <th>Status</th>
                     <th>Requested</th>
-                    @if (isAdmin) { <th>Actions</th> }
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var r in Model)
                 {
                     var badge = r.Status switch {
-                        "Approved" => "bg-success",
-                        "Rejected" => "bg-danger",
-                        _          => "bg-warning text-dark"
+                        "Approved"  => "bg-success",
+                        "Rejected"  => "bg-danger",
+                        "Cancelled" => "bg-secondary",
+                        _           => "bg-warning text-dark"
                     };
                     <tr>
                         @if (isAdmin) { <td>@r.Tenant?.FullName</td> }
@@ -62,9 +59,9 @@ else
                         <td class="small" style="max-width:280px">@r.Reason</td>
                         <td><span class="badge @badge">@r.Status</span></td>
                         <td class="small text-muted">@r.DateRequested.ToString("MMM dd, yyyy")</td>
-                        @if (isAdmin)
-                        {
-                            <td>
+                        <td>
+                            @if (isAdmin)
+                            {
                                 @if (r.Status == "Pending")
                                 {
                                     <div class="d-flex gap-1">
@@ -82,8 +79,27 @@ else
                                 {
                                     <span class="text-muted small">Reviewed @r.DateReviewed?.ToString("MMM dd")</span>
                                 }
-                            </td>
-                        }
+                            }
+                            else
+                            {
+                                @if (r.Status == "Pending")
+                                {
+                                    <form asp-action="Cancel" asp-route-id="@r.TransferID" method="post"
+                                          onsubmit="return confirm('Cancel this transfer request?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
+                                    </form>
+                                }
+                                else if (!string.IsNullOrEmpty(r.AdminNotes))
+                                {
+                                    <span class="text-muted small">Note: @r.AdminNotes</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">—</span>
+                                }
+                            }
+                        </td>
                     </tr>
                 }
             </tbody>

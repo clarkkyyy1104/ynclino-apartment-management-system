@@ -75,13 +75,6 @@
         }
 
         <div class="d-flex gap-2 mt-3">
-            @if (!isStaff && Model.Status == "Vacant"
-                && ViewBag.TenantUnitID != null && Model.UnitID != (int)ViewBag.TenantUnitID
-                && ViewBag.HasPendingTransfer != true)
-            {
-                <a asp-controller="Transfers" asp-action="Create" asp-route-unitId="@Model.UnitID"
-                   class="btn btn-success">Request Transfer</a>
-            }
             <a asp-action="Index" class="btn btn-outline-secondary">Back to Units</a>
         </div>
     </div>

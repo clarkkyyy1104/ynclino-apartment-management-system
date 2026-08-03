@@ -32,7 +32,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             ViewBag.StatusFilter = statusFilter;
             ViewBag.SearchTerm = searchTerm;
             ViewBag.HasUnits = await _context.tblUnits.AnyAsync();
-            await SetTenantTransferContextAsync();
 
             var units = await query.OrderBy(u => u.UnitNumber).ToListAsync();
             return View(units);
@@ -48,27 +47,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 .FirstOrDefaultAsync(u => u.UnitID == id);
 
             if (unit == null) return NotFound();
-            await SetTenantTransferContextAsync();
             return View(unit);
-        }
-
-        // for the tenant browsing units: which unit they're in, and whether they already
-        // have a pending transfer request — so the views can show a "Request Transfer"
-        // button on the other vacant units
-        private async Task SetTenantTransferContextAsync()
-        {
-            if (!User.IsInRole("Tenant")) return;
-
-            if (!int.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out int uid))
-                return;
-
-            var tenant = await _context.tblTenants
-                .FirstOrDefaultAsync(t => t.UserID == uid && t.Status == "Active");
-            if (tenant == null) return;
-
-            ViewBag.TenantUnitID = tenant.UnitID;
-            ViewBag.HasPendingTransfer = await _context.tblUnitTransferRequests
-                .AnyAsync(r => r.TenantID == tenant.TenantID && r.Status == "Pending");
         }
 
         // GET: Units/Create
