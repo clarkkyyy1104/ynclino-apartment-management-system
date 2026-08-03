@@ -8,6 +8,15 @@
         <div class="card shadow-sm">
             <div class="card-header bg-info text-white fw-semibold">Tenant Details — @Model.FullName</div>
             <div class="card-body">
+                @if (!string.IsNullOrEmpty(Model.PhotoPath))
+                {
+                    <div class="text-center mb-3">
+                        <a href="@Model.PhotoPath" target="_blank">
+                            <img src="@Model.PhotoPath" alt="Tenant photo"
+                                 class="rounded-circle border" style="width:110px;height:110px;object-fit:cover;" />
+                        </a>
+                    </div>
+                }
                 <dl class="row">
                     <dt class="col-sm-4">Full Name</dt>
                     <dd class="col-sm-8">@Model.LastName, @Model.FirstName</dd>

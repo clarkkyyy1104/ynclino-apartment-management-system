@@ -55,6 +55,10 @@ namespace YnclinoApartmentManagementSystem.Models
         [Display(Name = "Date Recorded")]
         public DateTime DateRecorded { get; set; } = DateTime.Now;
 
+        // optional profile photo the tenant can upload
+        [MaxLength(300)]
+        public string? PhotoPath { get; set; }
+
         [ForeignKey("UserID")]
         public tblUser? User { get; set; }
 
