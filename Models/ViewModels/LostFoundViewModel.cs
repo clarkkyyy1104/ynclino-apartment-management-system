@@ -19,7 +19,7 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         public string? Description { get; set; }
 
         [Required(ErrorMessage = "Type is required.")]
-        [Display(Name = "Type")]
+        [Display(Name = "Category")]
         public string ItemType { get; set; } = "Lost";
 
         [MaxLength(200)]
