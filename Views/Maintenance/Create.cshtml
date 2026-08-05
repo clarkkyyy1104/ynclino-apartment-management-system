@@ -36,7 +36,8 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label asp-for="Category" class="form-label fw-semibold small"></label>
-                            <select asp-for="Category" id="categorySelect" class="form-select">
+                            <select asp-for="Category" id="categorySelect" class="form-select" required>
+                                <option value="">— Select —</option>
                                 <option>Plumbing</option>
                                 <option>Electrical</option>
                                 <option>Structural</option>
@@ -47,7 +48,8 @@
                         </div>
                         <div class="col-md-6">
                             <label asp-for="Priority" class="form-label fw-semibold small"></label>
-                            <select asp-for="Priority" class="form-select">
+                            <select asp-for="Priority" class="form-select" required>
+                                <option value="">— Select —</option>
                                 <option>Minor</option>
                                 <option>Moderate</option>
                                 <option>Major</option>

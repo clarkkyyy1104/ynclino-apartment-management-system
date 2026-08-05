@@ -14,7 +14,8 @@
 
                     <div class="mb-3">
                         <label asp-for="ItemType" class="form-label fw-semibold small"></label>
-                        <select asp-for="ItemType" class="form-select">
+                        <select asp-for="ItemType" class="form-select" required>
+                            <option value="">— Select —</option>
                             <option>Lost</option>
                             <option>Found</option>
                         </select>

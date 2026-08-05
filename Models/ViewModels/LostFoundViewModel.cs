@@ -18,9 +18,9 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         [Display(Name = "Description")]
         public string? Description { get; set; }
 
-        [Required(ErrorMessage = "Type is required.")]
+        [Required(ErrorMessage = "Please select a category.")]
         [Display(Name = "Category")]
-        public string ItemType { get; set; } = "Lost";
+        public string ItemType { get; set; } = "";
 
         [MaxLength(200)]
         [Display(Name = "Last Known Location")]
