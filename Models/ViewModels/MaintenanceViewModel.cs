@@ -14,7 +14,7 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
 
         [Required(ErrorMessage = "Issue type is required.")]
         [Display(Name = "Issue Type")]
-        public string Category { get; set; } = "Other";
+        public string Category { get; set; } = "";
 
         // nullable so an empty value isn't implicitly required; a description is
         // only enforced (in the controller) when the Issue Type is "Other"
@@ -24,7 +24,7 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
 
         [Required(ErrorMessage = "Priority is required.")]
         [Display(Name = "Priority")]
-        public string Priority { get; set; } = "Moderate";
+        public string Priority { get; set; } = "";
 
         [Display(Name = "Status")]
         public string Status { get; set; } = "Pending";

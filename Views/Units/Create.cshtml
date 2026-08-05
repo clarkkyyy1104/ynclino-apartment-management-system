@@ -73,7 +73,8 @@
 
                     <div class="mb-4">
                         <label asp-for="Status" class="form-label fw-semibold"></label>
-                        <select asp-for="Status" class="form-select">
+                        <select asp-for="Status" class="form-select" required>
+                            <option value="">— Select —</option>
                             <option>Vacant</option>
                             <option>Occupied</option>
                             <option>Under Maintenance</option>

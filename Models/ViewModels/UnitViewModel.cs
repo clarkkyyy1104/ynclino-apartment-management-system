@@ -42,6 +42,6 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
 
         [Required(ErrorMessage = "Status is required.")]
         [MaxLength(20)]
-        public string Status { get; set; } = "Vacant";
+        public string Status { get; set; } = "";
     }
 }
