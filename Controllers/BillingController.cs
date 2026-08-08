@@ -297,7 +297,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             return await _context.tblTenants
                 .Include(t => t.Unit)
-                .Where(t => t.Status == "Active")
+                .Where(t => t.Status == "Active" && t.UnitID != null)
                 .OrderBy(t => t.LastName)
                 .Select(t => new SelectListItem
                 {
@@ -312,7 +312,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             return await _context.tblTenants
                 .Include(t => t.Unit)
-                .Where(t => t.Status == "Active" || t.TenantID == currentTenantId)
+                .Where(t => (t.Status == "Active" && t.UnitID != null) || t.TenantID == currentTenantId)
                 .OrderBy(t => t.LastName)
                 .Select(t => new SelectListItem
                 {

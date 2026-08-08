@@ -131,6 +131,11 @@ using (var scope = app.Services.CreateScope())
     // migrate the old billing status "Overdue" to the current "Late" label
     if (db.tblBillings.Any(b => b.Status == "Overdue"))
         db.tblBillings.Where(b => b.Status == "Overdue").ExecuteUpdate(s => s.SetProperty(b => b.Status, "Late"));
+
+    // a tenant may now exist without a unit (they apply for one), so make these
+    // columns nullable on databases created before the change. No-op when already null.
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE tblTenants MODIFY UnitID INT NULL"); } catch { }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE tblUnitTransferRequests MODIFY CurrentUnitID INT NULL"); } catch { }
 }
 
 if (!app.Environment.IsDevelopment())

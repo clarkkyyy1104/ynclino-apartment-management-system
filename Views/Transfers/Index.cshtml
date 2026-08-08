@@ -3,9 +3,11 @@
     ViewData["Title"] = "Unit Transfer Requests";
     bool isAdmin = User.IsInRole("Admin");
     bool archived = ViewBag.Archived == true;
+    bool hasUnit = ViewBag.HasUnit == true;
+    string tenantAction = hasUnit ? "Request Transfer" : "Apply for a Unit";
     string title = isAdmin
-        ? (archived ? "Transfer Archive" : "Unit Transfer Requests")
-        : (archived ? "My Past Requests" : "My Transfer Requests");
+        ? (archived ? "Unit Requests Archive" : "Unit Requests")
+        : (archived ? "My Past Requests" : (hasUnit ? "My Transfer Requests" : "My Unit Applications"));
     var unreadIds = ViewBag.UnreadIds as HashSet<int> ?? new HashSet<int>();
     var readIds = ViewBag.ReadIds as HashSet<int> ?? new HashSet<int>();
 }
@@ -21,7 +23,7 @@
         </div>
         @if (!isAdmin && !archived)
         {
-            <a asp-action="Create" class="btn btn-primary btn-sm">+ Request Transfer</a>
+            <a asp-action="Create" class="btn btn-primary btn-sm">+ @tenantAction</a>
         }
     </div>
 </div>
@@ -60,7 +62,7 @@ else
                                  : readIds.Contains(r.TransferID) ? "text-secondary" : "";
                     <tr class="@rowCls">
                         @if (isAdmin) { <td>@r.Tenant?.FullName</td> }
-                        <td>@r.CurrentUnit?.UnitNumber</td>
+                        <td>@(r.CurrentUnit?.UnitNumber ?? "— (none)")</td>
                         <td>@r.RequestedUnit?.UnitNumber</td>
                         <td class="small" style="max-width:280px">@r.Reason</td>
                         <td><span class="badge @badge">@r.Status</span></td>

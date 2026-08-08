@@ -10,8 +10,8 @@ namespace YnclinoApartmentManagementSystem.Models
 
         public int? UserID { get; set; }
 
-        [Required]
-        public int UnitID { get; set; }
+        // a tenant may exist without a unit until they apply for one and it's approved
+        public int? UnitID { get; set; }
 
         [Required, MaxLength(50)]
         [Display(Name = "First Name")]

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using YnclinoApartmentManagementSystem.Data;
 using YnclinoApartmentManagementSystem.Helpers;
+using YnclinoApartmentManagementSystem.Models;
 using YnclinoApartmentManagementSystem.Models.ViewModels;
 
 namespace YnclinoApartmentManagementSystem.Controllers
@@ -58,6 +59,54 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 return View(vm);
             }
 
+            await SignInUserAsync(user);
+
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                return Redirect(returnUrl);
+
+            return RedirectToAction("Index", "Home");
+        }
+
+        // Demo/presentation convenience: sign in as a sample admin or tenant with one
+        // click (no password), so the system can be shown/tested without typing logins.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> QuickLogin(string role)
+        {
+            tblUser? user = null;
+            if (role == "Admin")
+            {
+                user = await _context.tblUsers
+                    .Where(u => u.Role == "Admin" && u.IsActive)
+                    .OrderByDescending(u => u.IsMainAdmin)
+                    .FirstOrDefaultAsync();
+            }
+            else if (role == "Tenant")
+            {
+                // prefer a tenant that already has a unit, so the demo shows real data
+                var tenant = await _context.tblTenants
+                    .Include(t => t.User)
+                    .Where(t => t.User!.IsActive && t.User.Role == "Tenant" && t.Status == "Active")
+                    .OrderByDescending(t => t.UnitID != null)
+                    .ThenBy(t => t.TenantID)
+                    .FirstOrDefaultAsync();
+                user = tenant?.User;
+            }
+
+            if (user == null)
+            {
+                TempData["Error"] = role == "Tenant"
+                    ? "No sample tenant found. Ask the admin to load sample data first."
+                    : "No administrator account found.";
+                return RedirectToAction(nameof(Login));
+            }
+
+            await SignInUserAsync(user);
+            return RedirectToAction("Index", "Home");
+        }
+
+        private async Task SignInUserAsync(tblUser user)
+        {
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.UserID.ToString()),
@@ -73,11 +122,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 principal,
                 new AuthenticationProperties { IsPersistent = false });
-
-            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-                return Redirect(returnUrl);
-
-            return RedirectToAction("Index", "Home");
         }
 
         [HttpPost]

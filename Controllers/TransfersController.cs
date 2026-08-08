@@ -51,6 +51,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                     return View(new List<tblUnitTransferRequest>());
                 }
                 query = query.Where(r => r.TenantID == tenant.TenantID);
+                ViewBag.HasUnit = tenant.UnitID != null;   // drives "Apply for a Unit" vs "Request Transfer"
             }
 
             // the archive holds reviewed requests; the main list holds pending ones
@@ -88,6 +89,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             await PopulateVacantUnitsAsync(tenant);
             ViewBag.CurrentUnit = tenant.Unit?.UnitNumber;
+            ViewBag.HasUnit = tenant.UnitID != null;
             return View();
         }
 
@@ -119,13 +121,15 @@ namespace YnclinoApartmentManagementSystem.Controllers
             {
                 await PopulateVacantUnitsAsync(tenant);
                 ViewBag.CurrentUnit = tenant.Unit?.UnitNumber;
+                ViewBag.HasUnit = tenant.UnitID != null;
                 return View();
             }
 
+            bool isApplication = tenant.UnitID == null;
             var newRequest = new tblUnitTransferRequest
             {
                 TenantID = tenant.TenantID,
-                CurrentUnitID = tenant.UnitID,
+                CurrentUnitID = tenant.UnitID,          // null when applying for a first unit
                 RequestedUnitID = requestedUnitID,
                 Reason = reason.Trim(),
                 Status = "Pending",
@@ -135,9 +139,12 @@ namespace YnclinoApartmentManagementSystem.Controllers
             await _context.SaveChangesAsync();
 
             await NotificationHelper.NotifyAdminsAsync(_context, "Transfer",
-                $"{tenant.FullName} requested a unit transfer.", "/Transfers", newRequest.TransferID);
+                isApplication ? $"{tenant.FullName} applied for a unit." : $"{tenant.FullName} requested a unit transfer.",
+                "/Transfers", newRequest.TransferID);
 
-            TempData["Success"] = "Your unit transfer request has been submitted.";
+            TempData["Success"] = isApplication
+                ? "Your unit application has been submitted."
+                : "Your unit transfer request has been submitted.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -193,7 +200,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
             }
 
             var tenant = req.Tenant!;
-            int oldUnitID = tenant.UnitID;
+            int? oldUnitID = tenant.UnitID;                 // null when this is a first-unit application
+            bool isApplication = oldUnitID == null;
             tenant.UnitID = req.RequestedUnitID;
 
             req.Status = "Approved";
@@ -202,19 +210,20 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             await _context.SaveChangesAsync();
 
-            // refresh occupancy on both units after the move
-            await RefreshUnitStatusAsync(oldUnitID);
+            // refresh occupancy on the old (if any) and the new unit
+            if (oldUnitID.HasValue) await RefreshUnitStatusAsync(oldUnitID.Value);
             await RefreshUnitStatusAsync(req.RequestedUnitID);
             await _context.SaveChangesAsync();
 
+            string verb = isApplication ? "assigned to" : "moved to";
             if (tenant.UserID != null)
                 await NotificationHelper.CreateAsync(_context, tenant.UserID.Value, "Transfer",
-                    $"Your transfer request was approved — you've been moved to unit {target.UnitNumber}.", "/Transfers", req.TransferID);
+                    $"Your unit request was approved — you've been {verb} unit {target.UnitNumber}.", "/Transfers", req.TransferID);
 
             var approverId = CurrentUserID();
             if (approverId != null) await NotificationHelper.MarkRecordReadAsync(_context, approverId.Value, "Transfer", req.TransferID);
 
-            TempData["Success"] = $"{tenant.FullName} was moved to unit {target.UnitNumber}.";
+            TempData["Success"] = $"{tenant.FullName} was {verb} unit {target.UnitNumber}.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -271,8 +280,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // vacant units (with room) other than the tenant's current one
         private async Task PopulateVacantUnitsAsync(tblTenant tenant)
         {
+            var currentUnitId = tenant.UnitID;   // null when the tenant has no unit yet
             var units = await _context.tblUnits
-                .Where(u => u.UnitID != tenant.UnitID && u.Status != "Under Maintenance")
+                .Where(u => (currentUnitId == null || u.UnitID != currentUnitId) && u.Status != "Under Maintenance")
                 .OrderBy(u => u.UnitNumber)
                 .ToListAsync();
 

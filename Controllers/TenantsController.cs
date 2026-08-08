@@ -136,15 +136,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (string.IsNullOrWhiteSpace(vm.Password))
                 ModelState.AddModelError("Password", "Password is required. Enter a password or fill in Contact Number and Name.");
 
-            // the posted unit must exist and still have room
-            var unit = await _context.tblUnits.FindAsync(vm.UnitID);
-            if (unit == null)
-                ModelState.AddModelError("UnitID", "Select a valid unit.");
-            else if (unit.Status == "Under Maintenance")
-                ModelState.AddModelError("UnitID", "That unit is under maintenance and cannot take tenants.");
-            else if (await ActiveTenantCountAsync(unit.UnitID) >= unit.Capacity)
-                ModelState.AddModelError("UnitID", "That unit is already at full capacity.");
-
+            // a unit is not assigned at registration — the tenant applies for one later
             // flag an obvious duplicate registration
             if (await IsDuplicateTenantAsync(vm.FirstName, vm.LastName, vm.ContactNumber, null))
                 ModelState.AddModelError(string.Empty, "An active tenant with the same name and contact number already exists.");
@@ -169,7 +161,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var tenant = new tblTenant
             {
                 User = user,
-                UnitID = vm.UnitID,
+                UnitID = null,   // no unit yet — the tenant applies for one after registering
                 FirstName = vm.FirstName,
                 LastName = vm.LastName,
                 ContactNumber = vm.ContactNumber,
@@ -182,11 +174,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             _context.tblTenants.Add(tenant);
             await _context.SaveChangesAsync();
 
-            // a unit only reads "Occupied" once it's full
-            await SyncUnitStatusAsync(vm.UnitID);
-            await _context.SaveChangesAsync();
-
-            TempData["Success"] = $"Tenant {tenant.FullName} has been registered with account '{user.Username}'.";
+            TempData["Success"] = $"Tenant {tenant.FullName} has been registered with account '{user.Username}'. They can now apply for a unit.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -255,32 +243,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var tenant = await _context.tblTenants.FindAsync(id);
             if (tenant == null) return NotFound();
 
-            int previousUnitID = tenant.UnitID;
+            // the tenant's unit is managed through the unit-application/approval flow,
+            // not edited here, so it is left untouched below
+            int? previousUnitID = tenant.UnitID;
             string previousStatus = tenant.Status;
             bool becomingActive = vm.Status == "Active";
-
-            // when the tenant is (or is becoming) active, the target unit must be valid and have room
-            if (becomingActive)
-            {
-                var targetUnit = await _context.tblUnits.FindAsync(vm.UnitID);
-                if (targetUnit == null)
-                    ModelState.AddModelError("UnitID", "Select a valid unit.");
-                else
-                {
-                    int activeInTarget = await ActiveTenantCountAsync(vm.UnitID, excludeTenantId: id);
-                    if (targetUnit.Status == "Under Maintenance")
-                        ModelState.AddModelError("UnitID", "That unit is under maintenance and cannot take tenants.");
-                    else if (activeInTarget >= targetUnit.Capacity)
-                        ModelState.AddModelError("UnitID", "That unit is already at full capacity.");
-                }
-            }
-
-            if (!ModelState.IsValid)
-            {
-                ViewBag.IsMainAdmin = isMainAdmin;
-                vm.AvailableUnits = await GetAllUnitsAsync();
-                return View(vm);
-            }
 
             // the username must be free (ignoring this tenant's own account)
             bool duplicateUsername = await _context.tblUsers
@@ -326,7 +293,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 tenant.User = newUser;
             }
 
-            tenant.UnitID = vm.UnitID;
             tenant.FirstName = vm.FirstName;
             tenant.LastName = vm.LastName;
             tenant.ContactNumber = vm.ContactNumber;
@@ -344,10 +310,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             await _context.SaveChangesAsync();
 
-            // re-derive occupancy for both the old and the new unit
-            await SyncUnitStatusAsync(previousUnitID);
-            if (previousUnitID != vm.UnitID)
-                await SyncUnitStatusAsync(vm.UnitID);
+            // re-derive occupancy for the tenant's unit (their active state may have changed)
+            if (previousUnitID.HasValue)
+                await SyncUnitStatusAsync(previousUnitID.Value);
             await _context.SaveChangesAsync();
 
             TempData["Success"] = $"Tenant {tenant.FullName} has been updated.";
@@ -389,7 +354,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             await _context.SaveChangesAsync();
 
-            await SyncUnitStatusAsync(tenant.UnitID);
+            if (tenant.UnitID.HasValue)
+                await SyncUnitStatusAsync(tenant.UnitID.Value);
             await _context.SaveChangesAsync();
 
             TempData["Success"] = $"Tenant {tenant.FullName} has been set to Inactive.";

@@ -46,6 +46,25 @@
 
                     <button type="submit" class="btn btn-primary w-100">Sign In</button>
                 </form>
+
+                <div class="d-flex align-items-center my-3 text-muted small">
+                    <hr class="flex-grow-1 my-0" />
+                    <span class="px-2">quick access for demo</span>
+                    <hr class="flex-grow-1 my-0" />
+                </div>
+
+                <div class="d-flex gap-2">
+                    <form asp-action="QuickLogin" method="post" class="flex-grow-1">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="role" value="Admin" />
+                        <button type="submit" class="btn btn-outline-dark w-100">Login as Admin</button>
+                    </form>
+                    <form asp-action="QuickLogin" method="post" class="flex-grow-1">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="role" value="Tenant" />
+                        <button type="submit" class="btn btn-outline-secondary w-100">Login as Tenant</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

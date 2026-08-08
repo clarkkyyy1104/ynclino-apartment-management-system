@@ -26,9 +26,9 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         [Display(Name = "Confirm Password")]
         public string? ConfirmPassword { get; set; }
 
-        [Required(ErrorMessage = "Unit is required.")]
+        // a unit is no longer assigned at registration — tenants apply for one later
         [Display(Name = "Unit")]
-        public int UnitID { get; set; }
+        public int? UnitID { get; set; }
 
         [Required(ErrorMessage = "First Name is required.")]
         [MaxLength(50)]

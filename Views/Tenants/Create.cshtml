@@ -27,12 +27,9 @@
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="UnitID" class="form-label fw-semibold small"></label>
-                        <select asp-for="UnitID" asp-items="Model.AvailableUnits" class="form-select">
-                            <option value="">— Select Unit —</option>
-                        </select>
-                        <span asp-validation-for="UnitID" class="text-danger small"></span>
+                    <div class="alert alert-info small mb-3 py-2">
+                        A unit is not assigned here — after registering, the tenant applies for a
+                        vacant unit from their side and an administrator approves it.
                     </div>
 
                     <div class="row mb-3">
