@@ -1,116 +1,39 @@
 @model IEnumerable<YnclinoApartmentManagementSystem.Models.tblUnitTransferRequest>
 @{
-    ViewData["Title"] = "Unit Transfer Requests";
+    ViewData["Title"] = "Unit Requests";
     bool isAdmin = User.IsInRole("Admin");
-    bool archived = ViewBag.Archived == true;
-    bool hasUnit = ViewBag.HasUnit == true;
-    string tenantAction = hasUnit ? "Request Transfer" : "Apply for a Unit";
-    string title = isAdmin
-        ? (archived ? "Unit Requests Archive" : "Unit Requests")
-        : (archived ? "My Past Requests" : (hasUnit ? "My Transfer Requests" : "My Unit Applications"));
-    var unreadIds = ViewBag.UnreadIds as HashSet<int> ?? new HashSet<int>();
-    var readIds = ViewBag.ReadIds as HashSet<int> ?? new HashSet<int>();
+    string title = isAdmin ? "Unit Requests" : "My Unit Requests";
+    var archivedList = ViewBag.ArchivedList as IEnumerable<YnclinoApartmentManagementSystem.Models.tblUnitTransferRequest>
+                       ?? Enumerable.Empty<YnclinoApartmentManagementSystem.Models.tblUnitTransferRequest>();
 }
 
 @await Component.InvokeAsync("ModuleNotifications", new { module = "Transfer" })
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3 class="fw-bold mb-0">@title</h3>
-    <div class="d-flex gap-2">
-        <div class="btn-group">
-            <a asp-action="Index" class="btn btn-sm @(archived ? "btn-outline-secondary" : "btn-secondary")">Active</a>
-            <a asp-action="Index" asp-route-archived="true" class="btn btn-sm @(archived ? "btn-secondary" : "btn-outline-secondary")">Archive</a>
-        </div>
-        @if (!isAdmin && !archived)
-        {
-            <a asp-action="Create" class="btn btn-primary btn-sm">+ @tenantAction</a>
-        }
-    </div>
+    @if (!isAdmin)
+    {
+        <span class="text-muted small">To request a unit, use <strong>Units → Browse Units</strong>.</span>
+    }
 </div>
 
-@if (!Model.Any())
-{
-    <div class="card"><div class="card-body text-center text-muted py-5">
-        @(archived ? "Nothing in the archive yet." : (isAdmin ? "No pending transfer requests." : "No transfer requests yet."))
-    </div></div>
-}
-else
-{
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead>
-                <tr>
-                    @if (isAdmin) { <th>Tenant</th> }
-                    <th>From</th>
-                    <th>To</th>
-                    <th>Reason</th>
-                    <th>Status</th>
-                    <th>Requested</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var r in Model)
-                {
-                    var badge = r.Status switch {
-                        "Approved"  => "bg-success",
-                        "Rejected"  => "bg-danger",
-                        "Cancelled" => "bg-secondary",
-                        _           => "bg-warning text-dark"
-                    };
-                    var rowCls = unreadIds.Contains(r.TransferID) ? "fw-bold text-dark"
-                                 : readIds.Contains(r.TransferID) ? "text-secondary" : "";
-                    <tr class="@rowCls">
-                        @if (isAdmin) { <td>@r.Tenant?.FullName</td> }
-                        <td>@(r.CurrentUnit?.UnitNumber ?? "— (none)")</td>
-                        <td>@r.RequestedUnit?.UnitNumber</td>
-                        <td class="small" style="max-width:280px">@r.Reason</td>
-                        <td><span class="badge @badge">@r.Status</span></td>
-                        <td class="small text-muted">@r.DateRequested.ToString("MMM dd, yyyy")</td>
-                        <td>
-                            @if (isAdmin)
-                            {
-                                @if (r.Status == "Pending")
-                                {
-                                    <div class="d-flex gap-1">
-                                        <form asp-action="Approve" asp-route-id="@r.TransferID" method="post" onsubmit="return confirm('Move @r.Tenant?.FullName to unit @r.RequestedUnit?.UnitNumber?');">
-                                            @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-sm btn-success">Approve</button>
-                                        </form>
-                                        <form asp-action="Reject" asp-route-id="@r.TransferID" method="post">
-                                            @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
-                                        </form>
-                                    </div>
-                                }
-                                else
-                                {
-                                    <span class="text-muted small">Reviewed @r.DateReviewed?.ToString("MMM dd")</span>
-                                }
-                            }
-                            else
-                            {
-                                @if (r.Status == "Pending")
-                                {
-                                    <form asp-action="Cancel" asp-route-id="@r.TransferID" method="post"
-                                          onsubmit="return confirm('Cancel this transfer request?');">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
-                                    </form>
-                                }
-                                else if (!string.IsNullOrEmpty(r.AdminNotes))
-                                {
-                                    <span class="text-muted small">Note: @r.AdminNotes</span>
-                                }
-                                else
-                                {
-                                    <span class="text-muted small">—</span>
-                                }
-                            }
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header fw-semibold">Active</div>
+            <div class="card-body p-0">
+                @{ ViewData["EmptyText"] = "No active requests."; }
+                <partial name="_RequestList" model="Model" />
+            </div>
+        </div>
     </div>
-}
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header fw-semibold text-muted">Archive</div>
+            <div class="card-body p-0">
+                @{ ViewData["EmptyText"] = "Nothing in the archive yet."; }
+                <partial name="_RequestList" model="archivedList" />
+            </div>
+        </div>
+    </div>
+</div>

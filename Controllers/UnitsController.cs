@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -32,6 +33,18 @@ namespace YnclinoApartmentManagementSystem.Controllers
             ViewBag.StatusFilter = statusFilter;
             ViewBag.SearchTerm = searchTerm;
             ViewBag.HasUnits = await _context.tblUnits.AnyAsync();
+
+            // for a tenant browsing units: whether they can request one, and its label
+            if (User.IsInRole("Tenant")
+                && int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int uid))
+            {
+                var t = await _context.tblTenants.FirstOrDefaultAsync(x => x.UserID == uid && x.Status == "Active");
+                if (t != null)
+                {
+                    ViewBag.CanRequestUnit = true;
+                    ViewBag.TenantHasUnit = t.UnitID != null;
+                }
+            }
 
             var units = await query.OrderBy(u => u.UnitNumber).ToListAsync();
             return View(units);

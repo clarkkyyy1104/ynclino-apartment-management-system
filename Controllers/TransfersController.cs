@@ -34,8 +34,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // reviewed/closed requests move out of the active list into the archive
         private static readonly string[] ArchivedStatuses = { "Approved", "Rejected", "Cancelled" };
 
-        // GET: Transfers
-        public async Task<IActionResult> Index(bool archived = false)
+        // GET: Transfers  — shows Active and Archived side by side (two columns)
+        public async Task<IActionResult> Index()
         {
             IQueryable<tblUnitTransferRequest> query = _context.tblUnitTransferRequests
                 .Include(r => r.Tenant).ThenInclude(t => t!.Unit)
@@ -47,27 +47,24 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 var tenant = await GetCurrentTenantAsync();
                 if (tenant == null)
                 {
-                    ViewBag.Archived = archived;
+                    ViewBag.ArchivedList = new List<tblUnitTransferRequest>();
                     return View(new List<tblUnitTransferRequest>());
                 }
                 query = query.Where(r => r.TenantID == tenant.TenantID);
                 ViewBag.HasUnit = tenant.UnitID != null;   // drives "Apply for a Unit" vs "Request Transfer"
             }
 
-            // the archive holds reviewed requests; the main list holds pending ones
-            if (archived)
-                query = query.Where(r => ArchivedStatuses.Contains(r.Status));
-            else
-                query = query.Where(r => !ArchivedStatuses.Contains(r.Status));
+            var all = await query.ToListAsync();
+            var active = all.Where(r => !ArchivedStatuses.Contains(r.Status))
+                            .OrderByDescending(r => r.DateRequested).ToList();
+            var archived = all.Where(r => ArchivedStatuses.Contains(r.Status))
+                              .OrderByDescending(r => r.DateReviewed).ToList();
+            ViewBag.ArchivedList = archived;
 
-            var list = await query
-                .OrderByDescending(r => archived ? r.DateReviewed : r.DateRequested)
-                .ToListAsync();
-            ViewBag.Archived = archived;
             var meId = CurrentUserID();
             ViewBag.UnreadIds = meId == null ? new HashSet<int>() : await NotificationHelper.UnreadTargetIdsAsync(_context, meId.Value, "Transfer");
             ViewBag.ReadIds = meId == null ? new HashSet<int>() : await NotificationHelper.ReadTargetIdsAsync(_context, meId.Value, "Transfer");
-            return View(list);
+            return View(active);
         }
 
         // GET: Transfers/Create  (tenant picks a vacant unit and gives a reason)

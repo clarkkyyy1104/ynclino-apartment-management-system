@@ -1,0 +1,79 @@
+@model IEnumerable<YnclinoApartmentManagementSystem.Models.tblUnitTransferRequest>
+@{
+    bool isAdmin = User.IsInRole("Admin");
+    var unreadIds = ViewBag.UnreadIds as HashSet<int> ?? new HashSet<int>();
+    var readIds = ViewBag.ReadIds as HashSet<int> ?? new HashSet<int>();
+    string emptyText = ViewData["EmptyText"] as string ?? "Nothing here.";
+}
+@if (!Model.Any())
+{
+    <div class="text-center text-muted small py-4">@emptyText</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle small mb-0">
+            <thead>
+                <tr>
+                    @if (isAdmin) { <th>Tenant</th> }
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in Model)
+                {
+                    var badge = r.Status switch {
+                        "Approved"  => "bg-success",
+                        "Rejected"  => "bg-danger",
+                        "Cancelled" => "bg-secondary",
+                        _           => "bg-warning text-dark"
+                    };
+                    var rowCls = unreadIds.Contains(r.TransferID) ? "fw-bold text-dark"
+                                 : readIds.Contains(r.TransferID) ? "text-secondary" : "";
+                    <tr class="@rowCls">
+                        @if (isAdmin) { <td>@r.Tenant?.FullName</td> }
+                        <td>@(r.CurrentUnit?.UnitNumber ?? "—")</td>
+                        <td>@r.RequestedUnit?.UnitNumber</td>
+                        <td style="max-width:180px" class="text-truncate" title="@r.Reason">@r.Reason</td>
+                        <td><span class="badge @badge">@r.Status</span></td>
+                        <td>
+                            @if (isAdmin && r.Status == "Pending")
+                            {
+                                <div class="d-flex gap-1">
+                                    <form asp-action="Approve" asp-route-id="@r.TransferID" method="post" onsubmit="return confirm('Move @r.Tenant?.FullName to unit @r.RequestedUnit?.UnitNumber?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                    </form>
+                                    <form asp-action="Reject" asp-route-id="@r.TransferID" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
+                                    </form>
+                                </div>
+                            }
+                            else if (!isAdmin && r.Status == "Pending")
+                            {
+                                <form asp-action="Cancel" asp-route-id="@r.TransferID" method="post"
+                                      onsubmit="return confirm('Cancel this request?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
+                                </form>
+                            }
+                            else if (!string.IsNullOrEmpty(r.AdminNotes))
+                            {
+                                <span class="text-muted">Note: @r.AdminNotes</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">@(r.DateReviewed?.ToString("MMM dd") ?? "—")</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
