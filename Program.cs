@@ -8,13 +8,22 @@ using YnclinoApartmentManagementSystem.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Per-developer overrides (e.g. your local MySQL password) live in appsettings.Local.json,
-// which is git-ignored so secrets never get committed. It overrides appsettings.json when present.
+// Per-developer overrides (your local MySQL password) live in appsettings.Local.json,
+// which is git-ignored so secrets never get committed.
 builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 
 builder.Services.AddControllersWithViews();
 
+// The connection string (including the DATABASE NAME) comes from the committed
+// appsettings.json, so each branch can target its own database. Your local password
+// is kept out of source control in appsettings.Local.json ("MySqlPassword") and is
+// injected into the placeholder here. (A full DefaultConnection in Local.json still
+// works and takes precedence, for backward compatibility.)
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var localPassword = builder.Configuration["MySqlPassword"];
+if (!string.IsNullOrWhiteSpace(localPassword) && connectionString != null && connectionString.Contains("YOUR_MYSQL_PASSWORD"))
+    connectionString = connectionString.Replace("YOUR_MYSQL_PASSWORD", localPassword);
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
