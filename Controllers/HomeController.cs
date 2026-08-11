@@ -23,6 +23,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             {
                 ViewBag.TotalUnits = await _context.tblUnits.CountAsync();
                 ViewBag.VacantUnits = await _context.tblUnits.CountAsync(u => u.Status == "Vacant");
+                ViewBag.ReservedUnits = await _context.tblUnits.CountAsync(u => u.Status == "Reserved");
                 ViewBag.OccupiedUnits = await _context.tblUnits.CountAsync(u => u.Status == "Occupied");
                 ViewBag.MaintenanceUnits = await _context.tblUnits.CountAsync(u => u.Status == "Under Maintenance");
                 ViewBag.ActiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Active");

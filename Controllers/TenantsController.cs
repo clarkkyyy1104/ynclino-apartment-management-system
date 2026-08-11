@@ -34,14 +34,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // reads "Occupied" once it is at full capacity, so partially filled
         // bedspacers stay available. A unit under maintenance keeps that
         // status until an admin clears it by hand.
-        private async Task SyncUnitStatusAsync(int unitId)
-        {
-            var unit = await _context.tblUnits.FindAsync(unitId);
-            if (unit == null || unit.Status == "Under Maintenance") return;
-
-            int active = await _context.tblTenants.CountAsync(t => t.UnitID == unitId && t.Status == "Active");
-            unit.Status = active >= unit.Capacity ? "Occupied" : "Vacant";
-        }
+        private Task SyncUnitStatusAsync(int unitId) => UnitStatusHelper.RefreshAsync(_context, unitId);
 
         // school-style login username: [2-digit year]-[2-digit month] + the uppercase
         // initials of the first and last name, e.g. Ana Cruz in July 2026 -> "26-07AC"

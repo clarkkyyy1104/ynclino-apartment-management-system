@@ -31,6 +31,7 @@
         <select name="statusFilter" class="form-select" style="width:229px" onchange="this.form.submit()">
             <option value="">All Statuses</option>
             <option value="Vacant" selected="@(ViewBag.StatusFilter == "Vacant")">Vacant</option>
+            <option value="Reserved" selected="@(ViewBag.StatusFilter == "Reserved")">Reserved</option>
             <option value="Occupied" selected="@(ViewBag.StatusFilter == "Occupied")">Occupied</option>
             <option value="Under Maintenance" selected="@(ViewBag.StatusFilter == "Under Maintenance")">Under Maintenance</option>
         </select>
@@ -69,6 +70,7 @@
                             var badge = unit.Status switch {
                                 "Occupied" => "bg-warning text-dark",
                                 "Vacant" => "bg-success",
+                                "Reserved" => "bg-info text-dark",
                                 _ => "bg-secondary"
                             };
                         }

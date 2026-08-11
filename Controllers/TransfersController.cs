@@ -114,8 +114,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var target = await _context.tblUnits.FindAsync(requestedUnitID);
             if (target == null || requestedUnitID == tenant.UnitID)
                 ModelState.AddModelError("requestedUnitID", "Choose a different, available unit.");
-            else if (!await UnitHasRoomAsync(target))
-                ModelState.AddModelError("requestedUnitID", "That unit is no longer available.");
+            else if (target.Status != "Vacant" || !await UnitHasRoomAsync(target))
+                ModelState.AddModelError("requestedUnitID", "That unit is no longer available (it may be occupied or already reserved).");
 
             if (!ModelState.IsValid)
             {
@@ -136,6 +136,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 DateRequested = DateTime.Now
             };
             _context.tblUnitTransferRequests.Add(newRequest);
+            await _context.SaveChangesAsync();
+
+            // the requested unit is now spoken for → mark it Reserved
+            await UnitStatusHelper.RefreshAsync(_context, requestedUnitID);
             await _context.SaveChangesAsync();
 
             await NotificationHelper.NotifyAdminsAsync(_context, "Transfer",
@@ -170,6 +174,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             req.Status = "Cancelled";
             req.DateReviewed = DateTime.Now;
+            await _context.SaveChangesAsync();
+
+            // release the reservation on the requested unit
+            await UnitStatusHelper.RefreshAsync(_context, req.RequestedUnitID);
             await _context.SaveChangesAsync();
 
             TempData["Success"] = "Your transfer request has been cancelled.";
@@ -211,8 +219,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
             await _context.SaveChangesAsync();
 
             // refresh occupancy on the old (if any) and the new unit
-            if (oldUnitID.HasValue) await RefreshUnitStatusAsync(oldUnitID.Value);
-            await RefreshUnitStatusAsync(req.RequestedUnitID);
+            if (oldUnitID.HasValue) await UnitStatusHelper.RefreshAsync(_context, oldUnitID.Value);
+            await UnitStatusHelper.RefreshAsync(_context, req.RequestedUnitID);
             await _context.SaveChangesAsync();
 
             string verb = isApplication ? "assigned to" : "moved to";
@@ -246,6 +254,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
             req.AdminNotes = adminNotes;
             await _context.SaveChangesAsync();
 
+            // release the reservation on the requested unit
+            await UnitStatusHelper.RefreshAsync(_context, req.RequestedUnitID);
+            await _context.SaveChangesAsync();
+
             var rejectedTenant = await _context.tblTenants.FindAsync(req.TenantID);
             if (rejectedTenant?.UserID != null)
                 await NotificationHelper.CreateAsync(_context, rejectedTenant.UserID.Value, "Transfer",
@@ -269,20 +281,12 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return active < unit.Capacity;
         }
 
-        private async Task RefreshUnitStatusAsync(int unitID)
-        {
-            var unit = await _context.tblUnits.FindAsync(unitID);
-            if (unit == null || unit.Status == "Under Maintenance") return;
-            int active = await _context.tblTenants.CountAsync(t => t.UnitID == unitID && t.Status == "Active");
-            unit.Status = active >= unit.Capacity ? "Occupied" : "Vacant";
-        }
-
-        // vacant units (with room) other than the tenant's current one
+        // only truly Vacant units are offered — Reserved / Occupied ones are excluded
         private async Task PopulateVacantUnitsAsync(tblTenant tenant)
         {
             var currentUnitId = tenant.UnitID;   // null when the tenant has no unit yet
             var units = await _context.tblUnits
-                .Where(u => (currentUnitId == null || u.UnitID != currentUnitId) && u.Status != "Under Maintenance")
+                .Where(u => (currentUnitId == null || u.UnitID != currentUnitId) && u.Status == "Vacant")
                 .OrderBy(u => u.UnitNumber)
                 .ToListAsync();
 
