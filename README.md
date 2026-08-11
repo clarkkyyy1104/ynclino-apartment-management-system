@@ -55,16 +55,22 @@ In the project root, copy `appsettings.Local.json.example` to
 
 ```json
 {
-  "ConnectionStrings": {
-    "DefaultConnection": "server=localhost;port=3306;database=YnclinoApartmentManagementSystemDb;user=root;password=YOUR_PASSWORD_HERE;"
-  }
+  "MySqlPassword": "YOUR_PASSWORD_HERE"
 }
 ```
 
 - This file is **git-ignored** — your password is never committed or pushed.
+- Only the **password** lives here now. The rest of the connection string —
+  including the **database name** — comes from the committed `appsettings.json`,
+  so each branch can point at its own database and this one local file works on
+  every branch (no editing when you switch branches).
 - **Do not** put your real password in `appsettings.json`; leave its
   `YOUR_MYSQL_PASSWORD` placeholder untouched.
 - Each teammate creates their own `appsettings.Local.json` with their own password.
+
+> Different databases per branch: the `crud` branch uses `YnclinoAMS_crud` and
+> `crud(copy)` uses `YnclinoApartmentManagementSystemDb`, so the two branches never
+> share data. (Set in each branch's `appsettings.json`.)
 
 ### 3. Run the app
 Press **F5** in Visual Studio (or `dotnet run`). On first launch it:
