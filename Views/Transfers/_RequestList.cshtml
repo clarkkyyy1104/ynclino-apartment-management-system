@@ -38,7 +38,7 @@ else
                         @if (isAdmin) { <td>@r.Tenant?.FullName</td> }
                         <td>@(r.CurrentUnit?.UnitNumber ?? "—")</td>
                         <td>@r.RequestedUnit?.UnitNumber</td>
-                        <td style="max-width:180px" class="text-truncate" title="@r.Reason">@r.Reason</td>
+                        <td style="max-width:180px" class="text-truncate" title="@r.Reason">@(string.IsNullOrWhiteSpace(r.Reason) ? "—" : r.Reason)</td>
                         <td><span class="badge @badge">@r.Status</span></td>
                         <td>
                             @if (isAdmin && r.Status == "Pending")

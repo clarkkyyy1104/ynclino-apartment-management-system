@@ -19,7 +19,7 @@ namespace YnclinoApartmentManagementSystem.Models
         [Required]
         public int RequestedUnitID { get; set; }
 
-        [Required]
+        // optional — a tenant may submit a request without stating a reason
         [MaxLength(500)]
         public string Reason { get; set; } = string.Empty;
 

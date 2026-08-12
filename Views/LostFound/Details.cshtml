@@ -143,7 +143,6 @@
                                 <button type="submit" class="btn btn-outline-success btn-sm">Mark Resolved</button>
                             </form>
                         }
-                        <a asp-action="Delete" asp-route-id="@Model.ItemID" class="btn btn-outline-danger btn-sm">Delete</a>
                     }
                     else if (Model.ItemType == "Found" && Model.Status == "Reported"
                         && Model.ReportedByUserID != (int?)ViewBag.CurrentUserID)

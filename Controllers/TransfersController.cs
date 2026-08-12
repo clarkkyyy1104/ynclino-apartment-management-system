@@ -94,7 +94,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Tenant")]
-        public async Task<IActionResult> Create(int requestedUnitID, string reason)
+        public async Task<IActionResult> Create(int requestedUnitID, string? reason)
         {
             var tenant = await GetCurrentTenantAsync();
             if (tenant == null) return Forbid();
@@ -104,9 +104,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 TempData["Error"] = "You already have a pending transfer request.";
                 return RedirectToAction(nameof(Index));
             }
-
-            if (string.IsNullOrWhiteSpace(reason))
-                ModelState.AddModelError("reason", "Please give a reason for the transfer.");
 
             var target = await _context.tblUnits.FindAsync(requestedUnitID);
             if (target == null || requestedUnitID == tenant.UnitID)
@@ -128,7 +125,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 TenantID = tenant.TenantID,
                 CurrentUnitID = tenant.UnitID,          // null when applying for a first unit
                 RequestedUnitID = requestedUnitID,
-                Reason = reason.Trim(),
+                Reason = reason?.Trim() ?? string.Empty,
                 Status = "Pending",
                 DateRequested = DateTime.Now
             };
