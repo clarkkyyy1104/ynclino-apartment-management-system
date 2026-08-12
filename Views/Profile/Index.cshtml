@@ -7,6 +7,33 @@
     var transfers = ViewBag.Transfers as IEnumerable<tblUnitTransferRequest> ?? Enumerable.Empty<tblUnitTransferRequest>();
 }
 
+<style>
+        .profile-avatar {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            line-height: 0;
+        }
+        .profile-avatar .avatar-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.45);
+            opacity: 0;
+            transition: opacity 0.15s ease-in-out;
+        }
+        .profile-avatar:hover .avatar-overlay,
+        .profile-avatar:focus-within .avatar-overlay {
+            opacity: 1;
+        }
+        .avatar-overlay-text {
+            font-size: 1.6rem;
+            line-height: 1;
+        }
+</style>
+
 @if (Model == null)
 {
     <div class="card">
@@ -26,39 +53,45 @@
     <div class="bg-dark" style="height:120px;"></div>
     <div class="card-body">
         <div class="d-flex align-items-end flex-wrap" style="margin-top:-64px;">
-            @if (!string.IsNullOrEmpty(Model.PhotoPath))
-            {
-                <img src="@Model.PhotoPath" alt="Profile photo"
-                     class="rounded-circle border border-3 border-white object-fit-cover"
-                     style="width:96px;height:96px;object-fit:cover;" />
-            }
-            else
-            {
-                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center border border-3 border-white"
-                     style="width:96px;height:96px;font-size:2rem;font-weight:600;">
-                    @initials.ToUpper()
-                </div>
-            }
+            <form asp-action="UploadPhoto" method="post" enctype="multipart/form-data" id="photoForm">
+                @Html.AntiForgeryToken()
+                <input type="file" name="photo" accept="image/*" id="photoInput" class="d-none"
+                       onchange="document.getElementById('photoForm').submit();" />
+                <label for="photoInput" class="profile-avatar" role="button"
+                       title="@(string.IsNullOrEmpty(Model.PhotoPath) ? "Add a profile photo" : "Change your profile photo")">
+                    @if (!string.IsNullOrEmpty(Model.PhotoPath))
+                    {
+                        <img src="@Model.PhotoPath" alt="Profile photo"
+                             class="rounded-circle border border-3 border-white"
+                             style="width:96px;height:96px;object-fit:cover;" />
+                    }
+                    else
+                    {
+                        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center border border-3 border-white"
+                             style="width:96px;height:96px;font-size:2rem;font-weight:600;">
+                            @initials.ToUpper()
+                        </div>
+                    }
+                    <span class="avatar-overlay rounded-circle">
+                        <span class="avatar-overlay-text">📷</span>
+                    </span>
+                </label>
+            </form>
             <div class="ms-3 pb-1">
                 <h4 class="fw-bold mb-0">@Model.FullName</h4>
                 <div class="text-muted small">
                     Unit @(Model.Unit?.UnitNumber ?? "—")
                 </div>
             </div>
-            <div class="ms-auto pb-1 d-flex gap-2">
-                <form asp-action="UploadPhoto" method="post" enctype="multipart/form-data" class="d-flex gap-2 align-items-center">
-                    @Html.AntiForgeryToken()
-                    <input type="file" name="photo" accept="image/*" class="form-control form-control-sm" style="max-width:220px;" required />
-                    <button type="submit" class="btn btn-sm btn-primary">@(string.IsNullOrEmpty(Model.PhotoPath) ? "Add Photo" : "Change")</button>
-                </form>
-                @if (!string.IsNullOrEmpty(Model.PhotoPath))
-                {
+            @if (!string.IsNullOrEmpty(Model.PhotoPath))
+            {
+                <div class="ms-auto pb-1">
                     <form asp-action="RemovePhoto" method="post" onsubmit="return confirm('Remove your profile photo?');">
                         @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Remove Photo</button>
                     </form>
-                }
-            </div>
+                </div>
+            }
         </div>
     </div>
 </div>

@@ -20,12 +20,6 @@
             <a asp-action="Create" class="btn btn-primary">+ Add Unit</a>
         </div>
     }
-    else if (ViewBag.CanRequestUnit == true)
-    {
-        <a asp-controller="Transfers" asp-action="Create" class="btn btn-primary">
-            + @(ViewBag.TenantHasUnit == true ? "Request Transfer" : "Apply for a Unit")
-        </a>
-    }
 </div>
 
 <form method="get" class="row g-2 mb-4">
