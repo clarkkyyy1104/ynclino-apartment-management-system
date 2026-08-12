@@ -25,45 +25,88 @@ else
 {
     <div class="row g-3">
 
+        <!-- LEFT column: Personal Information + Unit Information stacked vertically -->
         <div class="col-md-6">
-            <div class="card border-0 shadow-sm h-100 hover-lift">
-                <div class="card-header bg-primary text-white d-flex align-items-center gap-2 py-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
-                    </svg>
-                    <span class="fw-semibold small">Personal Information</span>
-                </div>
-                <div class="card-body pb-2">
-                    <dl class="row mb-0 info-list">
-                        <dt class="col-5">Full Name</dt>
-                        <dd class="col-7">@Model.FullName</dd>
+            <div class="d-flex flex-column gap-3">
 
-                        <dt class="col-5">Contact No.</dt>
-                        <dd class="col-7">@(string.IsNullOrEmpty(Model.ContactNumber) ? "—" : Model.ContactNumber)</dd>
+                <div class="card border-0 shadow-sm hover-lift">
+                    <div class="card-header bg-primary text-white d-flex align-items-center gap-2 py-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
+                        </svg>
+                        <span class="fw-semibold small">Personal Information</span>
+                    </div>
+                    <div class="card-body pb-2">
+                        <dl class="row mb-0 info-list">
+                            <dt class="col-5">Full Name</dt>
+                            <dd class="col-7">@Model.FullName</dd>
 
-                        <dt class="col-5">Emergency Contact</dt>
-                        <dd class="col-7">
-                            @if (string.IsNullOrEmpty(Model.EmergencyContactName))
-                            {
-                                <text>—</text>
-                            }
-                            else
-                            {
-                                @Model.EmergencyContactName
-                                @if (!string.IsNullOrEmpty(Model.EmergencyContactNumber))
+                            <dt class="col-5">Contact No.</dt>
+                            <dd class="col-7">@(string.IsNullOrEmpty(Model.ContactNumber) ? "—" : Model.ContactNumber)</dd>
+
+                            <dt class="col-5">Emergency Contact</dt>
+                            <dd class="col-7">
+                                @if (string.IsNullOrEmpty(Model.EmergencyContactName))
                                 {
-                                    <text> — @Model.EmergencyContactNumber</text>
+                                    <text>—</text>
                                 }
-                            }
-                        </dd>
+                                else
+                                {
+                                    @Model.EmergencyContactName
+                                    @if (!string.IsNullOrEmpty(Model.EmergencyContactNumber))
+                                    {
+                                        <text> — @Model.EmergencyContactNumber</text>
+                                    }
+                                }
+                            </dd>
 
-                        <dt class="col-5">Status</dt>
-                        <dd class="col-7"><span class="badge bg-success">@Model.Status</span></dd>
-                    </dl>
+                            <dt class="col-5">Status</dt>
+                            <dd class="col-7"><span class="badge bg-success">@Model.Status</span></dd>
+                        </dl>
+                    </div>
                 </div>
+
+                <a asp-controller="Units" asp-action="Index" class="card border-0 shadow-sm hover-lift text-decoration-none text-reset">
+                    <div class="card-header bg-info text-white d-flex align-items-center gap-2 py-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.707L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.646a.5.5 0 0 0 .708-.707L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z"/>
+                        </svg>
+                        <span class="fw-semibold small">Unit Information</span>
+                    </div>
+                    <div class="card-body pb-2">
+                        @if (Model.Unit != null)
+                        {
+                            <dl class="row mb-0 info-list">
+                                <dt class="col-5">Unit Number</dt>
+                                <dd class="col-7 fw-semibold">@Model.Unit.UnitNumber</dd>
+
+                                <dt class="col-5">Unit Type</dt>
+                                <dd class="col-7">@Model.Unit.UnitType</dd>
+
+                                <dt class="col-5">Monthly Rent</dt>
+                                <dd class="col-7">&#x20B1;@Model.Unit.RentPrice.ToString("N2")</dd>
+
+                                <dt class="col-5">Deposit</dt>
+                                <dd class="col-7">&#x20B1;@Model.Unit.Deposit.ToString("N2")</dd>
+
+                                <dt class="col-5">One Month Advance</dt>
+                                <dd class="col-7">&#x20B1;@Model.Unit.AdvancePayment.ToString("N2")</dd>
+
+                                <dt class="col-5">Capacity</dt>
+                                <dd class="col-7">@Model.Unit.Capacity person(s)</dd>
+                            </dl>
+                        }
+                        else
+                        {
+                            <p class="text-muted small mb-0">No unit yet — open <strong>My Unit</strong> to apply for a vacant one.</p>
+                        }
+                    </div>
+                </a>
+
             </div>
         </div>
 
+        <!-- RIGHT column: Date Occupancy stretches (h-100) to match the left stack's full height -->
         <div class="col-md-6">
             <div class="card border-0 shadow-sm h-100 hover-lift">
                 <div class="card-header bg-success text-white d-flex align-items-center gap-2 py-2">
@@ -81,43 +124,5 @@ else
             </div>
         </div>
 
-        <div class="col-md-6">
-            <a asp-controller="Units" asp-action="Index" class="card border-0 shadow-sm h-100 hover-lift text-decoration-none text-reset">
-                <div class="card-header bg-info text-white d-flex align-items-center gap-2 py-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.707L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.646a.5.5 0 0 0 .708-.707L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z"/>
-                    </svg>
-                    <span class="fw-semibold small">Unit Information</span>
-                </div>
-                <div class="card-body pb-2">
-                    @if (Model.Unit != null)
-                    {
-                        <dl class="row mb-0 info-list">
-                            <dt class="col-5">Unit Number</dt>
-                            <dd class="col-7 fw-semibold">@Model.Unit.UnitNumber</dd>
-
-                            <dt class="col-5">Unit Type</dt>
-                            <dd class="col-7">@Model.Unit.UnitType</dd>
-
-                            <dt class="col-5">Monthly Rent</dt>
-                            <dd class="col-7">&#x20B1;@Model.Unit.RentPrice.ToString("N2")</dd>
-
-                            <dt class="col-5">Deposit</dt>
-                            <dd class="col-7">&#x20B1;@Model.Unit.Deposit.ToString("N2")</dd>
-
-                            <dt class="col-5">One Month Advance</dt>
-                            <dd class="col-7">&#x20B1;@Model.Unit.AdvancePayment.ToString("N2")</dd>
-
-                            <dt class="col-5">Capacity</dt>
-                            <dd class="col-7">@Model.Unit.Capacity person(s)</dd>
-                        </dl>
-                    }
-                    else
-                    {
-                        <p class="text-muted small mb-0">No unit yet — open <strong>My Unit</strong> to apply for a vacant one.</p>
-                    }
-                </div>
-            </a>
-        </div>
     </div>
 }
