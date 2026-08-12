@@ -118,7 +118,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             // 32 units, all 2-person rooms at ₱6,000/month (deposit + one-month advance
             // each equal to one month's rent). 22 will be filled by the 44 tenants below,
-            // leaving 10 vacant so transfers and new registrations have somewhere to go.
+            // leaving 10 available so transfers and new registrations have somewhere to go.
             // "Date Added" climbs from early 2023 to a few weeks ago, with light jitter.
             var units = new List<tblUnit>();
             int number = 101;
@@ -127,7 +127,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 var added = seedStart.AddDays(unitSpan * i / 31 + rng.Next(-4, 5));
                 if (added > unitEnd) added = unitEnd;
                 if (added < seedStart.AddDays(-6)) added = seedStart;
-                units.Add(new tblUnit { UnitNumber = (number++).ToString(), UnitType = "Studio", RentPrice = 6000m, Deposit = 6000m, AdvancePayment = 6000m, Capacity = 2, Status = "Vacant", DateAdded = added });
+                units.Add(new tblUnit { UnitNumber = (number++).ToString(), UnitType = "Studio", RentPrice = 6000m, Deposit = 6000m, AdvancePayment = 6000m, Capacity = 2, Status = "Available", DateAdded = added });
             }
             _context.tblUnits.AddRange(units);
             await _context.SaveChangesAsync();
@@ -141,7 +141,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             for (int k = 0; k < 26; k++) pairs.Add((k, k));               // AA, BB, ... ZZ
             for (int k = 0; pairs.Count < 44; k++) pairs.Add((k, k + 1)); // AB, BC, ...
 
-            // fill the first 22 units (2 tenants each = 44), leaving the last 10 vacant
+            // fill the first 22 units (2 tenants each = 44), leaving the last 10 available
             var slots = new List<tblUnit>();
             for (int i = 0; i < 22; i++) for (int s = 0; s < 2; s++) slots.Add(units[i]);
 
@@ -194,11 +194,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
             }
             await _context.SaveChangesAsync();
 
-            // mark the fully-filled units Occupied; the rest stay Vacant
+            // mark the fully-filled units Occupied; the rest stay Available
             foreach (var unit in units)
             {
                 int active = await _context.tblTenants.CountAsync(t => t.UnitID == unit.UnitID && t.Status == "Active");
-                unit.Status = active >= unit.Capacity ? "Occupied" : "Vacant";
+                unit.Status = active >= unit.Capacity ? "Occupied" : "Available";
             }
             await _context.SaveChangesAsync();
 
@@ -254,7 +254,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 }
 
                 // a current bill that is not yet past due, so Unpaid and Partial show up
-                // alongside Paid and Late in the demo
+                // alongside Paid and Overdue in the demo
                 if (monthsHere >= 0)
                 {
                     var curDue = now.Date.AddDays(7);
@@ -441,11 +441,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
             }
 
             // keep the status honest against actual tenancy — "Occupied" means full,
-            // so a partially filled unit legitimately stays Vacant
+            // so a partially filled unit legitimately stays Available
             int activeTenants = await _context.tblTenants.CountAsync(t => t.UnitID == id && t.Status == "Active");
-            if (vm.Status == "Vacant" && activeTenants >= vm.Capacity)
+            if (vm.Status == "Available" && activeTenants >= vm.Capacity)
             {
-                ModelState.AddModelError("Status", "This unit is at full capacity. Move a tenant out before marking it Vacant.");
+                ModelState.AddModelError("Status", "This unit is at full capacity. Move a tenant out before marking it Available.");
                 return View(vm);
             }
             if (vm.Status == "Occupied" && activeTenants == 0)
@@ -466,9 +466,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
             unit.Status = vm.Status;
 
             // a capacity change can flip whether the unit counts as full,
-            // so re-derive Vacant/Occupied unless it's under maintenance
+            // so re-derive Available/Occupied unless it's under maintenance
             if (unit.Status != "Under Maintenance")
-                unit.Status = activeTenants >= unit.Capacity ? "Occupied" : "Vacant";
+                unit.Status = activeTenants >= unit.Capacity ? "Occupied" : "Available";
 
             try
             {

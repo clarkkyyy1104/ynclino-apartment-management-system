@@ -34,17 +34,17 @@ namespace YnclinoApartmentManagementSystem.Controllers
         //   Paid    – paid in full
         //   Partial – part paid, balance remains, not yet past due
         //   Unpaid  – nothing paid, not yet past due
-        //   Late    – past the due date and not paid in full
+        //   Overdue    – past the due date and not paid in full
         public static string DeriveStatus(decimal amountDue, decimal? amountPaid, DateTime dueDate)
         {
             decimal paid = amountPaid ?? 0m;
             if (paid >= amountDue) return "Paid";
-            if (dueDate.Date < DateTime.Today) return "Late";
+            if (dueDate.Date < DateTime.Today) return "Overdue";
             if (paid > 0m) return "Partial";
             return "Unpaid";
         }
 
-        // recompute the status of every not-fully-paid bill so "Late" stays current
+        // recompute the status of every not-fully-paid bill so "Overdue" stays current
         private async Task RefreshStatusesAsync(int? tenantId = null)
         {
             var open = await _context.tblBillings

@@ -17,7 +17,7 @@ maintenance, and lost & found.
 
 ## Features
 
-- **Units** — full CRUD; separate Deposit and One-Month-Advance (each auto-fills to one month's rent); status tracking (Vacant / Occupied / Under Maintenance)
+- **Units** — full CRUD; separate Deposit and One-Month-Advance (each auto-fills to one month's rent); status tracking (Available / Occupied / Under Maintenance)
 - **Tenants** — full CRUD with soft-delete (history preserved), emergency contact details
 - **Billing & Payment** — issue and track bills
 - **Maintenance** — requests with Low/Medium/High/Urgent priority, issue types, photo attachments, and an Active/Archive view

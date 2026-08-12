@@ -137,9 +137,15 @@ using (var scope = app.Services.CreateScope())
         db.tblMaintenanceRequests.Where(m => m.Priority == "High").ExecuteUpdate(s => s.SetProperty(m => m.Priority, "Major"));
     }
 
-    // migrate the old billing status "Overdue" to the current "Late" label
-    if (db.tblBillings.Any(b => b.Status == "Overdue"))
-        db.tblBillings.Where(b => b.Status == "Overdue").ExecuteUpdate(s => s.SetProperty(b => b.Status, "Late"));
+    // billing status label follows the manuscript: the past-due state is "Overdue"
+    // (older databases stored it as "Late") — migrate any leftover rows
+    if (db.tblBillings.Any(b => b.Status == "Late"))
+        db.tblBillings.Where(b => b.Status == "Late").ExecuteUpdate(s => s.SetProperty(b => b.Status, "Overdue"));
+
+    // unit occupancy label follows the manuscript: an empty unit is "Available"
+    // (older databases stored it as "Vacant") — migrate any leftover rows
+    if (db.tblUnits.Any(u => u.Status == "Vacant"))
+        db.tblUnits.Where(u => u.Status == "Vacant").ExecuteUpdate(s => s.SetProperty(u => u.Status, "Available"));
 
     // a tenant may now exist without a unit (they apply for one), so make these
     // columns nullable on databases created before the change. No-op when already null.

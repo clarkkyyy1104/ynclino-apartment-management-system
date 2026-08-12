@@ -167,7 +167,7 @@
                             <span class="badge bg-secondary me-2">Billing</span>
                             Bill for @b.BillingPeriod.ToString("MMMM yyyy") — ₱@b.AmountDue.ToString("N2")
                         </div>
-                        <span class="badge @(b.Status == "Paid" ? "bg-success" : b.Status == "Partial" ? "bg-info text-dark" : b.Status == "Late" ? "bg-danger" : "bg-warning text-dark")">@b.Status</span>
+                        <span class="badge @(b.Status == "Paid" ? "bg-success" : b.Status == "Partial" ? "bg-info text-dark" : b.Status == "Overdue" ? "bg-danger" : "bg-warning text-dark")">@b.Status</span>
                     </div>
                 }
                 @foreach (var m in maintenance)

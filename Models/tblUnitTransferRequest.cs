@@ -15,7 +15,7 @@ namespace YnclinoApartmentManagementSystem.Models
         // has no unit yet and is applying for their first one
         public int? CurrentUnitID { get; set; }
 
-        // the vacant unit the tenant wants to move to
+        // the available unit the tenant wants to move to
         [Required]
         public int RequestedUnitID { get; set; }
 

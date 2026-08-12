@@ -67,7 +67,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return View(active);
         }
 
-        // GET: Transfers/Create  (tenant picks a vacant unit and gives a reason)
+        // GET: Transfers/Create  (tenant picks a available unit and gives a reason)
         [Authorize(Roles = "Tenant")]
         public async Task<IActionResult> Create()
         {
@@ -84,7 +84,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            await PopulateVacantUnitsAsync(tenant);
+            await PopulateAvailableUnitsAsync(tenant);
             ViewBag.CurrentUnit = tenant.Unit?.UnitNumber;
             ViewBag.HasUnit = tenant.UnitID != null;
             return View();
@@ -108,12 +108,12 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var target = await _context.tblUnits.FindAsync(requestedUnitID);
             if (target == null || requestedUnitID == tenant.UnitID)
                 ModelState.AddModelError("requestedUnitID", "Choose a different, available unit.");
-            else if (target.Status != "Vacant" || !await UnitHasRoomAsync(target))
+            else if (target.Status != "Available" || !await UnitHasRoomAsync(target))
                 ModelState.AddModelError("requestedUnitID", "That unit is no longer available (it may be occupied or already reserved).");
 
             if (!ModelState.IsValid)
             {
-                await PopulateVacantUnitsAsync(tenant);
+                await PopulateAvailableUnitsAsync(tenant);
                 ViewBag.CurrentUnit = tenant.Unit?.UnitNumber;
                 ViewBag.HasUnit = tenant.UnitID != null;
                 return View();
@@ -275,12 +275,12 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return active < unit.Capacity;
         }
 
-        // only truly Vacant units are offered — Reserved / Occupied ones are excluded
-        private async Task PopulateVacantUnitsAsync(tblTenant tenant)
+        // only truly Available units are offered — Reserved / Occupied ones are excluded
+        private async Task PopulateAvailableUnitsAsync(tblTenant tenant)
         {
             var currentUnitId = tenant.UnitID;   // null when the tenant has no unit yet
             var units = await _context.tblUnits
-                .Where(u => (currentUnitId == null || u.UnitID != currentUnitId) && u.Status == "Vacant")
+                .Where(u => (currentUnitId == null || u.UnitID != currentUnitId) && u.Status == "Available")
                 .OrderBy(u => u.UnitNumber)
                 .ToListAsync();
 
@@ -295,7 +295,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                         Text = $"Unit {u.UnitNumber} — {u.UnitType} (₱{u.RentPrice:N0}/mo, {u.Capacity - active} slot(s) open)"
                     });
             }
-            ViewBag.VacantUnits = options;
+            ViewBag.AvailableUnits = options;
         }
     }
 }

@@ -7,7 +7,7 @@ namespace YnclinoApartmentManagementSystem.Helpers
     //   Under Maintenance : left as-is (set manually by an admin)
     //   Occupied          : active tenants have filled the unit
     //   Reserved          : has room, but a tenant has a PENDING application/transfer to it
-    //   Vacant            : has room and no pending request
+    //   Available            : has room and no pending request
     // The caller is responsible for SaveChanges.
     public static class UnitStatusHelper
     {
@@ -26,7 +26,7 @@ namespace YnclinoApartmentManagementSystem.Helpers
 
             bool reserved = await db.tblUnitTransferRequests
                 .AnyAsync(r => r.RequestedUnitID == unitId && r.Status == "Pending");
-            unit.Status = reserved ? "Reserved" : "Vacant";
+            unit.Status = reserved ? "Reserved" : "Available";
         }
     }
 }

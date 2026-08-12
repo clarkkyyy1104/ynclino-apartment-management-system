@@ -36,7 +36,7 @@ namespace YnclinoApartmentManagementSystem.Data
                 entity.HasKey(e => e.UnitID);
                 entity.Property(e => e.UnitNumber).IsRequired().HasMaxLength(20);
                 entity.Property(e => e.UnitType).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.Status).IsRequired().HasMaxLength(20).HasDefaultValue("Vacant");
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(20).HasDefaultValue("Available");
                 entity.HasIndex(e => e.UnitNumber).IsUnique();
             });
 

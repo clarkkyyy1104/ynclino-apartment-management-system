@@ -1,7 +1,7 @@
 @{
     bool hasUnit = ViewBag.HasUnit == true;
     ViewData["Title"] = hasUnit ? "Request Unit Transfer" : "Apply for a Unit";
-    var vacantUnits = ViewBag.VacantUnits as IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>
+    var availableUnits = ViewBag.AvailableUnits as IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>
                       ?? Enumerable.Empty<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>();
 }
 
@@ -22,12 +22,12 @@
                     }
                     else
                     {
-                        <text>You don't have a unit yet. Choose a vacant unit you'd like to occupy and tell us why.</text>
+                        <text>You don't have a unit yet. Choose a available unit you'd like to occupy and tell us why.</text>
                     }
                     An administrator will review your request.
                 </p>
 
-                @if (!vacantUnits.Any())
+                @if (!availableUnits.Any())
                 {
                     <div class="alert alert-warning small">There are no available units right now.</div>
                     <a asp-action="Index" class="btn btn-secondary btn-sm">Back</a>
@@ -41,7 +41,7 @@
                             <label class="form-label fw-semibold small">Preferred Unit</label>
                             <select name="requestedUnitID" class="form-select" required>
                                 <option value="">— Select an available unit —</option>
-                                @foreach (var u in vacantUnits)
+                                @foreach (var u in availableUnits)
                                 {
                                     <option value="@u.Value">@u.Text</option>
                                 }
@@ -51,7 +51,7 @@
                         <div class="mb-4">
                             <label class="form-label fw-semibold small">Reason <span class="text-muted fw-normal">(optional)</span></label>
                             <textarea name="reason" class="form-control" rows="3" maxlength="500"
-                                      placeholder="@(hasUnit ? "e.g. I'd prefer a unit closer to the entrance…" : "e.g. I'd like to occupy this vacant unit…")"></textarea>
+                                      placeholder="@(hasUnit ? "e.g. I'd prefer a unit closer to the entrance…" : "e.g. I'd like to occupy this available unit…")"></textarea>
                         </div>
 
                         <div class="d-flex gap-2">

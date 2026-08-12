@@ -35,7 +35,7 @@ namespace YnclinoApartmentManagementSystem.Models
         public int Capacity { get; set; }
 
         [Required, MaxLength(20)]
-        public string Status { get; set; } = "Vacant"; // Vacant | Reserved | Occupied | Under Maintenance
+        public string Status { get; set; } = "Available"; // Available | Reserved | Occupied | Under Maintenance
 
         [Display(Name = "Date Added")]
         public DateTime DateAdded { get; set; } = DateTime.Now;

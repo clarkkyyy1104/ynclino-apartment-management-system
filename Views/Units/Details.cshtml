@@ -4,7 +4,7 @@
     bool isStaff = User.IsInRole("Admin");
     var badge = Model.Status switch {
         "Occupied" => "bg-warning text-dark",
-        "Vacant" => "bg-success",
+        "Available" => "bg-success",
         "Reserved" => "bg-info text-dark",
         _ => "bg-secondary"
     };
