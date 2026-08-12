@@ -68,13 +68,13 @@ In the project root, copy `appsettings.Local.json.example` to
   `YOUR_MYSQL_PASSWORD` placeholder untouched.
 - Each teammate creates their own `appsettings.Local.json` with their own password.
 
-> Different databases per branch: the `crud` branch uses `YnclinoAMS_crud` and
+> Different databases per branch: the `crud` branch uses `YnclinoAMSCrudDb` and
 > `crud(copy)` uses `YnclinoApartmentManagementSystemDb`, so the two branches never
 > share data. (Set in each branch's `appsettings.json`.)
 
 ### 3. Run the app
 Press **F5** in Visual Studio (or `dotnet run`). On first launch it:
-- creates the `YnclinoAMS_crud` database and tables,
+- creates the `YnclinoAMSCrudDb` database and tables,
 - seeds the default admin account,
 - opens at **https://localhost:7251**.
 
@@ -85,7 +85,7 @@ Press **F5** in Visual Studio (or `dotnet run`). On first launch it:
 > **Resetting the database:** because the schema is created (not migrated), the
 > quickest way to start fresh is to drop it and re-run the app:
 > ```sql
-> DROP DATABASE YnclinoAMS_crud;
+> DROP DATABASE YnclinoAMSCrudDb;
 > ```
 
 ### Forgot your MySQL root password?
