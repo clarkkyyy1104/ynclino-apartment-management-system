@@ -94,6 +94,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // order; admin accounts are left untouched
         private async Task ClearSampleDataAsync()
         {
+            // stale alerts point at records we're about to delete — clear them too
+            await _context.tblNotifications.ExecuteDeleteAsync();
             await _context.tblClaimRequests.ExecuteDeleteAsync();
             await _context.tblUnitTransferRequests.ExecuteDeleteAsync();
             await _context.tblBillings.ExecuteDeleteAsync();
