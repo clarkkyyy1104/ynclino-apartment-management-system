@@ -73,7 +73,8 @@
 
                 @if (isAdmin)
                 {
-                    <a class="nav-link @Active("Users")" asp-controller="Users" asp-action="Index">Manage Users</a>
+                    @* Manage Users tab hidden for now — restore this line to bring it back *@
+                    @* <a class="nav-link @Active("Users")" asp-controller="Users" asp-action="Index">Manage Users</a> *@
                     <a class="nav-link @Active("Tenants")" asp-controller="Tenants" asp-action="Index">Tenants</a>
                 }
                 <a class="nav-link @Active("Billing")" asp-controller="Billing" asp-action="Index">Billing &amp; Payment @await Component.InvokeAsync("NavAlert", new { module = "Billing" })</a>
