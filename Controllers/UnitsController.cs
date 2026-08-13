@@ -58,8 +58,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // POST: Units/GenerateSampleData
-        // one-time loader for the survey data: 22 units (13 bedspacers, 9 studios)
-        // and 44 tenants, created through the same logic the forms use.
+        // one-time loader for the demo data: 5 units and 5 tenants,
+        // created through the same logic the forms use.
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
@@ -72,7 +72,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             }
 
             await SeedSampleDataAsync();
-            TempData["Success"] = "Loaded 32 units and 44 tenants with sample bills, maintenance requests, and lost & found items. Sample tenants log in with password 'Tenant@123'.";
+            TempData["Success"] = "Loaded 5 units and 5 tenants with sample bills, maintenance requests, and lost & found items. Sample tenants log in with password 'Tenant@123'.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -86,7 +86,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             await ClearSampleDataAsync();
             await SeedSampleDataAsync();
-            TempData["Success"] = "Reloaded a fresh sample set: 32 units, 44 tenants, and connected bills, maintenance, and lost & found records. Sample tenants log in with password 'Tenant@123'.";
+            TempData["Success"] = "Reloaded a fresh sample set: 5 units, 5 tenants, and connected bills, maintenance, and lost & found records. Sample tenants log in with password 'Tenant@123'.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -116,15 +116,15 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var unitEnd = now.AddDays(-20);
             double unitSpan = (unitEnd - seedStart).TotalDays;
 
-            // 32 units, all 2-person rooms at ₱6,000/month (deposit + one-month advance
-            // each equal to one month's rent). 22 will be filled by the 44 tenants below,
-            // leaving 10 available so transfers and new registrations have somewhere to go.
+            // 5 units, all 2-person rooms at ₱6,000/month (deposit + one-month advance
+            // each equal to one month's rent). 3 will be filled by the 5 tenants below,
+            // leaving 2 available so transfers and new registrations have somewhere to go.
             // "Date Added" climbs from early 2023 to a few weeks ago, with light jitter.
             var units = new List<tblUnit>();
             int number = 101;
-            for (int i = 0; i < 32; i++)
+            for (int i = 0; i < 5; i++)
             {
-                var added = seedStart.AddDays(unitSpan * i / 31 + rng.Next(-4, 5));
+                var added = seedStart.AddDays(unitSpan * i / 4 + rng.Next(-4, 5));
                 if (added > unitEnd) added = unitEnd;
                 if (added < seedStart.AddDays(-6)) added = seedStart;
                 units.Add(new tblUnit { UnitNumber = (number++).ToString(), UnitType = "Studio", RentPrice = 6000m, Deposit = 6000m, AdvancePayment = 6000m, Capacity = 2, Status = "Available", DateAdded = added });
@@ -136,17 +136,20 @@ namespace YnclinoApartmentManagementSystem.Controllers
             string[] firsts = { "Ana", "Ben", "Carlo", "Dina", "Elena", "Fidel", "Grace", "Hector", "Ivy", "Jose", "Karl", "Lara", "Marco", "Nina", "Oscar", "Paula", "Quennie", "Rico", "Sara", "Tomas", "Ulan", "Vera", "Wendell", "Xander", "Yana", "Zeny" };
             string[] lasts = { "Abad", "Bautista", "Cruz", "Diaz", "Espino", "Flores", "Garcia", "Hidalgo", "Ilagan", "Jimenez", "Katindig", "Lopez", "Mendoza", "Navarro", "Ocampo", "Perez", "Quizon", "Reyes", "Santos", "Torres", "Uy", "Valdez", "Wong", "Ximeno", "Yumul", "Zafra" };
 
-            // 44 distinct (first-initial, last-initial) pairs
+            // 5 distinct (first-initial, last-initial) pairs → unique usernames
             var pairs = new List<(int f, int l)>();
-            for (int k = 0; k < 26; k++) pairs.Add((k, k));               // AA, BB, ... ZZ
-            for (int k = 0; pairs.Count < 44; k++) pairs.Add((k, k + 1)); // AB, BC, ...
+            for (int k = 0; k < 5; k++) pairs.Add((k, k));                // AA, BB, ... EE
 
-            // fill the first 22 units (2 tenants each = 44), leaving the last 10 available
+            // fill units two-per-room until the 5 tenants are placed (3 units used),
+            // leaving the remaining units available for transfers and new applications
+            const int tenantCount = 5;
             var slots = new List<tblUnit>();
-            for (int i = 0; i < 22; i++) for (int s = 0; s < 2; s++) slots.Add(units[i]);
+            for (int i = 0; i < units.Count && slots.Count < tenantCount; i++)
+                for (int s = 0; s < units[i].Capacity && slots.Count < tenantCount; s++)
+                    slots.Add(units[i]);
 
             var createdTenants = new List<tblTenant>();
-            for (int t = 0; t < 44; t++)
+            for (int t = 0; t < tenantCount; t++)
             {
                 string first = firsts[pairs[t].f];
                 string last = lasts[pairs[t].l];
@@ -285,7 +288,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 "Appliance"  => "Air-conditioner is not cooling properly.",
                 _            => "General upkeep request."
             };
-            for (int i = 0; i < 14; i++)
+            for (int i = 0; i < 5; i++)
             {
                 var tenant = createdTenants[rng.Next(createdTenants.Count)];
                 var cat = mCats[i % mCats.Length];
@@ -325,8 +328,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var lostItems = new List<tblLostFoundItem>
             {
                 new() { ReportedByUserID = createdTenants[3].UserID!.Value,  ItemName = "Student ID Card",   ItemType = "Lost", Location = "Around the building", Status = "Reported", Description = "Lost my school ID.",       DateReported = now.AddDays(-5) },
-                new() { ReportedByUserID = createdTenants[8].UserID!.Value,  ItemName = "Laptop Charger",    ItemType = "Lost", Location = "Study area",         Status = "Reported", Description = "65W USB-C charger.",       DateReported = now.AddDays(-3) },
-                new() { ReportedByUserID = createdTenants[15].UserID!.Value, ItemName = "Silver Ring",       ItemType = "Lost", Location = "Laundry room",       Status = "Resolved", Description = "Already recovered.",       DateReported = now.AddDays(-25) },
+                new() { ReportedByUserID = createdTenants[4].UserID!.Value,  ItemName = "Laptop Charger",    ItemType = "Lost", Location = "Study area",         Status = "Reported", Description = "65W USB-C charger.",       DateReported = now.AddDays(-3) },
+                new() { ReportedByUserID = createdTenants[1].UserID!.Value,  ItemName = "Silver Ring",       ItemType = "Lost", Location = "Laundry room",       Status = "Resolved", Description = "Already recovered.",       DateReported = now.AddDays(-25) },
             };
             _context.tblLostFoundItems.AddRange(foundItems);
             _context.tblLostFoundItems.AddRange(lostItems);
@@ -336,7 +339,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             _context.tblClaimRequests.Add(new tblClaimRequest
             {
                 ItemID = foundItems[0].ItemID,
-                ClaimantUserID = createdTenants[5].UserID!.Value,
+                ClaimantUserID = createdTenants[0].UserID!.Value,
                 VerificationDetails = "It's my wallet — brown card holder inside with my ID.",
                 Status = "Pending",
                 SubmittedAt = now.AddDays(-3)
@@ -344,7 +347,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             _context.tblClaimRequests.Add(new tblClaimRequest
             {
                 ItemID = foundItems[1].ItemID,
-                ClaimantUserID = createdTenants[9].UserID!.Value,
+                ClaimantUserID = createdTenants[2].UserID!.Value,
                 VerificationDetails = "That's my phone, lock screen is a photo of a dog.",
                 Status = "Pending",
                 SubmittedAt = now.AddDays(-1)

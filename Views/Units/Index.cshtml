@@ -12,7 +12,7 @@
             @if (ViewBag.HasUnits != true)
             {
                 <form asp-action="GenerateSampleData" method="post"
-                      onsubmit="return confirm('Load the sample data (32 units, 44 tenants, and connected records)?')">
+                      onsubmit="return confirm('Load the sample data (5 units, 5 tenants, and connected records)?')">
                     @Html.AntiForgeryToken()
                     <button type="submit" class="btn btn-outline-secondary">Load Sample Data</button>
                 </form>
