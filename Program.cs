@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using YnclinoApartmentManagementSystem.Data;
+using YnclinoApartmentManagementSystem.Filters;
 using YnclinoApartmentManagementSystem.Helpers;
 using YnclinoApartmentManagementSystem.Models;
 
@@ -12,7 +13,11 @@ var builder = WebApplication.CreateBuilder(args);
 // which is git-ignored so secrets never get committed.
 builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    // force users flagged for a password reset onto the change page until they comply
+    options.Filters.Add<MustChangePasswordFilter>();
+});
 
 // The connection string (including the DATABASE NAME) comes from the committed
 // appsettings.json, so each branch can target its own database. Your local password

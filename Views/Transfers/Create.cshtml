@@ -18,7 +18,7 @@
                 <p class="text-muted small mb-3">
                     @if (hasUnit)
                     {
-                        <text>You are currently in <strong>Unit @ViewBag.CurrentUnit</strong>. Choose an available unit you'd like to move to..</text>
+                        <text>You are currently in <strong>Unit @ViewBag.CurrentUnit</strong>. Choose an available unit you'd like to move to.</text>
                     }
                     An administrator will review your request.
                 </p>
@@ -42,14 +42,8 @@
                                     <option value="@u.Value">@u.Text</option>
                                 }
                             </select>
-                        </div>@* 
-
-                        <div class="mb-4">
-                            <label class="form-label fw-semibold small">Reason <span class="text-muted fw-normal">(optional)</span></label>
-                            <textarea name="reason" class="form-control" rows="3" maxlength="500"
-                                      placeholder="@(hasUnit ? "e.g. I'd prefer a unit closer to the entrance…" : "e.g. I'd like to occupy this available unit…")"></textarea>
                         </div>
- *@
+
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary btn-sm">Submit Request</button>
                             <a asp-action="Index" class="btn btn-secondary btn-sm">Cancel</a>

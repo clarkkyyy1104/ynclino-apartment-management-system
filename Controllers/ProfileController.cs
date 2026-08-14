@@ -4,10 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using YnclinoApartmentManagementSystem.Data;
 using YnclinoApartmentManagementSystem.Helpers;
+using YnclinoApartmentManagementSystem.Models;
 
 namespace YnclinoApartmentManagementSystem.Controllers
 {
-    [Authorize(Roles = "Tenant")]
+    [Authorize]
     public class ProfileController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -19,11 +20,22 @@ namespace YnclinoApartmentManagementSystem.Controllers
             _env = env;
         }
 
-        // GET: Profile  — the tenant's own profile page (info + recent activity)
+        // GET: Profile  — the signed-in user's own profile page.
+        // Admins get an account/overview page; tenants get their profile + activity.
         public async Task<IActionResult> Index()
         {
             if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int uid))
                 return View((YnclinoApartmentManagementSystem.Models.tblTenant?)null);
+
+            if (User.IsInRole("Admin"))
+            {
+                var admin = await _context.tblUsers.FirstOrDefaultAsync(u => u.UserID == uid);
+                ViewBag.TotalUnits = await _context.tblUnits.CountAsync();
+                ViewBag.ActiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Active");
+                ViewBag.PendingTransfers = await _context.tblUnitTransferRequests.CountAsync(r => r.Status == "Pending");
+                ViewBag.AdminCount = await _context.tblUsers.CountAsync(u => u.Role == "Admin" && u.IsActive);
+                return View("AdminProfile", admin);
+            }
 
             var tenant = await _context.tblTenants
                 .Include(t => t.Unit)
@@ -53,6 +65,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // POST: Profile/UploadPhoto  — tenant sets/replaces their own profile photo
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Tenant")]
         public async Task<IActionResult> UploadPhoto(IFormFile? photo)
         {
             if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int uid))
@@ -86,6 +99,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // POST: Profile/RemovePhoto
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Tenant")]
         public async Task<IActionResult> RemovePhoto()
         {
             if (int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int uid))

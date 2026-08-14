@@ -31,18 +31,14 @@
     }
     @if (isTenant)
     {
-        @await Component.InvokeAsync("ModuleNotifications", new { module = "Transfer" })
-
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            @if (isTenant)
-            {
-                <a asp-action="Create" class="btn btn-primary">
-                    + @("Request Transfer")
-                </a>
-            }
-        </div>
+        <a asp-controller="Transfers" asp-action="Create" class="btn btn-primary">+ Request Transfer</a>
     }
 </div>
+
+@if (isTenant)
+{
+    @await Component.InvokeAsync("ModuleNotifications", new { module = "Transfer" })
+}
 
 <form method="get" class="row g-2 mb-4">
     <div class="col-auto">

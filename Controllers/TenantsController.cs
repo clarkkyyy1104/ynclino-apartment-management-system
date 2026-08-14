@@ -148,6 +148,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 Role = "Tenant",
                 IsActive = true,
                 IsMainAdmin = false,
+                // the admin sets a temporary password; the tenant must change it on first login
+                MustChangePassword = true,
                 DateCreated = DateTime.Now
             };
 
@@ -304,12 +306,14 @@ namespace YnclinoApartmentManagementSystem.Controllers
             tenant.EmergencyContactNumber = vm.EmergencyContactNumber;
             tenant.Status = vm.Status;
 
-            // stamp a move-out when deactivating, clear it when bringing the tenant back,
-            // and otherwise leave any existing move-out date untouched
-            if (previousStatus == "Active" && !becomingActive)
-                tenant.MoveOutDate = DateTime.Now;
-            else if (becomingActive)
+            // move-out date is admin-controlled: an active tenant never has one; an
+            // inactive tenant uses the date the admin entered, falling back to "now"
+            // the moment they are deactivated (so it's never left blank on move-out)
+            if (becomingActive)
                 tenant.MoveOutDate = null;
+            else
+                tenant.MoveOutDate = vm.MoveOutDate
+                    ?? (previousStatus == "Active" ? DateTime.Now : tenant.MoveOutDate);
 
             await _context.SaveChangesAsync();
 

@@ -61,13 +61,12 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             await SignInUserAsync(user);
 
+            // a forced password change takes priority over everything else
+            if (user.MustChangePassword)
+                return RedirectToAction(nameof(MandatoryPassChange));
+
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 return Redirect(returnUrl);
-
-            if (user.MustChangePassword)
-            {
-                return RedirectToAction("MandatoryPassChange", new { id = user.UserID });
-            }
 
             return RedirectToAction("Index", "Home");
         }
@@ -118,6 +117,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 new Claim(ClaimTypes.Name, user.Username),
                 new Claim(ClaimTypes.Role, user.Role)
             };
+
+            // carry the "must change password" state in the cookie so it can be
+            // enforced on every request without hitting the database each time
+            if (user.MustChangePassword)
+                claims.Add(new Claim("MustChangePassword", "true"));
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var principal = new ClaimsPrincipal(identity);
@@ -173,6 +177,48 @@ namespace YnclinoApartmentManagementSystem.Controllers
             await _context.SaveChangesAsync();
 
             TempData["Success"] = "Password changed successfully.";
+            return RedirectToAction("Index", "Home");
+        }
+
+        // A tenant/user whose account was created by an admin is forced through this
+        // page on first login and cannot use the rest of the app until they set their
+        // own password (enforced globally by MustChangePasswordFilter).
+        [Authorize]
+        [HttpGet]
+        public IActionResult MandatoryPassChange() => View(new ChangePasswordViewModel());
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MandatoryPassChange(ChangePasswordViewModel vm)
+        {
+            // the current password isn't asked for here — the user just logged in with it
+            ModelState.Remove(nameof(vm.CurrentPassword));
+            if (!ModelState.IsValid)
+                return View(vm);
+
+            var idStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(idStr, out int userId))
+                return Forbid();
+
+            var user = await _context.tblUsers.FindAsync(userId);
+            if (user == null)
+                return Forbid();
+
+            if (PasswordHelper.Verify(vm.NewPassword, user.Password))
+            {
+                ModelState.AddModelError("NewPassword", "Please choose a new password, different from your temporary one.");
+                return View(vm);
+            }
+
+            user.Password = PasswordHelper.Hash(vm.NewPassword);
+            user.MustChangePassword = false;
+            await _context.SaveChangesAsync();
+
+            // re-issue the cookie so the "must change" claim is dropped
+            await SignInUserAsync(user);
+
+            TempData["Success"] = "Your password has been set. Welcome!";
             return RedirectToAction("Index", "Home");
         }
 

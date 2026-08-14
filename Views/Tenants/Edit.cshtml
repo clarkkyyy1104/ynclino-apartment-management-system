@@ -108,13 +108,21 @@
                         </div>
                     </div>
 
-                    <div class="mb-4">
-                        <label asp-for="Status" class="form-label fw-semibold small"></label>
-                        <select asp-for="Status" class="form-select">
-                            <option>Active</option>
-                            <option>Inactive</option>
-                        </select>
-                        <span asp-validation-for="Status" class="text-danger small"></span>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label asp-for="Status" class="form-label fw-semibold small"></label>
+                            <select asp-for="Status" class="form-select" id="statusSelect">
+                                <option>Active</option>
+                                <option>Inactive</option>
+                            </select>
+                            <span asp-validation-for="Status" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="MoveOutDate" class="form-label fw-semibold small">Move-Out Date</label>
+                            <input asp-for="MoveOutDate" type="date" class="form-control" id="moveOutInput" />
+                            <div class="form-text text-muted small">Set when the tenant leaves. Only admins can change this; it clears automatically if the tenant is set back to Active.</div>
+                            <span asp-validation-for="MoveOutDate" class="text-danger small"></span>
+                        </div>
                     </div>
 
                     <div class="d-flex gap-2">
@@ -130,6 +138,20 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/password.js" asp-append-version="true"></script>
+    <script>
+        // an Active tenant has no move-out date — disable/clear the field to match
+        (function () {
+            var status = document.getElementById('statusSelect');
+            var moveOut = document.getElementById('moveOutInput');
+            function sync() {
+                var active = status.value === 'Active';
+                moveOut.disabled = active;
+                if (active) moveOut.value = '';
+            }
+            status.addEventListener('change', sync);
+            sync();
+        })();
+    </script>
     @if (ViewBag.IsMainAdmin == true)
     {
         <script>
