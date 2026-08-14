@@ -154,7 +154,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var tenant = new tblTenant
             {
                 User = user,
-                UnitID = null,   // no unit yet — the tenant applies for one after registering
+                // allow the admin to assign a unit during registration; vm.UnitID may be null
+                UnitID = vm.UnitID,
                 FirstName = vm.FirstName,
                 LastName = vm.LastName,
                 ContactNumber = vm.ContactNumber,
@@ -166,8 +167,17 @@ namespace YnclinoApartmentManagementSystem.Controllers
             };
             _context.tblTenants.Add(tenant);
             await _context.SaveChangesAsync();
-
-            TempData["Success"] = $"Tenant {tenant.FullName} has been registered with account '{user.Username}'. They can now apply for a unit.";
+            // if a unit was assigned at creation, refresh its computed status
+            if (tenant.UnitID.HasValue)
+            {
+                await SyncUnitStatusAsync(tenant.UnitID.Value);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = $"Tenant {tenant.FullName} has been registered and assigned to unit { (await _context.tblUnits.FindAsync(tenant.UnitID.Value))?.UnitNumber }.";
+            }
+            else
+            {
+                TempData["Success"] = $"Tenant {tenant.FullName} has been registered with account '{user.Username}'.";
+            }
             return RedirectToAction(nameof(Index));
         }
 

@@ -64,6 +64,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 return Redirect(returnUrl);
 
+            if (user.MustChangePassword)
+            {
+                return RedirectToAction("MandatoryPassChange", new { id = user.UserID });
+            }
+
             return RedirectToAction("Index", "Home");
         }
 

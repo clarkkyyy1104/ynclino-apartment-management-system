@@ -55,8 +55,6 @@
                     <dt class="col-sm-4">Date Reported</dt>
                     <dd class="col-sm-8">@Model.DateReported.ToString("MMM dd, yyyy hh:mm tt")</dd>
 
-                    <dt class="col-sm-4">Notes</dt>
-                    <dd class="col-sm-8">@(Model.Notes ?? "—")</dd>
                 </dl>
 
                 @if (User.IsInRole("Admin"))
@@ -86,17 +84,11 @@
                                     <form asp-action="ReviewClaim" method="post">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="claimId" value="@claim.ClaimID" />
-                                        <textarea name="adminNotes" class="form-control form-control-sm mb-2" rows="2"
-                                                  placeholder="Optional note (shown to the claimant)…"></textarea>
                                         <div class="d-flex gap-2">
                                             <button type="submit" name="decision" value="Approved" class="btn btn-success btn-sm">Approve</button>
                                             <button type="submit" name="decision" value="Rejected" class="btn btn-outline-danger btn-sm">Reject</button>
                                         </div>
                                     </form>
-                                }
-                                @if (!string.IsNullOrEmpty(claim.AdminNotes))
-                                {
-                                    <p class="text-muted small mt-1 mb-0">Note: @claim.AdminNotes</p>
                                 }
                             </div>
                         }
@@ -123,10 +115,6 @@
                                     <a href="@claim.ImagePath" target="_blank">
                                         <img src="@claim.ImagePath" alt="Proof photo" class="img-fluid rounded border mb-2" style="max-height:140px" />
                                     </a>
-                                }
-                                @if (!string.IsNullOrEmpty(claim.AdminNotes))
-                                {
-                                    <p class="text-muted small mb-0">Admin note: @claim.AdminNotes</p>
                                 }
                             </div>
                         }

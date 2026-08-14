@@ -7,17 +7,7 @@
                        ?? Enumerable.Empty<YnclinoApartmentManagementSystem.Models.tblUnitTransferRequest>();
 }
 
-@await Component.InvokeAsync("ModuleNotifications", new { module = "Transfer" })
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="fw-bold mb-0">@title</h3>
-    @if (!isAdmin)
-    {
-        <a asp-action="Create" class="btn btn-primary">
-            + @(ViewBag.HasUnit == true ? "Request Transfer" : "Apply for a Unit")
-        </a>
-    }
-</div>
 
 <div class="row g-3">
     <div class="col-lg-6">

@@ -53,11 +53,6 @@
                         </select>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Notes" class="form-label fw-semibold small"></label>
-                        <textarea asp-for="Notes" class="form-control" rows="2"></textarea>
-                    </div>
-
                     <div class="mb-4">
                         <label asp-for="ImageUpload" class="form-label fw-semibold small"></label>
                         @if (!string.IsNullOrEmpty(Model.ImagePath))

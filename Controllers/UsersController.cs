@@ -94,6 +94,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 Role         = vm.Role,
                 IsActive     = vm.IsActive,
                 IsMainAdmin = false,
+                MustChangePassword = true,
                 DateCreated  = DateTime.Now
             };
 
@@ -290,6 +291,23 @@ namespace YnclinoApartmentManagementSystem.Controllers
             await _context.SaveChangesAsync();
             TempData["Success"] = $"Account '{user.Username}' has been deleted.";
             return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> ResetPassword(int id)
+        {
+            var user = await _context.tblUsers.FindAsync(id);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            if (!user.MustChangePassword)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            return View(user);
         }
     }
 }
