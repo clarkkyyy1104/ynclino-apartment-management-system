@@ -11,7 +11,10 @@ namespace YnclinoApartmentManagementSystem.Filters
         public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
             var user = context.HttpContext.User;
-            if (user?.Identity?.IsAuthenticated == true && user.HasClaim("MustChangePassword", "true"))
+            // admins are never forced — only a signed-in tenant carrying the claim is locked
+            if (user?.Identity?.IsAuthenticated == true
+                && !user.IsInRole("Admin")
+                && user.HasClaim("MustChangePassword", "true"))
             {
                 var controller = context.RouteData.Values["controller"] as string;
                 var action = context.RouteData.Values["action"] as string;

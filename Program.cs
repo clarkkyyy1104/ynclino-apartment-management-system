@@ -152,6 +152,12 @@ using (var scope = app.Services.CreateScope())
     if (db.tblUnits.Any(u => u.Status == "Vacant"))
         db.tblUnits.Where(u => u.Status == "Vacant").ExecuteUpdate(s => s.SetProperty(u => u.Status, "Available"));
 
+    // the forced password change is for tenants only — clear the flag on any admin
+    // account that may have picked it up before this rule was enforced
+    if (db.tblUsers.Any(u => u.Role == "Admin" && u.MustChangePassword))
+        db.tblUsers.Where(u => u.Role == "Admin" && u.MustChangePassword)
+                   .ExecuteUpdate(s => s.SetProperty(u => u.MustChangePassword, false));
+
     // a tenant may now exist without a unit (they apply for one), so make these
     // columns nullable on databases created before the change. No-op when already null.
     try { db.Database.ExecuteSqlRaw("ALTER TABLE tblTenants MODIFY UnitID INT NULL"); } catch { }

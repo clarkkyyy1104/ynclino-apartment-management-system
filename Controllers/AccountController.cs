@@ -61,8 +61,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             await SignInUserAsync(user);
 
-            // a forced password change takes priority over everything else
-            if (user.MustChangePassword)
+            // a forced password change takes priority over everything else (tenants only)
+            if (user.MustChangePassword && user.Role == "Tenant")
                 return RedirectToAction(nameof(MandatoryPassChange));
 
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
@@ -119,8 +119,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
             };
 
             // carry the "must change password" state in the cookie so it can be
-            // enforced on every request without hitting the database each time
-            if (user.MustChangePassword)
+            // enforced on every request without hitting the database each time.
+            // This only ever applies to tenants — admins are never forced.
+            if (user.MustChangePassword && user.Role == "Tenant")
                 claims.Add(new Claim("MustChangePassword", "true"));
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);

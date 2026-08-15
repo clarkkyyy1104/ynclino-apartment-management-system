@@ -94,7 +94,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 Role         = vm.Role,
                 IsActive     = vm.IsActive,
                 IsMainAdmin = false,
-                MustChangePassword = true,
+                // only tenants are forced to change their password on first login — never admins
+                MustChangePassword = vm.Role == "Tenant",
                 DateCreated  = DateTime.Now
             };
 
