@@ -87,6 +87,13 @@ using (var scope = app.Services.CreateScope())
     // MySQL server this builds every table from the current models.
     db.Database.EnsureCreated();
 
+    // Add newer columns to databases created before they existed, BEFORE the probe
+    // below runs — otherwise the probe's SELECT would fail on the missing column and
+    // trigger a full destructive rebuild. Existing accounts get the column's safe
+    // default (0 / false), so only accounts created from now on are ever forced to
+    // change their password. No-op on a fresh database that already has the column.
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE tblUsers ADD COLUMN IF NOT EXISTS MustChangePassword tinyint(1) NOT NULL DEFAULT 0"); } catch { }
+
     // Guard against a leftover database whose schema predates the current
     // models: probe every table, and if the shape no longer matches, rebuild
     // it from scratch. A fresh, matching database never triggers this.
