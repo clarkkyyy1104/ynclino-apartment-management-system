@@ -59,17 +59,25 @@
             <nav class="nav flex-column py-2">
                 <a class="nav-link @Active("Home")" asp-controller="Home" asp-action="Index">Dashboard</a>
 
-                <a class="nav-link group-toggle @(unitsOpen ? "active" : "")" data-bs-toggle="collapse" href="#unitsGroup" role="button" aria-expanded="@(unitsOpen ? "true" : "false")">
-                    Units <span class="caret">▾</span>
-                </a>
-                <div class="collapse @(unitsOpen ? "show" : "")" id="unitsGroup">
-                    <div class="sub">
-                        <a class="nav-link @Active("Units")" asp-controller="Units" asp-action="Index">@(isAdmin ? "Units" : "Browse Units")</a>
-                        <a class="nav-link @Active("Transfers")" asp-controller="Transfers" asp-action="Index">
-                            @(isAdmin ? "Unit Requests" : "My Unit / Transfer") @await Component.InvokeAsync("NavAlert", new { module = "Transfer" })
-                        </a>
+                @if (isAdmin)
+                {
+                    <a class="nav-link group-toggle @(unitsOpen ? "active" : "")" data-bs-toggle="collapse" href="#unitsGroup" role="button" aria-expanded="@(unitsOpen ? "true" : "false")">
+                        Units <span class="caret">▾</span>
+                    </a>
+                    <div class="collapse @(unitsOpen ? "show" : "")" id="unitsGroup">
+                        <div class="sub">
+                            <a class="nav-link @Active("Units")" asp-controller="Units" asp-action="Index">Units</a>
+                            <a class="nav-link @Active("Transfers")" asp-controller="Transfers" asp-action="Index">
+                                Unit Requests @await Component.InvokeAsync("NavAlert", new { module = "Transfer" })
+                            </a>
+                        </div>
                     </div>
-                </div>
+                }
+                else
+                {
+                    @* tenant: a single Units link (browse); My Unit / Transfer lives in their Profile *@
+                    <a class="nav-link @Active("Units")" asp-controller="Units" asp-action="Index">Units</a>
+                }
 
                 @if (isAdmin)
                 {
@@ -91,7 +99,11 @@
                         @User.Identity.Name <span class="text-secondary">(@(isAdmin ? "Admin" : "Tenant"))</span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" asp-controller="Profile" asp-action="Index">My Profile</a></li>
+                        <li>
+                            <a class="dropdown-item" asp-controller="Profile" asp-action="Index">
+                                My Profile @if (!isAdmin) { @await Component.InvokeAsync("NavAlert", new { module = "Transfer" }) }
+                            </a>
+                        </li>
                         <li><a class="dropdown-item" asp-controller="Account" asp-action="ChangePassword">Change Password</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
