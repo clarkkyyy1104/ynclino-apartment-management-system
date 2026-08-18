@@ -20,6 +20,14 @@ namespace YnclinoApartmentManagementSystem.Models
         [Display(Name = "Amount Due")]
         public decimal AmountDue { get; set; }
 
+        // a move-in bill records how much of the total was deposit and advance.
+        // for a normal monthly bill both are 0, so the whole AmountDue is rent.
+        [Column(TypeName = "decimal(10,2)")]
+        public decimal Deposit { get; set; }
+
+        [Column(TypeName = "decimal(10,2)")]
+        public decimal Advance { get; set; }
+
         [Required]
         [Display(Name = "Due Date")]
         public DateTime DueDate { get; set; }

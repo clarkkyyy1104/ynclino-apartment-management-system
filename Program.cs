@@ -93,6 +93,11 @@ using (var scope = app.Services.CreateScope())
     // default (0 / false), so only accounts created from now on are ever forced to
     // change their password. No-op on a fresh database that already has the column.
     try { db.Database.ExecuteSqlRaw("ALTER TABLE tblUsers ADD COLUMN IF NOT EXISTS MustChangePassword tinyint(1) NOT NULL DEFAULT 0"); } catch { }
+    // The bill breakdown columns (deposit / advance) were added later; add them to
+    // existing databases before the probe below, so it doesn't fail and wipe data.
+    // Old bills default to 0 for both — which the views treat as "all rent".
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE tblBillings ADD COLUMN IF NOT EXISTS Deposit decimal(10,2) NOT NULL DEFAULT 0"); } catch { }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE tblBillings ADD COLUMN IF NOT EXISTS Advance decimal(10,2) NOT NULL DEFAULT 0"); } catch { }
 
     // Guard against a leftover database whose schema predates the current
     // models: probe every table, and if the shape no longer matches, rebuild
