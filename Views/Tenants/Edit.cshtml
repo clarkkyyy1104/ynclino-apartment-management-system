@@ -109,7 +109,7 @@
                     </div>
 
                     <div class="row mb-4">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label asp-for="Status" class="form-label fw-semibold small"></label>
                             <select asp-for="Status" class="form-select" id="statusSelect">
                                 <option>Active</option>
@@ -117,10 +117,15 @@
                             </select>
                             <span asp-validation-for="Status" class="text-danger small"></span>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
+                            <label asp-for="MoveInDate" class="form-label fw-semibold small">Move-In Date</label>
+                            <input asp-for="MoveInDate" type="date" class="form-control" />
+                            <span asp-validation-for="MoveInDate" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
                             <label asp-for="MoveOutDate" class="form-label fw-semibold small">Move-Out Date</label>
                             <input asp-for="MoveOutDate" type="date" class="form-control" id="moveOutInput" />
-                            <div class="form-text text-muted small">Set when the tenant leaves. Only admins can change this; it clears automatically if the tenant is set back to Active.</div>
+                            <div class="form-text text-muted small">Set when the tenant leaves. Clears automatically if set back to Active.</div>
                             <span asp-validation-for="MoveOutDate" class="text-danger small"></span>
                         </div>
                     </div>

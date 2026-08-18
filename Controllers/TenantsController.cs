@@ -232,6 +232,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 EmergencyContactName = tenant.EmergencyContactName,
                 EmergencyContactRelationship = tenant.EmergencyContactRelationship,
                 EmergencyContactNumber = tenant.EmergencyContactNumber,
+                MoveInDate = tenant.MoveInDate,
                 MoveOutDate = tenant.MoveOutDate,
                 Status = tenant.Status,
                 AvailableUnits = await GetAllUnitsAsync()
@@ -326,6 +327,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             tenant.EmergencyContactRelationship = vm.EmergencyContactRelationship;
             tenant.EmergencyContactNumber = vm.EmergencyContactNumber;
             tenant.Status = vm.Status;
+            tenant.MoveInDate = vm.MoveInDate;
 
             // move-out date is admin-controlled: an active tenant never has one; an
             // inactive tenant uses the date the admin entered, falling back to "now"

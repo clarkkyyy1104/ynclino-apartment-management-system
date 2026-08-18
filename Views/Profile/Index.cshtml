@@ -48,6 +48,9 @@
     var initials = $"{(Model.FirstName.Length > 0 ? Model.FirstName[0] : ' ')}{(Model.LastName.Length > 0 ? Model.LastName[0] : ' ')}".Trim();
 }
 
+@* Unread unit-request alerts (e.g. "approved") — clicking one marks it read and clears the red badge *@
+@await Component.InvokeAsync("ModuleNotifications", new { module = "Transfer" })
+
 <!-- Cover + identity header (Facebook-style) -->
 <div class="card mb-3 overflow-hidden">
     <div class="bg-dark" style="height:120px;"></div>
