@@ -39,7 +39,7 @@
 </form>
 
 <div class="table-responsive">
-    <table class="table table-hover align-middle">
+    <table class="table table-hover align-middle table-sm small">
         <thead class="table-primary">
             <tr>
                 @if (isAdmin) { <th>Tenant</th><th>Unit</th> }
@@ -72,8 +72,11 @@
                             <div class="text-muted small">@b.Notes</div>
                         }
                     </td>
-                    <td>₱@b.AmountDue.ToString("N2")</td>
                     <td>@b.DueDate.ToString("MMM dd, yyyy")</td>
+                    <td>₱@b.Deposit.ToString("N2")</td>
+                    <td>₱@b.Advance.ToString("N2")</td>
+                    <td>₱@((b.AmountDue - b.Deposit - b.Advance).ToString("N2"))</td>
+                    <td>₱@b.AmountDue.ToString("N2")</td>
                     <td>@(b.AmountPaid.HasValue ? "₱" + b.AmountPaid.Value.ToString("N2") : "—")</td>
                     <td>
                         @{
@@ -98,7 +101,7 @@
             }
             @if (!Model.Any())
             {
-                <tr><td colspan="@(isAdmin ? 8 : 6)" class="text-center text-muted py-4">No billing records found.</td></tr>
+                <tr><td colspan="@(isAdmin ? 11 : 9)" class="text-center text-muted py-4">No billing records found.</td></tr>
             }
         </tbody>
     </table>
