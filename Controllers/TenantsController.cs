@@ -185,6 +185,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
                         BillingPeriod = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1),
                         AmountDue = moveInTotal,
                         AmountPaid = moveInTotal,
+                        Deposit = unit.Deposit,
+                        Advance = unit.AdvancePayment,
                         DueDate = DateTime.Today,
                         DatePaid = DateTime.Today,
                         Status = "Paid",
