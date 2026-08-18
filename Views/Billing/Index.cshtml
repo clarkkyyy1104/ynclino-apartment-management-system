@@ -44,8 +44,11 @@
             <tr>
                 @if (isAdmin) { <th>Tenant</th><th>Unit</th> }
                 <th>Billing Period</th>
-                <th>Amount Due</th>
                 <th>Due Date</th>
+                <th>Deposit</th>
+                <th>Advance</th>
+                <th>Monthly Rent</th>
+                <th>Amount Due</th>
                 <th>Amount Paid</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -62,7 +65,13 @@
                         <td class="fw-semibold">@b.Tenant?.FullName</td>
                         <td>@(b.Tenant?.Unit?.UnitNumber ?? "—")</td>
                     }
-                    <td>@b.BillingPeriod.ToString("MMMM yyyy")</td>
+                    <td>
+                        @b.BillingPeriod.ToString("MMMM yyyy")
+                        @if (!isAdmin && !string.IsNullOrEmpty(b.Notes))
+                        {
+                            <div class="text-muted small">@b.Notes</div>
+                        }
+                    </td>
                     <td>₱@b.AmountDue.ToString("N2")</td>
                     <td>@b.DueDate.ToString("MMM dd, yyyy")</td>
                     <td>@(b.AmountPaid.HasValue ? "₱" + b.AmountPaid.Value.ToString("N2") : "—")</td>

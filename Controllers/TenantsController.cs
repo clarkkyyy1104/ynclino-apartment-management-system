@@ -174,7 +174,26 @@ namespace YnclinoApartmentManagementSystem.Controllers
             {
                 await SyncUnitStatusAsync(tenant.UnitID.Value);
                 await _context.SaveChangesAsync();
-                TempData["Success"] = $"Tenant {tenant.FullName} has been registered and assigned to unit { (await _context.tblUnits.FindAsync(tenant.UnitID.Value))?.UnitNumber }.";
+
+                var unit = await _context.tblUnits.FindAsync(tenant.UnitID.Value);
+                if (unit != null) 
+                {
+                    decimal moveInTotal = unit.Deposit + unit.AdvancePayment;
+                    _context.tblBillings.Add(new tblBilling
+                    {
+                        TenantID = tenant.TenantID,
+                        BillingPeriod = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1),
+                        AmountDue = moveInTotal,
+                        AmountPaid = moveInTotal,
+                        DueDate = DateTime.Today,
+                        DatePaid = DateTime.Today,
+                        Status = "Paid",
+                        Notes = $"Move-in payment - Deposit ₱{unit.Deposit:N2} + Advance Payment ₱{unit.AdvancePayment:N2}",
+                        DateIssued = DateTime.Now
+                    });
+                    await _context.SaveChangesAsync();
+                }
+                TempData["Success"] = $"Tenant {tenant.FullName} has been registered and assigned to unit {unit?.UnitNumber}.";
             }
             else
             {
