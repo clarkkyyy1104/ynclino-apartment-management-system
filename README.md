@@ -5,6 +5,30 @@ maintenance, and lost & found.
 
 ---
 
+## ▶ Running this branch (`Complete`) — no database setup needed
+
+This branch uses **SQLite**, a single self-contained database file, so you can run
+the project on any laptop **without installing MySQL** and without connecting to
+anyone else's machine.
+
+1. Install the **.NET 8 SDK** (or open the solution in **Visual Studio 2022**).
+2. Clone this branch and run it — press **F5** in Visual Studio, or from a terminal:
+   ```
+   dotnet run
+   ```
+3. Open the URL it prints (e.g. `https://localhost:7251`).
+4. Log in as admin — **`admin`** / **`Admin@123`**. Sample tenants use **`Tenant@123`**.
+
+The database is the file **`ynclino.db`** in the project folder. It ships with
+sample data already loaded (5 units, 5 tenants, and their bills/records), so the
+system is populated the moment you run it. To start completely fresh, delete
+`ynclino.db` and run again — the app recreates it with the default admin account.
+
+> The other branches (`crud`, `crud(copy)`) use MySQL; **only this `Complete`
+> branch uses SQLite**, for easy sharing and offline demos.
+
+---
+
 ## Tech Stack
 
 - **Framework:** ASP.NET Core MVC 8.0

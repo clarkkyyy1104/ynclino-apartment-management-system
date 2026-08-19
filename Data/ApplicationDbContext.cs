@@ -18,6 +18,14 @@ namespace YnclinoApartmentManagementSystem.Data
         public DbSet<tblUnitTransferRequest> tblUnitTransferRequests { get; set; }
         public DbSet<tblNotification> tblNotifications { get; set; }
 
+        // SQLite has no native decimal type. Store money values as REAL (double) so that
+        // comparisons and ordering in queries work numerically; stored as TEXT (the EF
+        // default for SQLite) they would sort lexicographically and break billing logic.
+        protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+        {
+            configurationBuilder.Properties<decimal>().HaveConversion<double>();
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

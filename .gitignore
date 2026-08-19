@@ -10,10 +10,12 @@ obj/
 packages/
 *.nupkg
 
-## Local SQLite leftovers (no longer used — SQL Server now)
-*.db
+## SQLite: ignore the temporary journal/WAL files, but COMMIT the seeded database
+## (ynclino.db) so teammates get a ready-to-run, pre-populated copy on clone.
 *.db-shm
 *.db-wal
+*.db
+!ynclino.db
 
 ## Environment / secrets
 appsettings.*.json

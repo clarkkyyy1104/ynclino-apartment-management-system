@@ -29,8 +29,11 @@ var localPassword = builder.Configuration["MySqlPassword"];
 if (!string.IsNullOrWhiteSpace(localPassword) && connectionString != null && connectionString.Contains("YOUR_MYSQL_PASSWORD"))
     connectionString = connectionString.Replace("YOUR_MYSQL_PASSWORD", localPassword);
 
+// This branch uses SQLite — a single self-contained file database — so the project
+// runs anywhere with no MySQL server to install. The file is named in appsettings.json
+// (Data Source=ynclino.db) and is created automatically on first run.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+    options.UseSqlite(connectionString));
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
