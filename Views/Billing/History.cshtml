@@ -2,14 +2,10 @@
 @{
     ViewData["Title"] = "Payment History";
     bool isAdmin = User.IsInRole("Admin");
-    decimal totalCollected = (decimal)(ViewBag.TotalCollected ?? 0m);
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3 class="fw-bold mb-0">Payment History</h3>
-    <span class="badge bg-success fs-6">
-        @(isAdmin ? "Total Collected" : "Total Paid"): ₱@totalCollected.ToString("N2")
-    </span>
 </div>
 
 @if (isAdmin)
