@@ -17,6 +17,7 @@ namespace YnclinoApartmentManagementSystem.Data
         public DbSet<tblClaimRequest> tblClaimRequests { get; set; }
         public DbSet<tblUnitTransferRequest> tblUnitTransferRequests { get; set; }
         public DbSet<tblNotification> tblNotifications { get; set; }
+        public DbSet<tblPayment> tblPayments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -71,6 +72,19 @@ namespace YnclinoApartmentManagementSystem.Data
                 entity.HasOne(b => b.Tenant)
                       .WithMany()
                       .HasForeignKey(b => b.TenantID)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<tblPayment>(entity =>
+            {
+                entity.HasKey(e => e.PaymentID);
+                entity.Property(e => e.Method).HasMaxLength(50);
+                entity.Property(e => e.Remarks).HasMaxLength(300);
+
+                // deleting a bill removes its payment rows too
+                entity.HasOne(p => p.Billing)
+                      .WithMany()
+                      .HasForeignKey(p => p.BillingID)
                       .OnDelete(DeleteBehavior.Cascade);
             });
 

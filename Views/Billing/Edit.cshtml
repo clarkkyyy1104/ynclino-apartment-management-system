@@ -1,12 +1,12 @@
 @model YnclinoApartmentManagementSystem.Models.ViewModels.BillingViewModel
 @{
-    ViewData["Title"] = "Edit Bill";
+    ViewData["Title"] = "Update Bill";
 }
 
 <div class="row justify-content-center">
     <div class="col-md-7">
         <div class="card shadow-sm border-0">
-            <div class="card-header bg-secondary text-white fw-semibold">Edit Bill</div>
+            <div class="card-header bg-secondary text-white fw-semibold">Update Bill</div>
             <div class="card-body">
                 <form asp-action="Edit" method="post">
                     @Html.AntiForgeryToken()
@@ -39,35 +39,117 @@
                         <label asp-for="AmountDue" class="form-label fw-semibold small"></label>
                         <div class="input-group">
                             <span class="input-group-text">₱</span>
-                            <input asp-for="AmountDue" type="number" min="0.01" step="0.01" class="form-control" />
+                            <input asp-for="AmountDue" type="number" min="1" step="1000" class="form-control" />
                         </div>
                         <span asp-validation-for="AmountDue" class="text-danger small"></span>
                     </div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label asp-for="AmountPaid" class="form-label fw-semibold small"></label>
-                            <div class="input-group">
-                                <span class="input-group-text">₱</span>
-                                <input asp-for="AmountPaid" type="number" min="0" step="0.01" class="form-control" placeholder="Leave blank if unpaid" />
+                    @* running totals — computed from the payments below, never typed *@
+                    <div class="row g-2 mb-3 text-center">
+                        <div class="col-4">
+                            <div class="border rounded py-2">
+                                <div class="small text-muted">Amount Due</div>
+                                <div class="fw-bold">₱@Model.AmountDue.ToString("N2")</div>
                             </div>
-                            <span asp-validation-for="AmountPaid" class="text-danger small"></span>
                         </div>
-                        <div class="col-md-6">
-                            <label asp-for="DatePaid" class="form-label fw-semibold small"></label>
-                            <input asp-for="DatePaid" type="date" class="form-control" />
-                            <span asp-validation-for="DatePaid" class="text-danger small"></span>
+                        <div class="col-4">
+                            <div class="border rounded py-2">
+                                <div class="small text-muted">Total Paid</div>
+                                <div class="fw-bold text-success">₱@Model.TotalPaid.ToString("N2")</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border rounded py-2">
+                                <div class="small text-muted">Balance</div>
+                                <div class="fw-bold @(Model.Balance > 0 ? "text-danger" : "text-muted")">₱@Model.Balance.ToString("N2")</div>
+                            </div>
                         </div>
                     </div>
+
+                    @if (Model.Balance <= 0)
+                    {
+                        <div class="alert alert-success py-2 small mb-3">
+                            This bill is fully settled — no further payment is needed.
+                        </div>
+                    }
+                    else
+                    {
+                        <h6 class="section-label mb-2">Record a Payment</h6>
+                        <p class="form-text mt-0 mb-2">
+                            Enter only what the tenant just paid. It is <strong>added</strong> to the total above,
+                            and the balance and status update automatically.
+                        </p>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="PaymentAmount" class="form-label fw-semibold small"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₱</span>
+                                    <input asp-for="PaymentAmount" type="number" min="1" step="1000"
+                                           max="@Model.Balance" class="form-control"
+                                           placeholder="— leave blank if none" />
+                                </div>
+                                <div class="form-text text-muted small">Maximum: ₱@Model.Balance.ToString("N2")</div>
+                                <span asp-validation-for="PaymentAmount" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="PaymentDate" class="form-label fw-semibold small"></label>
+                                <input asp-for="PaymentDate" type="date" class="form-control" />
+                                <span asp-validation-for="PaymentDate" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label asp-for="PaymentMethod" class="form-label fw-semibold small"></label>
+                                <select asp-for="PaymentMethod" class="form-select">
+                                    <option value="Cash">Cash</option>
+                                    <option value="GCash">GCash</option>
+                                    <option value="Bank Transfer">Bank Transfer</option>
+                                </select>
+                            </div>
+                        </div>
+                    }
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold small">Status</label>
                         <p class="form-text mb-0">
-                            The status is set automatically from the amount paid and the due date —
+                            The status is set automatically from the total paid and the due date —
                             <strong>Paid</strong> (paid in full), <strong>Partial</strong> (part paid),
                             <strong>Unpaid</strong> (nothing paid, not yet due), or
                             <strong>Overdue</strong> (past due and not fully paid).
                         </p>
+                    </div>
+
+                    @* this bill's payment history *@
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold small">Payments for this bill</label>
+                        @if (!Model.Payments.Any())
+                        {
+                            <p class="form-text mb-0">No payments recorded yet.</p>
+                        }
+                        else
+                        {
+                            <table class="table table-sm small mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date Paid</th>
+                                        <th>Amount</th>
+                                        <th>Method</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var p in Model.Payments)
+                                    {
+                                        <tr>
+                                            <td>@p.DatePaid.ToString("MMM dd, yyyy")</td>
+                                            <td class="text-success fw-semibold">₱@p.Amount.ToString("N2")</td>
+                                            <td>@(string.IsNullOrEmpty(p.Method) ? "—" : p.Method)</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
                     </div>
 
                     <div class="d-flex gap-2">

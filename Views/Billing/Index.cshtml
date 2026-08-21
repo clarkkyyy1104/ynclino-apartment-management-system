@@ -93,7 +93,15 @@
                         <a asp-action="Details" asp-route-id="@b.BillingID" class="btn btn-sm btn-outline-info">Details</a>
                         @if (isAdmin)
                         {
-                            <a asp-action="Edit" asp-route-id="@b.BillingID" class="btn btn-sm btn-outline-primary">Edit</a>
+                            @if (b.Status == "Paid")
+                            {
+                                <span class="btn btn-sm btn-outline-secondary disabled"
+                                      title="This bill is fully paid — there is nothing left to update.">Update</span>
+                            }
+                            else
+                            {
+                                <a asp-action="Edit" asp-route-id="@b.BillingID" class="btn btn-sm btn-outline-primary">Update</a>
+                            }
                             <a asp-action="Delete" asp-route-id="@b.BillingID" class="btn btn-sm btn-outline-danger">Delete</a>
                         }
                     </td>

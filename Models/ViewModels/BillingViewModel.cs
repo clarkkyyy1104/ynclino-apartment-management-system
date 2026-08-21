@@ -45,6 +45,31 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         public string? TenantName { get; set; }
         public string? UnitNumber { get; set; }
 
+        // ── Recording a NEW payment ──────────────────────────────────────────
+        // The admin types only what the tenant just handed over; the system adds it
+        // to whatever was paid before. Leave blank to edit the bill without paying.
+        [Range(0.01, double.MaxValue, ErrorMessage = "Payment must be greater than 0.")]
+        [Display(Name = "Payment Amount")]
+        public decimal? PaymentAmount { get; set; }
+
+        [Display(Name = "Date Paid")]
+        [DataType(DataType.Date)]
+        public DateTime? PaymentDate { get; set; } = DateTime.Today;
+
+        [Display(Name = "Payment Method")]
+        public string? PaymentMethod { get; set; }
+
+        [MaxLength(300)]
+        [Display(Name = "Remarks")]
+        public string? PaymentRemarks { get; set; }
+
+        // running totals shown on the form (never typed by the admin)
+        public decimal TotalPaid { get; set; }
+        public decimal Balance => AmountDue - TotalPaid;
+
+        // this bill's payments, newest first
+        public List<tblPayment> Payments { get; set; } = new List<tblPayment>();
+
         public IEnumerable<SelectListItem> AvailableTenants { get; set; } = new List<SelectListItem>();
     }
 }

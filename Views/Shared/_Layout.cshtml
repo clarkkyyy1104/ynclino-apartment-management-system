@@ -50,6 +50,8 @@
     string Active(string c) => activeController == c ? "active" : "";
     bool isAdmin = User.IsInRole("Admin");
     bool unitsOpen = activeController == "Units" || activeController == "Transfers";
+    var activeAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    bool billingOpen = activeController == "Billing";
 }
 @if (User.Identity?.IsAuthenticated == true)
 {
@@ -85,7 +87,16 @@
                     @* <a class="nav-link @Active("Users")" asp-controller="Users" asp-action="Index">Manage Users</a> *@
                     <a class="nav-link @Active("Tenants")" asp-controller="Tenants" asp-action="Index">Tenants</a>
                 }
-                <a class="nav-link @Active("Billing")" asp-controller="Billing" asp-action="Index">Billing &amp; Payment @await Component.InvokeAsync("NavAlert", new { module = "Billing" })</a>
+                                <a class="nav-link group-toggle @(billingOpen ? "active" : "")" data-bs-toggle="collapse" href="#billingGroup" role="button" aria-expanded="@(billingOpen ? "true" : "false")">
+                    Billing &amp; Payment @await Component.InvokeAsync("NavAlert", new { module = "Billing" }) <span class="caret">▾</span>
+                </a>
+                <div class="collapse @(billingOpen ? "show" : "")" id="billingGroup">
+                    <div class="sub">
+                        <a class="nav-link @(activeController == "Billing" && activeAction != "History" ? "active" : "")" asp-controller="Billing" asp-action="Index">Bills</a>
+                        <a class="nav-link @(activeController == "Billing" && activeAction == "History" ? "active" : "")" asp-controller="Billing" asp-action="History">Payment History</a>
+                    </div>
+                </div>
+
                 <a class="nav-link @Active("Maintenance")" asp-controller="Maintenance" asp-action="Index">Maintenance @await Component.InvokeAsync("NavAlert", new { module = "Maintenance" })</a>
                 <a class="nav-link @Active("LostFound")" asp-controller="LostFound" asp-action="Index">Lost &amp; Found @await Component.InvokeAsync("NavAlert", new { module = "LostFound" })</a>
             </nav>

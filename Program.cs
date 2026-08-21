@@ -99,6 +99,23 @@ using (var scope = app.Services.CreateScope())
     try { db.Database.ExecuteSqlRaw("ALTER TABLE tblBillings ADD COLUMN IF NOT EXISTS Deposit decimal(10,2) NOT NULL DEFAULT 0"); } catch { }
     try { db.Database.ExecuteSqlRaw("ALTER TABLE tblBillings ADD COLUMN IF NOT EXISTS Advance decimal(10,2) NOT NULL DEFAULT 0"); } catch { }
 
+    // Payments live in their own table so one bill can be settled in instalments.
+    // CREATE TABLE IF NOT EXISTS *is* valid MySQL, so this safely adds the table to an
+    // existing database without touching a single existing row.
+    try { db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS tblPayments (
+            PaymentID int NOT NULL AUTO_INCREMENT,
+            BillingID int NOT NULL,
+            Amount decimal(10,2) NOT NULL,
+            DatePaid datetime(6) NOT NULL,
+            Method varchar(50) NULL,
+            Remarks varchar(300) NULL,
+            RecordedAt datetime(6) NOT NULL,
+            CONSTRAINT PK_tblPayments PRIMARY KEY (PaymentID),
+            CONSTRAINT FK_tblPayments_tblBillings_BillingID
+                FOREIGN KEY (BillingID) REFERENCES tblBillings (BillingID) ON DELETE CASCADE
+        ) CHARACTER SET=utf8mb4;"); } catch { }
+
     // Guard against a leftover database whose schema predates the current
     // models: probe every table, and if the shape no longer matches, rebuild
     // it from scratch. A fresh, matching database never triggers this.
@@ -163,6 +180,35 @@ using (var scope = app.Services.CreateScope())
     // (older databases stored it as "Vacant") — migrate any leftover rows
     if (db.tblUnits.Any(u => u.Status == "Vacant"))
         db.tblUnits.Where(u => u.Status == "Vacant").ExecuteUpdate(s => s.SetProperty(u => u.Status, "Available"));
+
+    // One-time backfill: bills that were already (partly) paid before payments got
+    // their own table each get a single payment row, so the Payment History page
+    // isn't empty for data that already existed. Runs only while tblPayments is empty.
+    try
+    {
+        if (!db.tblPayments.Any())
+        {
+            var alreadyPaid = db.tblBillings
+                .Where(b => b.AmountPaid != null && b.AmountPaid > 0)
+                .ToList();
+
+            foreach (var bill in alreadyPaid)
+            {
+                db.tblPayments.Add(new tblPayment
+                {
+                    BillingID = bill.BillingID,
+                    Amount = bill.AmountPaid!.Value,
+                    DatePaid = bill.DatePaid ?? bill.DueDate,
+                    Method = "Cash",
+                    Remarks = "Recorded before payment history was added.",
+                    RecordedAt = DateTime.Now
+                });
+            }
+
+            if (alreadyPaid.Count > 0) db.SaveChanges();
+        }
+    }
+    catch { }
 
     // the forced password change is for tenants only — clear the flag on any admin
     // account that may have picked it up before this rule was enforced
