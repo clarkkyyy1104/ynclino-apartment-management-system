@@ -98,17 +98,6 @@
                                 <span asp-validation-for="PaymentDate" class="text-danger small"></span>
                             </div>
                         </div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <label asp-for="PaymentMethod" class="form-label fw-semibold small"></label>
-                                <select asp-for="PaymentMethod" class="form-select">
-                                    <option value="Cash">Cash</option>
-                                    <option value="GCash">GCash</option>
-                                    <option value="Bank Transfer">Bank Transfer</option>
-                                </select>
-                            </div>
-                        </div>
                     }
 
                     <div class="mb-3">
@@ -119,37 +108,6 @@
                             <strong>Unpaid</strong> (nothing paid, not yet due), or
                             <strong>Overdue</strong> (past due and not fully paid).
                         </p>
-                    </div>
-
-                    @* this bill's payment history *@
-                    <div class="mb-4">
-                        <label class="form-label fw-semibold small">Payments for this bill</label>
-                        @if (!Model.Payments.Any())
-                        {
-                            <p class="form-text mb-0">No payments recorded yet.</p>
-                        }
-                        else
-                        {
-                            <table class="table table-sm small mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Date Paid</th>
-                                        <th>Amount</th>
-                                        <th>Method</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var p in Model.Payments)
-                                    {
-                                        <tr>
-                                            <td>@p.DatePaid.ToString("MMM dd, yyyy")</td>
-                                            <td class="text-success fw-semibold">₱@p.Amount.ToString("N2")</td>
-                                            <td>@(string.IsNullOrEmpty(p.Method) ? "—" : p.Method)</td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        }
                     </div>
 
                     <div class="d-flex gap-2">

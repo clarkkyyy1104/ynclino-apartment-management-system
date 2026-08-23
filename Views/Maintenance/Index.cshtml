@@ -52,7 +52,6 @@
             <tr>
                 @if (isAdmin) { <th>Tenant</th><th>Unit</th> }
                 <th>Issue Type</th>
-                <th>Description</th>
                 <th>Priority</th>
                 <th>Status</th>
                 <th>Date Submitted</th>
@@ -71,7 +70,6 @@
                         <td>@(r.Tenant?.Unit?.UnitNumber ?? "—")</td>
                     }
                     <td>@r.Category</td>
-                    <td class="text-truncate" style="max-width:200px" title="@r.Description">@r.Description</td>
                     <td>
                         @{
                             var pbadge = r.Priority switch {

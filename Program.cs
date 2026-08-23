@@ -87,17 +87,29 @@ using (var scope = app.Services.CreateScope())
     // MySQL server this builds every table from the current models.
     db.Database.EnsureCreated();
 
-    // Add newer columns to databases created before they existed, BEFORE the probe
-    // below runs — otherwise the probe's SELECT would fail on the missing column and
-    // trigger a full destructive rebuild. Existing accounts get the column's safe
-    // default (0 / false), so only accounts created from now on are ever forced to
-    // change their password. No-op on a fresh database that already has the column.
-    try { db.Database.ExecuteSqlRaw("ALTER TABLE tblUsers ADD COLUMN IF NOT EXISTS MustChangePassword tinyint(1) NOT NULL DEFAULT 0"); } catch { }
-    // The bill breakdown columns (deposit / advance) were added later; add them to
-    // existing databases before the probe below, so it doesn't fail and wipe data.
-    // Old bills default to 0 for both — which the views treat as "all rent".
-    try { db.Database.ExecuteSqlRaw("ALTER TABLE tblBillings ADD COLUMN IF NOT EXISTS Deposit decimal(10,2) NOT NULL DEFAULT 0"); } catch { }
-    try { db.Database.ExecuteSqlRaw("ALTER TABLE tblBillings ADD COLUMN IF NOT EXISTS Advance decimal(10,2) NOT NULL DEFAULT 0"); } catch { }
+    //MySQL does NOT support "ALTER TABLE ... ADD COLUMN IF NOT EXISTS" (MariaDB-only),
+    //so ask information_schema first, then run a plain ALTER when it is really missing.
+    void AddColumnIfMissing(string table, string column, string definition)
+    {
+        try
+        {
+            int found = db.Database.SqlQueryRaw<int>("SELCT COUNT(*) AS Value FROM INFORMATION_SCHEMA.columns " + "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = {0} AND COLUMN_NAME = {1}", table, column).AsEnumerable().First();
+            if (found == 0)
+            {
+                string alter = "ATLER TABLE '" + table + "'ADD COLUMN" + column + "' " + definition;
+                db.Database.ExecuteSqlRaw(alter);
+                Console.WriteLine($"[schema] Added missing column {table}.{column}");
+            }
+        }
+        catch (Exception ex) 
+        {
+            Console.WriteLine($"[schema] Could not add {table}.{column}: {ex.Message}");
+        }
+    }
+
+    AddColumnIfMissing("tblUsers", "MustChangePassword", "tinyint(1) NOT NULL DEFAULT 0");
+    AddColumnIfMissing("tblBillings", "Deposit", "decimal(10,2) NOT NULL DEFAULT 0");
+    AddColumnIfMissing("tblBillings", "Advance", "decimal(10,2) NOT NULL DEFAULT 0");
 
     // Payments live in their own table so one bill can be settled in instalments.
     // CREATE TABLE IF NOT EXISTS *is* valid MySQL, so this safely adds the table to an
@@ -139,12 +151,17 @@ using (var scope = app.Services.CreateScope())
     {
         ProbeSchema();
     }
-    catch (Exception)
+    catch (Exception ex)
     {
-        db.Database.EnsureDeleted();
-        db.Database.EnsureCreated();
-        // drop anything the failed probe may have tracked before it threw
+        //NEVER delete a database automatically -  report the mismatch instead.
         db.ChangeTracker.Clear();
+
+        Console.WriteLine("==================================================================");
+        Console.WriteLine(" SCHEMA MISMATCH - the database does not match the current models.");
+        Console.WriteLine(" " + ex.Message);
+        Console.WriteLine(" NOTHING WAS DELETED. Add the missing column with");
+        Console.WriteLine(" AddColumnIfMissing(...) above, or drop the databse by hand.");
+        Console.WriteLine("==================================================================");
     }
 
     // create a default admin the first time the app runs
