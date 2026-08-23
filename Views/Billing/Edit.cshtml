@@ -21,28 +21,24 @@
                         <span asp-validation-for="TenantID" class="text-danger small"></span>
                     </div>
 
-                    <div class="row mb-3">
+                    @* Bill details are fixed when the bill is issued — shown here, never edited *@
+                    <div class="row mb-2">
                         <div class="col-md-6">
-                            <label asp-for="BillingPeriod" class="form-label fw-semibold small">Billing Period (Month)</label>
-                            <input asp-for="BillingPeriod" type="month" class="form-control"
-                                   value="@Model.BillingPeriod.ToString("yyyy-MM")" />
-                            <span asp-validation-for="BillingPeriod" class="text-danger small"></span>
+                            <label class="form-label fw-semibold small">Billing Period (Month)</label>
+                            <input class="form-control bg-light" value="@Model.BillingPeriod.ToString("MMMM yyyy")" disabled />
+                            <input type="hidden" asp-for="BillingPeriod" value="@Model.BillingPeriod.ToString("yyyy-MM-dd")" />
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="DueDate" class="form-label fw-semibold small"></label>
-                            <input asp-for="DueDate" type="date" class="form-control" />
-                            <span asp-validation-for="DueDate" class="text-danger small"></span>
+                            <label class="form-label fw-semibold small">Due Date</label>
+                            <input class="form-control bg-light" value="@Model.DueDate.ToString("MMM dd, yyyy")" disabled />
+                            <input type="hidden" asp-for="DueDate" value="@Model.DueDate.ToString("yyyy-MM-dd")" />
                         </div>
                     </div>
-
-                    <div class="mb-3">
-                        <label asp-for="AmountDue" class="form-label fw-semibold small"></label>
-                        <div class="input-group">
-                            <span class="input-group-text">₱</span>
-                            <input asp-for="AmountDue" type="number" min="1" step="1000" class="form-control" />
-                        </div>
-                        <span asp-validation-for="AmountDue" class="text-danger small"></span>
-                    </div>
+                    @* carried so model validation still passes; the controller ignores it *@
+                    <input type="hidden" asp-for="AmountDue" />
+                    <p class="form-text mt-0 mb-3">
+                        The billing month, due date and bill amount are set when the bill is issued and cannot be changed here.
+                    </p>
 
                     @* running totals — computed from the payments below, never typed *@
                     <div class="row g-2 mb-3 text-center">
@@ -93,9 +89,9 @@
                                 <span asp-validation-for="PaymentAmount" class="text-danger small"></span>
                             </div>
                             <div class="col-md-6">
-                                <label asp-for="PaymentDate" class="form-label fw-semibold small"></label>
-                                <input asp-for="PaymentDate" type="date" class="form-control" />
-                                <span asp-validation-for="PaymentDate" class="text-danger small"></span>
+                                <label class="form-label fw-semibold small">Date Paid</label>
+                                <input class="form-control bg-light" value="@DateTime.Today.ToString("MMM dd, yyyy")" disabled />
+                                <div class="form-text text-muted small">Recorded as today automatically.</div>
                             </div>
                         </div>
                     }

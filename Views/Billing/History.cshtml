@@ -30,7 +30,7 @@
                 <th>For the Month</th>
                 <th>Date Paid</th>
                 <th>Amount Paid</th>
-                <th>Method</th>
+                <th>Balance</th>
                 <th>Bill Status</th>
             </tr>
         </thead>
@@ -47,7 +47,12 @@
                     <td>@(bill != null ? bill.BillingPeriod.ToString("MMMM yyyy") : "—")</td>
                     <td>@p.DatePaid.ToString("MMM dd, yyyy")</td>
                     <td class="text-success fw-semibold">₱@p.Amount.ToString("N2")</td>
-                    <td>@(string.IsNullOrEmpty(p.Method) ? "—" : p.Method)</td>
+                    @{
+                        var balances = ViewBag.BalanceAfter as Dictionary<int, decimal>;
+                        decimal bal = (balances != null && balances.ContainsKey(p.PaymentID))
+                            ? balances[p.PaymentID] : 0m;
+                    }
+                    <td class="@(bal > 0 ? "text-danger fw-semibold" : "text-success")">₱@bal.ToString("N2")</td>
                     <td>
                         @{
                             var status = bill?.Status ?? "—";

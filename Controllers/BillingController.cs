@@ -121,8 +121,22 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 .OrderByDescending(p => p.DatePaid).ThenByDescending(p => p.PaymentID)
                 .ToListAsync();
 
+            // running balance: how much of that bill was still owed AFTER each payment
+            var balanceAfter = new Dictionary<int, decimal>();
+            foreach (var billGroup in payments.GroupBy(p => p.BillingID))
+            {
+                decimal due = billGroup.First().Billing?.AmountDue ?? 0m;
+                decimal running = 0m;
+                foreach (var p in billGroup.OrderBy(p => p.DatePaid).ThenBy(p => p.PaymentID))
+                {
+                    running += p.Amount;
+                    balanceAfter[p.PaymentID] = due - running;
+                }
+            }
+
             ViewBag.SearchTerm = searchTerm;
             ViewBag.TotalCollected = payments.Sum(p => p.Amount);
+            ViewBag.BalanceAfter = balanceAfter;
             return View(payments);
         }
 
@@ -272,7 +286,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (billing == null) return NotFound();
 
             decimal alreadyPaid = await TotalPaidAsync(id);
-            decimal balanceBefore = vm.AmountDue - alreadyPaid;
+            decimal balanceBefore = billing.AmountDue - alreadyPaid;   // stored original, never the posted value
 
             // a payment can never exceed what is still owed, and a settled bill
             // cannot take another payment
@@ -298,9 +312,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             // 1) the bill's own details
             billing.TenantID = vm.TenantID;
-            billing.BillingPeriod = new DateTime(vm.BillingPeriod.Year, vm.BillingPeriod.Month, 1);
-            billing.AmountDue = vm.AmountDue;
-            billing.DueDate = vm.DueDate;
+            // BillingPeriod, AmountDue and DueDate are fixed at issue time - never overwritten here
             billing.Notes = vm.Notes;
 
             // 2) a new payment is ADDED to the history — never replacing what came before
@@ -312,7 +324,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 {
                     BillingID = billing.BillingID,
                     Amount = paidNow,
-                    DatePaid = vm.PaymentDate ?? DateTime.Today,
+                    DatePaid = DateTime.Today,   // always the day it was encoded
                     Method = string.IsNullOrWhiteSpace(vm.PaymentMethod) ? "Cash" : vm.PaymentMethod,
                     Remarks = vm.PaymentRemarks,
                     RecordedAt = DateTime.Now
