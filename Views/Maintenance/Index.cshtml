@@ -12,14 +12,14 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3 class="fw-bold mb-0">@(archived ? "Maintenance Archive" : "Maintenance Requests")</h3>
     <div class="d-flex gap-2">
-        <div class="btn-group">
-            <a asp-action="Index" class="btn btn-sm @(archived ? "btn-outline-secondary" : "btn-secondary")">Active</a>
-            <a asp-action="Index" asp-route-archived="true" class="btn btn-sm @(archived ? "btn-secondary" : "btn-outline-secondary")">Archive</a>
-        </div>
         @if (!archived)
         {
             <a asp-action="Create" class="btn btn-primary">+ New Request</a>
         }
+        <div class="btn-group">
+            <a asp-action="Index" class="btn btn-sm @(archived ? "btn-outline-secondary" : "btn-secondary")">Active</a>
+            <a asp-action="Index" asp-route-archived="true" class="btn btn-sm @(archived ? "btn-secondary" : "btn-outline-secondary")">Archive</a>
+        </div>
     </div>
 </div>
 

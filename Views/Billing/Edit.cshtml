@@ -81,7 +81,7 @@
                                 <label asp-for="PaymentAmount" class="form-label fw-semibold small"></label>
                                 <div class="input-group">
                                     <span class="input-group-text">₱</span>
-                                    <input asp-for="PaymentAmount" type="number" min="1" step="1000"
+                                    <input asp-for="PaymentAmount" type="number" min="1000" step="1000"
                                            max="@Model.Balance" class="form-control"
                                            placeholder="— leave blank if none" />
                                 </div>
@@ -95,16 +95,6 @@
                             </div>
                         </div>
                     }
-
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold small">Status</label>
-                        <p class="form-text mb-0">
-                            The status is set automatically from the total paid and the due date —
-                            <strong>Paid</strong> (paid in full), <strong>Partial</strong> (part paid),
-                            <strong>Unpaid</strong> (nothing paid, not yet due), or
-                            <strong>Overdue</strong> (past due and not fully paid).
-                        </p>
-                    </div>
 
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
