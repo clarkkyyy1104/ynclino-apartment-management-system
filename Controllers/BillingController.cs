@@ -74,6 +74,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             {
                 var tenant = await GetCurrentTenantAsync();
                 if (tenant == null) return View(new List<tblBilling>());
+                ViewBag.AdvanceCredit = tenant.AdvanceCredit;
                 query = query.Where(b => b.TenantID == tenant.TenantID);
             }
 
@@ -209,14 +210,19 @@ namespace YnclinoApartmentManagementSystem.Controllers
             _context.tblBillings.Add(billing);
             await _context.SaveChangesAsync();
 
+            // if the tenant is holding advance payment, use it on this new bill
+            decimal usedAdvance = await UseAdvanceCreditAsync(billing);
+
             // let the tenant know a new bill was issued
             var billedTenant = await _context.tblTenants.FirstOrDefaultAsync(t => t.TenantID == vm.TenantID);
             if (billedTenant?.UserID != null)
                 await NotificationHelper.CreateAsync(_context, billedTenant.UserID.Value, "Billing",
-                    $"A bill of ₱{billing.AmountDue:N2} for {period:MMMM yyyy} was issued (due {billing.DueDate:MMM dd}).",
+                    $"A bill of ₱{billing.AmountDue:N0} for {period:MMMM yyyy} was issued (due {billing.DueDate:MMM dd}).",
                     $"/Billing/Details/{billing.BillingID}", billing.BillingID);
 
-            TempData["Success"] = "Billing record created.";
+            TempData["Success"] = usedAdvance > 0
+                ? $"Billing record created. ₱{usedAdvance:N0} of advance payment was applied automatically."
+                : "Billing record created.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -246,6 +252,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 DatePaid = billing.DatePaid,
                 Status = billing.Status,
                 Notes = billing.Notes,
+                AdvanceCredit = billing.Tenant?.AdvanceCredit ?? 0m,
                 TotalPaid = await TotalPaidAsync(billing.BillingID),
                 Payments = await _context.tblPayments
                     .Where(p => p.BillingID == billing.BillingID)
@@ -276,6 +283,108 @@ namespace YnclinoApartmentManagementSystem.Controllers
             bill.Status = DeriveStatus(bill.AmountDue, bill.AmountPaid, bill.DueDate);
         }
 
+        // Applies a payment for a tenant: it settles THIS bill first, then any of the
+        // tenant's other unpaid bills (oldest first), and whatever is still left over
+        // is kept on the tenant as advance payment for future bills.
+        private async Task<(decimal here, decimal others, decimal advance)> ApplyPaymentAsync(
+            tblBilling bill, decimal amount, string? remarks)
+        {
+            decimal left = amount;
+
+            // 1) this bill, up to what it still owes
+            decimal balanceHere = bill.AmountDue - await TotalPaidAsync(bill.BillingID);
+            decimal here = Math.Min(left, Math.Max(balanceHere, 0m));
+            if (here > 0)
+            {
+                _context.tblPayments.Add(new tblPayment
+                {
+                    BillingID = bill.BillingID,
+                    Amount = here,
+                    Method = "Cash",
+                    Remarks = remarks,
+                    DatePaid = DateTime.Today,
+                    RecordedAt = DateTime.Now
+                });
+                await _context.SaveChangesAsync();
+                await RefreshBillTotalsAsync(bill);
+                await _context.SaveChangesAsync();
+                left -= here;
+            }
+
+            // 2) spill over onto the tenant's other unpaid bills, oldest first
+            decimal others = 0m;
+            if (left > 0)
+            {
+                var otherBills = await _context.tblBillings
+                    .Where(b => b.TenantID == bill.TenantID && b.BillingID != bill.BillingID)
+                    .OrderBy(b => b.BillingPeriod)
+                    .ToListAsync();
+
+                foreach (var ob in otherBills)
+                {
+                    if (left <= 0) break;
+                    decimal obBalance = ob.AmountDue - await TotalPaidAsync(ob.BillingID);
+                    if (obBalance <= 0) continue;
+
+                    decimal take = Math.Min(left, obBalance);
+                    _context.tblPayments.Add(new tblPayment
+                    {
+                        BillingID = ob.BillingID,
+                        Amount = take,
+                        Method = "Advance",
+                        Remarks = "Applied from overpayment",
+                        DatePaid = DateTime.Today,
+                        RecordedAt = DateTime.Now
+                    });
+                    await _context.SaveChangesAsync();
+                    await RefreshBillTotalsAsync(ob);
+                    await _context.SaveChangesAsync();
+
+                    left -= take;
+                    others += take;
+                }
+            }
+
+            // 3) anything still left becomes advance payment held for the tenant
+            if (left > 0)
+            {
+                var tenant = await _context.tblTenants.FindAsync(bill.TenantID);
+                if (tenant != null)
+                {
+                    tenant.AdvanceCredit += left;
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            return (here, others, left);
+        }
+
+        // Uses any advance payment the tenant is holding to settle a newly issued bill.
+        private async Task<decimal> UseAdvanceCreditAsync(tblBilling bill)
+        {
+            var tenant = await _context.tblTenants.FindAsync(bill.TenantID);
+            if (tenant == null || tenant.AdvanceCredit <= 0) return 0m;
+
+            decimal balance = bill.AmountDue - await TotalPaidAsync(bill.BillingID);
+            if (balance <= 0) return 0m;
+
+            decimal use = Math.Min(tenant.AdvanceCredit, balance);
+            _context.tblPayments.Add(new tblPayment
+            {
+                BillingID = bill.BillingID,
+                Amount = use,
+                Method = "Advance",
+                Remarks = "Settled from advance payment",
+                DatePaid = DateTime.Today,
+                RecordedAt = DateTime.Now
+            });
+            tenant.AdvanceCredit -= use;
+            await _context.SaveChangesAsync();
+            await RefreshBillTotalsAsync(bill);
+            await _context.SaveChangesAsync();
+            return use;
+        }
+
         // POST: Billing/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -290,16 +399,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
             decimal alreadyPaid = await TotalPaidAsync(id);
             decimal balanceBefore = billing.AmountDue - alreadyPaid;   // stored original, never the posted value
 
-            // a payment can never exceed what is still owed, and a settled bill
-            // cannot take another payment
-            if (vm.PaymentAmount.HasValue && vm.PaymentAmount.Value > 0)
-            {
-                if (balanceBefore <= 0)
-                    ModelState.AddModelError("PaymentAmount", "This bill is already fully paid.");
-                else if (vm.PaymentAmount.Value > balanceBefore)
-                    ModelState.AddModelError("PaymentAmount",
-                        $"Payment exceeds the remaining balance of {balanceBefore:N2}.");
-            }
+            // Overpayment is allowed: anything beyond this bill spills onto the tenant's
+            // other unpaid bills and then becomes advance payment. Only a negative
+            // amount is rejected.
+            if (vm.PaymentAmount.HasValue && vm.PaymentAmount.Value < 0)
+                ModelState.AddModelError("PaymentAmount", "Payment cannot be negative.");
 
             if (!ModelState.IsValid)
             {
@@ -317,21 +421,13 @@ namespace YnclinoApartmentManagementSystem.Controllers
             // BillingPeriod, AmountDue and DueDate are fixed at issue time - never overwritten here
             billing.Notes = vm.Notes;
 
-            // 2) a new payment is ADDED to the history — never replacing what came before
+            // 2) the payment is ADDED to the history, spilling onto older unpaid bills
+            //    and finally into advance payment when it exceeds what is owed
             decimal paidNow = vm.PaymentAmount ?? 0m;
             bool paymentRecorded = paidNow > 0;
+            decimal toOthers = 0m, toAdvance = 0m;
             if (paymentRecorded)
-            {
-                _context.tblPayments.Add(new tblPayment
-                {
-                    BillingID = billing.BillingID,
-                    Amount = paidNow,
-                    DatePaid = DateTime.Today,   // always the day it was encoded
-                    Remarks = vm.PaymentRemarks,
-                    RecordedAt = DateTime.Now
-                });
-                await _context.SaveChangesAsync();   // save first so the total below includes it
-            }
+                (_, toOthers, toAdvance) = await ApplyPaymentAsync(billing, paidNow, vm.PaymentRemarks);
 
             // 3) recompute the running total, last payment date and status
             await RefreshBillTotalsAsync(billing);
@@ -341,16 +437,20 @@ namespace YnclinoApartmentManagementSystem.Controllers
             {
                 decimal balanceAfter = billing.AmountDue - (billing.AmountPaid ?? 0m);
 
+                string extra = "";
+                if (toOthers > 0) extra += $" ₱{toOthers:N0} was applied to other unpaid bills.";
+                if (toAdvance > 0) extra += $" ₱{toAdvance:N0} was kept as advance payment.";
+
                 // tell the tenant their payment was posted
                 var payer = await _context.tblTenants.FirstOrDefaultAsync(t => t.TenantID == billing.TenantID);
                 if (payer?.UserID != null)
                     await NotificationHelper.CreateAsync(_context, payer.UserID.Value, "Billing",
-                        $"Payment of {paidNow:N2} received for {billing.BillingPeriod:MMMM yyyy}. Remaining balance: {balanceAfter:N2}.",
+                        $"Payment of ₱{paidNow:N0} received for {billing.BillingPeriod:MMMM yyyy}. Remaining balance: ₱{balanceAfter:N0}.{extra}",
                         $"/Billing/Details/{billing.BillingID}", billing.BillingID);
 
-                TempData["Success"] = balanceAfter <= 0
-                    ? $"Payment of {paidNow:N2} recorded. This bill is now fully paid."
-                    : $"Payment of {paidNow:N2} recorded. Remaining balance: {balanceAfter:N2}.";
+                TempData["Success"] = (balanceAfter <= 0
+                    ? $"Payment of ₱{paidNow:N0} recorded. This bill is now fully paid."
+                    : $"Payment of ₱{paidNow:N0} recorded. Remaining balance: ₱{balanceAfter:N0}.") + extra;
             }
             else
             {

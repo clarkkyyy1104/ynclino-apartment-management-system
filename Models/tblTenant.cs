@@ -52,6 +52,12 @@ namespace YnclinoApartmentManagementSystem.Models
         [Required, MaxLength(20)]
         public string Status { get; set; } = "Active"; // Active | Inactive
 
+        // Money paid beyond what a bill required. Carried forward and used
+        // automatically on the tenant's next bill.
+        [Column(TypeName = "decimal(10,2)")]
+        [Display(Name = "Advance Payment")]
+        public decimal AdvanceCredit { get; set; }
+
         [Display(Name = "Date Recorded")]
         public DateTime DateRecorded { get; set; } = DateTime.Now;
 

@@ -21,26 +21,26 @@
                     <dd class="col-sm-8">@Model.BillingPeriod.ToString("MMMM yyyy")</dd>
 
                     <dt class="col-sm-4">Amount Due</dt>
-                    <dd class="col-sm-8">₱@Model.AmountDue.ToString("N2")</dd>
+                    <dd class="col-sm-8">₱@Model.AmountDue.ToString("N0")</dd>
 
                     <dt class="col-sm-4">Monthly Rent</dt>
-                    <dd class="col-sm-8">₱@((Model.AmountDue - Model.Deposit - Model.Advance).ToString("N2"))</dd>
+                    <dd class="col-sm-8">₱@((Model.AmountDue - Model.Deposit - Model.Advance).ToString("N0"))</dd>
 
                     <dt class="col-sm-4">Deposit on File</dt>
                     <dd class="col-sm-8">
-                        ₱@((Model.Tenant?.Unit?.Deposit ?? 0m).ToString("N2"))
+                        ₱@((Model.Tenant?.Unit?.Deposit ?? 0m).ToString("N0"))
                         <span class="badge bg-info text-dark ms-1">covers the final month at move-out</span>
                     </dd>
 
                     <dt class="col-sm-4">Advance Payment</dt>
-                    <dd class="col-sm-8">₱@Model.Advance.ToString("N2")</dd>
+                    <dd class="col-sm-8">₱@Model.Advance.ToString("N0")</dd>
 
 
                     <dt class="col-sm-4">Due Date</dt>
                     <dd class="col-sm-8">@Model.DueDate.ToString("MMM dd, yyyy")</dd>
 
                     <dt class="col-sm-4">Amount Paid</dt>
-                    <dd class="col-sm-8">@(Model.AmountPaid.HasValue ? "₱" + Model.AmountPaid.Value.ToString("N2") : "—")</dd>
+                    <dd class="col-sm-8">@(Model.AmountPaid.HasValue ? "₱" + Model.AmountPaid.Value.ToString("N0") : "—")</dd>
 
                     <dt class="col-sm-4">Date Paid</dt>
                     <dd class="col-sm-8">@(Model.DatePaid?.ToString("MMM dd, yyyy") ?? "—")</dd>

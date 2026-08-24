@@ -68,6 +68,9 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         public decimal Deposit { get; set; }
         public decimal Advance { get; set; }
 
+        // advance payment the tenant is holding (shown read-only)
+        public decimal AdvanceCredit { get; set; }
+
         public decimal TotalPaid { get; set; }
         public decimal Balance => AmountDue - TotalPaid;
 

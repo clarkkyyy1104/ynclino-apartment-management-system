@@ -45,19 +45,19 @@
                         <div class="col-4">
                             <div class="border rounded py-2">
                                 <div class="small text-muted">Amount Due</div>
-                                <div class="fw-bold">₱@Model.AmountDue.ToString("N2")</div>
+                                <div class="fw-bold">₱@Model.AmountDue.ToString("N0")</div>
                             </div>
                         </div>
                         <div class="col-4">
                             <div class="border rounded py-2">
                                 <div class="small text-muted">Total Paid</div>
-                                <div class="fw-bold text-success">₱@Model.TotalPaid.ToString("N2")</div>
+                                <div class="fw-bold text-success">₱@Model.TotalPaid.ToString("N0")</div>
                             </div>
                         </div>
                         <div class="col-4">
                             <div class="border rounded py-2">
                                 <div class="small text-muted">Balance</div>
-                                <div class="fw-bold @(Model.Balance > 0 ? "text-danger" : "text-muted")">₱@Model.Balance.ToString("N2")</div>
+                                <div class="fw-bold @(Model.Balance > 0 ? "text-danger" : "text-muted")">₱@Model.Balance.ToString("N0")</div>
                             </div>
                         </div>
                     </div>
@@ -65,10 +65,25 @@
                     @if (Model.Deposit > 0 || Model.Advance > 0)
                     {
                         <p class="form-text mt-0 mb-3">
-                            This bill includes a <strong>₱@Model.Deposit.ToString("N2")</strong> deposit
+                            This bill includes a <strong>₱@Model.Deposit.ToString("N0")</strong> deposit
                             (held until the tenant moves out) and
-                            <strong>₱@Model.Advance.ToString("N2")</strong> advance payment.
+                            <strong>₱@Model.Advance.ToString("N0")</strong> advance payment.
                         </p>
+                    }
+
+                    @if (Model.AdvanceCredit > 0)
+                    {
+                        <div class="alert alert-info py-2 small mb-3">
+                            This tenant is holding <strong>₱@Model.AdvanceCredit.ToString("N0")</strong>
+                            in advance payment. It is applied automatically to their next bill.
+                        </div>
+                    }
+
+                    @if (Model.Balance <= 0)
+                    {
+                        <div class="alert alert-success py-2 small mb-3">
+                            This bill is fully settled — no further payment is needed.
+                        </div>
                     }
                     else
                     {
@@ -84,10 +99,13 @@
                                 <div class="input-group">
                                     <span class="input-group-text">₱</span>
                                     <input asp-for="PaymentAmount" type="number" min="0" step="1"
-                                           max="@Model.Balance" class="form-control"
+                                           class="form-control"
                                            placeholder="— leave blank if none" />
                                 </div>
-                                <div class="form-text text-muted small">Maximum: ₱@Model.Balance.ToString("N2")</div>
+                                <div class="form-text text-muted small">
+                                    Balance: ₱@Model.Balance.ToString("N0"). Paying more is fine — the extra
+                                    settles other unpaid bills, then becomes advance payment.
+                                </div>
                                 <span asp-validation-for="PaymentAmount" class="text-danger small"></span>
                             </div>
                             <div class="col-md-6">

@@ -16,6 +16,17 @@
     }
 </div>
 
+@{
+    decimal advanceCredit = (decimal)(ViewBag.AdvanceCredit ?? 0m);
+}
+@if (!isAdmin && advanceCredit > 0)
+{
+    <div class="alert alert-info py-2 small">
+        You have <strong>₱@advanceCredit.ToString("N0")</strong> in advance payment.
+        It will be applied automatically to your next bill.
+    </div>
+}
+
 <form method="get" class="row g-2 mb-4">
     @if (isAdmin)
     {
@@ -73,11 +84,11 @@
                         }
                     </td>
                     <td>@b.DueDate.ToString("MMM dd, yyyy")</td>
-                    <td>₱@((b.Tenant?.Unit?.Deposit ?? 0m).ToString("N2"))</td>
-                    <td>₱@b.Advance.ToString("N2")</td>
-                    <td>₱@((b.AmountDue - b.Deposit - b.Advance).ToString("N2"))</td>
-                    <td>₱@((b.AmountDue - (b.AmountPaid ?? 0m)).ToString("N2"))</td>
-                    <td>@(b.AmountPaid.HasValue ? "₱" + b.AmountPaid.Value.ToString("N2") : "—")</td>
+                    <td>₱@((b.Tenant?.Unit?.Deposit ?? 0m).ToString("N0"))</td>
+                    <td>₱@b.Advance.ToString("N0")</td>
+                    <td>₱@((b.AmountDue - b.Deposit - b.Advance).ToString("N0"))</td>
+                    <td>₱@((b.AmountDue - (b.AmountPaid ?? 0m)).ToString("N0"))</td>
+                    <td>@(b.AmountPaid.HasValue ? "₱" + b.AmountPaid.Value.ToString("N0") : "—")</td>
                     <td>
                         @{
                             var badge = b.Status switch {

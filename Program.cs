@@ -93,10 +93,10 @@ using (var scope = app.Services.CreateScope())
     {
         try
         {
-            int found = db.Database.SqlQueryRaw<int>("SELCT COUNT(*) AS Value FROM INFORMATION_SCHEMA.columns " + "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = {0} AND COLUMN_NAME = {1}", table, column).AsEnumerable().First();
+            int found = db.Database.SqlQueryRaw<int>("SELECT COUNT(*) AS Value FROM INFORMATION_SCHEMA.columns " + "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = {0} AND COLUMN_NAME = {1}", table, column).AsEnumerable().First();
             if (found == 0)
             {
-                string alter = "ATLER TABLE '" + table + "'ADD COLUMN" + column + "' " + definition;
+                string alter = "ALTER TABLE `" + table + "` ADD COLUMN `" + column + "` " + definition;
                 db.Database.ExecuteSqlRaw(alter);
                 Console.WriteLine($"[schema] Added missing column {table}.{column}");
             }
@@ -110,6 +110,7 @@ using (var scope = app.Services.CreateScope())
     AddColumnIfMissing("tblUsers", "MustChangePassword", "tinyint(1) NOT NULL DEFAULT 0");
     AddColumnIfMissing("tblBillings", "Deposit", "decimal(10,2) NOT NULL DEFAULT 0");
     AddColumnIfMissing("tblBillings", "Advance", "decimal(10,2) NOT NULL DEFAULT 0");
+    AddColumnIfMissing("tblTenants", "AdvanceCredit", "decimal(10,2) NOT NULL DEFAULT 0");
 
     // Payments live in their own table so one bill can be settled in instalments.
     // CREATE TABLE IF NOT EXISTS *is* valid MySQL, so this safely adds the table to an
