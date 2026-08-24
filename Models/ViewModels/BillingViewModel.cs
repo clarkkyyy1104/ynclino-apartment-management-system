@@ -34,6 +34,10 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         [DataType(DataType.Date)]
         public DateTime? DatePaid { get; set; }
 
+        [MaxLength(20)]
+        [Display(Name = "Payment Method")]
+        public string? PaymentMethod { get; set; }
+
         [Required]
         [Display(Name = "Status")]
         public string Status { get; set; } = "Unpaid";
@@ -43,7 +47,6 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
 
         // for display only
         public string? TenantName { get; set; }
-        public string? UnitNumber { get; set; }
 
         public IEnumerable<SelectListItem> AvailableTenants { get; set; } = new List<SelectListItem>();
     }

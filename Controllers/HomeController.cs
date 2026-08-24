@@ -21,10 +21,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             if (User.IsInRole("Admin"))
             {
-                ViewBag.TotalUnits = await _context.tblUnits.CountAsync();
-                ViewBag.VacantUnits = await _context.tblUnits.CountAsync(u => u.Status == "Vacant");
-                ViewBag.OccupiedUnits = await _context.tblUnits.CountAsync(u => u.Status == "Occupied");
-                ViewBag.MaintenanceUnits = await _context.tblUnits.CountAsync(u => u.Status == "Under Maintenance");
                 ViewBag.ActiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Active");
                 ViewBag.InactiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Inactive");
                 ViewBag.TotalUsers = await _context.tblUsers.CountAsync(u => u.IsActive);
@@ -37,7 +33,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 if (int.TryParse(userIdStr, out int userId))
                 {
                     tenant = await _context.tblTenants
-                        .Include(t => t.Unit)
                         .FirstOrDefaultAsync(t => t.UserID == userId && t.Status == "Active");
                 }
                 return View("TenantDashboard", tenant);

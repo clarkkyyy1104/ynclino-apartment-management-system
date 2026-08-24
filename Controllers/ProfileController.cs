@@ -26,7 +26,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 return View((YnclinoApartmentManagementSystem.Models.tblTenant?)null);
 
             var tenant = await _context.tblTenants
-                .Include(t => t.Unit)
                 .Include(t => t.User)
                 .FirstOrDefaultAsync(t => t.UserID == uid);
 
@@ -41,11 +40,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             ViewBag.Maintenance = await _context.tblMaintenanceRequests
                 .Where(m => m.TenantID == tenant.TenantID)
                 .OrderByDescending(m => m.DateSubmitted).Take(5).ToListAsync();
-
-            ViewBag.Transfers = await _context.tblUnitTransferRequests
-                .Include(r => r.RequestedUnit)
-                .Where(r => r.TenantID == tenant.TenantID)
-                .OrderByDescending(r => r.DateRequested).Take(5).ToListAsync();
 
             return View(tenant);
         }

@@ -13,7 +13,7 @@ namespace YnclinoApartmentManagementSystem.Models
         public int UserID { get; set; }
 
         // which module it belongs to (drives the per-module nav badge):
-        // Billing | Maintenance | LostFound | Transfer
+        // Billing | Maintenance | LostFound
         [Required]
         [MaxLength(30)]
         public string Module { get; set; } = string.Empty;

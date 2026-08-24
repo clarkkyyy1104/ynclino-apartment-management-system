@@ -14,9 +14,6 @@
                     <dt class="col-sm-4">Tenant</dt>
                     <dd class="col-sm-8">@Model.Tenant?.FullName</dd>
 
-                    <dt class="col-sm-4">Unit</dt>
-                    <dd class="col-sm-8">@(Model.Tenant?.Unit?.UnitNumber ?? "—")</dd>
-
                     <dt class="col-sm-4">Billing Period</dt>
                     <dd class="col-sm-8">@Model.BillingPeriod.ToString("MMMM yyyy")</dd>
 
@@ -31,6 +28,9 @@
 
                     <dt class="col-sm-4">Date Paid</dt>
                     <dd class="col-sm-8">@(Model.DatePaid?.ToString("MMM dd, yyyy") ?? "—")</dd>
+
+                    <dt class="col-sm-4">Payment Method</dt>
+                    <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.PaymentMethod) ? "—" : Model.PaymentMethod)</dd>
 
                     <dt class="col-sm-4">Status</dt>
                     <dd class="col-sm-8">

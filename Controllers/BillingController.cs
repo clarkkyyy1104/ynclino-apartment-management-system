@@ -67,7 +67,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             await RefreshStatusesAsync();
 
             IQueryable<tblBilling> query = _context.tblBillings
-                .Include(b => b.Tenant).ThenInclude(t => t!.Unit);
+                .Include(b => b.Tenant);
 
             // tenants only see their own bills
             if (User.IsInRole("Tenant"))
@@ -102,7 +102,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (id == null) return NotFound();
 
             var billing = await _context.tblBillings
-                .Include(b => b.Tenant).ThenInclude(t => t!.Unit)
+                .Include(b => b.Tenant)
                 .FirstOrDefaultAsync(b => b.BillingID == id);
 
             if (billing == null) return NotFound();
@@ -198,6 +198,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 DueDate = billing.DueDate,
                 AmountPaid = billing.AmountPaid,
                 DatePaid = billing.DatePaid,
+                PaymentMethod = billing.PaymentMethod,
                 Status = billing.Status,
                 Notes = billing.Notes,
                 AvailableTenants = await GetTenantListForBillAsync(billing.TenantID)
@@ -233,10 +234,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
             billing.Status = DeriveStatus(vm.AmountDue, vm.AmountPaid, vm.DueDate);
             billing.Notes = vm.Notes;
 
-            // record a payment date when something has been paid, clear it otherwise
-            billing.DatePaid = (vm.AmountPaid.HasValue && vm.AmountPaid.Value > 0)
-                ? (vm.DatePaid ?? DateTime.Today)
-                : null;
+            // record a payment date and method when something has been paid, clear them otherwise
+            bool hasPayment = vm.AmountPaid.HasValue && vm.AmountPaid.Value > 0;
+            billing.DatePaid = hasPayment ? (vm.DatePaid ?? DateTime.Today) : null;
+            billing.PaymentMethod = hasPayment ? vm.PaymentMethod : null;
 
             await _context.SaveChangesAsync();
             TempData["Success"] = "Billing record updated.";
@@ -250,7 +251,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (id == null) return NotFound();
 
             var billing = await _context.tblBillings
-                .Include(b => b.Tenant).ThenInclude(t => t!.Unit)
+                .Include(b => b.Tenant)
                 .FirstOrDefaultAsync(b => b.BillingID == id);
 
             if (billing == null) return NotFound();
@@ -272,37 +273,15 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // ajax helper - suggests the unit's monthly rent and reports any arrears
-        [HttpGet]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetSuggestedAmount(int tenantId)
-        {
-            var tenant = await _context.tblTenants
-                .Include(t => t.Unit)
-                .FirstOrDefaultAsync(t => t.TenantID == tenantId);
-            if (tenant == null || tenant.Unit == null)
-                return Json(new { suggestedAmount = 0m, unpaidMonths = 0 });
-
-            var unpaidCount = await _context.tblBillings
-                .CountAsync(b => b.TenantID == tenantId && (b.AmountPaid == null || b.AmountPaid < b.AmountDue));
-
-            // each month is its own bill, so suggest one month's rent
-            return Json(new {
-                suggestedAmount = tenant.Unit.RentPrice,
-                unpaidMonths = unpaidCount
-            });
-        }
-
         private async Task<IEnumerable<SelectListItem>> GetActiveTenantListAsync()
         {
             return await _context.tblTenants
-                .Include(t => t.Unit)
                 .Where(t => t.Status == "Active")
                 .OrderBy(t => t.LastName)
                 .Select(t => new SelectListItem
                 {
                     Value = t.TenantID.ToString(),
-                    Text = $"{t.LastName}, {t.FirstName} — Unit {t.Unit!.UnitNumber}"
+                    Text = $"{t.LastName}, {t.FirstName}"
                 })
                 .ToListAsync();
         }
@@ -311,13 +290,12 @@ namespace YnclinoApartmentManagementSystem.Controllers
         private async Task<IEnumerable<SelectListItem>> GetTenantListForBillAsync(int currentTenantId)
         {
             return await _context.tblTenants
-                .Include(t => t.Unit)
                 .Where(t => t.Status == "Active" || t.TenantID == currentTenantId)
                 .OrderBy(t => t.LastName)
                 .Select(t => new SelectListItem
                 {
                     Value = t.TenantID.ToString(),
-                    Text = $"{t.LastName}, {t.FirstName} — Unit {t.Unit!.UnitNumber}"
+                    Text = $"{t.LastName}, {t.FirstName}"
                 })
                 .ToListAsync();
         }

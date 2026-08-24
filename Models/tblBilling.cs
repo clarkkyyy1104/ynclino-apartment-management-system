@@ -31,8 +31,13 @@ namespace YnclinoApartmentManagementSystem.Models
         [Display(Name = "Date Paid")]
         public DateTime? DatePaid { get; set; }
 
+        // how the payment was made (recorded when a payment is entered)
+        [MaxLength(20)]
+        [Display(Name = "Payment Method")]
+        public string? PaymentMethod { get; set; }   // Cash | GCash
+
         [Required, MaxLength(20)]
-        public string Status { get; set; } = "Unpaid";   // Unpaid | Paid | Overdue
+        public string Status { get; set; } = "Unpaid";   // Unpaid | Paid | Partial | Late
 
         [MaxLength(500)]
         public string? Notes { get; set; }

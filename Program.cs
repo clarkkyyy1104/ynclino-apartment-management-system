@@ -91,13 +91,11 @@ using (var scope = app.Services.CreateScope())
     void ProbeSchema()
     {
         db.tblTenants.AsNoTracking().FirstOrDefault();
-        db.tblUnits.AsNoTracking().FirstOrDefault();
         db.tblUsers.AsNoTracking().FirstOrDefault();
         db.tblBillings.AsNoTracking().FirstOrDefault();
         db.tblMaintenanceRequests.AsNoTracking().FirstOrDefault();
         db.tblLostFoundItems.AsNoTracking().FirstOrDefault();
         db.tblClaimRequests.AsNoTracking().FirstOrDefault();
-        db.tblUnitTransferRequests.AsNoTracking().FirstOrDefault();
         db.tblNotifications.AsNoTracking().FirstOrDefault();
     }
 

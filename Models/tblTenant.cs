@@ -10,9 +10,6 @@ namespace YnclinoApartmentManagementSystem.Models
 
         public int? UserID { get; set; }
 
-        [Required]
-        public int UnitID { get; set; }
-
         [Required, MaxLength(50)]
         [Display(Name = "First Name")]
         public string FirstName { get; set; } = string.Empty;
@@ -61,9 +58,6 @@ namespace YnclinoApartmentManagementSystem.Models
 
         [ForeignKey("UserID")]
         public tblUser? User { get; set; }
-
-        [ForeignKey("UnitID")]
-        public tblUnit? Unit { get; set; }
 
         [NotMapped]
         public string FullName => $"{FirstName} {LastName}";

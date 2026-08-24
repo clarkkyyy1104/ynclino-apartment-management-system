@@ -50,7 +50,7 @@
     <table class="table table-hover align-middle">
         <thead class="table-primary">
             <tr>
-                @if (isAdmin) { <th>Tenant</th><th>Unit</th> }
+                @if (isAdmin) { <th>Tenant</th> }
                 <th>Issue Type</th>
                 <th>Description</th>
                 <th>Priority</th>
@@ -68,7 +68,6 @@
                     @if (isAdmin)
                     {
                         <td class="fw-semibold">@r.Tenant?.FullName</td>
-                        <td>@(r.Tenant?.Unit?.UnitNumber ?? "—")</td>
                     }
                     <td>@r.Category</td>
                     <td class="text-truncate" style="max-width:200px" title="@r.Description">@r.Description</td>
@@ -107,7 +106,7 @@
             }
             @if (!Model.Any())
             {
-                <tr><td colspan="@(isAdmin ? 8 : 6)" class="text-center text-muted py-4">No maintenance requests found.</td></tr>
+                <tr><td colspan="@(isAdmin ? 7 : 6)" class="text-center text-muted py-4">No maintenance requests found.</td></tr>
             }
         </tbody>
     </table>

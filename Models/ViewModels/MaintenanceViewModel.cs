@@ -45,7 +45,6 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
 
         // for display only
         public string? TenantName { get; set; }
-        public string? UnitNumber { get; set; }
         public string? ImagePath { get; set; }
 
         public IEnumerable<SelectListItem> AvailableTenants { get; set; } = new List<SelectListItem>();

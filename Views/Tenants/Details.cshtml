@@ -21,12 +21,6 @@
                     <dt class="col-sm-4">Full Name</dt>
                     <dd class="col-sm-8">@Model.LastName, @Model.FirstName</dd>
 
-                    <dt class="col-sm-4">Unit</dt>
-                    <dd class="col-sm-8">@(Model.Unit?.UnitNumber ?? "—") (@(Model.Unit?.UnitType ?? "—"))</dd>
-
-                    <dt class="col-sm-4">Rent Price</dt>
-                    <dd class="col-sm-8">₱@(Model.Unit?.RentPrice.ToString("N2") ?? "—")</dd>
-
                     <dt class="col-sm-4">Contact Number</dt>
                     <dd class="col-sm-8">@(Model.ContactNumber ?? "—")</dd>
 

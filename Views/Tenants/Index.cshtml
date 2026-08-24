@@ -31,7 +31,6 @@
             <tr>
                 <th>Username (ID)</th>
                 <th>Name</th>
-                <th>Unit</th>
                 <th>Contact</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -43,7 +42,6 @@
                 <tr>
                     <td>@(tenant.User?.Username ?? "—")</td>
                     <td class="fw-semibold">@tenant.LastName, @tenant.FirstName</td>
-                    <td>@(tenant.Unit?.UnitNumber ?? "—")</td>
                     <td>@(tenant.ContactNumber ?? "—")</td>
                     <td>
                         <span class="badge @(tenant.Status == "Active" ? "bg-success" : "bg-secondary")">
@@ -58,7 +56,7 @@
             @if (!Model.Any())
             {
                 <tr>
-                    <td colspan="6" class="text-center text-muted py-4">No tenants found.</td>
+                    <td colspan="5" class="text-center text-muted py-4">No tenants found.</td>
                 </tr>
             }
         </tbody>

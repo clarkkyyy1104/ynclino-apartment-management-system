@@ -4,7 +4,6 @@
     ViewData["Title"] = "My Profile";
     var bills = ViewBag.Bills as IEnumerable<tblBilling> ?? Enumerable.Empty<tblBilling>();
     var maintenance = ViewBag.Maintenance as IEnumerable<tblMaintenanceRequest> ?? Enumerable.Empty<tblMaintenanceRequest>();
-    var transfers = ViewBag.Transfers as IEnumerable<tblUnitTransferRequest> ?? Enumerable.Empty<tblUnitTransferRequest>();
 }
 
 @if (Model == null)
@@ -41,9 +40,7 @@
             }
             <div class="ms-3 pb-1">
                 <h4 class="fw-bold mb-0">@Model.FullName</h4>
-                <div class="text-muted small">
-                    Unit @(Model.Unit?.UnitNumber ?? "—")
-                </div>
+                <div class="text-muted small">@(Model.User?.Username ?? "Tenant")</div>
             </div>
             <div class="ms-auto pb-1 d-flex gap-2">
                 <form asp-action="UploadPhoto" method="post" enctype="multipart/form-data" class="d-flex gap-2 align-items-center">
@@ -87,22 +84,6 @@
             </div>
         </div>
 
-        <div class="card mb-3">
-            <div class="card-header fw-semibold">Unit Information</div>
-            <div class="card-body">
-                @if (Model.Unit != null)
-                {
-                    <dl class="row mb-0 small">
-                        <dt class="col-5">Unit Number</dt><dd class="col-7 fw-semibold">@Model.Unit.UnitNumber</dd>
-                        <dt class="col-5">Unit Type</dt><dd class="col-7">@Model.Unit.UnitType</dd>
-                        <dt class="col-5">Monthly Rent</dt><dd class="col-7">₱@Model.Unit.RentPrice.ToString("N2")</dd>
-                        <dt class="col-5">Capacity</dt><dd class="col-7">@Model.Unit.Capacity person(s)</dd>
-                    </dl>
-                }
-                else { <p class="text-muted small mb-0">Unit information unavailable.</p> }
-            </div>
-        </div>
-
         <div class="card">
             <div class="card-header fw-semibold">Tenancy</div>
             <div class="card-body">
@@ -119,7 +100,7 @@
         <div class="card">
             <div class="card-header fw-semibold">Recent Activity</div>
             <div class="list-group list-group-flush">
-                @if (!bills.Any() && !maintenance.Any() && !transfers.Any())
+                @if (!bills.Any() && !maintenance.Any())
                 {
                     <div class="list-group-item text-center text-muted py-4">No recent activity.</div>
                 }
@@ -141,16 +122,6 @@
                             @m.Category — @m.DateSubmitted.ToString("MMM dd, yyyy")
                         </div>
                         <span class="badge bg-light text-dark border">@m.Status</span>
-                    </div>
-                }
-                @foreach (var r in transfers)
-                {
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <span class="badge bg-secondary me-2">Transfer</span>
-                            Requested Unit @(r.RequestedUnit?.UnitNumber ?? "—") — @r.DateRequested.ToString("MMM dd, yyyy")
-                        </div>
-                        <span class="badge @(r.Status == "Approved" ? "bg-success" : r.Status == "Rejected" ? "bg-danger" : r.Status == "Cancelled" ? "bg-secondary" : "bg-warning text-dark")">@r.Status</span>
                     </div>
                 }
             </div>

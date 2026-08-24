@@ -1,7 +1,7 @@
-# Ynclino Apartment Management System
+# BKS Apartment Management System
 
-An ASP.NET Core MVC application for managing apartment units, tenants, billing,
-maintenance, and lost & found.
+An ASP.NET Core MVC application for managing tenants, billing, maintenance,
+and lost & found for **BKS Apartment**.
 
 ---
 
@@ -11,18 +11,24 @@ maintenance, and lost & found.
 - **Database:** MySQL 8.0 (or MariaDB 10.4+)
 - **ORM:** Entity Framework Core 8.0 with the Pomelo MySQL provider
   (schema is created automatically on first run — no migrations to apply)
-- **UI:** Bootstrap 5.3 with a custom Ynclino theme
+- **UI:** Bootstrap 5.3
 
 ---
 
 ## Features
 
-- **Units** — full CRUD; separate Deposit and One-Month-Advance (each auto-fills to one month's rent); status tracking (Vacant / Occupied / Under Maintenance)
-- **Tenants** — full CRUD with soft-delete (history preserved), emergency contact details
-- **Billing & Payment** — issue and track bills
-- **Maintenance** — requests with Low/Medium/High/Urgent priority, issue types, photo attachments, and an Active/Archive view
+- **Tenants** — full CRUD with soft-delete (history preserved), auto-generated
+  login accounts, and emergency contact details
+- **Billing & Payment** — issue and track bills; records amount paid, date paid,
+  a **Payment Method** (Cash / GCash), and an auto-derived status
+  (Paid / Partial / Unpaid / Late)
+- **Maintenance** — requests with Minor/Moderate/Major/Urgent priority, issue
+  types, photo attachments, and an Active/Archive view
 - **Lost & Found** — report items with photos and handle claims
 - **Roles** — Admin and Tenant, each with a tailored dashboard
+
+> This build has **no Units module** — rent is entered directly on each bill, so
+> the app suits a single property that is billed per tenant.
 
 ---
 
@@ -30,8 +36,7 @@ maintenance, and lost & found.
 
 - Visual Studio 2022 (or VS Code with the C# Dev Kit)
 - **.NET 8 SDK**
-- **MySQL Server 8.0** (installed via the *MySQL Installer for Windows*) and,
-  optionally, **MySQL Workbench** for browsing the database
+- **MySQL Server 8.0** and, optionally, **MySQL Workbench** for browsing the database
 
 > ⚠️ MySQL **Workbench** is only a GUI — it is not the database. You must have
 > **MySQL Server** installed and its Windows service (`MySQL80`) **running**.
@@ -60,77 +65,27 @@ In the project root, copy `appsettings.Local.json.example` to
 ```
 
 - This file is **git-ignored** — your password is never committed or pushed.
-- Only the **password** lives here now. The rest of the connection string —
-  including the **database name** — comes from the committed `appsettings.json`,
-  so each branch can point at its own database and this one local file works on
-  every branch (no editing when you switch branches).
+- Only the **password** lives here. The rest of the connection string —
+  including the **database name** (`BKSApartmentDb`) — comes from the committed
+  `appsettings.json`.
 - **Do not** put your real password in `appsettings.json`; leave its
   `YOUR_MYSQL_PASSWORD` placeholder untouched.
-- Each teammate creates their own `appsettings.Local.json` with their own password.
-
-> Different databases per branch: the `crud` branch uses `YnclinoAMSCrudDb` and
-> `crud(copy)` uses `YnclinoApartmentManagementSystemDb`, so the two branches never
-> share data. (Set in each branch's `appsettings.json`.)
 
 ### 3. Run the app
 Press **F5** in Visual Studio (or `dotnet run`). On first launch it:
-- creates the `YnclinoAMSCrudDb` database and tables,
+- creates the `BKSApartmentDb` database and tables,
 - seeds the default admin account,
 - opens at **https://localhost:7251**.
 
-### 4. Log in and load demo data
+### 4. Log in
 - Default admin login: **`admin`** / **`Admin@123`**
-- On the **Units** page, click **Load Sample Data** to populate demo units and tenants.
+- Change this password after the first sign-in (top-right menu → Change Password).
 
 > **Resetting the database:** because the schema is created (not migrated), the
 > quickest way to start fresh is to drop it and re-run the app:
 > ```sql
-> DROP DATABASE YnclinoAMSCrudDb;
+> DROP DATABASE BKSApartmentDb;
 > ```
-
-### Forgot your MySQL root password?
-Stop the `MySQL80` service, create `C:\mysql-init.txt` containing
-`ALTER USER 'root'@'localhost' IDENTIFIED BY 'NewPass@2026';`, then from an
-**Administrator** Command Prompt run:
-```
-"C:\Program Files\MySQL\MySQL Server 8.0\bin\mysqld" --defaults-file="C:\ProgramData\MySQL\MySQL Server 8.0\my.ini" --init-file="C:\mysql-init.txt" --console
-```
-Press `Ctrl+C` after it starts, restart the service, delete the init file, and
-update `appsettings.Local.json` with the new password.
-
----
-
-## Brand & Theme
-
-The Ynclino visual identity is derived from the logo.
-
-### Colors
-
-| Role | Hex | Used for |
-|------|-----|----------|
-| **Brand orange** | `#ff8235` | Buttons, active nav item, table/card top borders, profile pill, login accents |
-| **Orange (hover/active)** | `#e5701f` | Button hover/active states |
-| **Charcoal** | `#37383a` | Sidebar, table headers, panel/card headers, stat-card caps |
-| **Cream / off-white** | `#ecebe4` | Text on dark (login, sidebar wordmark) |
-| Page background | `#f6f8fb` | App content area |
-
-There is **no blue** in the palette. Brand tokens live as CSS variables in
-`wwwroot/css/theme.css` (`--ynk-orange`, `--ynk-dark`, etc.); Bootstrap's
-`primary` is mapped to charcoal so all default "primary" fills stay on-brand.
-
-### Logos
-
-Source SVGs are in `Logos/`; web-ready copies used by the app are in
-`wwwroot/images/`:
-
-| File | Variant | Where it's used |
-|------|---------|-----------------|
-| `ynclino-logo-text-light.svg` | Wordmark, light | Sidebar and login (dark backgrounds) |
-| `ynclino-logo-light.svg` | Icon only, light | For dark backgrounds |
-| `ynclino-logo-dark.svg` | Icon only, dark | Browser favicon (light backgrounds) |
-
-> A dark-background **wordmark** (icon + text) is not yet available; when it is,
-> drop it into `wwwroot/images/` and it can be used on any light surface.
 
 ---
 
@@ -138,16 +93,15 @@ Source SVGs are in `Logos/`; web-ready copies used by the app are in
 
 ```
 ynclino-apartment-management-system/
-├── Controllers/         MVC controllers (Units, Tenants, Billing, Maintenance, LostFound, ...)
+├── Controllers/         MVC controllers (Tenants, Billing, Maintenance, LostFound, ...)
 ├── Data/                ApplicationDbContext (EF Core)
-├── Helpers/             Password hashing, image upload helper
-├── Logos/               Source logo SVGs
-├── Models/              Entity classes (tblUnit, tblTenant, ...)
+├── Helpers/             Password hashing, image upload, notifications
+├── Models/              Entity classes (tblTenant, tblBilling, ...)
 │   └── ViewModels/      Form-binding view models
 ├── Views/               Razor views (one folder per controller)
 │   └── Shared/          Layout, partials
 ├── wwwroot/
-│   ├── css/             site.css, theme.css (brand theme)
+│   ├── css/             site.css, theme.css
 │   ├── images/          Logos
 │   └── uploads/         Runtime-uploaded photos (git-ignored)
 ├── appsettings.json              Config with a password placeholder (committed)
@@ -159,13 +113,21 @@ ynclino-apartment-management-system/
 
 ---
 
-## Notes for the team
+## Deployment
+
+To host this online for the landlord, deploy the ASP.NET Core app to a host that
+also provides a MySQL database (e.g. a free ASP.NET + MySQL host such as
+MonsterASP.NET, or a container host). Publish a Release build, set the production
+connection string via the host's environment/`appsettings` (never commit real
+credentials), and the schema is created automatically on first run.
+
+---
+
+## Notes
 
 - **Never commit your database password.** It belongs only in
-  `appsettings.Local.json` (git-ignored). If you accidentally commit it, change
-  your MySQL password and remove it from the tracked file.
-- Uploaded photos are stored under `wwwroot/uploads/` and are git-ignored, so
-  they stay on each person's machine.
+  `appsettings.Local.json` (git-ignored).
+- Uploaded photos are stored under `wwwroot/uploads/` and are git-ignored.
 
 ---
 

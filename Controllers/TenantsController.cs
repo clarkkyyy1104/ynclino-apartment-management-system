@@ -1,7 +1,6 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using YnclinoApartmentManagementSystem.Data;
 using YnclinoApartmentManagementSystem.Helpers;
@@ -30,19 +29,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
         private int? CurrentUserID() =>
             int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int id) ? id : null;
 
-        // Re-derive a unit's occupancy from its active tenants: the unit only
-        // reads "Occupied" once it is at full capacity, so partially filled
-        // bedspacers stay available. A unit under maintenance keeps that
-        // status until an admin clears it by hand.
-        private async Task SyncUnitStatusAsync(int unitId)
-        {
-            var unit = await _context.tblUnits.FindAsync(unitId);
-            if (unit == null || unit.Status == "Under Maintenance") return;
-
-            int active = await _context.tblTenants.CountAsync(t => t.UnitID == unitId && t.Status == "Active");
-            unit.Status = active >= unit.Capacity ? "Occupied" : "Vacant";
-        }
-
         // school-style login username: [2-digit year]-[2-digit month] + the uppercase
         // initials of the first and last name, e.g. Ana Cruz in July 2026 -> "26-07AC"
         private static string GenerateUsername(string firstName, string lastName)
@@ -56,7 +42,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Index(string? statusFilter, string? searchTerm)
         {
-            var query = _context.tblTenants.Include(t => t.Unit).Include(t => t.User).AsQueryable();
+            var query = _context.tblTenants.Include(t => t.User).AsQueryable();
 
             // default view is Active; "All" is an explicit choice that skips filtering
             statusFilter ??= "Active";
@@ -80,7 +66,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (id == null) return NotFound();
 
             var tenant = await _context.tblTenants
-                .Include(t => t.Unit)
                 .Include(t => t.User)
                 .FirstOrDefaultAsync(t => t.TenantID == id);
 
@@ -95,13 +80,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
         // GET: Tenants/Create
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Create()
+        public IActionResult Create()
         {
-            var vm = new TenantViewModel
-            {
-                AvailableUnits = await GetAvailableUnitsAsync()
-            };
-            return View(vm);
+            return View(new TenantViewModel());
         }
 
         // POST: Tenants/Create
@@ -136,24 +117,12 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (string.IsNullOrWhiteSpace(vm.Password))
                 ModelState.AddModelError("Password", "Password is required. Enter a password or fill in Contact Number and Name.");
 
-            // the posted unit must exist and still have room
-            var unit = await _context.tblUnits.FindAsync(vm.UnitID);
-            if (unit == null)
-                ModelState.AddModelError("UnitID", "Select a valid unit.");
-            else if (unit.Status == "Under Maintenance")
-                ModelState.AddModelError("UnitID", "That unit is under maintenance and cannot take tenants.");
-            else if (await ActiveTenantCountAsync(unit.UnitID) >= unit.Capacity)
-                ModelState.AddModelError("UnitID", "That unit is already at full capacity.");
-
             // flag an obvious duplicate registration
             if (await IsDuplicateTenantAsync(vm.FirstName, vm.LastName, vm.ContactNumber, null))
                 ModelState.AddModelError(string.Empty, "An active tenant with the same name and contact number already exists.");
 
             if (!ModelState.IsValid)
-            {
-                vm.AvailableUnits = await GetAvailableUnitsAsync();
                 return View(vm);
-            }
 
             // create the login account and tenant together so a failure leaves neither behind
             var user = new tblUser
@@ -169,7 +138,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var tenant = new tblTenant
             {
                 User = user,
-                UnitID = vm.UnitID,
                 FirstName = vm.FirstName,
                 LastName = vm.LastName,
                 ContactNumber = vm.ContactNumber,
@@ -180,10 +148,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 DateRecorded = DateTime.Now
             };
             _context.tblTenants.Add(tenant);
-            await _context.SaveChangesAsync();
-
-            // a unit only reads "Occupied" once it's full
-            await SyncUnitStatusAsync(vm.UnitID);
             await _context.SaveChangesAsync();
 
             TempData["Success"] = $"Tenant {tenant.FullName} has been registered with account '{user.Username}'.";
@@ -211,7 +175,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 TenantID = tenant.TenantID,
                 UserID = tenant.UserID,
                 Username = linkedUser?.Username,
-                UnitID = tenant.UnitID,
                 FirstName = tenant.FirstName,
                 LastName = tenant.LastName,
                 ContactNumber = tenant.ContactNumber,
@@ -219,8 +182,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 EmergencyContactRelationship = tenant.EmergencyContactRelationship,
                 EmergencyContactNumber = tenant.EmergencyContactNumber,
                 MoveOutDate = tenant.MoveOutDate,
-                Status = tenant.Status,
-                AvailableUnits = await GetAllUnitsAsync()
+                Status = tenant.Status
             };
             return View(vm);
         }
@@ -248,39 +210,14 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (!ModelState.IsValid)
             {
                 ViewBag.IsMainAdmin = isMainAdmin;
-                vm.AvailableUnits = await GetAllUnitsAsync();
                 return View(vm);
             }
 
             var tenant = await _context.tblTenants.FindAsync(id);
             if (tenant == null) return NotFound();
 
-            int previousUnitID = tenant.UnitID;
             string previousStatus = tenant.Status;
             bool becomingActive = vm.Status == "Active";
-
-            // when the tenant is (or is becoming) active, the target unit must be valid and have room
-            if (becomingActive)
-            {
-                var targetUnit = await _context.tblUnits.FindAsync(vm.UnitID);
-                if (targetUnit == null)
-                    ModelState.AddModelError("UnitID", "Select a valid unit.");
-                else
-                {
-                    int activeInTarget = await ActiveTenantCountAsync(vm.UnitID, excludeTenantId: id);
-                    if (targetUnit.Status == "Under Maintenance")
-                        ModelState.AddModelError("UnitID", "That unit is under maintenance and cannot take tenants.");
-                    else if (activeInTarget >= targetUnit.Capacity)
-                        ModelState.AddModelError("UnitID", "That unit is already at full capacity.");
-                }
-            }
-
-            if (!ModelState.IsValid)
-            {
-                ViewBag.IsMainAdmin = isMainAdmin;
-                vm.AvailableUnits = await GetAllUnitsAsync();
-                return View(vm);
-            }
 
             // the username must be free (ignoring this tenant's own account)
             bool duplicateUsername = await _context.tblUsers
@@ -289,7 +226,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             {
                 ModelState.AddModelError("Username", "Username already exists.");
                 ViewBag.IsMainAdmin = isMainAdmin;
-                vm.AvailableUnits = await GetAllUnitsAsync();
                 return View(vm);
             }
 
@@ -326,7 +262,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 tenant.User = newUser;
             }
 
-            tenant.UnitID = vm.UnitID;
             tenant.FirstName = vm.FirstName;
             tenant.LastName = vm.LastName;
             tenant.ContactNumber = vm.ContactNumber;
@@ -344,12 +279,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             await _context.SaveChangesAsync();
 
-            // re-derive occupancy for both the old and the new unit
-            await SyncUnitStatusAsync(previousUnitID);
-            if (previousUnitID != vm.UnitID)
-                await SyncUnitStatusAsync(vm.UnitID);
-            await _context.SaveChangesAsync();
-
             TempData["Success"] = $"Tenant {tenant.FullName} has been updated.";
             return RedirectToAction(nameof(Index));
         }
@@ -361,7 +290,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (id == null) return NotFound();
 
             var tenant = await _context.tblTenants
-                .Include(t => t.Unit)
                 .FirstOrDefaultAsync(t => t.TenantID == id);
 
             if (tenant == null) return NotFound();
@@ -389,18 +317,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             await _context.SaveChangesAsync();
 
-            await SyncUnitStatusAsync(tenant.UnitID);
-            await _context.SaveChangesAsync();
-
             TempData["Success"] = $"Tenant {tenant.FullName} has been set to Inactive.";
             return RedirectToAction(nameof(Index));
         }
-
-        private Task<int> ActiveTenantCountAsync(int unitId, int? excludeTenantId = null) =>
-            _context.tblTenants.CountAsync(t =>
-                t.UnitID == unitId &&
-                t.Status == "Active" &&
-                (excludeTenantId == null || t.TenantID != excludeTenantId));
 
         private Task<bool> IsDuplicateTenantAsync(string firstName, string lastName, string? contact, int? excludeTenantId) =>
             _context.tblTenants.AnyAsync(t =>
@@ -409,32 +328,5 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 t.LastName == lastName &&
                 t.ContactNumber == contact &&
                 (excludeTenantId == null || t.TenantID != excludeTenantId));
-
-        // units that aren't under maintenance and still have a free slot
-        private async Task<IEnumerable<SelectListItem>> GetAvailableUnitsAsync()
-        {
-            return await _context.tblUnits
-                .Where(u => u.Status != "Under Maintenance"
-                            && u.Tenants.Count(t => t.Status == "Active") < u.Capacity)
-                .OrderBy(u => u.UnitNumber)
-                .Select(u => new SelectListItem
-                {
-                    Value = u.UnitID.ToString(),
-                    Text = $"{u.UnitNumber} — {u.UnitType} (₱{u.RentPrice:N2})"
-                })
-                .ToListAsync();
-        }
-
-        private async Task<IEnumerable<SelectListItem>> GetAllUnitsAsync()
-        {
-            return await _context.tblUnits
-                .OrderBy(u => u.UnitNumber)
-                .Select(u => new SelectListItem
-                {
-                    Value = u.UnitID.ToString(),
-                    Text = $"{u.UnitNumber} — {u.UnitType} (₱{u.RentPrice:N2}) [{u.Status}]"
-                })
-                .ToListAsync();
-        }
     }
 }

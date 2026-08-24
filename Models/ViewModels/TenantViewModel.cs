@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace YnclinoApartmentManagementSystem.Models.ViewModels
 {
@@ -25,10 +24,6 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         [Compare(nameof(Password), ErrorMessage = "Passwords do not match.")]
         [Display(Name = "Confirm Password")]
         public string? ConfirmPassword { get; set; }
-
-        [Required(ErrorMessage = "Unit is required.")]
-        [Display(Name = "Unit")]
-        public int UnitID { get; set; }
 
         [Required(ErrorMessage = "First Name is required.")]
         [MaxLength(50)]
@@ -82,9 +77,5 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         public string Status { get; set; } = "Active";
 
         public string FullName => $"{FirstName} {LastName}";
-
-        public string? UnitNumber { get; set; }
-
-        public IEnumerable<SelectListItem> AvailableUnits { get; set; } = new List<SelectListItem>();
     }
 }
