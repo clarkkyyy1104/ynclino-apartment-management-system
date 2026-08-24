@@ -1,7 +1,7 @@
-/* ── Ynclino AMS Global Styles ── */
+/* ── BKS Apartment Global Styles ── */
 
 body {
-    background-color: #f5f7fa;
+    background-color: #f7f4ef;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -160,12 +160,12 @@ a.hover-lift {
 
 /* ── Dashboard — tenant module links ── */
 .tenant-module-link {
-    border: 1px solid #e9ecef;
+    border: 1px solid #ece4da;
     transition: background-color .12s ease;
 }
 
 .tenant-module-link:hover {
-    background-color: #f0f4ff !important;
+    background-color: #fdefe3 !important;
 }
 
 /* ── Info list (dl/dt/dd) ── */
@@ -186,6 +186,10 @@ a.hover-lift {
 /* ── Password field wrapper ── */
 .pw-wrapper {
     position: relative;
+}
+
+.pw-wrapper .form-control {
+    padding-right: 2.5rem;
 }
 
 .pw-toggle {
@@ -258,8 +262,8 @@ a.hover-lift {
 
 /* rounded panels for the Contact Number / Emergency Contact pair on the tenant form */
 .contact-box {
-    border: 1px solid #e2e8f0;
+    border: 1px solid #ece4da;
     border-radius: 12px;
     padding: 14px 16px;
-    background: #fff;
+    background: #fdfbf8;
 }

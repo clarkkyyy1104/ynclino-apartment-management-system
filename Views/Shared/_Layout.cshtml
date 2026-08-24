@@ -5,31 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] — BKS Apartment</title>
     <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" />
-    <style>
-        /* show/hide password toggle placed inside the input */
-        .pw-wrapper { position: relative; }
-        .pw-wrapper .form-control { padding-right: 2.5rem; }
-        .pw-toggle {
-            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-            background: none; border: none; padding: 2px 4px; color: #6c757d;
-            cursor: pointer; line-height: 1; z-index: 5; display: inline-flex; align-items: center;
-        }
-        .pw-toggle:hover { color: #343a40; }
-        /* password-rules checklist */
-        .pw-rules { margin-top: .4rem; padding: .5rem .75rem; background: #f8f9fa; border-radius: .375rem; border: 1px solid #e9ecef; }
-        .pw-rules li { color: #6c757d; padding: .15rem 0; display: flex; align-items: center; gap: .4rem; }
-        .pw-rules li.rule-pass { color: #198754; }
-        .pw-rules li.rule-fail { color: #dc3545; }
-        .pw-rules .rule-icon { display: inline-flex; align-items: center; flex-shrink: 0; }
-        .shake { animation: shake .5s ease; }
-        @@keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20% { transform: translateX(-6px); }
-            40% { transform: translateX(6px); }
-            60% { transform: translateX(-4px); }
-            80% { transform: translateX(4px); }
-        }
-    </style>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/theme.css" asp-append-version="true" />
 </head>
 <body>
 @{

@@ -10,15 +10,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login — BKS Apartment</title>
     <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/theme.css" asp-append-version="true" />
+    <style>
+        body.login-page {
+            min-height: 100vh;
+            background:
+                radial-gradient(1100px 520px at 50% -12%, #fff1e2 0%, rgba(255,241,226,0) 60%),
+                var(--bks-page);
+        }
+        .login-card { border-top: 4px solid var(--bks-orange); }
+        .login-badge {
+            width: 56px; height: 56px; border-radius: 16px;
+            background: var(--bks-orange); box-shadow: 0 8px 20px rgba(240,128,46,.42);
+            display: inline-flex; align-items: center; justify-content: center; color: #fff;
+        }
+    </style>
 </head>
-<body class="bg-body-tertiary">
+<body class="login-page">
     <div class="container" style="max-width:420px;">
         <div class="mt-5 mb-4 text-center">
+            <div class="login-badge mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.707L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.646a.5.5 0 0 0 .708-.707L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z"/>
+                </svg>
+            </div>
             <h4 class="fw-semibold mb-0">BKS Apartment</h4>
             <p class="text-muted small mb-0">Please sign in to your account</p>
         </div>
 
-        <div class="card shadow-sm">
+        <div class="card shadow-sm login-card">
             <div class="card-body p-4">
                 <form asp-action="Login" method="post">
                     <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
