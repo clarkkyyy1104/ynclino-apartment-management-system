@@ -325,7 +325,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
                     BillingID = billing.BillingID,
                     Amount = paidNow,
                     DatePaid = DateTime.Today,   // always the day it was encoded
-                    Method = string.IsNullOrWhiteSpace(vm.PaymentMethod) ? "Cash" : vm.PaymentMethod,
                     Remarks = vm.PaymentRemarks,
                     RecordedAt = DateTime.Now
                 });

@@ -81,7 +81,7 @@
                                 <label asp-for="PaymentAmount" class="form-label fw-semibold small"></label>
                                 <div class="input-group">
                                     <span class="input-group-text">₱</span>
-                                    <input asp-for="PaymentAmount" type="number" min="1000" step="1000"
+                                    <input asp-for="PaymentAmount" type="number" min="0" step="1000"
                                            max="@Model.Balance" class="form-control"
                                            placeholder="— leave blank if none" />
                                 </div>
