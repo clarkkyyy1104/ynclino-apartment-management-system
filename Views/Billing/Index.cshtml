@@ -73,8 +73,8 @@
                         }
                     </td>
                     <td>@b.DueDate.ToString("MMM dd, yyyy")</td>
-                    <td>₱@b.Deposit.ToString("N2")</td>
-                    <td>₱@b.Advance.ToString("N2")</td>
+                    <td>₱@((b.Tenant?.Unit?.Deposit ?? 0m).ToString("N2"))</td>
+                    <td>₱@((b.Tenant?.Unit?.AdvancePayment ?? 0m).ToString("N2"))</td>
                     <td>₱@((b.AmountDue - b.Deposit - b.Advance).ToString("N2"))</td>
                     <td>₱@((b.AmountDue - (b.AmountPaid ?? 0m)).ToString("N2"))</td>
                     <td>@(b.AmountPaid.HasValue ? "₱" + b.AmountPaid.Value.ToString("N2") : "—")</td>
