@@ -109,6 +109,34 @@ using (var scope = app.Services.CreateScope())
         db.SaveChanges();
     }
 
+    // seed the initial tenant list (names + monthly rent) the first time the app
+    // runs. Runs only when there are no tenants yet, so it never duplicates and
+    // the admin can freely edit/add/remove tenants afterwards.
+    if (!db.tblTenants.Any())
+    {
+        var seededAt = DateTime.Now;
+        void SeedTenant(string name, decimal rent) =>
+            db.tblTenants.Add(new tblTenant { Name = name, MonthlyRent = rent, Status = "Active", DateRecorded = seededAt });
+
+        SeedTenant("4 Students", 4000m);
+        SeedTenant("Crime", 3500m);
+        SeedTenant("Christine", 3500m);
+        SeedTenant("Vincent", 3500m);
+        SeedTenant("Raymund", 1300m);
+        SeedTenant("Vic", 2650m);
+        SeedTenant("Yadz Barber", 3000m);
+        SeedTenant("Andy", 4000m);
+        SeedTenant("John Alwayne", 1300m);
+        SeedTenant("John Vincent", 1400m);
+        SeedTenant("Clark", 3000m);
+        SeedTenant("Roy", 5000m);
+        SeedTenant("Jemboy", 1300m);
+        SeedTenant("John James", 1400m);
+        SeedTenant("Addrian", 1300m);
+        SeedTenant("Ching", 1300m);
+        db.SaveChanges();
+    }
+
     // one-off label migration for databases created by older versions of the app
     // (a fresh database has nothing to migrate, so this simply no-ops)
     try

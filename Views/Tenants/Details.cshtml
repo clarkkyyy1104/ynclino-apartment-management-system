@@ -18,8 +18,11 @@
                     </div>
                 }
                 <dl class="row">
-                    <dt class="col-sm-4">Full Name</dt>
-                    <dd class="col-sm-8">@Model.LastName, @Model.FirstName</dd>
+                    <dt class="col-sm-4">Name</dt>
+                    <dd class="col-sm-8">@Model.Name</dd>
+
+                    <dt class="col-sm-4">Monthly Rent</dt>
+                    <dd class="col-sm-8">₱@Model.MonthlyRent.ToString("N2")</dd>
 
                     <dt class="col-sm-4">Contact Number</dt>
                     <dd class="col-sm-8">@(Model.ContactNumber ?? "—")</dd>

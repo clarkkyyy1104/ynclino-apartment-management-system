@@ -6,17 +6,14 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
     {
         public int TenantID { get; set; }
 
-        [Required(ErrorMessage = "First Name is required.")]
-        [MaxLength(50)]
-        [RegularExpression(@"^[A-Za-zñÑ .'-]+$", ErrorMessage = "First Name may not contain numbers.")]
-        [Display(Name = "First Name")]
-        public string FirstName { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Name is required.")]
+        [MaxLength(100)]
+        [Display(Name = "Name")]
+        public string Name { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Last Name is required.")]
-        [MaxLength(50)]
-        [RegularExpression(@"^[A-Za-zñÑ .'-]+$", ErrorMessage = "Last Name may not contain numbers.")]
-        [Display(Name = "Last Name")]
-        public string LastName { get; set; } = string.Empty;
+        [Range(0, 9999999.99, ErrorMessage = "Enter a valid rent amount.")]
+        [Display(Name = "Monthly Rent")]
+        public decimal MonthlyRent { get; set; }
 
         [MaxLength(20)]
         [RegularExpression(@"^[0-9]{7,15}$", ErrorMessage = "Contact Number must contain digits only (7–15 digits).")]
@@ -24,7 +21,6 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         public string? ContactNumber { get; set; }
 
         [MaxLength(100)]
-        [RegularExpression(@"^[A-Za-zñÑ .'-]+$", ErrorMessage = "Emergency Contact Name may not contain numbers.")]
         [Display(Name = "Emergency Contact Name")]
         public string? EmergencyContactName { get; set; }
 
@@ -49,6 +45,6 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         [MaxLength(20)]
         public string Status { get; set; } = "Active";
 
-        public string FullName => $"{FirstName} {LastName}";
+        public string FullName => Name;
     }
 }

@@ -8,13 +8,13 @@ namespace YnclinoApartmentManagementSystem.Models
         [Key]
         public int TenantID { get; set; }
 
-        [Required, MaxLength(50)]
-        [Display(Name = "First Name")]
-        public string FirstName { get; set; } = string.Empty;
+        [Required, MaxLength(100)]
+        [Display(Name = "Name")]
+        public string Name { get; set; } = string.Empty;
 
-        [Required, MaxLength(50)]
-        [Display(Name = "Last Name")]
-        public string LastName { get; set; } = string.Empty;
+        [Column(TypeName = "decimal(10,2)")]
+        [Display(Name = "Monthly Rent")]
+        public decimal MonthlyRent { get; set; }
 
         [MaxLength(20)]
         [Display(Name = "Contact Number")]
@@ -38,12 +38,6 @@ namespace YnclinoApartmentManagementSystem.Models
         [Display(Name = "Move-Out Date")]
         public DateTime? MoveOutDate { get; set; }
 
-        [Display(Name = "Lease Start")]
-        public DateTime? LeaseStart { get; set; }
-
-        [Display(Name = "Lease End")]
-        public DateTime? LeaseEnd { get; set; }
-
         [Required, MaxLength(20)]
         public string Status { get; set; } = "Active"; // Active | Inactive
 
@@ -54,7 +48,8 @@ namespace YnclinoApartmentManagementSystem.Models
         [MaxLength(300)]
         public string? PhotoPath { get; set; }
 
+        // kept as an alias so existing views that use FullName keep working
         [NotMapped]
-        public string FullName => $"{FirstName} {LastName}";
+        public string FullName => Name;
     }
 }

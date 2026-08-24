@@ -28,12 +28,12 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 query = query.Where(t => t.Status == statusFilter);
 
             if (!string.IsNullOrEmpty(searchTerm))
-                query = query.Where(t => t.FirstName.Contains(searchTerm) || t.LastName.Contains(searchTerm));
+                query = query.Where(t => t.Name.Contains(searchTerm));
 
             ViewBag.StatusFilter = statusFilter;
             ViewBag.SearchTerm = searchTerm;
 
-            var tenants = await query.OrderBy(t => t.LastName).ThenBy(t => t.FirstName).ToListAsync();
+            var tenants = await query.OrderBy(t => t.Name).ToListAsync();
             return View(tenants);
         }
 
@@ -59,7 +59,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(TenantViewModel vm)
         {
-            if (await IsDuplicateTenantAsync(vm.FirstName, vm.LastName, vm.ContactNumber, null))
+            if (await IsDuplicateTenantAsync(vm.Name, vm.ContactNumber, null))
                 ModelState.AddModelError(string.Empty, "An active tenant with the same name and contact number already exists.");
 
             if (!ModelState.IsValid)
@@ -67,8 +67,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             var tenant = new tblTenant
             {
-                FirstName = vm.FirstName,
-                LastName = vm.LastName,
+                Name = vm.Name,
+                MonthlyRent = vm.MonthlyRent,
                 ContactNumber = vm.ContactNumber,
                 EmergencyContactName = vm.EmergencyContactName,
                 EmergencyContactRelationship = vm.EmergencyContactRelationship,
@@ -95,8 +95,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var vm = new TenantViewModel
             {
                 TenantID = tenant.TenantID,
-                FirstName = tenant.FirstName,
-                LastName = tenant.LastName,
+                Name = tenant.Name,
+                MonthlyRent = tenant.MonthlyRent,
                 ContactNumber = tenant.ContactNumber,
                 EmergencyContactName = tenant.EmergencyContactName,
                 EmergencyContactRelationship = tenant.EmergencyContactRelationship,
@@ -122,8 +122,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
             string previousStatus = tenant.Status;
             bool becomingActive = vm.Status == "Active";
 
-            tenant.FirstName = vm.FirstName;
-            tenant.LastName = vm.LastName;
+            tenant.Name = vm.Name;
+            tenant.MonthlyRent = vm.MonthlyRent;
             tenant.ContactNumber = vm.ContactNumber;
             tenant.EmergencyContactName = vm.EmergencyContactName;
             tenant.EmergencyContactRelationship = vm.EmergencyContactRelationship;
@@ -169,11 +169,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        private Task<bool> IsDuplicateTenantAsync(string firstName, string lastName, string? contact, int? excludeTenantId) =>
+        private Task<bool> IsDuplicateTenantAsync(string name, string? contact, int? excludeTenantId) =>
             _context.tblTenants.AnyAsync(t =>
                 t.Status == "Active" &&
-                t.FirstName == firstName &&
-                t.LastName == lastName &&
+                t.Name == name &&
                 t.ContactNumber == contact &&
                 (excludeTenantId == null || t.TenantID != excludeTenantId));
     }

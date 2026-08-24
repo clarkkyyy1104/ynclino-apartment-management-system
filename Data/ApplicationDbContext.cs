@@ -29,8 +29,7 @@ namespace YnclinoApartmentManagementSystem.Data
             modelBuilder.Entity<tblTenant>(entity =>
             {
                 entity.HasKey(e => e.TenantID);
-                entity.Property(e => e.FirstName).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.LastName).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.ContactNumber).HasMaxLength(20);
                 entity.Property(e => e.EmergencyContactName).HasMaxLength(100);
                 entity.Property(e => e.EmergencyContactRelationship).HasMaxLength(50);

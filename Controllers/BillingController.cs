@@ -59,9 +59,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 query = query.Where(b => b.Status == statusFilter);
 
             if (!string.IsNullOrEmpty(searchTerm))
-                query = query.Where(b =>
-                    b.Tenant!.FirstName.Contains(searchTerm) ||
-                    b.Tenant!.LastName.Contains(searchTerm));
+                query = query.Where(b => b.Tenant!.Name.Contains(searchTerm));
 
             ViewBag.StatusFilter = statusFilter;
             ViewBag.SearchTerm = searchTerm;
@@ -226,11 +224,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             return await _context.tblTenants
                 .Where(t => t.Status == "Active")
-                .OrderBy(t => t.LastName)
+                .OrderBy(t => t.Name)
                 .Select(t => new SelectListItem
                 {
                     Value = t.TenantID.ToString(),
-                    Text = $"{t.LastName}, {t.FirstName}"
+                    Text = t.MonthlyRent > 0 ? $"{t.Name} — ₱{t.MonthlyRent:N0}/mo" : t.Name
                 })
                 .ToListAsync();
         }
@@ -240,11 +238,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             return await _context.tblTenants
                 .Where(t => t.Status == "Active" || t.TenantID == currentTenantId)
-                .OrderBy(t => t.LastName)
+                .OrderBy(t => t.Name)
                 .Select(t => new SelectListItem
                 {
                     Value = t.TenantID.ToString(),
-                    Text = $"{t.LastName}, {t.FirstName}"
+                    Text = t.MonthlyRent > 0 ? $"{t.Name} — ₱{t.MonthlyRent:N0}/mo" : t.Name
                 })
                 .ToListAsync();
         }
