@@ -62,11 +62,13 @@
                         </div>
                     </div>
 
-                    @if (Model.Balance <= 0)
+                    @if (Model.Deposit > 0 || Model.Advance > 0)
                     {
-                        <div class="alert alert-success py-2 small mb-3">
-                            This bill is fully settled — no further payment is needed.
-                        </div>
+                        <p class="form-text mt-0 mb-3">
+                            This bill includes a <strong>₱@Model.Deposit.ToString("N2")</strong> deposit
+                            (held until the tenant moves out) and
+                            <strong>₱@Model.Advance.ToString("N2")</strong> advance payment.
+                        </p>
                     }
                     else
                     {
@@ -81,7 +83,7 @@
                                 <label asp-for="PaymentAmount" class="form-label fw-semibold small"></label>
                                 <div class="input-group">
                                     <span class="input-group-text">₱</span>
-                                    <input asp-for="PaymentAmount" type="number" min="0" step="1000"
+                                    <input asp-for="PaymentAmount" type="number" min="0" step="1"
                                            max="@Model.Balance" class="form-control"
                                            placeholder="— leave blank if none" />
                                 </div>

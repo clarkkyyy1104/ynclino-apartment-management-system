@@ -237,6 +237,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 BillingID = billing.BillingID,
                 TenantID = billing.TenantID,
                 TenantName = billing.Tenant?.FullName,
+                Deposit = billing.Deposit,
+                Advance = billing.Advance,
                 BillingPeriod = billing.BillingPeriod,
                 AmountDue = billing.AmountDue,
                 DueDate = billing.DueDate,

@@ -64,6 +64,10 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         public string? PaymentRemarks { get; set; }
 
         // running totals shown on the form (never typed by the admin)
+        // shown read-only on the Update form so the deposit stays visible
+        public decimal Deposit { get; set; }
+        public decimal Advance { get; set; }
+
         public decimal TotalPaid { get; set; }
         public decimal Balance => AmountDue - TotalPaid;
 
