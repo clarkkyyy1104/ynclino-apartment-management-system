@@ -57,17 +57,11 @@
                         </span>
                     </dd>
 
-                    <dt class="col-sm-4">Login Account</dt>
-                    <dd class="col-sm-8">
-                        @if (Model.User != null)
-                        {
-                            @Model.User.Username
-                        }
-                        else
-                        {
-                            <span class="text-muted">No account</span>
-                        }
-                    </dd>
+                    @if (Model.MoveInDate.HasValue)
+                    {
+                        <dt class="col-sm-4">Move-In Date</dt>
+                        <dd class="col-sm-8">@Model.MoveInDate.Value.ToString("MMMM dd, yyyy")</dd>
+                    }
 
                     <dt class="col-sm-4">Date Recorded</dt>
                     <dd class="col-sm-8">@Model.DateRecorded.ToString("MMMM dd, yyyy")</dd>

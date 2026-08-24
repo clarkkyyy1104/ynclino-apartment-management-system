@@ -109,18 +109,10 @@ using (var scope = app.Services.CreateScope())
         db.SaveChanges();
     }
 
-    // one-off label migrations for databases created by older versions of the app
-    // (a fresh database has nothing to migrate, so these simply no-op)
+    // one-off label migration for databases created by older versions of the app
+    // (a fresh database has nothing to migrate, so this simply no-ops)
     try
     {
-        // maintenance priorities: Low->Minor, Medium->Moderate, High->Major; Urgent kept
-        if (db.tblMaintenanceRequests.Any(m => m.Priority == "Low" || m.Priority == "Medium" || m.Priority == "High"))
-        {
-            db.tblMaintenanceRequests.Where(m => m.Priority == "Low").ExecuteUpdate(s => s.SetProperty(m => m.Priority, "Minor"));
-            db.tblMaintenanceRequests.Where(m => m.Priority == "Medium").ExecuteUpdate(s => s.SetProperty(m => m.Priority, "Moderate"));
-            db.tblMaintenanceRequests.Where(m => m.Priority == "High").ExecuteUpdate(s => s.SetProperty(m => m.Priority, "Major"));
-        }
-
         // billing status: the old "Overdue" is now "Late"
         if (db.tblBillings.Any(b => b.Status == "Overdue"))
             db.tblBillings.Where(b => b.Status == "Overdue").ExecuteUpdate(s => s.SetProperty(b => b.Status, "Late"));

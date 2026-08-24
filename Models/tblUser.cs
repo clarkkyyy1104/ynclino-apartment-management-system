@@ -21,7 +21,5 @@ namespace YnclinoApartmentManagementSystem.Models
         public bool IsMainAdmin { get; set; } = false;
 
         public DateTime DateCreated { get; set; } = DateTime.Now;
-
-        public ICollection<tblTenant> Tenants { get; set; } = new List<tblTenant>();
     }
 }

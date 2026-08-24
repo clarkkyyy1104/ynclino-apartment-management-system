@@ -1,29 +1,18 @@
 @model IEnumerable<YnclinoApartmentManagementSystem.Models.tblBilling>
 @{
     ViewData["Title"] = "Billing & Payment";
-    bool isAdmin = User.IsInRole("Admin");
-    var unreadIds = ViewBag.UnreadIds as HashSet<int> ?? new HashSet<int>();
-    var readIds = ViewBag.ReadIds as HashSet<int> ?? new HashSet<int>();
 }
-
-@await Component.InvokeAsync("ModuleNotifications", new { module = "Billing" })
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3 class="fw-bold mb-0">Billing &amp; Payment</h3>
-    @if (isAdmin)
-    {
-        <a asp-action="Create" class="btn btn-primary">+ Issue Bill</a>
-    }
+    <a asp-action="Create" class="btn btn-primary">+ Issue Bill</a>
 </div>
 
 <form method="get" class="row g-2 mb-4">
-    @if (isAdmin)
-    {
-        <div class="col-auto">
-            <input type="text" name="searchTerm" value="@ViewBag.SearchTerm"
-                   class="form-control" style="width:229px" placeholder="Search tenant name…" />
-        </div>
-    }
+    <div class="col-auto">
+        <input type="text" name="searchTerm" value="@ViewBag.SearchTerm"
+               class="form-control" style="width:229px" placeholder="Search tenant name…" />
+    </div>
     <div class="col-auto">
         <select name="statusFilter" class="form-select" style="width:229px" onchange="this.form.submit()">
             <option value="">All Statuses</option>
@@ -42,7 +31,7 @@
     <table class="table table-hover align-middle">
         <thead class="table-primary">
             <tr>
-                @if (isAdmin) { <th>Tenant</th> }
+                <th>Tenant</th>
                 <th>Billing Period</th>
                 <th>Amount Due</th>
                 <th>Due Date</th>
@@ -55,13 +44,8 @@
         <tbody>
             @foreach (var b in Model)
             {
-                var rowCls = unreadIds.Contains(b.BillingID) ? "fw-bold text-dark"
-                             : readIds.Contains(b.BillingID) ? "text-secondary" : "";
-                <tr class="@rowCls">
-                    @if (isAdmin)
-                    {
-                        <td class="fw-semibold">@b.Tenant?.FullName</td>
-                    }
+                <tr>
+                    <td class="fw-semibold">@b.Tenant?.FullName</td>
                     <td>@b.BillingPeriod.ToString("MMMM yyyy")</td>
                     <td>₱@b.AmountDue.ToString("N2")</td>
                     <td>@b.DueDate.ToString("MMM dd, yyyy")</td>
@@ -80,17 +64,14 @@
                     </td>
                     <td>
                         <a asp-action="Details" asp-route-id="@b.BillingID" class="btn btn-sm btn-outline-info">Details</a>
-                        @if (isAdmin)
-                        {
-                            <a asp-action="Edit" asp-route-id="@b.BillingID" class="btn btn-sm btn-outline-primary">Edit</a>
-                            <a asp-action="Delete" asp-route-id="@b.BillingID" class="btn btn-sm btn-outline-danger">Delete</a>
-                        }
+                        <a asp-action="Edit" asp-route-id="@b.BillingID" class="btn btn-sm btn-outline-primary">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@b.BillingID" class="btn btn-sm btn-outline-danger">Delete</a>
                     </td>
                 </tr>
             }
             @if (!Model.Any())
             {
-                <tr><td colspan="@(isAdmin ? 8 : 7)" class="text-center text-muted py-4">No billing records found.</td></tr>
+                <tr><td colspan="8" class="text-center text-muted py-4">No billing records found.</td></tr>
             }
         </tbody>
     </table>

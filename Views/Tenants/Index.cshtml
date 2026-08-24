@@ -29,7 +29,6 @@
     <table class="table table-hover align-middle">
         <thead class="table-primary">
             <tr>
-                <th>Username (ID)</th>
                 <th>Name</th>
                 <th>Contact</th>
                 <th>Status</th>
@@ -40,7 +39,6 @@
             @foreach (var tenant in Model)
             {
                 <tr>
-                    <td>@(tenant.User?.Username ?? "—")</td>
                     <td class="fw-semibold">@tenant.LastName, @tenant.FirstName</td>
                     <td>@(tenant.ContactNumber ?? "—")</td>
                     <td>
@@ -50,13 +48,14 @@
                     </td>
                     <td>
                         <a asp-action="Details" asp-route-id="@tenant.TenantID" class="btn btn-sm btn-outline-info">Details</a>
+                        <a asp-action="Edit" asp-route-id="@tenant.TenantID" class="btn btn-sm btn-outline-primary">Edit</a>
                     </td>
                 </tr>
             }
             @if (!Model.Any())
             {
                 <tr>
-                    <td colspan="5" class="text-center text-muted py-4">No tenants found.</td>
+                    <td colspan="4" class="text-center text-muted py-4">No tenants found.</td>
                 </tr>
             }
         </tbody>

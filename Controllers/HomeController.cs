@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -7,7 +6,7 @@ using YnclinoApartmentManagementSystem.Models;
 
 namespace YnclinoApartmentManagementSystem.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public class HomeController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -19,26 +18,22 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
         public async Task<IActionResult> Index()
         {
-            if (User.IsInRole("Admin"))
-            {
-                ViewBag.ActiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Active");
-                ViewBag.InactiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Inactive");
-                ViewBag.TotalUsers = await _context.tblUsers.CountAsync(u => u.IsActive);
-                return View("AdminDashboard");
-            }
-            else
-            {
-                var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                tblTenant? tenant = null;
-                if (int.TryParse(userIdStr, out int userId))
-                {
-                    tenant = await _context.tblTenants
-                        .FirstOrDefaultAsync(t => t.UserID == userId && t.Status == "Active");
-                }
-                return View("TenantDashboard", tenant);
-            }
+            ViewBag.ActiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Active");
+            ViewBag.InactiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Inactive");
+
+            // outstanding = bills that aren't paid in full
+            var outstanding = await _context.tblBillings
+                .Where(b => b.AmountPaid == null || b.AmountPaid < b.AmountDue)
+                .Select(b => new { b.AmountDue, b.AmountPaid })
+                .ToListAsync();
+
+            ViewBag.OutstandingCount = outstanding.Count;
+            ViewBag.OutstandingTotal = outstanding.Sum(b => b.AmountDue - (b.AmountPaid ?? 0m));
+
+            return View("AdminDashboard");
         }
 
+        [AllowAnonymous]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {

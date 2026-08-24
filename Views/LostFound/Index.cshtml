@@ -1,12 +1,7 @@
 @model IEnumerable<YnclinoApartmentManagementSystem.Models.tblLostFoundItem>
 @{
     ViewData["Title"] = "Lost & Found";
-    bool isAdmin = User.IsInRole("Admin");
-    var unreadIds = ViewBag.UnreadIds as HashSet<int> ?? new HashSet<int>();
-    var readIds = ViewBag.ReadIds as HashSet<int> ?? new HashSet<int>();
 }
-
-@await Component.InvokeAsync("ModuleNotifications", new { module = "LostFound" })
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3 class="fw-bold mb-0">Lost &amp; Found</h3>
@@ -29,7 +24,6 @@
         <select name="statusFilter" class="form-select" style="width:229px" onchange="this.form.submit()">
             <option value="">All Statuses</option>
             <option value="Reported"  selected="@(ViewBag.StatusFilter == "Reported")">Reported</option>
-            <option value="Claimed"   selected="@(ViewBag.StatusFilter == "Claimed")">Claimed</option>
             <option value="Resolved"  selected="@(ViewBag.StatusFilter == "Resolved")">Resolved</option>
         </select>
     </div>
@@ -45,7 +39,6 @@
                 <th>Category</th>
                 <th>Item Name</th>
                 <th>Location</th>
-                <th>Reported By</th>
                 <th>Date Reported</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -54,9 +47,7 @@
         <tbody>
             @foreach (var item in Model)
             {
-                var rowCls = unreadIds.Contains(item.ItemID) ? "fw-bold text-dark"
-                             : readIds.Contains(item.ItemID) ? "text-secondary" : "";
-                <tr class="@rowCls">
+                <tr>
                     <td>
                         <span class="badge @(item.ItemType == "Lost" ? "bg-danger" : "bg-info text-dark")">
                             @item.ItemType
@@ -64,13 +55,11 @@
                     </td>
                     <td class="fw-semibold">@item.ItemName</td>
                     <td>@(item.Location ?? "—")</td>
-                    <td>@(item.ReportedBy?.Username ?? "—")</td>
                     <td>@item.DateReported.ToString("MMM dd, yyyy")</td>
                     <td>
                         @{
                             var sbadge = item.Status switch {
                                 "Resolved" => "bg-success",
-                                "Claimed"  => "bg-primary",
                                 _          => "bg-warning text-dark"
                             };
                         }
@@ -78,22 +67,14 @@
                     </td>
                     <td>
                         <a asp-action="Details" asp-route-id="@item.ItemID" class="btn btn-sm btn-outline-info">Details</a>
-                        @if (!isAdmin && item.ItemType == "Found" && item.Status == "Reported"
-                            && item.ReportedByUserID != (int?)ViewBag.CurrentUserID)
-                        {
-                            <a asp-action="Claim" asp-route-id="@item.ItemID" class="btn btn-sm btn-outline-success">Claim</a>
-                        }
-                        @if (isAdmin)
-                        {
-                            <a asp-action="Edit" asp-route-id="@item.ItemID" class="btn btn-sm btn-outline-primary">Edit</a>
-                            <a asp-action="Delete" asp-route-id="@item.ItemID" class="btn btn-sm btn-outline-danger">Delete</a>
-                        }
+                        <a asp-action="Edit" asp-route-id="@item.ItemID" class="btn btn-sm btn-outline-primary">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@item.ItemID" class="btn btn-sm btn-outline-danger">Delete</a>
                     </td>
                 </tr>
             }
             @if (!Model.Any())
             {
-                <tr><td colspan="7" class="text-center text-muted py-4">No items reported.</td></tr>
+                <tr><td colspan="6" class="text-center text-muted py-4">No items reported.</td></tr>
             }
         </tbody>
     </table>

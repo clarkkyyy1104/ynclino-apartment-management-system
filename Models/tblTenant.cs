@@ -8,8 +8,6 @@ namespace YnclinoApartmentManagementSystem.Models
         [Key]
         public int TenantID { get; set; }
 
-        public int? UserID { get; set; }
-
         [Required, MaxLength(50)]
         [Display(Name = "First Name")]
         public string FirstName { get; set; } = string.Empty;
@@ -52,12 +50,9 @@ namespace YnclinoApartmentManagementSystem.Models
         [Display(Name = "Date Recorded")]
         public DateTime DateRecorded { get; set; } = DateTime.Now;
 
-        // optional profile photo the tenant can upload
+        // optional tenant photo the admin can attach
         [MaxLength(300)]
         public string? PhotoPath { get; set; }
-
-        [ForeignKey("UserID")]
-        public tblUser? User { get; set; }
 
         [NotMapped]
         public string FullName => $"{FirstName} {LastName}";

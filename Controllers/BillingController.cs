@@ -1,16 +1,14 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using YnclinoApartmentManagementSystem.Data;
-using YnclinoApartmentManagementSystem.Helpers;
 using YnclinoApartmentManagementSystem.Models;
 using YnclinoApartmentManagementSystem.Models.ViewModels;
 
 namespace YnclinoApartmentManagementSystem.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public class BillingController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -18,16 +16,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
         public BillingController(ApplicationDbContext context)
         {
             _context = context;
-        }
-
-        private int? CurrentUserID() =>
-            int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int id) ? id : null;
-
-        private async Task<tblTenant?> GetCurrentTenantAsync()
-        {
-            var uid = CurrentUserID();
-            if (uid == null) return null;
-            return await _context.tblTenants.FirstOrDefaultAsync(t => t.UserID == uid && t.Status == "Active");
         }
 
         // the billing status is derived from how much has been paid and the due date:
@@ -45,11 +33,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // recompute the status of every not-fully-paid bill so "Late" stays current
-        private async Task RefreshStatusesAsync(int? tenantId = null)
+        private async Task RefreshStatusesAsync()
         {
             var open = await _context.tblBillings
-                .Where(b => (b.AmountPaid == null || b.AmountPaid < b.AmountDue)
-                            && (tenantId == null || b.TenantID == tenantId))
+                .Where(b => b.AmountPaid == null || b.AmountPaid < b.AmountDue)
                 .ToListAsync();
 
             bool changed = false;
@@ -66,16 +53,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             await RefreshStatusesAsync();
 
-            IQueryable<tblBilling> query = _context.tblBillings
-                .Include(b => b.Tenant);
-
-            // tenants only see their own bills
-            if (User.IsInRole("Tenant"))
-            {
-                var tenant = await GetCurrentTenantAsync();
-                if (tenant == null) return View(new List<tblBilling>());
-                query = query.Where(b => b.TenantID == tenant.TenantID);
-            }
+            IQueryable<tblBilling> query = _context.tblBillings.Include(b => b.Tenant);
 
             if (!string.IsNullOrEmpty(statusFilter))
                 query = query.Where(b => b.Status == statusFilter);
@@ -87,11 +65,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             ViewBag.StatusFilter = statusFilter;
             ViewBag.SearchTerm = searchTerm;
-            var uid = CurrentUserID();
-            ViewBag.UnreadIds = uid == null ? new HashSet<int>()
-                : await NotificationHelper.UnreadTargetIdsAsync(_context, uid.Value, "Billing");
-            ViewBag.ReadIds = uid == null ? new HashSet<int>()
-                : await NotificationHelper.ReadTargetIdsAsync(_context, uid.Value, "Billing");
 
             return View(await query.OrderByDescending(b => b.BillingPeriod).ToListAsync());
         }
@@ -106,22 +79,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 .FirstOrDefaultAsync(b => b.BillingID == id);
 
             if (billing == null) return NotFound();
-
-            // tenant can only see their own
-            if (User.IsInRole("Tenant"))
-            {
-                var tenant = await GetCurrentTenantAsync();
-                if (tenant == null || billing.TenantID != tenant.TenantID) return Forbid();
-            }
-
-            var uid = CurrentUserID();
-            if (uid != null) await NotificationHelper.MarkRecordReadAsync(_context, uid.Value, "Billing", billing.BillingID);
-
             return View(billing);
         }
 
         // GET: Billing/Create
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create()
         {
             var vm = new BillingViewModel
@@ -134,7 +95,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // POST: Billing/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(BillingViewModel vm)
         {
             var period = new DateTime(vm.BillingPeriod.Year, vm.BillingPeriod.Month, 1);
@@ -165,19 +125,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
             _context.tblBillings.Add(billing);
             await _context.SaveChangesAsync();
 
-            // let the tenant know a new bill was issued
-            var billedTenant = await _context.tblTenants.FirstOrDefaultAsync(t => t.TenantID == vm.TenantID);
-            if (billedTenant?.UserID != null)
-                await NotificationHelper.CreateAsync(_context, billedTenant.UserID.Value, "Billing",
-                    $"A bill of ₱{billing.AmountDue:N2} for {period:MMMM yyyy} was issued (due {billing.DueDate:MMM dd}).",
-                    $"/Billing/Details/{billing.BillingID}", billing.BillingID);
-
             TempData["Success"] = "Billing record created.";
             return RedirectToAction(nameof(Index));
         }
 
         // GET: Billing/Edit/5
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -209,7 +161,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // POST: Billing/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id, BillingViewModel vm)
         {
             if (id != vm.BillingID) return NotFound();
@@ -245,7 +196,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // GET: Billing/Delete/5
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -261,7 +211,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // POST: Billing/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var billing = await _context.tblBillings.FindAsync(id);

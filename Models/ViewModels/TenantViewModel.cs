@@ -6,25 +6,6 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
     {
         public int TenantID { get; set; }
 
-        public int? UserID { get; set; }
-
-        // login fields - required when creating, optional when editing
-        [MaxLength(50)]
-        [Display(Name = "Username")]
-        public string? Username { get; set; }
-
-        [MaxLength(255)]
-        [DataType(DataType.Password)]
-        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$",
-            ErrorMessage = "Password must be at least 8 characters with an uppercase letter, a lowercase letter, a number, and a special character.")]
-        [Display(Name = "Password")]
-        public string? Password { get; set; }
-
-        [DataType(DataType.Password)]
-        [Compare(nameof(Password), ErrorMessage = "Passwords do not match.")]
-        [Display(Name = "Confirm Password")]
-        public string? ConfirmPassword { get; set; }
-
         [Required(ErrorMessage = "First Name is required.")]
         [MaxLength(50)]
         [RegularExpression(@"^[A-Za-zñÑ .'-]+$", ErrorMessage = "First Name may not contain numbers.")]
@@ -63,14 +44,6 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         [Display(Name = "Move-Out Date")]
         [DataType(DataType.Date)]
         public DateTime? MoveOutDate { get; set; }
-
-        [Display(Name = "Lease Start")]
-        [DataType(DataType.Date)]
-        public DateTime? LeaseStart { get; set; }
-
-        [Display(Name = "Lease End")]
-        [DataType(DataType.Date)]
-        public DateTime? LeaseEnd { get; set; }
 
         [Required]
         [MaxLength(20)]

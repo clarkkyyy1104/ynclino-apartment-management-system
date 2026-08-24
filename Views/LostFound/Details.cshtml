@@ -42,15 +42,11 @@
                         @{
                             var sbadge = Model.Status switch {
                                 "Resolved" => "bg-success",
-                                "Claimed"  => "bg-primary",
                                 _          => "bg-warning text-dark"
                             };
                         }
                         <span class="badge @sbadge">@Model.Status</span>
                     </dd>
-
-                    <dt class="col-sm-4">Reported By</dt>
-                    <dd class="col-sm-8">@(Model.ReportedBy?.Username ?? "—")</dd>
 
                     <dt class="col-sm-4">Date Reported</dt>
                     <dd class="col-sm-8">@Model.DateReported.ToString("MMM dd, yyyy hh:mm tt")</dd>
@@ -59,97 +55,16 @@
                     <dd class="col-sm-8">@(Model.Notes ?? "—")</dd>
                 </dl>
 
-                @if (User.IsInRole("Admin"))
-                {
-                    var claims = ViewBag.Claims as IEnumerable<YnclinoApartmentManagementSystem.Models.tblClaimRequest> ?? new List<YnclinoApartmentManagementSystem.Models.tblClaimRequest>();
-                    if (claims.Any())
-                    {
-                        <hr />
-                        <h6 class="fw-semibold mb-2">Ownership Claims</h6>
-                        @foreach (var claim in claims)
-                        {
-                            <div class="border rounded p-3 mb-2 @(claim.Status == "Pending" ? "border-warning" : claim.Status == "Approved" ? "border-success" : "border-secondary")">
-                                <div class="d-flex justify-content-between align-items-start mb-1">
-                                    <span class="fw-semibold small">@(claim.Claimant?.Username ?? "—")</span>
-                                    <span class="badge @(claim.Status == "Pending" ? "bg-warning text-dark" : claim.Status == "Approved" ? "bg-success" : "bg-secondary")">@claim.Status</span>
-                                </div>
-                                <p class="small mb-1">@claim.VerificationDetails</p>
-                                @if (!string.IsNullOrEmpty(claim.ImagePath))
-                                {
-                                    <a href="@claim.ImagePath" target="_blank">
-                                        <img src="@claim.ImagePath" alt="Proof photo" class="img-fluid rounded border mb-2" style="max-height:160px" />
-                                    </a>
-                                }
-                                <p class="text-muted small mb-2">Submitted: @claim.SubmittedAt.ToString("MMM dd, yyyy hh:mm tt")</p>
-                                @if (claim.Status == "Pending")
-                                {
-                                    <form asp-action="ReviewClaim" method="post">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="claimId" value="@claim.ClaimID" />
-                                        <textarea name="adminNotes" class="form-control form-control-sm mb-2" rows="2"
-                                                  placeholder="Optional note (shown to the claimant)…"></textarea>
-                                        <div class="d-flex gap-2">
-                                            <button type="submit" name="decision" value="Approved" class="btn btn-success btn-sm">Approve</button>
-                                            <button type="submit" name="decision" value="Rejected" class="btn btn-outline-danger btn-sm">Reject</button>
-                                        </div>
-                                    </form>
-                                }
-                                @if (!string.IsNullOrEmpty(claim.AdminNotes))
-                                {
-                                    <p class="text-muted small mt-1 mb-0">Note: @claim.AdminNotes</p>
-                                }
-                            </div>
-                        }
-                    }
-                }
-
-                @if (User.IsInRole("Tenant"))
-                {
-                    var myClaims = ViewBag.MyClaims as IEnumerable<YnclinoApartmentManagementSystem.Models.tblClaimRequest> ?? new List<YnclinoApartmentManagementSystem.Models.tblClaimRequest>();
-                    if (myClaims.Any())
-                    {
-                        <hr />
-                        <h6 class="fw-semibold mb-2">My Claim</h6>
-                        @foreach (var claim in myClaims)
-                        {
-                            <div class="border rounded p-3 mb-2 @(claim.Status == "Pending" ? "border-warning" : claim.Status == "Approved" ? "border-success" : "border-secondary")">
-                                <div class="d-flex justify-content-between align-items-start mb-1">
-                                    <span class="text-muted small">Submitted @claim.SubmittedAt.ToString("MMM dd, yyyy")</span>
-                                    <span class="badge @(claim.Status == "Pending" ? "bg-warning text-dark" : claim.Status == "Approved" ? "bg-success" : "bg-secondary")">@claim.Status</span>
-                                </div>
-                                <p class="small mb-1">@claim.VerificationDetails</p>
-                                @if (!string.IsNullOrEmpty(claim.ImagePath))
-                                {
-                                    <a href="@claim.ImagePath" target="_blank">
-                                        <img src="@claim.ImagePath" alt="Proof photo" class="img-fluid rounded border mb-2" style="max-height:140px" />
-                                    </a>
-                                }
-                                @if (!string.IsNullOrEmpty(claim.AdminNotes))
-                                {
-                                    <p class="text-muted small mb-0">Admin note: @claim.AdminNotes</p>
-                                }
-                            </div>
-                        }
-                    }
-                }
-
                 <div class="d-flex gap-2 mt-3">
-                    @if (User.IsInRole("Admin"))
+                    @if (Model.Status != "Resolved")
                     {
-                        @if (Model.Status == "Claimed")
-                        {
-                            <form asp-action="Resolve" asp-route-id="@Model.ItemID" method="post" class="d-inline">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-outline-success btn-sm">Mark Resolved</button>
-                            </form>
-                        }
-                        <a asp-action="Delete" asp-route-id="@Model.ItemID" class="btn btn-outline-danger btn-sm">Delete</a>
+                        <form asp-action="Resolve" asp-route-id="@Model.ItemID" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-success btn-sm">Mark Resolved</button>
+                        </form>
                     }
-                    else if (Model.ItemType == "Found" && Model.Status == "Reported"
-                        && Model.ReportedByUserID != (int?)ViewBag.CurrentUserID)
-                    {
-                        <a asp-action="Claim" asp-route-id="@Model.ItemID" class="btn btn-outline-success btn-sm">Claim This Item</a>
-                    }
+                    <a asp-action="Edit" asp-route-id="@Model.ItemID" class="btn btn-outline-primary btn-sm">Edit</a>
+                    <a asp-action="Delete" asp-route-id="@Model.ItemID" class="btn btn-outline-danger btn-sm">Delete</a>
                     <a asp-action="Index" class="btn btn-secondary btn-sm">Back</a>
                 </div>
             </div>

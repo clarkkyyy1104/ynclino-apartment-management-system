@@ -9,7 +9,7 @@ using YnclinoApartmentManagementSystem.Models.ViewModels;
 
 namespace YnclinoApartmentManagementSystem.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public class LostFoundController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -27,15 +27,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // GET: LostFound
         public async Task<IActionResult> Index(string? typeFilter, string? statusFilter, string? searchTerm)
         {
-            IQueryable<tblLostFoundItem> query = _context.tblLostFoundItems
-                .Include(l => l.ReportedBy);
-
-            // tenants see their own reports plus anything marked Found
-            if (User.IsInRole("Tenant"))
-            {
-                var uid = CurrentUserID();
-                query = query.Where(l => l.ReportedByUserID == uid || l.ItemType == "Found");
-            }
+            IQueryable<tblLostFoundItem> query = _context.tblLostFoundItems;
 
             if (!string.IsNullOrEmpty(typeFilter))
                 query = query.Where(l => l.ItemType == typeFilter);
@@ -51,10 +43,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             ViewBag.TypeFilter = typeFilter;
             ViewBag.StatusFilter = statusFilter;
             ViewBag.SearchTerm = searchTerm;
-            var meId = CurrentUserID();
-            ViewBag.CurrentUserID = meId;
-            ViewBag.UnreadIds = meId == null ? new HashSet<int>() : await NotificationHelper.UnreadTargetIdsAsync(_context, meId.Value, "LostFound");
-            ViewBag.ReadIds = meId == null ? new HashSet<int>() : await NotificationHelper.ReadTargetIdsAsync(_context, meId.Value, "LostFound");
 
             return View(await query.OrderByDescending(l => l.DateReported).ToListAsync());
         }
@@ -64,37 +52,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             if (id == null) return NotFound();
 
-            var item = await _context.tblLostFoundItems
-                .Include(l => l.ReportedBy)
-                .FirstOrDefaultAsync(l => l.ItemID == id);
-
+            var item = await _context.tblLostFoundItems.FirstOrDefaultAsync(l => l.ItemID == id);
             if (item == null) return NotFound();
-
-            ViewBag.CurrentUserID = CurrentUserID();
-
-            if (User.IsInRole("Tenant") && item.ItemType != "Found" && item.ReportedByUserID != CurrentUserID())
-                return Forbid();
-
-            var meId = CurrentUserID();
-            if (meId != null) await NotificationHelper.MarkRecordReadAsync(_context, meId.Value, "LostFound", item.ItemID);
-
-            if (User.IsInRole("Admin"))
-            {
-                ViewBag.Claims = await _context.tblClaimRequests
-                    .Include(c => c.Claimant)
-                    .Where(c => c.ItemID == id)
-                    .OrderByDescending(c => c.SubmittedAt)
-                    .ToListAsync();
-            }
-            else if (User.IsInRole("Tenant"))
-            {
-                // a tenant sees only the claims they filed on this item
-                var uid = CurrentUserID();
-                ViewBag.MyClaims = await _context.tblClaimRequests
-                    .Where(c => c.ItemID == id && c.ClaimantUserID == uid)
-                    .OrderByDescending(c => c.SubmittedAt)
-                    .ToListAsync();
-            }
 
             return View(item);
         }
@@ -134,27 +93,22 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             _context.tblLostFoundItems.Add(item);
             await _context.SaveChangesAsync();
-            TempData["Success"] = $"{vm.ItemType} item \"{vm.ItemName}\" has been reported.";
+            TempData["Success"] = $"{vm.ItemType} item \"{vm.ItemName}\" has been recorded.";
             return RedirectToAction(nameof(Index));
         }
 
         // GET: LostFound/Edit/5
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
 
-            var item = await _context.tblLostFoundItems
-                .Include(l => l.ReportedBy)
-                .FirstOrDefaultAsync(l => l.ItemID == id);
-
+            var item = await _context.tblLostFoundItems.FindAsync(id);
             if (item == null) return NotFound();
 
             var vm = new LostFoundViewModel
             {
                 ItemID = item.ItemID,
                 ReportedByUserID = item.ReportedByUserID,
-                ReportedByName = item.ReportedBy?.Username,
                 ItemName = item.ItemName,
                 Description = item.Description,
                 ItemType = item.ItemType,
@@ -170,7 +124,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // POST: LostFound/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id, LostFoundViewModel vm)
         {
             if (id != vm.ItemID) return NotFound();
@@ -178,11 +131,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (vm.ImageUpload != null && !ImageUploadHelper.IsValid(vm.ImageUpload, out var imgErr))
                 ModelState.AddModelError(nameof(vm.ImageUpload), imgErr);
 
-            if (!ModelState.IsValid)
-            {
-                vm.ReportedByName = (await _context.tblUsers.FindAsync(vm.ReportedByUserID))?.Username;
-                return View(vm);
-            }
+            if (!ModelState.IsValid) return View(vm);
 
             var item = await _context.tblLostFoundItems.FindAsync(id);
             if (item == null) return NotFound();
@@ -203,15 +152,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // GET: LostFound/Delete/5
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
 
-            var item = await _context.tblLostFoundItems
-                .Include(l => l.ReportedBy)
-                .FirstOrDefaultAsync(l => l.ItemID == id);
-
+            var item = await _context.tblLostFoundItems.FirstOrDefaultAsync(l => l.ItemID == id);
             if (item == null) return NotFound();
             return View(item);
         }
@@ -219,7 +164,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // POST: LostFound/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var item = await _context.tblLostFoundItems.FindAsync(id);
@@ -231,153 +175,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: LostFound/Claim/5
-        [Authorize(Roles = "Tenant")]
-        public async Task<IActionResult> Claim(int? id)
-        {
-            if (id == null) return NotFound();
-            var item = await _context.tblLostFoundItems.FindAsync(id);
-            if (item == null || item.ItemType != "Found" || item.Status != "Reported")
-                return NotFound();
-
-            var uid = CurrentUserID();
-
-            // you can't claim an item you reported yourself
-            if (item.ReportedByUserID == uid)
-            {
-                TempData["Error"] = "You reported this item, so you cannot file a claim on it.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            // don't let the same person stack pending claims on one item
-            bool alreadyClaimed = await _context.tblClaimRequests
-                .AnyAsync(c => c.ItemID == id && c.ClaimantUserID == uid && c.Status == "Pending");
-            if (alreadyClaimed)
-            {
-                TempData["Error"] = "You already have a pending claim for this item.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            ViewBag.Item = item;
-            return View();
-        }
-
-        // POST: LostFound/Claim/5
+        // POST: LostFound/Resolve/5 — close out an item that's been returned/handed over
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Tenant")]
-        public async Task<IActionResult> Claim(int id, string verificationDetails, IFormFile? proofImage)
-        {
-            var item = await _context.tblLostFoundItems.FindAsync(id);
-            if (item == null || item.ItemType != "Found" || item.Status != "Reported")
-                return NotFound();
-
-            var uid = CurrentUserID();
-            if (uid == null) return Forbid();
-
-            if (item.ReportedByUserID == uid)
-            {
-                TempData["Error"] = "You reported this item, so you cannot file a claim on it.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            if (string.IsNullOrWhiteSpace(verificationDetails) || verificationDetails.Length > 1000)
-            {
-                TempData["Error"] = "Please describe your proof of ownership (up to 1000 characters).";
-                return RedirectToAction(nameof(Claim), new { id });
-            }
-
-            if (proofImage != null && !ImageUploadHelper.IsValid(proofImage, out var imgErr))
-            {
-                TempData["Error"] = imgErr;
-                return RedirectToAction(nameof(Claim), new { id });
-            }
-
-            // re-check for a pending duplicate in case of a double submit
-            bool alreadyClaimed = await _context.tblClaimRequests
-                .AnyAsync(c => c.ItemID == id && c.ClaimantUserID == uid && c.Status == "Pending");
-            if (alreadyClaimed)
-            {
-                TempData["Error"] = "You already have a pending claim for this item.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            string? proofPath = null;
-            if (proofImage != null)
-                proofPath = await ImageUploadHelper.SaveAsync(proofImage, "claims", _env);
-
-            var claim = new tblClaimRequest
-            {
-                ItemID = id,
-                ClaimantUserID = uid.Value,
-                VerificationDetails = verificationDetails,
-                SubmittedAt = DateTime.Now,
-                Status = "Pending",
-                ImagePath = proofPath
-            };
-            _context.tblClaimRequests.Add(claim);
-            await _context.SaveChangesAsync();
-
-            await NotificationHelper.NotifyAdminsAsync(_context, "LostFound",
-                $"New ownership claim on \"{item.ItemName}\".",
-                $"/LostFound/Details/{item.ItemID}", item.ItemID);
-
-            TempData["Success"] = "Your claim has been submitted. An admin will review it.";
-            return RedirectToAction(nameof(Index));
-        }
-
-        // POST: LostFound/ReviewClaim
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> ReviewClaim(int claimId, string decision, string? adminNotes)
-        {
-            if (decision != "Approved" && decision != "Rejected")
-                return BadRequest();
-
-            var claim = await _context.tblClaimRequests
-                .Include(c => c.Item)
-                .FirstOrDefaultAsync(c => c.ClaimID == claimId);
-            if (claim == null) return NotFound();
-
-            if (claim.Status != "Pending")
-            {
-                TempData["Error"] = "This claim has already been reviewed.";
-                return RedirectToAction(nameof(Details), new { id = claim.ItemID });
-            }
-
-            claim.Status = decision;
-            claim.AdminNotes = adminNotes;
-
-            if (decision == "Approved" && claim.Item != null)
-            {
-                claim.Item.Status = "Claimed";
-
-                // any other pending claims on the same item lose automatically
-                var others = await _context.tblClaimRequests
-                    .Where(c => c.ItemID == claim.ItemID && c.ClaimID != claim.ClaimID && c.Status == "Pending")
-                    .ToListAsync();
-                foreach (var other in others)
-                {
-                    other.Status = "Rejected";
-                    other.AdminNotes = "Another claim was approved for this item.";
-                }
-            }
-
-            await _context.SaveChangesAsync();
-
-            await NotificationHelper.CreateAsync(_context, claim.ClaimantUserID, "LostFound",
-                $"Your claim on \"{claim.Item?.ItemName}\" was {decision.ToLower()}." + (string.IsNullOrEmpty(adminNotes) ? "" : $" Note: {adminNotes}"),
-                $"/LostFound/Details/{claim.ItemID}", claim.ItemID);
-
-            TempData["Success"] = $"Claim has been {decision.ToLower()}.";
-            return RedirectToAction(nameof(Details), new { id = claim.ItemID });
-        }
-
-        // POST: LostFound/Resolve/5 — close out an item that's been handed over
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Resolve(int id)
         {
             var item = await _context.tblLostFoundItems.FindAsync(id);

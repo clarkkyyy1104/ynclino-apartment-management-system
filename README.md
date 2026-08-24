@@ -1,7 +1,7 @@
 # BKS Apartment Management System
 
-An ASP.NET Core MVC application for managing tenants, billing, maintenance,
-and lost & found for **BKS Apartment**.
+An admin-only ASP.NET Core MVC application for tracking tenant payments (with a
+tenant list and a lost & found log) for **BKS Apartment**.
 
 ---
 
@@ -17,18 +17,18 @@ and lost & found for **BKS Apartment**.
 
 ## Features
 
-- **Tenants** — full CRUD with soft-delete (history preserved), auto-generated
-  login accounts, and emergency contact details
+- **Dashboard** — active/inactive tenant counts plus outstanding-bill count and
+  total amount outstanding at a glance
+- **Tenants** — full CRUD with soft-delete (history preserved) and emergency
+  contact details; tenants are admin-managed records (they do not log in)
 - **Billing & Payment** — issue and track bills; records amount paid, date paid,
   a **Payment Method** (Cash / GCash), and an auto-derived status
   (Paid / Partial / Unpaid / Late)
-- **Maintenance** — requests with Minor/Moderate/Major/Urgent priority, issue
-  types, photo attachments, and an Active/Archive view
-- **Lost & Found** — report items with photos and handle claims
-- **Roles** — Admin and Tenant, each with a tailored dashboard
+- **Lost & Found** — an admin log of lost and found items with photos
+- **Single admin login** — one administrator account runs the whole system
 
-> This build has **no Units module** — rent is entered directly on each bill, so
-> the app suits a single property that is billed per tenant.
+> This build is **admin-only** and has **no Units module** — rent is entered
+> directly on each bill, so it suits a single property billed per tenant.
 
 ---
 
