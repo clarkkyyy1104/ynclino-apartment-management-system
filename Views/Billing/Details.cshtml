@@ -22,19 +22,14 @@
 
                     <dt class="col-sm-4">Amount Due</dt>
                     <dd class="col-sm-8">₱@Model.AmountDue.ToString("N2")</dd>
-                    <dt class="col-sm-4">Amount Due</dt>
-                    <dd class="col-sm-8">₱@Model.AmountDue.ToString("N2")</dd>
 
                     <dt class="col-sm-4">Monthly Rent</dt>
                     <dd class="col-sm-8">₱@((Model.AmountDue - Model.Deposit - Model.Advance).ToString("N2"))</dd>
 
-                    <dt class="col-sm-4">Deposit</dt>
+                    <dt class="col-sm-4">Deposit on File</dt>
                     <dd class="col-sm-8">
-                        ₱@Model.Deposit.ToString("N2")
-                        @if (Model.Deposit > 0)
-                        {
-                            <span class="badge bg-secondary ms-1">held until move-out</span>
-                        }
+                        ₱@((Model.Tenant?.Unit?.Deposit ?? 0m).ToString("N2"))
+                        <span class="badge bg-info text-dark ms-1">covers the final month at move-out</span>
                     </dd>
 
                     <dt class="col-sm-4">Advance Payment</dt>

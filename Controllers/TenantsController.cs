@@ -340,13 +340,74 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             await _context.SaveChangesAsync();
 
-            // re-derive occupancy for the tenant's unit (their active state may have changed)
-            if (previousUnitID.HasValue)
-                await SyncUnitStatusAsync(previousUnitID.Value);
-            await _context.SaveChangesAsync();
+
+            // when a tenant leaves, their security deposit settles the final month's rent
+            if (previousStatus == "Active" && !becomingActive)
+                await ApplyDepositToFinalMonthAsync(tenant);
 
             TempData["Success"] = $"Tenant {tenant.FullName} has been updated.";
             return RedirectToAction(nameof(Index));
+        }
+
+        // A tenant's security deposit is really their last month's rent, held in advance.
+        // So when they move out, apply it to the final month's bill (creating that bill
+        // if it was never issued) so they owe nothing for the month they leave.
+        private async Task ApplyDepositToFinalMonthAsync(tblTenant tenant)
+        {
+            if (tenant.UnitID == null) return;
+            var unit = await _context.tblUnits.FindAsync(tenant.UnitID.Value);
+            if (unit == null || unit.Deposit <= 0) return;
+
+            var moveOut = tenant.MoveOutDate ?? DateTime.Today;
+            var finalMonth = new DateTime(moveOut.Year, moveOut.Month, 1);
+
+            // the bill for the final month — issue one (a month's rent) if it doesn't exist
+            var bill = await _context.tblBillings
+                .FirstOrDefaultAsync(b => b.TenantID == tenant.TenantID && b.BillingPeriod == finalMonth);
+            if (bill == null)
+            {
+                int lastDay = DateTime.DaysInMonth(finalMonth.Year, finalMonth.Month);
+                bill = new tblBilling
+                {
+                    TenantID = tenant.TenantID,
+                    BillingPeriod = finalMonth,
+                    AmountDue = unit.RentPrice,
+                    DueDate = new DateTime(finalMonth.Year, finalMonth.Month, lastDay),
+                    Status = "Unpaid",
+                    DateIssued = DateTime.Now
+                };
+                _context.tblBillings.Add(bill);
+                await _context.SaveChangesAsync();
+            }
+
+            // never apply the deposit twice
+            bool alreadyApplied = await _context.tblPayments
+                .AnyAsync(p => p.BillingID == bill.BillingID && p.Method == "Deposit");
+            if (alreadyApplied) return;
+
+            decimal paidSoFar = await _context.tblPayments
+                .Where(p => p.BillingID == bill.BillingID).SumAsync(p => (decimal?)p.Amount) ?? 0m;
+            decimal balance = bill.AmountDue - paidSoFar;
+            if (balance <= 0) return;   // final month already settled some other way
+
+            decimal applied = Math.Min(unit.Deposit, balance);
+            _context.tblPayments.Add(new tblPayment
+            {
+                BillingID = bill.BillingID,
+                Amount = applied,
+                Method = "Deposit",
+                Remarks = "Security deposit applied on move-out",
+                DatePaid = moveOut,
+                RecordedAt = DateTime.Now
+            });
+            await _context.SaveChangesAsync();
+
+            // refresh the bill's cached total and status from its payments
+            decimal total = await _context.tblPayments
+                .Where(p => p.BillingID == bill.BillingID).SumAsync(p => (decimal?)p.Amount) ?? 0m;
+            bill.AmountPaid = total > 0 ? total : (decimal?)null;
+            bill.Status = BillingController.DeriveStatus(bill.AmountDue, bill.AmountPaid, bill.DueDate);
+            await _context.SaveChangesAsync();
         }
 
         // GET: Tenants/Delete/5 (soft delete confirmation)
