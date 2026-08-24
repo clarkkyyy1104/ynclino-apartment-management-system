@@ -2,6 +2,8 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using YnclinoApartmentManagementSystem.Data;
 using YnclinoApartmentManagementSystem.Helpers;
 using YnclinoApartmentManagementSystem.Models;
@@ -78,38 +80,19 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-    // Create the database and schema if it doesn't exist yet. On a brand-new
-    // MySQL server this builds every table from the current models.
-    db.Database.EnsureCreated();
-
-    // Guard against a leftover database whose schema predates the current
-    // models: probe every table, and if the shape no longer matches, rebuild
-    // it from scratch. A fresh, matching database never triggers this.
-    // AsNoTracking: probing must not leave stale entities in the change tracker.
-    // If a probe fails partway and we rebuild below, any rows already read would
-    // otherwise collide (same key) with the freshly-seeded rows on SaveChanges.
-    void ProbeSchema()
-    {
-        db.tblTenants.AsNoTracking().FirstOrDefault();
-        db.tblUsers.AsNoTracking().FirstOrDefault();
-        db.tblBillings.AsNoTracking().FirstOrDefault();
-        db.tblMaintenanceRequests.AsNoTracking().FirstOrDefault();
-        db.tblLostFoundItems.AsNoTracking().FirstOrDefault();
-        db.tblClaimRequests.AsNoTracking().FirstOrDefault();
-        db.tblNotifications.AsNoTracking().FirstOrDefault();
-    }
-
-    try
-    {
-        ProbeSchema();
-    }
-    catch (Exception)
-    {
-        db.Database.EnsureDeleted();
-        db.Database.EnsureCreated();
-        // drop anything the failed probe may have tracked before it threw
-        db.ChangeTracker.Clear();
-    }
+    // Make sure the database and its tables exist, in a way that also works on
+    // shared hosting where the database is pre-created (empty) and the DB user
+    // cannot create or drop databases:
+    //   • local dev — the database may not exist yet, so EnsureCreated builds it
+    //     and every table from the current models.
+    //   • shared hosting — the database already exists but is empty, so
+    //     EnsureCreated does nothing; we then create just the tables.
+    // Neither path drops data, so this is safe to run on every startup.
+    var creator = db.GetService<IRelationalDatabaseCreator>();
+    try { db.Database.EnsureCreated(); }
+    catch { /* database already exists and we lack create-database rights — fine */ }
+    try { if (!creator.HasTables()) creator.CreateTables(); }
+    catch { /* the tables are already present */ }
 
     // create a default admin the first time the app runs
     if (!db.tblUsers.Any(u => u.Role == "Admin"))
@@ -126,18 +109,23 @@ using (var scope = app.Services.CreateScope())
         db.SaveChanges();
     }
 
-    // migrate any maintenance rows still using the old priority labels to the
-    // current vocabulary (Low->Minor, Medium->Moderate, High->Major; Urgent kept)
-    if (db.tblMaintenanceRequests.Any(m => m.Priority == "Low" || m.Priority == "Medium" || m.Priority == "High"))
+    // one-off label migrations for databases created by older versions of the app
+    // (a fresh database has nothing to migrate, so these simply no-op)
+    try
     {
-        db.tblMaintenanceRequests.Where(m => m.Priority == "Low").ExecuteUpdate(s => s.SetProperty(m => m.Priority, "Minor"));
-        db.tblMaintenanceRequests.Where(m => m.Priority == "Medium").ExecuteUpdate(s => s.SetProperty(m => m.Priority, "Moderate"));
-        db.tblMaintenanceRequests.Where(m => m.Priority == "High").ExecuteUpdate(s => s.SetProperty(m => m.Priority, "Major"));
-    }
+        // maintenance priorities: Low->Minor, Medium->Moderate, High->Major; Urgent kept
+        if (db.tblMaintenanceRequests.Any(m => m.Priority == "Low" || m.Priority == "Medium" || m.Priority == "High"))
+        {
+            db.tblMaintenanceRequests.Where(m => m.Priority == "Low").ExecuteUpdate(s => s.SetProperty(m => m.Priority, "Minor"));
+            db.tblMaintenanceRequests.Where(m => m.Priority == "Medium").ExecuteUpdate(s => s.SetProperty(m => m.Priority, "Moderate"));
+            db.tblMaintenanceRequests.Where(m => m.Priority == "High").ExecuteUpdate(s => s.SetProperty(m => m.Priority, "Major"));
+        }
 
-    // migrate the old billing status "Overdue" to the current "Late" label
-    if (db.tblBillings.Any(b => b.Status == "Overdue"))
-        db.tblBillings.Where(b => b.Status == "Overdue").ExecuteUpdate(s => s.SetProperty(b => b.Status, "Late"));
+        // billing status: the old "Overdue" is now "Late"
+        if (db.tblBillings.Any(b => b.Status == "Overdue"))
+            db.tblBillings.Where(b => b.Status == "Overdue").ExecuteUpdate(s => s.SetProperty(b => b.Status, "Late"));
+    }
+    catch { /* labels are already current — nothing to migrate */ }
 }
 
 if (!app.Environment.IsDevelopment())
