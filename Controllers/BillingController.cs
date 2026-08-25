@@ -283,10 +283,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
             bill.Status = DeriveStatus(bill.AmountDue, bill.AmountPaid, bill.DueDate);
         }
 
-        // Applies a payment for a tenant: it settles THIS bill first, then any of the
-        // tenant's other unpaid bills (oldest first), and whatever is still left over
-        // is kept on the tenant as advance payment for future bills.
-        private async Task<(decimal here, decimal others, decimal advance)> ApplyPaymentAsync(
+        // Applies a payment: it settles THIS bill up to what it owes, and anything paid
+        // beyond that is kept on the tenant as advance payment, which is deducted
+        // automatically from their next bill.
+        private async Task<(decimal here, decimal advance)> ApplyPaymentAsync(
             tblBilling bill, decimal amount, string? remarks)
         {
             decimal left = amount;
@@ -311,41 +311,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 left -= here;
             }
 
-            // 2) spill over onto the tenant's other unpaid bills, oldest first
-            decimal others = 0m;
-            if (left > 0)
-            {
-                var otherBills = await _context.tblBillings
-                    .Where(b => b.TenantID == bill.TenantID && b.BillingID != bill.BillingID)
-                    .OrderBy(b => b.BillingPeriod)
-                    .ToListAsync();
-
-                foreach (var ob in otherBills)
-                {
-                    if (left <= 0) break;
-                    decimal obBalance = ob.AmountDue - await TotalPaidAsync(ob.BillingID);
-                    if (obBalance <= 0) continue;
-
-                    decimal take = Math.Min(left, obBalance);
-                    _context.tblPayments.Add(new tblPayment
-                    {
-                        BillingID = ob.BillingID,
-                        Amount = take,
-                        Method = "Advance",
-                        Remarks = "Applied from overpayment",
-                        DatePaid = DateTime.Today,
-                        RecordedAt = DateTime.Now
-                    });
-                    await _context.SaveChangesAsync();
-                    await RefreshBillTotalsAsync(ob);
-                    await _context.SaveChangesAsync();
-
-                    left -= take;
-                    others += take;
-                }
-            }
-
-            // 3) anything still left becomes advance payment held for the tenant
+            // 2) anything paid beyond this month's bill becomes advance payment held for
+            //    the tenant — it is deducted automatically from their next bill
             if (left > 0)
             {
                 var tenant = await _context.tblTenants.FindAsync(bill.TenantID);
@@ -356,7 +323,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 }
             }
 
-            return (here, others, left);
+            return (here, left);
         }
 
         // Uses any advance payment the tenant is holding to settle a newly issued bill.
@@ -425,9 +392,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
             //    and finally into advance payment when it exceeds what is owed
             decimal paidNow = vm.PaymentAmount ?? 0m;
             bool paymentRecorded = paidNow > 0;
-            decimal toOthers = 0m, toAdvance = 0m;
+            decimal toAdvance = 0m;
             if (paymentRecorded)
-                (_, toOthers, toAdvance) = await ApplyPaymentAsync(billing, paidNow, vm.PaymentRemarks);
+                (_, toAdvance) = await ApplyPaymentAsync(billing, paidNow, vm.PaymentRemarks);
 
             // 3) recompute the running total, last payment date and status
             await RefreshBillTotalsAsync(billing);
@@ -437,9 +404,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
             {
                 decimal balanceAfter = billing.AmountDue - (billing.AmountPaid ?? 0m);
 
-                string extra = "";
-                if (toOthers > 0) extra += $" ₱{toOthers:N0} was applied to other unpaid bills.";
-                if (toAdvance > 0) extra += $" ₱{toAdvance:N0} was kept as advance payment.";
+                string extra = toAdvance > 0
+                    ? $" ₱{toAdvance:N0} became advance payment and will be deducted from the next bill."
+                    : "";
 
                 // tell the tenant their payment was posted
                 var payer = await _context.tblTenants.FirstOrDefaultAsync(t => t.TenantID == billing.TenantID);
@@ -503,10 +470,24 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var unpaidCount = await _context.tblBillings
                 .CountAsync(b => b.TenantID == tenantId && (b.AmountPaid == null || b.AmountPaid < b.AmountDue));
 
+            // suggest the next month this tenant has not been billed for yet
+            var latest = await _context.tblBillings
+                .Where(b => b.TenantID == tenantId)
+                .OrderByDescending(b => b.BillingPeriod)
+                .Select(b => (DateTime?)b.BillingPeriod)
+                .FirstOrDefaultAsync();
+
+            var thisMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+            var period = latest.HasValue ? latest.Value.AddMonths(1) : thisMonth;
+            if (period < thisMonth) period = thisMonth;
+
             // each month is its own bill, so suggest one month's rent
             return Json(new {
                 suggestedAmount = tenant.Unit.RentPrice,
-                unpaidMonths = unpaidCount
+                unpaidMonths = unpaidCount,
+                suggestedPeriod = period.ToString("yyyy-MM"),
+                suggestedDueDate = DateTime.Today.AddDays(30).ToString("yyyy-MM-dd"),
+                advanceCredit = tenant.AdvanceCredit
             });
         }
 

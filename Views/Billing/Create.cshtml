@@ -23,13 +23,15 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label asp-for="BillingPeriod" class="form-label fw-semibold small">Billing Period (Month)</label>
-                            <input asp-for="BillingPeriod" type="month" class="form-control"
+                            <input asp-for="BillingPeriod" id="periodInput" type="month" class="form-control"
                                    value="@Model.BillingPeriod.ToString("yyyy-MM")" />
+                            <div class="form-text text-muted small">Filled in automatically from the tenant's last bill.</div>
                             <span asp-validation-for="BillingPeriod" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
                             <label asp-for="DueDate" class="form-label fw-semibold small"></label>
-                            <input asp-for="DueDate" type="date" class="form-control" />
+                            <input asp-for="DueDate" id="dueDateInput" type="date" class="form-control" />
+                            <div class="form-text text-muted small">Defaults to 30 days from today — you can change it.</div>
                             <span asp-validation-for="DueDate" class="text-danger small"></span>
                         </div>
                     </div>
@@ -57,14 +59,28 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        document.getElementById('tenantSelect').addEventListener('change', function() {
+        document.getElementById('tenantSelect').addEventListener('change', function () {
             var tid = this.value;
             if (!tid) { document.getElementById('amountHint').textContent = ''; return; }
+
             fetch('/Billing/GetSuggestedAmount?tenantId=' + tid)
                 .then(r => r.json())
-                .then(function(data) {
-                    document.getElementById('amountDueInput').value = data.suggestedAmount.toFixed(2);
+                .then(function (data) {
+                    // amount = one month's rent (whole pesos)
+                    document.getElementById('amountDueInput').value = Math.round(data.suggestedAmount);
+
+                    // billing month = the next month this tenant has not been billed for
+                    if (data.suggestedPeriod)
+                        document.getElementById('periodInput').value = data.suggestedPeriod;
+
+                    // deadline = 30 days from today (still editable)
+                    if (data.suggestedDueDate)
+                        document.getElementById('dueDateInput').value = data.suggestedDueDate;
+
                     var hint = 'Suggested: one month of rent';
+                    if (data.advanceCredit > 0)
+                        hint += ' · tenant holds ₱' + Math.round(data.advanceCredit).toLocaleString() +
+                                ' advance payment, which will be deducted automatically';
                     if (data.unpaidMonths > 0)
                         hint += ' · note: tenant has ' + data.unpaidMonths + ' unpaid month(s) still outstanding';
                     document.getElementById('amountHint').textContent = hint;
