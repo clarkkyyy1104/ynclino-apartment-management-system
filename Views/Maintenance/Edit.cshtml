@@ -63,12 +63,20 @@
 
                     <div class="mb-3">
                         <label asp-for="Status" class="form-label fw-semibold small"></label>
+                        @{
+                            var allowedStatuses = ViewBag.AllowedStatuses as List<string>
+                                ?? new List<string> { "Pending", "In Progress", "Resolved", "Cancelled" };
+                        }
                         <select asp-for="Status" class="form-select">
-                            <option>Pending</option>
-                            <option>In Progress</option>
-                            <option>Resolved</option>
-                            <option>Cancelled</option>
+                            @foreach (var st in allowedStatuses)
+                            {
+                                <option value="@st">@st</option>
+                            }
                         </select>
+                        <div class="form-text text-muted small">
+                            A status can only move forward — a resolved or cancelled request
+                            cannot be reopened.
+                        </div>
                     </div>
 
                     <div class="mb-4">

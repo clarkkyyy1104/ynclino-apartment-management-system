@@ -46,11 +46,19 @@
 
                     <div class="mb-3">
                         <label asp-for="Status" class="form-label fw-semibold small"></label>
+                        @{
+                            var allowed = ViewBag.AllowedStatuses as List<string> ?? new List<string> { "Reported", "Claimed", "Resolved" };
+                        }
                         <select asp-for="Status" class="form-select">
-                            <option>Reported</option>
-                            <option>Claimed</option>
-                            <option>Resolved</option>
+                            @foreach (var st in allowed)
+                            {
+                                <option value="@st">@st</option>
+                            }
                         </select>
+                        <div class="form-text text-muted small">
+                            A status can only move forward — once an item is claimed by its
+                            owner it cannot be reported again.
+                        </div>
                     </div>
 
                     <div class="mb-4">

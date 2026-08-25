@@ -164,6 +164,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 Notes = item.Notes,
                 ImagePath = item.ImagePath
             };
+            // a claimed item can never go back to "Reported"
+            ViewBag.AllowedStatuses = StatusFlowHelper.AllowedLostFound(item.Status);
             return View(vm);
         }
 
@@ -175,6 +177,14 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             if (id != vm.ItemID) return NotFound();
 
+            // status may only move forward — an item already claimed by its owner
+            // cannot be reported again
+            var currentItem = await _context.tblLostFoundItems.AsNoTracking()
+                .FirstOrDefaultAsync(l => l.ItemID == id);
+            if (currentItem != null && !StatusFlowHelper.IsAllowedLostFound(currentItem.Status, vm.Status))
+                ModelState.AddModelError("Status",
+                    $"This item is already \"{currentItem.Status}\" — it cannot be moved back to \"{vm.Status}\".");
+
             if (vm.ImageUpload != null && !ImageUploadHelper.IsValid(vm.ImageUpload, out var imgErr))
                 ModelState.AddModelError(nameof(vm.ImageUpload), imgErr);
 
@@ -183,6 +193,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 vm.ReportedByName = (await _context.tblUsers
                     .Include(u => u.Tenants)
                     .FirstOrDefaultAsync(u => u.UserID == vm.ReportedByUserID))?.DisplayName;
+                ViewBag.AllowedStatuses = StatusFlowHelper.AllowedLostFound(currentItem?.Status);
                 return View(vm);
             }
 

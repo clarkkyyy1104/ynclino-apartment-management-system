@@ -220,6 +220,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 AdminNotes = request.AdminNotes,
                 ImagePath = request.ImagePath
             };
+            // a resolved/cancelled request cannot be reopened
+            ViewBag.AllowedStatuses = StatusFlowHelper.AllowedMaintenance(request.Status);
             return View(vm);
         }
 
@@ -248,11 +250,17 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 .FirstOrDefaultAsync(m => m.RequestID == id);
             if (request == null) return NotFound();
 
+            // status may only move forward — a resolved request cannot be reopened
+            if (!StatusFlowHelper.IsAllowedMaintenance(request.Status, vm.Status))
+                ModelState.AddModelError("Status",
+                    $"This request is already \"{request.Status}\" — it cannot be moved back to \"{vm.Status}\".");
+
             if (!ModelState.IsValid)
             {
                 vm.TenantName = request.Tenant?.FullName;
                 vm.UnitNumber = request.Tenant?.Unit?.UnitNumber;
                 vm.ImagePath = request.ImagePath;
+                ViewBag.AllowedStatuses = StatusFlowHelper.AllowedMaintenance(request.Status);
                 return View(vm);
             }
 
