@@ -98,7 +98,7 @@
                         @if (isAdmin)
                         {
                             @* archived requests are closed history — no editing *@
-                            @if (!archived)
+                            @if (!archived && !YnclinoApartmentManagementSystem.Helpers.StatusFlowHelper.IsClosedMaintenance(r.Status))
                             {
                                 <a asp-action="Edit" asp-route-id="@r.RequestID" class="btn btn-sm btn-outline-primary">Edit</a>
                             }

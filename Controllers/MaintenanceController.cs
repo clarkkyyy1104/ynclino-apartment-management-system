@@ -205,6 +205,13 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             if (request == null) return NotFound();
 
+            // resolved/cancelled requests are archived history — view only
+            if (StatusFlowHelper.IsClosedMaintenance(request.Status))
+            {
+                TempData["Error"] = $"This request is already \"{request.Status}\" and can no longer be edited.";
+                return RedirectToAction(nameof(Details), new { id = request.RequestID });
+            }
+
             var vm = new MaintenanceViewModel
             {
                 RequestID = request.RequestID,
@@ -249,6 +256,13 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 .Include(m => m.Tenant).ThenInclude(t => t!.Unit)
                 .FirstOrDefaultAsync(m => m.RequestID == id);
             if (request == null) return NotFound();
+
+            // closed requests are view-only — reject the post outright
+            if (StatusFlowHelper.IsClosedMaintenance(request.Status))
+            {
+                TempData["Error"] = $"This request is already \"{request.Status}\" and can no longer be edited.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
 
             // status may only move forward — a resolved request cannot be reopened
             if (!StatusFlowHelper.IsAllowedMaintenance(request.Status, vm.Status))

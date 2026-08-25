@@ -150,6 +150,13 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             if (item == null) return NotFound();
 
+            // a claimed/resolved item is closed history — view only
+            if (StatusFlowHelper.IsClosedLostFound(item.Status))
+            {
+                TempData["Error"] = $"This item is already \"{item.Status}\" and can no longer be edited.";
+                return RedirectToAction(nameof(Details), new { id = item.ItemID });
+            }
+
             var vm = new LostFoundViewModel
             {
                 ItemID = item.ItemID,
@@ -181,6 +188,13 @@ namespace YnclinoApartmentManagementSystem.Controllers
             // cannot be reported again
             var currentItem = await _context.tblLostFoundItems.AsNoTracking()
                 .FirstOrDefaultAsync(l => l.ItemID == id);
+
+            // closed items are view-only — reject the post outright
+            if (currentItem != null && StatusFlowHelper.IsClosedLostFound(currentItem.Status))
+            {
+                TempData["Error"] = $"This item is already \"{currentItem.Status}\" and can no longer be edited.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
             if (currentItem != null && !StatusFlowHelper.IsAllowedLostFound(currentItem.Status, vm.Status))
                 ModelState.AddModelError("Status",
                     $"This item is already \"{currentItem.Status}\" — it cannot be moved back to \"{vm.Status}\".");

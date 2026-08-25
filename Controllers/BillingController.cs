@@ -276,6 +276,16 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             if (billing == null) return NotFound();
 
+            // a fully settled bill is closed history — view only.
+            // use whichever total is higher so legacy bills (paid before the payment
+            // history existed) are also recognised as settled
+            decimal settled = Math.Max(billing.AmountPaid ?? 0m, await TotalPaidAsync(billing.BillingID));
+            if (billing.AmountDue - settled <= 0)
+            {
+                TempData["Error"] = "This bill is fully paid and can no longer be updated.";
+                return RedirectToAction(nameof(Details), new { id = billing.BillingID });
+            }
+
             var vm = new BillingViewModel
             {
                 BillingID = billing.BillingID,
@@ -401,8 +411,15 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var billing = await _context.tblBillings.FindAsync(id);
             if (billing == null) return NotFound();
 
-            decimal alreadyPaid = await TotalPaidAsync(id);
+            decimal alreadyPaid = Math.Max(billing.AmountPaid ?? 0m, await TotalPaidAsync(id));
             decimal balanceBefore = billing.AmountDue - alreadyPaid;   // stored original, never the posted value
+
+            // fully settled bills are view-only — reject the post outright
+            if (balanceBefore <= 0)
+            {
+                TempData["Error"] = "This bill is fully paid and can no longer be updated.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
 
             // Overpayment is allowed: anything beyond this bill spills onto the tenant's
             // other unpaid bills and then becomes advance payment. Only a negative

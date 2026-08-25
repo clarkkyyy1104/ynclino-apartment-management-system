@@ -211,6 +211,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             // so the demo has real history to browse: past bills, maintenance
             // requests, and lost & found items tied to the sample tenants.
             var firstOfThisMonth = new DateTime(now.Year, now.Month, 1);
+            var seededBills = new List<tblBilling>();
             foreach (var (tenant, idx) in createdTenants.Select((t, i) => (t, i)))
             {
                 // one bill per completed month the tenant has lived here, capped at the
@@ -256,6 +257,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                         bill.DatePaid = datePaid > now ? now : datePaid;
                     }
                     _context.tblBillings.Add(bill);
+                    seededBills.Add(bill);
                 }
 
                 // a current bill that is not yet past due, so Unpaid and Partial show up
@@ -276,8 +278,29 @@ namespace YnclinoApartmentManagementSystem.Controllers
                         DatePaid = (curPaid.HasValue && curPaid.Value > 0) ? now.Date : (DateTime?)null
                     };
                     _context.tblBillings.Add(curBill);
+                    seededBills.Add(curBill);
                 }
             }
+
+            // every peso recorded on a seeded bill also gets a real payment row, so the
+            // Payment History, the balance maths and the "settled = view only" rule agree
+            await _context.SaveChangesAsync();
+            foreach (var b in seededBills)
+            {
+                if (b.AmountPaid is decimal paidAmt && paidAmt > 0)
+                {
+                    _context.tblPayments.Add(new tblPayment
+                    {
+                        BillingID = b.BillingID,
+                        Amount = paidAmt,
+                        Method = "Cash",
+                        Remarks = "Recorded on move-in of the sample data",
+                        DatePaid = b.DatePaid ?? b.DueDate,
+                        RecordedAt = now
+                    });
+                }
+            }
+            await _context.SaveChangesAsync();
 
             // maintenance requests across a mix of statuses/priorities
             string[] mCats = { "Plumbing", "Electrical", "Structural", "Appliance", "Other" };

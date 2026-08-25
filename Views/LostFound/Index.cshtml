@@ -80,7 +80,11 @@
                         <a asp-action="Details" asp-route-id="@item.ItemID" class="btn btn-sm btn-outline-info">Details</a>
                         @if (isAdmin)
                         {
-                            <a asp-action="Edit" asp-route-id="@item.ItemID" class="btn btn-sm btn-outline-primary">Edit</a>
+                            @* claimed / resolved items are closed history — view only *@
+                            @if (!YnclinoApartmentManagementSystem.Helpers.StatusFlowHelper.IsClosedLostFound(item.Status))
+                            {
+                                <a asp-action="Edit" asp-route-id="@item.ItemID" class="btn btn-sm btn-outline-primary">Edit</a>
+                            }
                             <a asp-action="Delete" asp-route-id="@item.ItemID" class="btn btn-sm btn-outline-danger">Delete</a>
                         }
                     </td>

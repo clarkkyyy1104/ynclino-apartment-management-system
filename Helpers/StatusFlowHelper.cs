@@ -33,6 +33,14 @@ namespace YnclinoApartmentManagementSystem.Helpers
         public static bool IsAllowedMaintenance(string? current, string? next)
             => next != null && AllowedMaintenance(current).Contains(next);
 
+        // A record in a final state is CLOSED: it becomes view-only, so it can no
+        // longer be edited at all (not by button, and not by typing the URL).
+        public static bool IsClosedLostFound(string? status)
+            => status == "Claimed" || status == "Resolved";
+
+        public static bool IsClosedMaintenance(string? status)
+            => status == "Resolved" || status == "Cancelled";
+
         // the current status plus everything after it in the flow
         private static List<string> Forward(string[] flow, string? current)
         {
