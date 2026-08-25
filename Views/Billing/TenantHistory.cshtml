@@ -1,0 +1,72 @@
+@model IEnumerable<YnclinoApartmentManagementSystem.Models.tblPayment>
+@{
+    var tenant = ViewBag.Tenant as YnclinoApartmentManagementSystem.Models.tblTenant;
+    ViewData["Title"] = "Payment History";
+    bool isAdmin = User.IsInRole("Admin");
+    decimal totalCollected = (decimal)(ViewBag.TotalCollected ?? 0m);
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h3 class="fw-bold mb-0">@(tenant?.FullName ?? "Payment History")</h3>
+        <div class="text-muted small">
+            Unit @(tenant?.Unit?.UnitNumber ?? "—") · Payment History
+        </div>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-success fs-6">Total Paid: ₱@totalCollected.ToString("N0")</span>
+        @if (isAdmin)
+        {
+            <a asp-action="History" class="btn btn-outline-secondary btn-sm">← All Tenants</a>
+        }
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle table-sm small">
+        <thead class="table-primary">
+            <tr>
+                <th>For the Month</th>
+                <th>Date Paid</th>
+                <th>Amount Paid</th>
+                <th>Balance</th>
+                <th>Bill Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Model)
+            {
+                var bill = p.Billing;
+                <tr>
+                    <td>@(bill != null ? bill.BillingPeriod.ToString("MMMM yyyy") : "—")</td>
+                    <td>@p.DatePaid.ToString("MMM dd, yyyy")</td>
+                    <td class="text-success fw-semibold">₱@p.Amount.ToString("N0")</td>
+                    @{
+                        var balances = ViewBag.BalanceAfter as Dictionary<int, decimal>;
+                        decimal bal = (balances != null && balances.ContainsKey(p.PaymentID))
+                            ? balances[p.PaymentID] : 0m;
+                    }
+                    <td class="@(bal > 0 ? "text-danger fw-semibold" : "text-success")">₱@bal.ToString("N0")</td>
+                    <td>
+                        @{
+                            var status = bill?.Status ?? "—";
+                            var badge = status switch
+                            {
+                                "Paid" => "bg-success",
+                                "Partial" => "bg-info text-dark",
+                                "Overdue" => "bg-danger",
+                                "Unpaid" => "bg-warning text-dark",
+                                _ => "bg-secondary"
+                            };
+                        }
+                        <span class="badge @badge">@status</span>
+                    </td>
+                </tr>
+            }
+            @if (!Model.Any())
+            {
+                <tr><td colspan="6" class="text-center text-muted py-4">No payments recorded yet.</td></tr>
+            }
+        </tbody>
+    </table>
+</div>

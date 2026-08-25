@@ -64,7 +64,7 @@
                     </td>
                     <td class="fw-semibold">@item.ItemName</td>
                     <td>@(item.Location ?? "—")</td>
-                    <td>@(item.ReportedBy?.Username ?? "—")</td>
+                    <td>@(item.ReportedBy?.DisplayName ?? "—")</td>
                     <td>@item.DateReported.ToString("MMM dd, yyyy")</td>
                     <td>
                         @{
@@ -78,11 +78,6 @@
                     </td>
                     <td>
                         <a asp-action="Details" asp-route-id="@item.ItemID" class="btn btn-sm btn-outline-info">Details</a>
-                        @if (!isAdmin && item.ItemType == "Found" && item.Status == "Reported"
-                            && item.ReportedByUserID != (int?)ViewBag.CurrentUserID)
-                        {
-                            <a asp-action="Claim" asp-route-id="@item.ItemID" class="btn btn-sm btn-outline-success">Claim</a>
-                        }
                         @if (isAdmin)
                         {
                             <a asp-action="Edit" asp-route-id="@item.ItemID" class="btn btn-sm btn-outline-primary">Edit</a>

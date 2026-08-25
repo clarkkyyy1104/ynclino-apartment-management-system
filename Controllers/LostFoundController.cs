@@ -28,7 +28,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         public async Task<IActionResult> Index(string? typeFilter, string? statusFilter, string? searchTerm)
         {
             IQueryable<tblLostFoundItem> query = _context.tblLostFoundItems
-                .Include(l => l.ReportedBy);
+                .Include(l => l.ReportedBy).ThenInclude(u => u!.Tenants);
 
             // tenants see their own reports plus anything marked Found
             if (User.IsInRole("Tenant"))
@@ -65,7 +65,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (id == null) return NotFound();
 
             var item = await _context.tblLostFoundItems
-                .Include(l => l.ReportedBy)
+                .Include(l => l.ReportedBy).ThenInclude(u => u!.Tenants)
                 .FirstOrDefaultAsync(l => l.ItemID == id);
 
             if (item == null) return NotFound();
@@ -81,7 +81,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (User.IsInRole("Admin"))
             {
                 ViewBag.Claims = await _context.tblClaimRequests
-                    .Include(c => c.Claimant)
+                    .Include(c => c.Claimant).ThenInclude(u => u!.Tenants)
                     .Where(c => c.ItemID == id)
                     .OrderByDescending(c => c.SubmittedAt)
                     .ToListAsync();
@@ -145,7 +145,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (id == null) return NotFound();
 
             var item = await _context.tblLostFoundItems
-                .Include(l => l.ReportedBy)
+                .Include(l => l.ReportedBy).ThenInclude(u => u!.Tenants)
                 .FirstOrDefaultAsync(l => l.ItemID == id);
 
             if (item == null) return NotFound();
@@ -154,7 +154,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             {
                 ItemID = item.ItemID,
                 ReportedByUserID = item.ReportedByUserID,
-                ReportedByName = item.ReportedBy?.Username,
+                ReportedByName = item.ReportedBy?.DisplayName,
                 ItemName = item.ItemName,
                 Description = item.Description,
                 ItemType = item.ItemType,
@@ -180,7 +180,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             if (!ModelState.IsValid)
             {
-                vm.ReportedByName = (await _context.tblUsers.FindAsync(vm.ReportedByUserID))?.Username;
+                vm.ReportedByName = (await _context.tblUsers
+                    .Include(u => u.Tenants)
+                    .FirstOrDefaultAsync(u => u.UserID == vm.ReportedByUserID))?.DisplayName;
                 return View(vm);
             }
 
@@ -209,7 +211,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (id == null) return NotFound();
 
             var item = await _context.tblLostFoundItems
-                .Include(l => l.ReportedBy)
+                .Include(l => l.ReportedBy).ThenInclude(u => u!.Tenants)
                 .FirstOrDefaultAsync(l => l.ItemID == id);
 
             if (item == null) return NotFound();

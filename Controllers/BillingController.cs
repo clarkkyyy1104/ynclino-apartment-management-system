@@ -101,24 +101,62 @@ namespace YnclinoApartmentManagementSystem.Controllers
         //Admins see every payment; a tenant sees only their own.
         public async Task<IActionResult> History(string? searchTerm)
         {
-            // every individual payment, newest first — one bill can appear several
-            // times because it may have been settled in instalments
-            IQueryable<tblPayment> query = _context.tblPayments
-                .Include(p => p.Billing).ThenInclude(b => b!.Tenant).ThenInclude(t => t!.Unit);
-
+            // A tenant only ever has their own payments, so send them straight to the detail page
             if (User.IsInRole("Tenant"))
             {
-                var tenant = await GetCurrentTenantAsync();
-                if (tenant == null) return View(new List<tblPayment>());
-                query = query.Where(p => p.Billing!.TenantID == tenant.TenantID);
-            }
-            else if (!string.IsNullOrWhiteSpace(searchTerm))
-            {
-                query = query.Where(p => p.Billing!.Tenant!.FirstName.Contains(searchTerm)
-                    || p.Billing.Tenant.LastName.Contains(searchTerm));
+                var me = await GetCurrentTenantAsync();
+                if (me == null) return View(new List<TenantPaymentSummary>());
+                return RedirectToAction(nameof(TenantHistory), new { id = me.TenantID });
             }
 
-            var payments = await query
+            // Admin sees ONE ROW PER TENANT — cleaner than a long list of every payment.
+            IQueryable<tblTenant> tenants = _context.tblTenants.Include(t => t.Unit);
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+                tenants = tenants.Where(t => t.FirstName.Contains(searchTerm) || t.LastName.Contains(searchTerm));
+
+            var list = await tenants.OrderBy(t => t.LastName).ThenBy(t => t.FirstName).ToListAsync();
+
+            var summaries = new List<TenantPaymentSummary>();
+            foreach (var t in list)
+            {
+                var pays = await _context.tblPayments
+                    .Where(p => p.Billing!.TenantID == t.TenantID)
+                    .ToListAsync();
+
+                summaries.Add(new TenantPaymentSummary
+                {
+                    TenantID = t.TenantID,
+                    TenantName = t.FullName,
+                    UnitNumber = t.Unit?.UnitNumber,
+                    PaymentCount = pays.Count,
+                    TotalPaid = pays.Sum(p => p.Amount),
+                    LastPaymentDate = pays.Count > 0 ? pays.Max(p => p.DatePaid) : (DateTime?)null
+                });
+            }
+
+            ViewBag.SearchTerm = searchTerm;
+            ViewBag.TotalCollected = summaries.Sum(x => x.TotalPaid);
+            return View(summaries);
+        }
+
+        // GET: Billing/TenantHistory/5 — every payment made by one tenant
+        public async Task<IActionResult> TenantHistory(int id)
+        {
+            // a tenant may only open their own history
+            if (User.IsInRole("Tenant"))
+            {
+                var me = await GetCurrentTenantAsync();
+                if (me == null || me.TenantID != id) return Forbid();
+            }
+
+            var tenant = await _context.tblTenants
+                .Include(t => t.Unit)
+                .FirstOrDefaultAsync(t => t.TenantID == id);
+            if (tenant == null) return NotFound();
+
+            var payments = await _context.tblPayments
+                .Include(p => p.Billing).ThenInclude(b => b!.Tenant).ThenInclude(t => t!.Unit)
+                .Where(p => p.Billing!.TenantID == id)
                 .OrderByDescending(p => p.DatePaid).ThenByDescending(p => p.PaymentID)
                 .ToListAsync();
 
@@ -135,7 +173,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 }
             }
 
-            ViewBag.SearchTerm = searchTerm;
+            ViewBag.Tenant = tenant;
             ViewBag.TotalCollected = payments.Sum(p => p.Amount);
             ViewBag.BalanceAfter = balanceAfter;
             return View(payments);

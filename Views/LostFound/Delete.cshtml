@@ -15,7 +15,7 @@
                     <dt class="col-sm-5">Category</dt>
                     <dd class="col-sm-7">@Model.ItemType</dd>
                     <dt class="col-sm-5">Reported By</dt>
-                    <dd class="col-sm-7">@(Model.ReportedBy?.Username ?? "—")</dd>
+                    <dd class="col-sm-7">@(Model.ReportedBy?.DisplayName ?? "—")</dd>
                     <dt class="col-sm-5">Date Reported</dt>
                     <dd class="col-sm-7">@Model.DateReported.ToString("MMM dd, yyyy")</dd>
                 </dl>

@@ -50,7 +50,7 @@
                     </dd>
 
                     <dt class="col-sm-4">Reported By</dt>
-                    <dd class="col-sm-8">@(Model.ReportedBy?.Username ?? "—")</dd>
+                    <dd class="col-sm-8">@(Model.ReportedBy?.DisplayName ?? "—")</dd>
 
                     <dt class="col-sm-4">Date Reported</dt>
                     <dd class="col-sm-8">@Model.DateReported.ToString("MMM dd, yyyy hh:mm tt")</dd>
@@ -68,7 +68,7 @@
                         {
                             <div class="border rounded p-3 mb-2 @(claim.Status == "Pending" ? "border-warning" : claim.Status == "Approved" ? "border-success" : "border-secondary")">
                                 <div class="d-flex justify-content-between align-items-start mb-1">
-                                    <span class="fw-semibold small">@(claim.Claimant?.Username ?? "—")</span>
+                                    <span class="fw-semibold small">@(claim.Claimant?.DisplayName ?? "—")</span>
                                     <span class="badge @(claim.Status == "Pending" ? "bg-warning text-dark" : claim.Status == "Approved" ? "bg-success" : "bg-secondary")">@claim.Status</span>
                                 </div>
                                 <p class="small mb-1">@claim.VerificationDetails</p>
@@ -131,11 +131,6 @@
                                 <button type="submit" class="btn btn-outline-success btn-sm">Mark Resolved</button>
                             </form>
                         }
-                    }
-                    else if (Model.ItemType == "Found" && Model.Status == "Reported"
-                        && Model.ReportedByUserID != (int?)ViewBag.CurrentUserID)
-                    {
-                        <a asp-action="Claim" asp-route-id="@Model.ItemID" class="btn btn-outline-success btn-sm">Claim This Item</a>
                     }
                     <a asp-action="Index" class="btn btn-secondary btn-sm">Back</a>
                 </div>

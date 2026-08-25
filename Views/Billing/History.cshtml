@@ -1,77 +1,55 @@
-@model IEnumerable<YnclinoApartmentManagementSystem.Models.tblPayment>
+@model IEnumerable<YnclinoApartmentManagementSystem.Models.ViewModels.TenantPaymentSummary>
 @{
     ViewData["Title"] = "Payment History";
-    bool isAdmin = User.IsInRole("Admin");
+    decimal totalCollected = (decimal)(ViewBag.TotalCollected ?? 0m);
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3 class="fw-bold mb-0">Payment History</h3>
+    <span class="badge bg-success fs-6">Total Collected: ₱@totalCollected.ToString("N0")</span>
 </div>
 
-@if (isAdmin)
-{
-    <form method="get" class="row g-2 mb-4">
-        <div class="col-auto">
-            <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" class="form-control"
-                   style="width:229px" placeholder="Search tenant name..." />
-        </div>
-        <div class="col-auto">
-            <button type="submit" class="btn btn-outline-primary">Search</button>
-            <a asp-action="History" class="btn btn-link">Clear</a>
-        </div>
-    </form>
-}
+<form method="get" class="row g-2 mb-4">
+    <div class="col-auto">
+        <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" class="form-control"
+               style="width:229px" placeholder="Search tenant name..." />
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-outline-primary">Search</button>
+        <a asp-action="History" class="btn btn-link">Clear</a>
+    </div>
+</form>
 
 <div class="table-responsive">
     <table class="table table-hover align-middle table-sm small">
         <thead class="table-primary">
             <tr>
-                @if (isAdmin) { <th>Tenant</th><th>Unit</th> }
-                <th>For the Month</th>
-                <th>Date Paid</th>
-                <th>Amount Paid</th>
-                <th>Balance</th>
-                <th>Bill Status</th>
+                <th>Tenant</th>
+                <th>Unit</th>
+                <th>Payments</th>
+                <th>Total Paid</th>
+                <th>Last Payment</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var p in Model)
+            @foreach (var t in Model)
             {
-                var bill = p.Billing;
                 <tr>
-                    @if (isAdmin)
-                    {
-                        <td class="fw-semibold">@(bill?.Tenant?.FullName ?? "—")</td>
-                        <td>@(bill?.Tenant?.Unit?.UnitNumber ?? "—")</td>
-                    }
-                    <td>@(bill != null ? bill.BillingPeriod.ToString("MMMM yyyy") : "—")</td>
-                    <td>@p.DatePaid.ToString("MMM dd, yyyy")</td>
-                    <td class="text-success fw-semibold">₱@p.Amount.ToString("N0")</td>
-                    @{
-                        var balances = ViewBag.BalanceAfter as Dictionary<int, decimal>;
-                        decimal bal = (balances != null && balances.ContainsKey(p.PaymentID))
-                            ? balances[p.PaymentID] : 0m;
-                    }
-                    <td class="@(bal > 0 ? "text-danger fw-semibold" : "text-success")">₱@bal.ToString("N0")</td>
+                    <td class="fw-semibold">@t.TenantName</td>
+                    <td>@(t.UnitNumber ?? "—")</td>
+                    <td>@t.PaymentCount</td>
+                    <td class="text-success fw-semibold">₱@t.TotalPaid.ToString("N0")</td>
+                    <td>@(t.LastPaymentDate?.ToString("MMM dd, yyyy") ?? "—")</td>
                     <td>
-                        @{
-                            var status = bill?.Status ?? "—";
-                            var badge = status switch
-                            {
-                                "Paid" => "bg-success",
-                                "Partial" => "bg-info text-dark",
-                                "Overdue" => "bg-danger",
-                                "Unpaid" => "bg-warning text-dark",
-                                _ => "bg-secondary"
-                            };
-                        }
-                        <span class="badge @badge">@status</span>
+                        <a asp-action="TenantHistory" asp-route-id="@t.TenantID"
+                           class="btn btn-sm btn-outline-info">Details</a>
                     </td>
                 </tr>
             }
             @if (!Model.Any())
             {
-                <tr><td colspan="@(isAdmin ? 8 : 6)" class="text-center text-muted py-4">No payments recorded yet.</td></tr>
+                <tr><td colspan="6" class="text-center text-muted py-4">No tenants found.</td></tr>
             }
         </tbody>
     </table>
