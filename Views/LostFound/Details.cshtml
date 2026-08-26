@@ -41,8 +41,7 @@
                     <dd class="col-sm-8">
                         @{
                             var sbadge = Model.Status switch {
-                                "Resolved" => "bg-success",
-                                "Claimed"  => "bg-primary",
+                                "Claimed"  => "bg-success",
                                 _          => "bg-warning text-dark"
                             };
                         }
@@ -122,16 +121,6 @@
                 }
 
                 <div class="d-flex gap-2 mt-3">
-                    @if (User.IsInRole("Admin"))
-                    {
-                        @if (Model.Status == "Claimed")
-                        {
-                            <form asp-action="Resolve" asp-route-id="@Model.ItemID" method="post" class="d-inline">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-outline-success btn-sm">Mark Resolved</button>
-                            </form>
-                        }
-                    }
                     <a asp-action="Index" class="btn btn-secondary btn-sm">Back</a>
                 </div>
             </div>

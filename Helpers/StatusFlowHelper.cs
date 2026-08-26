@@ -5,8 +5,9 @@ namespace YnclinoApartmentManagementSystem.Helpers
     // reopened — that is how these things work in real life, so the system enforces it.
     public static class StatusFlowHelper
     {
-        // Reported -> Claimed -> Resolved
-        private static readonly string[] LostFoundFlow = { "Reported", "Claimed", "Resolved" };
+        // Reported -> Claimed. "Claimed" is the final state: the owner has the item
+        // back, so the report is finished (this replaces the old "Resolved" status).
+        private static readonly string[] LostFoundFlow = { "Reported", "Claimed" };
 
         // Pending -> In Progress -> Resolved   (Cancelled is a separate end state)
         private static readonly string[] MaintenanceFlow = { "Pending", "In Progress", "Resolved" };
@@ -35,6 +36,8 @@ namespace YnclinoApartmentManagementSystem.Helpers
 
         // A record in a final state is CLOSED: it becomes view-only, so it can no
         // longer be edited at all (not by button, and not by typing the URL).
+        // "Claimed" is final. "Resolved" is the retired status kept only so old
+        // records created before the change remain closed.
         public static bool IsClosedLostFound(string? status)
             => status == "Claimed" || status == "Resolved";
 

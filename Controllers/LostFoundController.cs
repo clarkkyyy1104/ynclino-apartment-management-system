@@ -400,20 +400,5 @@ namespace YnclinoApartmentManagementSystem.Controllers
             TempData["Success"] = $"Claim has been {decision.ToLower()}.";
             return RedirectToAction(nameof(Details), new { id = claim.ItemID });
         }
-
-        // POST: LostFound/Resolve/5 — close out an item that's been handed over
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Resolve(int id)
-        {
-            var item = await _context.tblLostFoundItems.FindAsync(id);
-            if (item == null) return NotFound();
-
-            item.Status = "Resolved";
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Item marked as resolved.";
-            return RedirectToAction(nameof(Details), new { id });
-        }
     }
 }

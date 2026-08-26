@@ -348,13 +348,13 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 new() { ReportedByUserID = adminId, ItemName = "Black Leather Wallet", ItemType = "Found", Location = "Lobby",        Status = "Reported", Description = "Found near the front desk.", DateReported = now.AddDays(-6) },
                 new() { ReportedByUserID = adminId, ItemName = "iPhone 13 (blue case)", ItemType = "Found", Location = "2nd floor hall", Status = "Reported", Description = "Turned in by a resident.",    DateReported = now.AddDays(-4) },
                 new() { ReportedByUserID = adminId, ItemName = "Silver House Keys",     ItemType = "Found", Location = "Parking area", Status = "Reported", Description = "Set of three keys on a ring.",  DateReported = now.AddDays(-2) },
-                new() { ReportedByUserID = adminId, ItemName = "Umbrella (red)",         ItemType = "Found", Location = "Stairwell",    Status = "Resolved", Description = "Claimed and returned.",       DateReported = now.AddDays(-20) },
+                new() { ReportedByUserID = adminId, ItemName = "Umbrella (red)",         ItemType = "Found", Location = "Stairwell",    Status = "Claimed", Description = "Claimed and returned.",       DateReported = now.AddDays(-20) },
             };
             var lostItems = new List<tblLostFoundItem>
             {
                 new() { ReportedByUserID = createdTenants[3].UserID!.Value,  ItemName = "Student ID Card",   ItemType = "Lost", Location = "Around the building", Status = "Reported", Description = "Lost my school ID.",       DateReported = now.AddDays(-5) },
                 new() { ReportedByUserID = createdTenants[4].UserID!.Value,  ItemName = "Laptop Charger",    ItemType = "Lost", Location = "Study area",         Status = "Reported", Description = "65W USB-C charger.",       DateReported = now.AddDays(-3) },
-                new() { ReportedByUserID = createdTenants[1].UserID!.Value,  ItemName = "Silver Ring",       ItemType = "Lost", Location = "Laundry room",       Status = "Resolved", Description = "Already recovered.",       DateReported = now.AddDays(-25) },
+                new() { ReportedByUserID = createdTenants[1].UserID!.Value,  ItemName = "Silver Ring",       ItemType = "Lost", Location = "Laundry room",       Status = "Claimed", Description = "Already recovered.",       DateReported = now.AddDays(-25) },
             };
             _context.tblLostFoundItems.AddRange(foundItems);
             _context.tblLostFoundItems.AddRange(lostItems);

@@ -26,7 +26,7 @@ namespace YnclinoApartmentManagementSystem.Models
         public string? Location { get; set; }
 
         [Required, MaxLength(20)]
-        public string Status { get; set; } = "Reported";   // Reported | Claimed | Resolved
+        public string Status { get; set; } = "Reported";   // Reported | Claimed (final)
 
         [Display(Name = "Date Reported")]
         public DateTime DateReported { get; set; } = DateTime.Now;

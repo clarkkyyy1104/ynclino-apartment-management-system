@@ -228,6 +228,12 @@ using (var scope = app.Services.CreateScope())
     }
     catch { }
 
+    // Lost & Found no longer has a separate "Resolved" state — being Claimed by its
+    // owner IS the end of the report. Fold any old Resolved rows into Claimed.
+    if (db.tblLostFoundItems.Any(l => l.Status == "Resolved"))
+        db.tblLostFoundItems.Where(l => l.Status == "Resolved")
+                            .ExecuteUpdate(x => x.SetProperty(l => l.Status, "Claimed"));
+
     // the forced password change is for tenants only — clear the flag on any admin
     // account that may have picked it up before this rule was enforced
     if (db.tblUsers.Any(u => u.Role == "Admin" && u.MustChangePassword))
