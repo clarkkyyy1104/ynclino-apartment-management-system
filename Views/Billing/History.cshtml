@@ -1,12 +1,10 @@
 @model IEnumerable<YnclinoApartmentManagementSystem.Models.ViewModels.TenantPaymentSummary>
 @{
     ViewData["Title"] = "Payment History";
-    decimal totalCollected = (decimal)(ViewBag.TotalCollected ?? 0m);
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3 class="fw-bold mb-0">Payment History</h3>
-    <span class="badge bg-success fs-6">Total Collected: ₱@totalCollected.ToString("N0")</span>
 </div>
 
 <form method="get" class="row g-2 mb-4">

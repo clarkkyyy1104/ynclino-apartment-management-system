@@ -3,7 +3,6 @@
     var tenant = ViewBag.Tenant as YnclinoApartmentManagementSystem.Models.tblTenant;
     ViewData["Title"] = "Payment History";
     bool isAdmin = User.IsInRole("Admin");
-    decimal totalCollected = (decimal)(ViewBag.TotalCollected ?? 0m);
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -14,7 +13,6 @@
         </div>
     </div>
     <div class="d-flex align-items-center gap-2">
-        <span class="badge bg-success fs-6">Total Paid: ₱@totalCollected.ToString("N0")</span>
         @if (isAdmin)
         {
             <a asp-action="History" class="btn btn-outline-secondary btn-sm">← All Tenants</a>
