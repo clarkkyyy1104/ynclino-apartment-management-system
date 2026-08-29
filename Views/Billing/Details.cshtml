@@ -17,8 +17,23 @@
                     <dt class="col-sm-4">Billing Period</dt>
                     <dd class="col-sm-8">@Model.BillingPeriod.ToString("MMMM yyyy")</dd>
 
+                    <dt class="col-sm-4">Tenant's Rent</dt>
+                    <dd class="col-sm-8">₱@((Model.Tenant?.MonthlyRent ?? 0m).ToString("N2"))</dd>
+
                     <dt class="col-sm-4">Amount Paid</dt>
                     <dd class="col-sm-8">₱@Model.AmountPaid.ToString("N2")</dd>
+
+                    <dt class="col-sm-4">Status</dt>
+                    <dd class="col-sm-8">
+                        @{
+                            var badge = Model.PaymentStatus switch {
+                                "Paid"    => "bg-success",
+                                "Partial" => "bg-info text-dark",
+                                _         => "bg-warning text-dark"
+                            };
+                        }
+                        <span class="badge @badge">@Model.PaymentStatus</span>
+                    </dd>
 
                     <dt class="col-sm-4">Payment Method</dt>
                     <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.PaymentMethod) ? "—" : Model.PaymentMethod)</dd>

@@ -34,5 +34,22 @@ namespace YnclinoApartmentManagementSystem.Models
 
         [ForeignKey("TenantID")]
         public tblTenant? Tenant { get; set; }
+
+        // status is derived from how much was paid against the tenant's own rent:
+        //   Paid    – paid their full monthly rent (or more)
+        //   Partial – paid some, but less than their rent
+        //   Unpaid  – nothing paid
+        // (requires the Tenant to be loaded; falls back sensibly if not)
+        [NotMapped]
+        public string PaymentStatus
+        {
+            get
+            {
+                decimal rent = Tenant?.MonthlyRent ?? 0m;
+                if (AmountPaid <= 0m) return "Unpaid";
+                if (rent <= 0m || AmountPaid >= rent) return "Paid";
+                return "Partial";
+            }
+        }
     }
 }

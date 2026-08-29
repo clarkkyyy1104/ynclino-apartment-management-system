@@ -26,6 +26,7 @@
                 <th>Billing Period</th>
                 <th>Amount Paid</th>
                 <th>Method</th>
+                <th>Status</th>
                 <th>Date Recorded</th>
                 <th>Actions</th>
             </tr>
@@ -38,6 +39,16 @@
                     <td>@b.BillingPeriod.ToString("MMMM yyyy")</td>
                     <td>₱@b.AmountPaid.ToString("N2")</td>
                     <td>@(string.IsNullOrEmpty(b.PaymentMethod) ? "—" : b.PaymentMethod)</td>
+                    <td>
+                        @{
+                            var badge = b.PaymentStatus switch {
+                                "Paid"    => "bg-success",
+                                "Partial" => "bg-info text-dark",
+                                _         => "bg-warning text-dark"
+                            };
+                        }
+                        <span class="badge @badge">@b.PaymentStatus</span>
+                    </td>
                     <td>@b.DateIssued.ToString("MMM dd, yyyy")</td>
                     <td>
                         <a asp-action="Details" asp-route-id="@b.BillingID" class="btn btn-sm btn-outline-info">Details</a>
@@ -47,7 +58,7 @@
             }
             @if (!Model.Any())
             {
-                <tr><td colspan="6" class="text-center text-muted py-4">No payments recorded yet.</td></tr>
+                <tr><td colspan="7" class="text-center text-muted py-4">No payments recorded yet.</td></tr>
             }
         </tbody>
     </table>
