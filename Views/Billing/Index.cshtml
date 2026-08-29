@@ -5,21 +5,13 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3 class="fw-bold mb-0">Billing &amp; Payment</h3>
-    <a asp-action="Create" class="btn btn-primary">+ Issue Bill</a>
+    <a asp-action="Create" class="btn btn-primary">+ Record Payment</a>
 </div>
 
 <form method="get" class="row g-2 mb-4">
     <div class="col-auto">
         <input type="text" name="searchTerm" value="@ViewBag.SearchTerm"
                class="form-control" style="width:229px" placeholder="Search tenant name…" />
-    </div>
-    <div class="col-auto">
-        <select name="statusFilter" class="form-select" style="width:229px" onchange="this.form.submit()">
-            <option value="">All Statuses</option>
-            <option value="Paid"    selected="@(ViewBag.StatusFilter == "Paid")">Paid</option>
-            <option value="Unpaid"  selected="@(ViewBag.StatusFilter == "Unpaid")">Unpaid</option>
-            <option value="Partial" selected="@(ViewBag.StatusFilter == "Partial")">Partial</option>
-        </select>
     </div>
     <div class="col-auto">
         <a asp-action="Index" class="btn btn-link">Clear</a>
@@ -34,7 +26,7 @@
                 <th>Billing Period</th>
                 <th>Amount Paid</th>
                 <th>Method</th>
-                <th>Status</th>
+                <th>Date Recorded</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -44,18 +36,9 @@
                 <tr>
                     <td class="fw-semibold">@b.Tenant?.FullName</td>
                     <td>@b.BillingPeriod.ToString("MMMM yyyy")</td>
-                    <td>@(b.AmountPaid.HasValue ? "₱" + b.AmountPaid.Value.ToString("N2") : "—")</td>
+                    <td>₱@b.AmountPaid.ToString("N2")</td>
                     <td>@(string.IsNullOrEmpty(b.PaymentMethod) ? "—" : b.PaymentMethod)</td>
-                    <td>
-                        @{
-                            var badge = b.Status switch {
-                                "Paid"    => "bg-success",
-                                "Partial" => "bg-info text-dark",
-                                _         => "bg-warning text-dark"
-                            };
-                        }
-                        <span class="badge @badge">@b.Status</span>
-                    </td>
+                    <td>@b.DateIssued.ToString("MMM dd, yyyy")</td>
                     <td>
                         <a asp-action="Details" asp-route-id="@b.BillingID" class="btn btn-sm btn-outline-info">Details</a>
                         <a asp-action="Delete" asp-route-id="@b.BillingID" class="btn btn-sm btn-outline-danger">Delete</a>
@@ -64,7 +47,7 @@
             }
             @if (!Model.Any())
             {
-                <tr><td colspan="7" class="text-center text-muted py-4">No billing records found.</td></tr>
+                <tr><td colspan="6" class="text-center text-muted py-4">No payments recorded yet.</td></tr>
             }
         </tbody>
     </table>

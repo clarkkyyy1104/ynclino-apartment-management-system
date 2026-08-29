@@ -40,7 +40,6 @@ namespace YnclinoApartmentManagementSystem.Data
             modelBuilder.Entity<tblBilling>(entity =>
             {
                 entity.HasKey(e => e.BillingID);
-                entity.Property(e => e.Status).IsRequired().HasMaxLength(20).HasDefaultValue("Unpaid");
                 entity.Property(e => e.Notes).HasMaxLength(500);
 
                 entity.HasOne(b => b.Tenant)

@@ -1,13 +1,13 @@
 @model YnclinoApartmentManagementSystem.Models.tblBilling
 @{
-    ViewData["Title"] = "Bill Details";
+    ViewData["Title"] = "Payment Details";
 }
 
 <div class="row justify-content-center">
     <div class="col-md-7">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-primary text-white fw-semibold">
-                Bill — @Model.Tenant?.FullName · @Model.BillingPeriod.ToString("MMMM yyyy")
+                Payment — @Model.Tenant?.FullName · @Model.BillingPeriod.ToString("MMMM yyyy")
             </div>
             <div class="card-body">
                 <dl class="row info-list">
@@ -17,40 +17,22 @@
                     <dt class="col-sm-4">Billing Period</dt>
                     <dd class="col-sm-8">@Model.BillingPeriod.ToString("MMMM yyyy")</dd>
 
-                    <dt class="col-sm-4">Amount Due</dt>
-                    <dd class="col-sm-8">₱@Model.AmountDue.ToString("N2")</dd>
-
                     <dt class="col-sm-4">Amount Paid</dt>
-                    <dd class="col-sm-8">@(Model.AmountPaid.HasValue ? "₱" + Model.AmountPaid.Value.ToString("N2") : "—")</dd>
-
-                    <dt class="col-sm-4">Date Paid</dt>
-                    <dd class="col-sm-8">@(Model.DatePaid?.ToString("MMM dd, yyyy") ?? "—")</dd>
+                    <dd class="col-sm-8">₱@Model.AmountPaid.ToString("N2")</dd>
 
                     <dt class="col-sm-4">Payment Method</dt>
                     <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.PaymentMethod) ? "—" : Model.PaymentMethod)</dd>
 
-                    <dt class="col-sm-4">Status</dt>
-                    <dd class="col-sm-8">
-                        @{
-                            var badge = Model.Status switch {
-                                "Paid"    => "bg-success",
-                                "Partial" => "bg-info text-dark",
-                                "Late"    => "bg-danger",
-                                _         => "bg-warning text-dark"
-                            };
-                        }
-                        <span class="badge @badge">@Model.Status</span>
-                    </dd>
-
                     <dt class="col-sm-4">Notes</dt>
                     <dd class="col-sm-8">@(Model.Notes ?? "—")</dd>
 
-                    <dt class="col-sm-4">Date Issued</dt>
+                    <dt class="col-sm-4">Date Recorded</dt>
                     <dd class="col-sm-8">@Model.DateIssued.ToString("MMM dd, yyyy hh:mm tt")</dd>
                 </dl>
 
                 <div class="d-flex gap-2 mt-3">
                     <a asp-action="Index" class="btn btn-secondary btn-sm">Back</a>
+                    <a asp-action="Delete" asp-route-id="@Model.BillingID" class="btn btn-outline-danger btn-sm">Delete</a>
                 </div>
             </div>
         </div>

@@ -16,26 +16,14 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         [DataType(DataType.Date)]
         public DateTime BillingPeriod { get; set; } = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
 
-        [Required(ErrorMessage = "Amount Due is required.")]
+        [Required(ErrorMessage = "Amount Paid is required.")]
         [Range(0.01, double.MaxValue, ErrorMessage = "Amount must be greater than 0.")]
-        [Display(Name = "Amount Due")]
-        public decimal AmountDue { get; set; }
-
-        [Range(0, double.MaxValue)]
         [Display(Name = "Amount Paid")]
-        public decimal? AmountPaid { get; set; }
-
-        [Display(Name = "Date Paid")]
-        [DataType(DataType.Date)]
-        public DateTime? DatePaid { get; set; }
+        public decimal AmountPaid { get; set; }
 
         [MaxLength(20)]
         [Display(Name = "Payment Method")]
         public string? PaymentMethod { get; set; }
-
-        [Required]
-        [Display(Name = "Status")]
-        public string Status { get; set; } = "Unpaid";
 
         [MaxLength(500)]
         public string? Notes { get; set; }

@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace YnclinoApartmentManagementSystem.Models
 {
+    // A bill is a record of a payment a tenant made for a given month.
     public class tblBilling
     {
         [Key]
@@ -17,28 +18,18 @@ namespace YnclinoApartmentManagementSystem.Models
 
         [Required]
         [Column(TypeName = "decimal(10,2)")]
-        [Display(Name = "Amount Due")]
-        public decimal AmountDue { get; set; }
-
-        [Column(TypeName = "decimal(10,2)")]
         [Display(Name = "Amount Paid")]
-        public decimal? AmountPaid { get; set; }
+        public decimal AmountPaid { get; set; }
 
-        [Display(Name = "Date Paid")]
-        public DateTime? DatePaid { get; set; }
-
-        // how the payment was made (recorded when a payment is entered)
+        // how the payment was made
         [MaxLength(20)]
         [Display(Name = "Payment Method")]
         public string? PaymentMethod { get; set; }   // Cash | GCash
 
-        [Required, MaxLength(20)]
-        public string Status { get; set; } = "Unpaid";   // Unpaid | Partial | Paid
-
         [MaxLength(500)]
         public string? Notes { get; set; }
 
-        [Display(Name = "Date Issued")]
+        [Display(Name = "Date Recorded")]
         public DateTime DateIssued { get; set; } = DateTime.Now;
 
         [ForeignKey("TenantID")]

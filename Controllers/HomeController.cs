@@ -23,15 +23,17 @@ namespace YnclinoApartmentManagementSystem.Controllers
             ViewBag.ActiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Active");
             ViewBag.InactiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Inactive");
 
-            // ── Billing & Payments ───────────────────────────────────
-            var bills = await _context.tblBillings
-                .Select(b => new { b.AmountDue, b.AmountPaid })
+            // ── Payments ─────────────────────────────────────────────
+            var thisMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+            var payments = await _context.tblBillings
+                .Select(b => new { b.AmountPaid, b.BillingPeriod })
                 .ToListAsync();
 
-            var outstanding = bills.Where(b => (b.AmountPaid ?? 0m) < b.AmountDue).ToList();
-            ViewBag.OutstandingCount = outstanding.Count;
-            ViewBag.OutstandingTotal = outstanding.Sum(b => b.AmountDue - (b.AmountPaid ?? 0m));
-            ViewBag.CollectedTotal = bills.Sum(b => b.AmountPaid ?? 0m);
+            ViewBag.PaymentsCount = payments.Count;
+            ViewBag.CollectedTotal = payments.Sum(p => p.AmountPaid);
+            ViewBag.CollectedThisMonth = payments
+                .Where(p => p.BillingPeriod.Year == thisMonth.Year && p.BillingPeriod.Month == thisMonth.Month)
+                .Sum(p => p.AmountPaid);
 
             return View("AdminDashboard");
         }
