@@ -18,17 +18,20 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
         public async Task<IActionResult> Index()
         {
+            // ── Tenants ──────────────────────────────────────────────
+            ViewBag.TotalTenants = await _context.tblTenants.CountAsync();
             ViewBag.ActiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Active");
             ViewBag.InactiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Inactive");
 
-            // outstanding = bills that aren't paid in full
-            var outstanding = await _context.tblBillings
-                .Where(b => b.AmountPaid == null || b.AmountPaid < b.AmountDue)
+            // ── Billing & Payments ───────────────────────────────────
+            var bills = await _context.tblBillings
                 .Select(b => new { b.AmountDue, b.AmountPaid })
                 .ToListAsync();
 
+            var outstanding = bills.Where(b => (b.AmountPaid ?? 0m) < b.AmountDue).ToList();
             ViewBag.OutstandingCount = outstanding.Count;
             ViewBag.OutstandingTotal = outstanding.Sum(b => b.AmountDue - (b.AmountPaid ?? 0m));
+            ViewBag.CollectedTotal = bills.Sum(b => b.AmountPaid ?? 0m);
 
             return View("AdminDashboard");
         }

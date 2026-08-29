@@ -212,7 +212,8 @@ h1, h2, h3, h4, h5, h6 { color: var(--bks-ink); }
     border-top: 4px solid var(--bks-orange);
     border-radius: 14px;
     box-shadow: 0 2px 12px rgba(59, 55, 64, .06);
-    overflow: hidden;
+    /* let wide tables scroll sideways on small screens instead of being clipped */
+    overflow-x: auto;
 }
 
 .table-responsive > .table { margin-bottom: 0; }
@@ -234,3 +235,32 @@ h1, h2, h3, h4, h5, h6 { color: var(--bks-ink); }
 
 /* ── Toasts keep the themed success/danger fills ────────────── */
 .toast { border-radius: 12px; }
+
+/* ── Mobile polish (phones) ─────────────────────────────────── */
+@media (max-width: 575.98px) {
+    .app-content { padding: 16px 13px; }
+    .app-topbar { padding: 0 14px; }
+
+    /* page headings sit above their action button instead of crowding it */
+    .app-content > .d-flex.justify-content-between {
+        flex-wrap: wrap;
+        gap: .6rem;
+    }
+    .app-content h3.fw-bold { font-size: 1.35rem; }
+
+    /* search / filter bars: each control goes full width instead of a fixed 229px */
+    form.row.g-2 > .col-auto { width: 100%; }
+    form.row.g-2 > .col-auto > .form-control,
+    form.row.g-2 > .col-auto > .form-select { width: 100% !important; }
+
+    /* denser tables so more fits before the sideways scroll kicks in */
+    .table { font-size: .9rem; }
+    .table thead th,
+    .table tbody td { padding: .5rem .55rem; }
+
+    /* stack the button row on card footers */
+    .card-footer.d-flex { flex-wrap: wrap; }
+}
+
+/* never let the page itself scroll sideways (only tables do) */
+html, body { overflow-x: hidden; }

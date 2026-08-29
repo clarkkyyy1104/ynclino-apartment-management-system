@@ -21,18 +21,11 @@
                         <span asp-validation-for="TenantID" class="text-danger small"></span>
                     </div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label asp-for="BillingPeriod" class="form-label fw-semibold small">Billing Period (Month)</label>
-                            <input asp-for="BillingPeriod" type="month" class="form-control"
-                                   value="@Model.BillingPeriod.ToString("yyyy-MM")" />
-                            <span asp-validation-for="BillingPeriod" class="text-danger small"></span>
-                        </div>
-                        <div class="col-md-6">
-                            <label asp-for="DueDate" class="form-label fw-semibold small"></label>
-                            <input asp-for="DueDate" type="date" class="form-control" />
-                            <span asp-validation-for="DueDate" class="text-danger small"></span>
-                        </div>
+                    <div class="mb-3">
+                        <label asp-for="BillingPeriod" class="form-label fw-semibold small">Billing Period (Month)</label>
+                        <input asp-for="BillingPeriod" type="month" class="form-control"
+                               value="@Model.BillingPeriod.ToString("yyyy-MM")" />
+                        <span asp-validation-for="BillingPeriod" class="text-danger small"></span>
                     </div>
 
                     <div class="mb-3">
@@ -74,10 +67,9 @@
                     <div class="mb-3">
                         <label class="form-label fw-semibold small">Status</label>
                         <p class="form-text mb-0">
-                            The status is set automatically from the amount paid and the due date —
+                            The status is set automatically from the amount paid —
                             <strong>Paid</strong> (paid in full), <strong>Partial</strong> (part paid),
-                            <strong>Unpaid</strong> (nothing paid, not yet due), or
-                            <strong>Late</strong> (past due and not fully paid).
+                            or <strong>Unpaid</strong> (nothing paid).
                         </p>
                     </div>
 

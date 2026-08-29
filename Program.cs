@@ -26,8 +26,13 @@ var localPassword = builder.Configuration["MySqlPassword"];
 if (!string.IsNullOrWhiteSpace(localPassword) && connectionString != null && connectionString.Contains("YOUR_MYSQL_PASSWORD"))
     connectionString = connectionString.Replace("YOUR_MYSQL_PASSWORD", localPassword);
 
+// Pin the MySQL version instead of ServerVersion.AutoDetect(): AutoDetect opens a
+// live connection at startup just to read the version, so if the database is briefly
+// unreachable the whole app fails to start. A fixed version needs no probe; MonsterASP
+// (and most current hosts) run MySQL 8.x.
+var serverVersion = new MySqlServerVersion(new Version(8, 0, 30));
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+    options.UseMySql(connectionString, serverVersion));
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -80,6 +85,11 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
+    // All database work below is wrapped so that if the database is briefly
+    // unreachable at startup the app still boots (and logs a warning) instead of
+    // crashing the whole process.
+    try
+    {
     // Make sure the database and its tables exist, in a way that also works on
     // shared hosting where the database is pre-created (empty) and the DB user
     // cannot create or drop databases:
@@ -137,15 +147,11 @@ using (var scope = app.Services.CreateScope())
         db.SaveChanges();
     }
 
-    // one-off label migration for databases created by older versions of the app
-    // (a fresh database has nothing to migrate, so this simply no-ops)
-    try
-    {
-        // billing status: the old "Overdue" is now "Late"
-        if (db.tblBillings.Any(b => b.Status == "Overdue"))
-            db.tblBillings.Where(b => b.Status == "Overdue").ExecuteUpdate(s => s.SetProperty(b => b.Status, "Late"));
     }
-    catch { /* labels are already current — nothing to migrate */ }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[startup] Database initialization skipped — is the database reachable? {ex.Message}");
+    }
 }
 
 if (!app.Environment.IsDevelopment())

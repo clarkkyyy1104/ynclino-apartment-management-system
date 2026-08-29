@@ -20,10 +20,6 @@ namespace YnclinoApartmentManagementSystem.Models
         [Display(Name = "Amount Due")]
         public decimal AmountDue { get; set; }
 
-        [Required]
-        [Display(Name = "Due Date")]
-        public DateTime DueDate { get; set; }
-
         [Column(TypeName = "decimal(10,2)")]
         [Display(Name = "Amount Paid")]
         public decimal? AmountPaid { get; set; }
@@ -37,7 +33,7 @@ namespace YnclinoApartmentManagementSystem.Models
         public string? PaymentMethod { get; set; }   // Cash | GCash
 
         [Required, MaxLength(20)]
-        public string Status { get; set; } = "Unpaid";   // Unpaid | Paid | Partial | Late
+        public string Status { get; set; } = "Unpaid";   // Unpaid | Partial | Paid
 
         [MaxLength(500)]
         public string? Notes { get; set; }

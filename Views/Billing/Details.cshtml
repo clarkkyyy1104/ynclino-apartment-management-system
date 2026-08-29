@@ -20,9 +20,6 @@
                     <dt class="col-sm-4">Amount Due</dt>
                     <dd class="col-sm-8">₱@Model.AmountDue.ToString("N2")</dd>
 
-                    <dt class="col-sm-4">Due Date</dt>
-                    <dd class="col-sm-8">@Model.DueDate.ToString("MMM dd, yyyy")</dd>
-
                     <dt class="col-sm-4">Amount Paid</dt>
                     <dd class="col-sm-8">@(Model.AmountPaid.HasValue ? "₱" + Model.AmountPaid.Value.ToString("N2") : "—")</dd>
 

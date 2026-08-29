@@ -7,7 +7,26 @@
     <p class="text-muted small mb-0">Welcome back, <strong>@User.Identity?.Name</strong>. Here is an overview of BKS Apartment.</p>
 </div>
 
-<div class="row g-3">
+<div class="mb-2">
+    <h6 class="section-label">Tenants</h6>
+</div>
+<div class="row g-3 mb-4">
+
+    <div class="col-sm-6 col-lg-3">
+        <a asp-controller="Tenants" asp-action="Index" asp-route-statusFilter="All" class="card stat-card border-0 shadow-sm text-decoration-none">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background-color:#fdefe3;color:#d96c1c;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1zm-7.978-1L7 13h.022zM11.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5m-1.958 4.5a5.5 5.5 0 0 1 .524-2.665A4 4 0 0 0 5 8c-4 0-5 3-5 4s1 1 1 1zM7 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="stat-value" style="color:#d96c1c;">@ViewBag.TotalTenants</div>
+                    <div class="stat-label">Total Tenants</div>
+                </div>
+            </div>
+        </a>
+    </div>
 
     <div class="col-sm-6 col-lg-3">
         <a asp-controller="Tenants" asp-action="Index" asp-route-statusFilter="Active" class="card stat-card border-0 shadow-sm text-decoration-none">
@@ -41,6 +60,13 @@
         </a>
     </div>
 
+</div>
+
+<div class="mb-2">
+    <h6 class="section-label">Billing &amp; Payments</h6>
+</div>
+<div class="row g-3">
+
     <div class="col-sm-6 col-lg-3">
         <a asp-controller="Billing" asp-action="Index" class="card stat-card border-0 shadow-sm text-decoration-none">
             <div class="card-body d-flex align-items-center gap-3">
@@ -60,14 +86,30 @@
     <div class="col-sm-6 col-lg-3">
         <a asp-controller="Billing" asp-action="Index" class="card stat-card border-0 shadow-sm text-decoration-none">
             <div class="card-body d-flex align-items-center gap-3">
-                <div class="stat-icon" style="background-color:#fdefe3;color:#d96c1c;">
+                <div class="stat-icon bg-danger-subtle text-danger">
                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
                         <path d="M4 10.781c.148 1.667 1.513 2.85 3.591 3.003V15h1.043v-1.216c2.27-.179 3.678-1.438 3.678-3.3 0-1.59-.947-2.51-2.956-3.028l-.722-.187V3.467c1.122.11 1.879.714 2.07 1.616h1.47c-.166-1.6-1.54-2.748-3.54-2.875V1H7.591v1.233c-1.939.23-3.27 1.472-3.27 3.156 0 1.454.966 2.483 2.661 2.917l.61.162v4.031c-1.149-.17-1.94-.8-2.131-1.718zm3.391-3.836c-1.043-.263-1.6-.825-1.6-1.616 0-.944.704-1.641 1.8-1.828v3.495l-.2-.05zm1.591 1.872c1.287.323 1.852.859 1.852 1.769 0 1.097-.826 1.828-2.2 1.939V8.73z"/>
                     </svg>
                 </div>
                 <div>
-                    <div class="stat-value" style="color:#d96c1c;">₱@(((decimal)ViewBag.OutstandingTotal).ToString("N2"))</div>
+                    <div class="stat-value text-danger">₱@(((decimal)ViewBag.OutstandingTotal).ToString("N2"))</div>
                     <div class="stat-label">Total Outstanding</div>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+        <a asp-controller="Billing" asp-action="Index" asp-route-statusFilter="Paid" class="card stat-card border-0 shadow-sm text-decoration-none">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background-color:#d1fae5;color:#065f46;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425z"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="stat-value" style="color:#065f46;">₱@(((decimal)ViewBag.CollectedTotal).ToString("N2"))</div>
+                    <div class="stat-label">Total Collected</div>
                 </div>
             </div>
         </a>
