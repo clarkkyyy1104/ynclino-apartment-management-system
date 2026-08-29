@@ -53,16 +53,7 @@
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="PaymentMethod" class="form-label fw-semibold small"></label>
-                        <select asp-for="PaymentMethod" class="form-select">
-                            <option value="">— Not paid / not recorded —</option>
-                            <option value="Cash">Cash</option>
-                            <option value="GCash">GCash</option>
-                        </select>
-                        <div class="form-text text-muted small">How the tenant paid. Cleared automatically if no amount is paid.</div>
-                        <span asp-validation-for="PaymentMethod" class="text-danger small"></span>
-                    </div>
+                    
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold small">Status</label>

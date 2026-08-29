@@ -26,7 +26,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             decimal paid = amountPaid ?? 0m;
             if (paid >= amountDue) return "Paid";
-            if (paid > 0m) return "Partial";
+            if (paid > 0m || paid < amountDue) return "Partial";
             return "Unpaid";
         }
 
@@ -61,19 +61,28 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // GET: Billing/Create
-        public async Task<IActionResult> Create()
+        public async Task<IActionResult> Create(int? id)
         {
+            var billing = await _context.tblBillings
+                .Include(b => b.Tenant)
+                .FirstOrDefaultAsync(b => b.BillingID == id);
+
+            if (billing == null) return NotFound();
             var vm = new BillingViewModel
             {
-                AvailableTenants = await GetActiveTenantListAsync()
+                AvailableTenants = await GetActiveTenantListAsync(),
+                BillingID = billing.BillingID,
+                AmountPaid = billing.AmountPaid,
+                PaymentMethod = billing.PaymentMethod,
             };
+            
             return View(vm);
         }
 
         // POST: Billing/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(BillingViewModel vm)
+        public async Task<IActionResult> Create(int id,BillingViewModel vm)
         {
             var period = new DateTime(vm.BillingPeriod.Year, vm.BillingPeriod.Month, 1);
 
@@ -82,7 +91,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 .AnyAsync(b => b.TenantID == vm.TenantID && b.BillingPeriod == period);
             if (alreadyBilled)
                 ModelState.AddModelError(string.Empty, "This tenant already has a bill for the selected month.");
+            if (id != vm.BillingID) return NotFound();
 
+            if (vm.AmountPaid != null && vm.AmountPaid < 0)
+                ModelState.AddModelError("AmountPaid", "Amount paid cannot be negative.");
+            
             if (!ModelState.IsValid)
             {
                 vm.AvailableTenants = await GetActiveTenantListAsync();
@@ -93,11 +106,22 @@ namespace YnclinoApartmentManagementSystem.Controllers
             {
                 TenantID = vm.TenantID,
                 BillingPeriod = period,
-                AmountDue = vm.AmountDue,
+                AmountPaid = vm.AmountPaid,
+                PaymentMethod = vm.PaymentMethod,
                 Status = DeriveStatus(vm.AmountDue, null),
                 Notes = vm.Notes,
                 DateIssued = DateTime.Now
             };
+
+            var bill = await _context.tblBillings.FindAsync(id);
+            if (bill == null) return NotFound();
+
+            bill.TenantID = vm.TenantID;
+            bill.BillingPeriod = new DateTime(vm.BillingPeriod.Year, vm.BillingPeriod.Month, 1);
+            bill.AmountPaid = vm.AmountPaid;
+            bill.PaymentMethod = vm.PaymentMethod;
+            bill.Status = DeriveStatus(vm.AmountDue, null);
+            bill.Notes = vm.Notes;
 
             _context.tblBillings.Add(billing);
             await _context.SaveChangesAsync();
@@ -124,9 +148,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 TenantName = billing.Tenant?.FullName,
                 BillingPeriod = billing.BillingPeriod,
                 AmountDue = billing.AmountDue,
-                AmountPaid = billing.AmountPaid,
                 DatePaid = billing.DatePaid,
-                PaymentMethod = billing.PaymentMethod,
                 Status = billing.Status,
                 Notes = billing.Notes,
                 AvailableTenants = await GetTenantListForBillAsync(billing.TenantID)

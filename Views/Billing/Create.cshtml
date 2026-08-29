@@ -28,12 +28,23 @@
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="AmountDue" class="form-label fw-semibold small"></label>
+                        <label asp-for="AmountPaid" class="form-label fw-semibold small"></label>
                         <div class="input-group">
                             <span class="input-group-text">₱</span>
-                            <input asp-for="AmountDue" type="number" min="0.01" step="0.01" class="form-control" placeholder="0.00" />
+                            <input asp-for="AmountPaid" type="number" min="0.01" step="0.01" class="form-control" placeholder="0" />
                         </div>
-                        <span asp-validation-for="AmountDue" class="text-danger small"></span>
+                        <span asp-validation-for="AmountPaid" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="PaymentMethod" class="form-label fw-semibold small"></label>
+                        <select asp-for="PaymentMethod" class="form-select">
+                            <option value="">— Not paid / not recorded —</option>
+                            <option value="Cash">Cash</option>
+                            <option value="GCash">GCash</option>
+                        </select>
+                        <div class="form-text text-muted small">How the tenant paid. Cleared automatically if no amount is paid.</div>
+                        <span asp-validation-for="PaymentMethod" class="text-danger small"></span>
                     </div>
 
                     <div class="mb-4">

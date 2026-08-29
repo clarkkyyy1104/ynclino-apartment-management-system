@@ -32,7 +32,6 @@
             <tr>
                 <th>Tenant</th>
                 <th>Billing Period</th>
-                <th>Amount Due</th>
                 <th>Amount Paid</th>
                 <th>Method</th>
                 <th>Status</th>
@@ -45,7 +44,6 @@
                 <tr>
                     <td class="fw-semibold">@b.Tenant?.FullName</td>
                     <td>@b.BillingPeriod.ToString("MMMM yyyy")</td>
-                    <td>₱@b.AmountDue.ToString("N2")</td>
                     <td>@(b.AmountPaid.HasValue ? "₱" + b.AmountPaid.Value.ToString("N2") : "—")</td>
                     <td>@(string.IsNullOrEmpty(b.PaymentMethod) ? "—" : b.PaymentMethod)</td>
                     <td>
@@ -60,7 +58,6 @@
                     </td>
                     <td>
                         <a asp-action="Details" asp-route-id="@b.BillingID" class="btn btn-sm btn-outline-info">Details</a>
-                        <a asp-action="Edit" asp-route-id="@b.BillingID" class="btn btn-sm btn-outline-primary">Edit</a>
                         <a asp-action="Delete" asp-route-id="@b.BillingID" class="btn btn-sm btn-outline-danger">Delete</a>
                     </td>
                 </tr>
