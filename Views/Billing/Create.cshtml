@@ -20,18 +20,11 @@
                         <span asp-validation-for="TenantID" class="text-danger small"></span>
                     </div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label asp-for="BillingPeriod" class="form-label fw-semibold small">Billing Period (Month)</label>
-                            <input asp-for="BillingPeriod" type="month" class="form-control"
-                                   value="@Model.BillingPeriod.ToString("yyyy-MM")" />
-                            <span asp-validation-for="BillingPeriod" class="text-danger small"></span>
-                        </div>
-                        <div class="col-md-6">
-                            <label asp-for="DueDate" class="form-label fw-semibold small"></label>
-                            <input asp-for="DueDate" type="date" class="form-control" />
-                            <span asp-validation-for="DueDate" class="text-danger small"></span>
-                        </div>
+                    <div class="mb-3">
+                        <label asp-for="BillingPeriod" class="form-label fw-semibold small">Billing Period (Month)</label>
+                        <input asp-for="BillingPeriod" type="month" class="form-control"
+                               value="@Model.BillingPeriod.ToString("yyyy-MM")" />
+                        <span asp-validation-for="BillingPeriod" class="text-danger small"></span>
                     </div>
 
                     <div class="mb-3">

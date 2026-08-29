@@ -21,11 +21,6 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         [Display(Name = "Amount Due")]
         public decimal AmountDue { get; set; }
 
-        [Required(ErrorMessage = "Due Date is required.")]
-        [Display(Name = "Due Date")]
-        [DataType(DataType.Date)]
-        public DateTime DueDate { get; set; } = DateTime.Today.AddDays(30);
-
         [Range(0, double.MaxValue)]
         [Display(Name = "Amount Paid")]
         public decimal? AmountPaid { get; set; }

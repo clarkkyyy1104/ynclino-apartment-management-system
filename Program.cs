@@ -147,15 +147,6 @@ using (var scope = app.Services.CreateScope())
         db.SaveChanges();
     }
 
-    // one-off label migration for databases created by older versions of the app
-    // (a fresh database has nothing to migrate, so this simply no-ops)
-    try
-    {
-        // billing status: the old "Overdue" is now "Late"
-        if (db.tblBillings.Any(b => b.Status == "Overdue"))
-            db.tblBillings.Where(b => b.Status == "Overdue").ExecuteUpdate(s => s.SetProperty(b => b.Status, "Late"));
-    }
-    catch { /* labels are already current — nothing to migrate */ }
     }
     catch (Exception ex)
     {

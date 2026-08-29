@@ -19,7 +19,6 @@
             <option value="Paid"    selected="@(ViewBag.StatusFilter == "Paid")">Paid</option>
             <option value="Unpaid"  selected="@(ViewBag.StatusFilter == "Unpaid")">Unpaid</option>
             <option value="Partial" selected="@(ViewBag.StatusFilter == "Partial")">Partial</option>
-            <option value="Late"    selected="@(ViewBag.StatusFilter == "Late")">Late</option>
         </select>
     </div>
     <div class="col-auto">
@@ -34,7 +33,6 @@
                 <th>Tenant</th>
                 <th>Billing Period</th>
                 <th>Amount Due</th>
-                <th>Due Date</th>
                 <th>Amount Paid</th>
                 <th>Method</th>
                 <th>Status</th>
@@ -48,7 +46,6 @@
                     <td class="fw-semibold">@b.Tenant?.FullName</td>
                     <td>@b.BillingPeriod.ToString("MMMM yyyy")</td>
                     <td>₱@b.AmountDue.ToString("N2")</td>
-                    <td>@b.DueDate.ToString("MMM dd, yyyy")</td>
                     <td>@(b.AmountPaid.HasValue ? "₱" + b.AmountPaid.Value.ToString("N2") : "—")</td>
                     <td>@(string.IsNullOrEmpty(b.PaymentMethod) ? "—" : b.PaymentMethod)</td>
                     <td>
@@ -56,7 +53,6 @@
                             var badge = b.Status switch {
                                 "Paid"    => "bg-success",
                                 "Partial" => "bg-info text-dark",
-                                "Late"    => "bg-danger",
                                 _         => "bg-warning text-dark"
                             };
                         }
@@ -71,7 +67,7 @@
             }
             @if (!Model.Any())
             {
-                <tr><td colspan="8" class="text-center text-muted py-4">No billing records found.</td></tr>
+                <tr><td colspan="7" class="text-center text-muted py-4">No billing records found.</td></tr>
             }
         </tbody>
     </table>

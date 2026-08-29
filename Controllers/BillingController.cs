@@ -18,41 +18,21 @@ namespace YnclinoApartmentManagementSystem.Controllers
             _context = context;
         }
 
-        // the billing status is derived from how much has been paid and the due date:
+        // the billing status is derived from how much has been paid:
         //   Paid    – paid in full
-        //   Partial – part paid, balance remains, not yet past due
-        //   Unpaid  – nothing paid, not yet past due
-        //   Late    – past the due date and not paid in full
-        public static string DeriveStatus(decimal amountDue, decimal? amountPaid, DateTime dueDate)
+        //   Partial – part paid, balance remains
+        //   Unpaid  – nothing paid
+        public static string DeriveStatus(decimal amountDue, decimal? amountPaid)
         {
             decimal paid = amountPaid ?? 0m;
             if (paid >= amountDue) return "Paid";
-            if (dueDate.Date < DateTime.Today) return "Late";
             if (paid > 0m) return "Partial";
             return "Unpaid";
-        }
-
-        // recompute the status of every not-fully-paid bill so "Late" stays current
-        private async Task RefreshStatusesAsync()
-        {
-            var open = await _context.tblBillings
-                .Where(b => b.AmountPaid == null || b.AmountPaid < b.AmountDue)
-                .ToListAsync();
-
-            bool changed = false;
-            foreach (var bill in open)
-            {
-                var status = DeriveStatus(bill.AmountDue, bill.AmountPaid, bill.DueDate);
-                if (bill.Status != status) { bill.Status = status; changed = true; }
-            }
-            if (changed) await _context.SaveChangesAsync();
         }
 
         // GET: Billing
         public async Task<IActionResult> Index(string? statusFilter, string? searchTerm)
         {
-            await RefreshStatusesAsync();
-
             IQueryable<tblBilling> query = _context.tblBillings.Include(b => b.Tenant);
 
             if (!string.IsNullOrEmpty(statusFilter))
@@ -114,8 +94,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 TenantID = vm.TenantID,
                 BillingPeriod = period,
                 AmountDue = vm.AmountDue,
-                DueDate = vm.DueDate,
-                Status = DeriveStatus(vm.AmountDue, null, vm.DueDate),
+                Status = DeriveStatus(vm.AmountDue, null),
                 Notes = vm.Notes,
                 DateIssued = DateTime.Now
             };
@@ -145,7 +124,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 TenantName = billing.Tenant?.FullName,
                 BillingPeriod = billing.BillingPeriod,
                 AmountDue = billing.AmountDue,
-                DueDate = billing.DueDate,
                 AmountPaid = billing.AmountPaid,
                 DatePaid = billing.DatePaid,
                 PaymentMethod = billing.PaymentMethod,
@@ -178,9 +156,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
             billing.TenantID = vm.TenantID;
             billing.BillingPeriod = new DateTime(vm.BillingPeriod.Year, vm.BillingPeriod.Month, 1);
             billing.AmountDue = vm.AmountDue;
-            billing.DueDate = vm.DueDate;
             billing.AmountPaid = vm.AmountPaid;
-            billing.Status = DeriveStatus(vm.AmountDue, vm.AmountPaid, vm.DueDate);
+            billing.Status = DeriveStatus(vm.AmountDue, vm.AmountPaid);
             billing.Notes = vm.Notes;
 
             // record a payment date and method when something has been paid, clear them otherwise
