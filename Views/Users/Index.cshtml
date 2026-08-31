@@ -47,9 +47,14 @@
                     </td>
                     <td>
                         @{
-                            var badgeClass = user.Role == "Admin" ? "bg-danger" : "bg-secondary";
+                            var badgeClass = user.Role switch {
+                                "Admin"       => "bg-danger",
+                                "Maintenance" => "bg-info text-dark",
+                                _             => "bg-secondary"
+                            };
+                            var roleLabel = user.Role == "Maintenance" ? "Maintenance Staff" : user.Role;
                         }
-                        <span class="badge @badgeClass">@user.Role</span>
+                        <span class="badge @badgeClass">@roleLabel</span>
                     </td>
                     <td>
                         <span class="badge @(user.IsActive ? "bg-success" : "bg-warning text-dark")">

@@ -15,7 +15,7 @@ namespace YnclinoApartmentManagementSystem.Models
         public string Password { get; set; } = string.Empty;
 
         [Required, MaxLength(20)]
-        public string Role { get; set; } = "Tenant"; // Admin | Tenant
+        public string Role { get; set; } = "Tenant"; // Admin | Maintenance | Tenant
 
         public bool IsActive { get; set; } = true;
         public bool MustChangePassword { get; set; }

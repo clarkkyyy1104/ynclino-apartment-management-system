@@ -14,8 +14,10 @@
                     <dt class="col-sm-4">Tenant</dt>
                     <dd class="col-sm-8">@Model.Tenant?.FullName</dd>
 
+                    @* the unit stamped on the request itself, so the history stays with
+                       the apartment even after the tenant transfers or moves out *@
                     <dt class="col-sm-4">Unit</dt>
-                    <dd class="col-sm-8">@(Model.Tenant?.Unit?.UnitNumber ?? "—")</dd>
+                    <dd class="col-sm-8">@(Model.Unit?.UnitNumber ?? Model.Tenant?.Unit?.UnitNumber ?? "—")</dd>
 
                     <dt class="col-sm-4">Issue Type</dt>
                     <dd class="col-sm-8">@Model.Category</dd>
@@ -65,6 +67,27 @@
                     <dt class="col-sm-4">Date Resolved</dt>
                     <dd class="col-sm-8">@(Model.DateResolved?.ToString("MMM dd, yyyy") ?? "—")</dd>
 
+                    @* the tenant does not need to see who was sent or what it cost *@
+                    @if (!User.IsInRole("Tenant"))
+                    {
+                        <dt class="col-sm-4">Assigned Staff</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.AssignedStaff != null)
+                            {
+                                <span class="badge bg-info text-dark">@Model.AssignedStaff.Username</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Unassigned</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">Repair Cost</dt>
+                        <dd class="col-sm-8">&#x20B1;@Model.Cost.ToString("N0")</dd>
+
+                        <dt class="col-sm-4">Work Notes</dt>
+                        <dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.StaffNotes) ? "—" : Model.StaffNotes)</dd>
+                    }
                     @if (User.IsInRole("Admin"))
                     {
                         <dt class="col-sm-4">Admin Notes</dt>
@@ -73,7 +96,13 @@
                 </dl>
 
                 <div class="d-flex gap-2 mt-3">
-                    @if (!User.IsInRole("Admin") && Model.Status == "Pending")
+                    @* the staff member's one action: report on the job *@
+                    @if (User.IsInRole("Maintenance") &&
+                         !YnclinoApartmentManagementSystem.Helpers.StatusFlowHelper.IsClosedMaintenance(Model.Status))
+                    {
+                        <a asp-action="Work" asp-route-id="@Model.RequestID" class="btn btn-primary btn-sm">Update Request</a>
+                    }
+                    @if (User.IsInRole("Tenant") && Model.Status == "Pending")
                     {
                         <form asp-action="Cancel" asp-route-id="@Model.RequestID" method="post" class="d-inline"
                               onsubmit="return confirm('Cancel this request?')">

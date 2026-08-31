@@ -40,6 +40,18 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         [Display(Name = "Admin Notes")]
         public string? AdminNotes { get; set; }
 
+        [MaxLength(500)]
+        [Display(Name = "Work Notes")]
+        public string? StaffNotes { get; set; }
+
+        // 0 means "unassigned" — the <select> posts 0 when nothing is chosen
+        [Display(Name = "Assign To")]
+        public int AssignedStaffID { get; set; }
+
+        [Range(0, 9999999, ErrorMessage = "Repair cost cannot be negative.")]
+        [Display(Name = "Repair Cost")]
+        public decimal Cost { get; set; }
+
         [Display(Name = "Photo (optional)")]
         public IFormFile? ImageUpload { get; set; }
 
@@ -47,7 +59,9 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         public string? TenantName { get; set; }
         public string? UnitNumber { get; set; }
         public string? ImagePath { get; set; }
+        public string? AssignedStaffName { get; set; }
 
         public IEnumerable<SelectListItem> AvailableTenants { get; set; } = new List<SelectListItem>();
+        public IEnumerable<SelectListItem> AvailableStaff { get; set; } = new List<SelectListItem>();
     }
 }

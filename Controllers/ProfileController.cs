@@ -8,7 +8,7 @@ using YnclinoApartmentManagementSystem.Models;
 
 namespace YnclinoApartmentManagementSystem.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin,Tenant")]
     public class ProfileController : Controller
     {
         private readonly ApplicationDbContext _context;

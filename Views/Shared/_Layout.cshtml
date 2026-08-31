@@ -49,6 +49,9 @@
     var activeController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
     string Active(string c) => activeController == c ? "active" : "";
     bool isAdmin = User.IsInRole("Admin");
+    // three roles now, so "not admin" no longer means "tenant" — name each one
+    bool isStaff = User.IsInRole("Maintenance");
+    bool isTenant = User.IsInRole("Tenant");
     bool unitsOpen = activeController == "Units" || activeController == "Transfers";
     var activeAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
     bool billingOpen = activeController == "Billing";
@@ -59,12 +62,14 @@
         <aside class="app-sidebar" id="appSidebar">
             <a class="brand" asp-controller="Home" asp-action="Index">Apartment Management System</a>
             <nav class="nav flex-column py-2">
-                <a class="nav-link @Active("Home")" asp-controller="Home" asp-action="Index">Dashboard</a>
+                <a class="nav-link @Active("Home")" asp-controller="Home" asp-action="Index">
+                    Dashboard @await Component.InvokeAsync("NavAlert", new { module = "All" })
+                </a>
 
                 @if (isAdmin)
                 {
                     <a class="nav-link group-toggle @(unitsOpen ? "active" : "")" data-bs-toggle="collapse" href="#unitsGroup" role="button" aria-expanded="@(unitsOpen ? "true" : "false")">
-                        Units <span class="caret">▾</span>
+                        Units @await Component.InvokeAsync("NavAlert", new { module = "Transfer" }) <span class="caret">▾</span>
                     </a>
                     <div class="collapse @(unitsOpen ? "show" : "")" id="unitsGroup">
                         <div class="sub">
@@ -75,7 +80,7 @@
                         </div>
                     </div>
                 }
-                else
+                else if (isTenant)
                 {
                     @* tenant: a single Units link (browse); My Unit / Transfer lives in their Profile *@
                     <a class="nav-link @Active("Units")" asp-controller="Units" asp-action="Index">Units</a>
@@ -83,22 +88,32 @@
 
                 @if (isAdmin)
                 {
-                    @* Manage Users tab hidden for now — restore this line to bring it back *@
-                    @* <a class="nav-link @Active("Users")" asp-controller="Users" asp-action="Index">Manage Users</a> *@
+                    <a class="nav-link @Active("Users")" asp-controller="Users" asp-action="Index">Manage Users</a>
                     <a class="nav-link @Active("Tenants")" asp-controller="Tenants" asp-action="Index">Tenants</a>
                 }
-                                <a class="nav-link group-toggle @(billingOpen ? "active" : "")" data-bs-toggle="collapse" href="#billingGroup" role="button" aria-expanded="@(billingOpen ? "true" : "false")">
-                    Billing &amp; Payment @await Component.InvokeAsync("NavAlert", new { module = "Billing" }) <span class="caret">▾</span>
-                </a>
-                <div class="collapse @(billingOpen ? "show" : "")" id="billingGroup">
-                    <div class="sub">
-                        <a class="nav-link @(activeController == "Billing" && activeAction != "History" ? "active" : "")" asp-controller="Billing" asp-action="Index">Bills</a>
-                        <a class="nav-link @(activeController == "Billing" && activeAction == "History" ? "active" : "")" asp-controller="Billing" asp-action="History">Payment History</a>
+
+                @* maintenance staff only ever see their own module — no billing,
+                   no tenants, no units, no lost &amp; found *@
+                @if (!isStaff)
+                {
+                    <a class="nav-link group-toggle @(billingOpen ? "active" : "")" data-bs-toggle="collapse" href="#billingGroup" role="button" aria-expanded="@(billingOpen ? "true" : "false")">
+                        Billing &amp; Payment @await Component.InvokeAsync("NavAlert", new { module = "Billing" }) <span class="caret">▾</span>
+                    </a>
+                    <div class="collapse @(billingOpen ? "show" : "")" id="billingGroup">
+                        <div class="sub">
+                            <a class="nav-link @(activeController == "Billing" && activeAction != "History" ? "active" : "")" asp-controller="Billing" asp-action="Index">Bills</a>
+                            <a class="nav-link @(activeController == "Billing" && activeAction == "History" ? "active" : "")" asp-controller="Billing" asp-action="History">Payment History</a>
+                        </div>
                     </div>
-                </div>
+                }
 
                 <a class="nav-link @Active("Maintenance")" asp-controller="Maintenance" asp-action="Index">Maintenance @await Component.InvokeAsync("NavAlert", new { module = "Maintenance" })</a>
-                <a class="nav-link @Active("LostFound")" asp-controller="LostFound" asp-action="Index">Lost &amp; Found @await Component.InvokeAsync("NavAlert", new { module = "LostFound" })</a>
+
+                @if (!isStaff)
+                {
+                    <a class="nav-link @Active("LostFound")" asp-controller="LostFound" asp-action="Index">Lost &amp; Found @await Component.InvokeAsync("NavAlert", new { module = "LostFound" })</a>
+                }
+                <a class="nav-link @Active("Reports")" asp-controller="Reports" asp-action="Index">Reports &amp; Records</a>
             </nav>
         </aside>
 
@@ -107,14 +122,17 @@
                 <button class="btn btn-sm btn-outline-light d-md-none" type="button" onclick="document.getElementById('appSidebar').classList.toggle('show')">☰</button>
                 <div class="ms-auto dropdown">
                     <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        @User.Identity.Name <span class="text-secondary">(@(isAdmin ? "Admin" : "Tenant"))</span>
+                        @User.Identity.Name <span class="text-secondary">(@(isAdmin ? "Admin" : isStaff ? "Maintenance Staff" : "Tenant"))</span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li>
-                            <a class="dropdown-item" asp-controller="Profile" asp-action="Index">
-                                My Profile @if (!isAdmin) { @await Component.InvokeAsync("NavAlert", new { module = "Transfer" }) }
-                            </a>
-                        </li>
+                        @if (!isStaff)
+                        {
+                            <li>
+                                <a class="dropdown-item" asp-controller="Profile" asp-action="Index">
+                                    My Profile @if (isTenant) { @await Component.InvokeAsync("NavAlert", new { module = "Transfer" }) }
+                                </a>
+                            </li>
+                        }
                         <li><a class="dropdown-item" asp-controller="Account" asp-action="ChangePassword">Change Password</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li>

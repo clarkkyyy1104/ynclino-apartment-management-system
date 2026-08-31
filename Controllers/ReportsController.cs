@@ -1,0 +1,209 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using YnclinoApartmentManagementSystem.Data;
+using YnclinoApartmentManagementSystem.Models;
+using YnclinoApartmentManagementSystem.Models.ViewModels;
+
+namespace YnclinoApartmentManagementSystem.Controllers
+{
+    // Reports & Records. Everything here is READ-ONLY — the system only displays
+    // reports on screen; it never edits data and has no export or print feature.
+    [Authorize]
+    public class ReportsController : Controller
+    {
+        private readonly ApplicationDbContext _context;
+
+        public ReportsController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+
+        private int? CurrentUserID() =>
+            int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int id) ? id : null;
+
+        private async Task<tblTenant?> GetCurrentTenantAsync()
+        {
+            var uid = CurrentUserID();
+            if (uid == null) return null;
+            return await _context.tblTenants
+                .Include(t => t.Unit)
+                .FirstOrDefaultAsync(t => t.UserID == uid && t.Status == "Active");
+        }
+
+        // GET: Reports — the reports dashboard the manuscript asks for:
+        // total units, occupancy status, monthly income, pending maintenance
+        // requests, and pending payments / overdue tenants.
+        public async Task<IActionResult> Index()
+        {
+            // a tenant only ever sees their own records
+            if (User.IsInRole("Tenant"))
+                return RedirectToAction(nameof(MyRecords));
+
+            var vm = new ReportsViewModel();
+            var firstOfMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+
+            // ── Units / occupancy ──
+            var units = await _context.tblUnits.AsNoTracking().ToListAsync();
+            vm.TotalUnits = units.Count;
+            vm.OccupiedUnits = units.Count(u => u.Status == "Occupied");
+            vm.AvailableUnits = units.Count(u => u.Status == "Available");
+            vm.ReservedUnits = units.Count(u => u.Status == "Reserved");
+            vm.MaintenanceUnits = units.Count(u => u.Status == "Under Maintenance");
+
+            // ── Tenants ──
+            vm.ActiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Active");
+            vm.InactiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Inactive");
+
+            // ── Money ──
+            var payments = await _context.tblPayments.AsNoTracking().ToListAsync();
+            vm.IncomeAllTime = payments.Sum(p => p.Amount);
+            vm.IncomeThisMonth = payments.Where(p => p.DatePaid >= firstOfMonth).Sum(p => p.Amount);
+
+            var bills = await _context.tblBillings.AsNoTracking()
+                .Include(b => b.Tenant).ThenInclude(t => t!.Unit)
+                .ToListAsync();
+
+            // ── Open requests ──
+            vm.PendingMaintenance = await _context.tblMaintenanceRequests
+                .CountAsync(m => m.Status == "Pending" || m.Status == "In Progress");
+            vm.PendingTransfers = await _context.tblUnitTransferRequests.CountAsync(r => r.Status == "Pending");
+            vm.OpenLostFound = await _context.tblLostFoundItems.CountAsync(l => l.Status == "Reported");
+
+            // ── Monthly income, last 6 months ──
+            for (int i = 5; i >= 0; i--)
+            {
+                var monthStart = firstOfMonth.AddMonths(-i);
+                var monthEnd = monthStart.AddMonths(1);
+                vm.MonthlyIncome.Add(new MonthlyIncomeRow
+                {
+                    Month = monthStart,
+                    Billed = bills.Where(b => b.BillingPeriod == monthStart).Sum(b => b.AmountDue),
+                    Collected = payments.Where(p => p.DatePaid >= monthStart && p.DatePaid < monthEnd).Sum(p => p.Amount)
+                });
+            }
+
+            // ── Outstanding balance per tenant ──
+            vm.Outstanding = bills
+                .GroupBy(b => b.TenantID)
+                .Select(g => new TenantBalanceRow
+                {
+                    TenantID = g.Key,
+                    TenantName = g.First().Tenant?.FullName ?? "—",
+                    UnitNumber = g.First().Tenant?.Unit?.UnitNumber,
+                    Billed = g.Sum(b => b.AmountDue),
+                    Paid = g.Sum(b => b.AmountPaid ?? 0m),
+                    Balance = g.Sum(b => b.AmountDue - (b.AmountPaid ?? 0m)),
+                    OverdueBills = g.Count(b => b.Status == "Overdue")
+                })
+                .Where(x => x.Balance > 0)
+                .OrderByDescending(x => x.Balance)
+                .ToList();
+
+            vm.OutstandingTotal = vm.Outstanding.Sum(x => x.Balance);
+            vm.OverdueTenants = vm.Outstanding.Count(x => x.OverdueBills > 0);
+
+                        // ── Maintenance records by status ──
+            var requests = await _context.tblMaintenanceRequests.AsNoTracking()
+                .Include(m => m.Tenant).ThenInclude(t => t!.Unit)
+                .ToListAsync();
+
+            vm.MaintenanceByStatus = requests
+                .GroupBy(m => m.Status)
+                .Select(g => new MaintenanceCountRow { Status = g.Key, Count = g.Count() })
+                .OrderByDescending(g => g.Count)
+                .ToList();
+
+            // ── Maintenance COSTS by issue type ──
+            vm.MaintenanceByCategory = requests
+                .GroupBy(m => m.Category)
+                .Select(g => new MaintenanceCostRow
+                {
+                    Category = g.Key,
+                    Requests = g.Count(),
+                    Cost = g.Sum(m => m.Cost)
+                })
+                .OrderByDescending(x => x.Cost)
+                .ToList();
+
+            vm.MaintenanceCostTotal = requests.Sum(m => m.Cost);
+            vm.MaintenanceCostThisMonth = requests
+                .Where(m => m.DateSubmitted >= firstOfMonth)
+                .Sum(m => m.Cost);
+
+            // ── Tenant histories ──
+            var allTenants = await _context.tblTenants.AsNoTracking()
+                .Include(t => t.Unit)
+                .OrderBy(t => t.LastName).ThenBy(t => t.FirstName)
+                .ToListAsync();
+
+            var transfers = await _context.tblUnitTransferRequests.AsNoTracking().ToListAsync();
+
+            vm.TenantHistory = allTenants.Select(t =>
+            {
+                var theirBills = bills.Where(b => b.TenantID == t.TenantID).ToList();
+                return new TenantHistoryRow
+                {
+                    TenantID = t.TenantID,
+                    TenantName = t.FullName,
+                    UnitNumber = t.Unit?.UnitNumber,
+                    Status = t.Status,
+                    MoveInDate = t.MoveInDate,
+                    MoveOutDate = t.MoveOutDate,
+                    MonthsBilled = theirBills.Count,
+                    TotalBilled = theirBills.Sum(b => b.AmountDue),
+                    TotalPaid = theirBills.Sum(b => b.AmountPaid ?? 0m),
+                    Balance = theirBills.Sum(b => b.AmountDue - (b.AmountPaid ?? 0m)),
+                    MaintenanceRequests = requests.Count(m => m.TenantID == t.TenantID),
+                    TransferRequests = transfers.Count(r => r.TenantID == t.TenantID)
+                };
+            }).ToList();
+
+            return View(vm);
+        }
+
+        // GET: Reports/MyRecords — a tenant's own read-only record summary
+        [Authorize(Roles = "Tenant")]
+        public async Task<IActionResult> MyRecords()
+        {
+            var tenant = await GetCurrentTenantAsync();
+            if (tenant == null) return View(new ReportsViewModel());
+
+            var vm = new ReportsViewModel();
+
+            var bills = await _context.tblBillings.AsNoTracking()
+                .Where(b => b.TenantID == tenant.TenantID)
+                .ToListAsync();
+
+            var payments = await _context.tblPayments.AsNoTracking()
+                .Where(p => p.Billing!.TenantID == tenant.TenantID)
+                .ToListAsync();
+
+            vm.IncomeAllTime = payments.Sum(p => p.Amount);            // total this tenant has paid
+            vm.OutstandingTotal = bills.Sum(b => b.AmountDue - (b.AmountPaid ?? 0m));
+            if (vm.OutstandingTotal < 0) vm.OutstandingTotal = 0;
+
+            vm.PendingMaintenance = await _context.tblMaintenanceRequests
+                .CountAsync(m => m.TenantID == tenant.TenantID && (m.Status == "Pending" || m.Status == "In Progress"));
+            vm.PendingTransfers = await _context.tblUnitTransferRequests
+                .CountAsync(r => r.TenantID == tenant.TenantID && r.Status == "Pending");
+
+            var firstOfMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+            for (int i = 5; i >= 0; i--)
+            {
+                var monthStart = firstOfMonth.AddMonths(-i);
+                var monthEnd = monthStart.AddMonths(1);
+                vm.MonthlyIncome.Add(new MonthlyIncomeRow
+                {
+                    Month = monthStart,
+                    Billed = bills.Where(b => b.BillingPeriod == monthStart).Sum(b => b.AmountDue),
+                    Collected = payments.Where(p => p.DatePaid >= monthStart && p.DatePaid < monthEnd).Sum(p => p.Amount)
+                });
+            }
+
+            ViewBag.Tenant = tenant;
+            return View(vm);
+        }
+    }
+}

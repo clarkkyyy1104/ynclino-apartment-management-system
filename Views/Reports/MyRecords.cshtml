@@ -1,0 +1,102 @@
+@model YnclinoApartmentManagementSystem.Models.ViewModels.ReportsViewModel
+@{
+    ViewData["Title"] = "My Records";
+    var tenant = ViewBag.Tenant as YnclinoApartmentManagementSystem.Models.tblTenant;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h3 class="fw-bold mb-0">My Records</h3>
+        <div class="text-muted small">
+            @(tenant?.FullName ?? "—") · Unit @(tenant?.Unit?.UnitNumber ?? "—") · view only
+        </div>
+    </div>
+    <span class="text-muted small">As of @DateTime.Today.ToString("MMMM dd, yyyy")</span>
+</div>
+
+@if (tenant == null)
+{
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center text-muted py-5">
+            No tenant record is linked to your account. Please contact the administrator.
+        </div>
+    </div>
+    return;
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center py-3">
+                <div class="text-muted small">Total Paid</div>
+                <div class="fs-3 fw-bold text-success">₱@Model.IncomeAllTime.ToString("N0")</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center py-3">
+                <div class="text-muted small">Outstanding Balance</div>
+                <div class="fs-3 fw-bold @(Model.OutstandingTotal > 0 ? "text-danger" : "text-muted")">₱@Model.OutstandingTotal.ToString("N0")</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center py-3">
+                <div class="text-muted small">Advance Payment</div>
+                <div class="fs-3 fw-bold text-info">₱@tenant.AdvanceCredit.ToString("N0")</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center py-3">
+                <div class="text-muted small">Open Requests</div>
+                <div class="fs-3 fw-bold text-warning">@(Model.PendingMaintenance + Model.PendingTransfers)</div>
+                <div class="small text-muted">@Model.PendingMaintenance maintenance · @Model.PendingTransfers transfer</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-success text-white py-2"><span class="fw-semibold small">My Billing Summary</span></div>
+            <div class="card-body p-0">
+                <table class="table table-sm small mb-0">
+                    <thead class="table-light">
+                        <tr><th>Month</th><th class="text-end">Billed</th><th class="text-end">Paid</th><th class="text-end">Balance</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var m in Model.MonthlyIncome)
+                        {
+                            <tr>
+                                <td>@m.Month.ToString("MMMM yyyy")</td>
+                                <td class="text-end">₱@m.Billed.ToString("N0")</td>
+                                <td class="text-end text-success">₱@m.Collected.ToString("N0")</td>
+                                <td class="text-end @(m.Uncollected > 0 ? "text-danger" : "text-muted")">₱@m.Uncollected.ToString("N0")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-primary text-white py-2"><span class="fw-semibold small">My Tenancy</span></div>
+            <div class="card-body">
+                <dl class="row mb-0 small">
+                    <dt class="col-6">Unit</dt><dd class="col-6">@(tenant.Unit?.UnitNumber ?? "—")</dd>
+                    <dt class="col-6">Monthly Rent</dt><dd class="col-6">₱@((tenant.Unit?.RentPrice ?? 0m).ToString("N0"))</dd>
+                    <dt class="col-6">Deposit on File</dt><dd class="col-6">₱@((tenant.Unit?.Deposit ?? 0m).ToString("N0"))</dd>
+                    <dt class="col-6">Move-In Date</dt><dd class="col-6">@(tenant.MoveInDate?.ToString("MMM dd, yyyy") ?? "—")</dd>
+                    <dt class="col-6">Status</dt><dd class="col-6"><span class="badge bg-success">@tenant.Status</span></dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>

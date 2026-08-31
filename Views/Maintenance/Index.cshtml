@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "Maintenance Requests";
     bool isAdmin = User.IsInRole("Admin");
+    bool isStaff = User.IsInRole("Maintenance");
     bool archived = ViewBag.Archived == true;
     var unreadIds = ViewBag.UnreadIds as HashSet<int> ?? new HashSet<int>();
     var readIds = ViewBag.ReadIds as HashSet<int> ?? new HashSet<int>();
@@ -10,9 +11,12 @@
 @await Component.InvokeAsync("ModuleNotifications", new { module = "Maintenance" })
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="fw-bold mb-0">@(archived ? "Maintenance Archive" : "Maintenance Requests")</h3>
+    z<h3 class="fw-bold mb-0">
+        @(archived ? "Maintenance Archive" : isStaff ? "My Assigned Requests" : "Maintenance Requests")
+    </h3>
     <div class="d-flex gap-2">
-        @if (!archived)
+        @* staff carry out work; they do not raise requests *@
+        @if (!archived && !isStaff)
         {
             <a asp-action="Create" class="btn btn-primary">+ New Request</a>
         }
@@ -50,10 +54,12 @@
     <table class="table table-hover align-middle">
         <thead class="table-primary">
             <tr>
-                @if (isAdmin) { <th>Tenant</th><th>Unit</th> }
+                @if (isAdmin) { <th>Tenant</th> }
+                @if (isAdmin || isStaff) { <th>Unit</th> }
                 <th>Issue Type</th>
                 <th>Priority</th>
                 <th>Status</th>
+                @if (isAdmin) { <th>Assigned To</th> }
                 <th>Date Submitted</th>
                 <th>Actions</th>
             </tr>
@@ -67,7 +73,10 @@
                     @if (isAdmin)
                     {
                         <td class="fw-semibold">@r.Tenant?.FullName</td>
-                        <td>@(r.Tenant?.Unit?.UnitNumber ?? "—")</td>
+                    }
+                    @if (isAdmin || isStaff)
+                    {
+                        <td>@(r.Unit?.UnitNumber ?? r.Tenant?.Unit?.UnitNumber ?? "—")</td>
                     }
                     <td>@r.Category</td>
                     <td>
@@ -92,15 +101,32 @@
                         }
                         <span class="badge @sbadge">@r.Status</span>
                     </td>
+                    @if (isAdmin)
+                    {
+                        <td>
+                            @if (r.AssignedStaff != null)
+                            {
+                                <span class="badge bg-info text-dark">@r.AssignedStaff.Username</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted small">Unassigned</span>
+                            }
+                        </td>
+                    }
                     <td>@r.DateSubmitted.ToString("MMM dd, yyyy")</td>
                     <td>
                         <a asp-action="Details" asp-route-id="@r.RequestID" class="btn btn-sm btn-outline-info">Details</a>
+                        @if (isStaff && !YnclinoApartmentManagementSystem.Helpers.StatusFlowHelper.IsClosedMaintenance(r.Status))
+                        {
+                            <a asp-action="Work" asp-route-id="@r.RequestID" class="btn btn-sm btn-outline-primary">Update</a>
+                        }
                         @if (isAdmin)
                         {
                             @* archived requests are closed history — no editing *@
                             @if (!archived && !YnclinoApartmentManagementSystem.Helpers.StatusFlowHelper.IsClosedMaintenance(r.Status))
                             {
-                                <a asp-action="Edit" asp-route-id="@r.RequestID" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <a asp-action="Edit" asp-route-id="@r.RequestID" class="btn btn-sm btn-outline-primary">Update</a>
                             }
                             <a asp-action="Delete" asp-route-id="@r.RequestID" class="btn btn-sm btn-outline-danger">Delete</a>
                         }
@@ -109,7 +135,7 @@
             }
             @if (!Model.Any())
             {
-                <tr><td colspan="@(isAdmin ? 8 : 6)" class="text-center text-muted py-4">No maintenance requests found.</td></tr>
+                <tr><td colspan="@(isAdmin ? 8 : isStaff ? 6 : 5)" class="text-center text-muted py-4">No maintenance requests found.</td></tr>
             }
         </tbody>
     </table>

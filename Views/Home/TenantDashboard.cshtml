@@ -1,128 +1,158 @@
-@model YnclinoApartmentManagementSystem.Models.tblTenant?
+@model YnclinoApartmentManagementSystem.Models.ViewModels.TenantDashboardViewModel
 @{
-    ViewData["Title"] = "My Profile";
+    ViewData["Title"] = "Dashboard";
+
+    // one place to describe every module, so the strip below is a simple loop
+    var modules = new[]
+    {
+        new { Name = "Billing",     Label = "Billing & Payment", Count = Model.BillingCount,     Controller = "Billing",     Colour = "primary" },
+        new { Name = "Maintenance", Label = "Maintenance",       Count = Model.MaintenanceCount, Controller = "Maintenance", Colour = "warning" },
+        new { Name = "LostFound",   Label = "Lost & Found",      Count = Model.LostFoundCount,   Controller = "LostFound",   Colour = "info"    },
+        new { Name = "Transfer",    Label = "Unit Request",      Count = Model.TransferCount,    Controller = "Transfers",   Colour = "success" }
+    };
+
+    string Badge(string module) => module switch
+    {
+        "Billing"     => "bg-primary",
+        "Maintenance" => "bg-warning text-dark",
+        "LostFound"   => "bg-info text-dark",
+        "Transfer"    => "bg-success",
+        _             => "bg-secondary"
+    };
+
+    // the database stores "LostFound"; people read "Lost & Found"
+    string Label(string module) => module switch
+    {
+        "Billing"     => "Billing",
+        "Maintenance" => "Maintenance",
+        "LostFound"   => "Lost & Found",
+        "Transfer"    => "Unit Request",
+        _             => module
+    };
 }
 
-<div class="mb-4">
-    <h4 class="fw-semibold mb-0">Welcome, @(Model?.FullName ?? User.Identity?.Name)</h4>
-    <p class="text-muted small mb-0">Your current tenancy information is shown below.</p>
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
+    <div>
+        <h4 class="fw-semibold mb-0">Welcome, @(Model.Tenant?.FullName ?? User.Identity?.Name)</h4>
+        <p class="text-muted small mb-0">
+            @if (Model.TotalUnread > 0)
+            {
+                <text>You have <strong class="text-danger">@Model.TotalUnread</strong> unread notification@(Model.TotalUnread > 1 ? "s" : "").</text>
+            }
+            else
+            {
+                <text>Nothing needs your attention right now.</text>
+            }
+        </p>
+    </div>
 </div>
 
-@if (Model == null)
-{
-    <div class="card border-0 shadow-sm">
-        <div class="card-body text-center py-5">
-            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="text-secondary mb-3" viewBox="0 0 16 16">
-                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
-                <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/>
-            </svg>
-            <p class="fw-semibold mb-1 text-secondary">No tenant profile linked to your account.</p>
-            <p class="small text-muted mb-0">Contact the administrator to link your account to a tenant record.</p>
-        </div>
-    </div>
-}
-else
-{
-    <div class="row g-3">
-
-        <!-- LEFT column: Personal Information + Unit Information stacked vertically -->
-        <div class="col-md-6">
-            <div class="d-flex flex-column gap-3">
-
-                <div class="card border-0 shadow-sm hover-lift">
-                    <div class="card-header bg-primary text-white d-flex align-items-center gap-2 py-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
-                        </svg>
-                        <span class="fw-semibold small">Personal Information</span>
+@* ── Indicator strip: one small card per module, showing its unread count ── *@
+<div class="row g-3 mb-4">
+    @foreach (var m in modules)
+    {
+        <div class="col-6 col-lg-3">
+            <a asp-controller="@m.Controller" asp-action="Index"
+               class="card border-0 shadow-sm h-100 text-decoration-none text-reset hover-lift">
+                <div class="card-body py-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small">@m.Label</div>
+                        <div class="fs-4 fw-semibold @(m.Count > 0 ? "text-danger" : "text-secondary")">@m.Count</div>
                     </div>
-                    <div class="card-body pb-2">
-                        <dl class="row mb-0 info-list">
-                            <dt class="col-5">Full Name</dt>
-                            <dd class="col-7">@Model.FullName</dd>
-
-                            <dt class="col-5">Contact No.</dt>
-                            <dd class="col-7">@(string.IsNullOrEmpty(Model.ContactNumber) ? "—" : Model.ContactNumber)</dd>
-
-                            <dt class="col-5">Emergency Contact</dt>
-                            <dd class="col-7">
-                                @if (string.IsNullOrEmpty(Model.EmergencyContactName))
-                                {
-                                    <text>—</text>
-                                }
-                                else
-                                {
-                                    @Model.EmergencyContactName
-                                    @if (!string.IsNullOrEmpty(Model.EmergencyContactNumber))
-                                    {
-                                        <text> — @Model.EmergencyContactNumber</text>
-                                    }
-                                }
-                            </dd>
-
-                            <dt class="col-5">Status</dt>
-                            <dd class="col-7"><span class="badge bg-success">@Model.Status</span></dd>
-                        </dl>
-                    </div>
+                    @if (m.Count > 0)
+                    {
+                        <span class="badge rounded-pill bg-danger">new</span>
+                    }
                 </div>
-
-                <a asp-controller="Units" asp-action="Index" class="card border-0 shadow-sm hover-lift text-decoration-none text-reset">
-                    <div class="card-header bg-info text-white d-flex align-items-center gap-2 py-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.707L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.646a.5.5 0 0 0 .708-.707L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z"/>
-                        </svg>
-                        <span class="fw-semibold small">Unit Information</span>
-                    </div>
-                    <div class="card-body pb-2">
-                        @if (Model.Unit != null)
-                        {
-                            <dl class="row mb-0 info-list">
-                                <dt class="col-5">Unit Number</dt>
-                                <dd class="col-7 fw-semibold">@Model.Unit.UnitNumber</dd>
-
-                                <dt class="col-5">Unit Type</dt>
-                                <dd class="col-7">@Model.Unit.UnitType</dd>
-
-                                <dt class="col-5">Monthly Rent</dt>
-                                <dd class="col-7">&#x20B1;@Model.Unit.RentPrice.ToString("N0")</dd>
-
-                                <dt class="col-5">Deposit</dt>
-                                <dd class="col-7">&#x20B1;@Model.Unit.Deposit.ToString("N0")</dd>
-
-                                <dt class="col-5">One Month Advance</dt>
-                                <dd class="col-7">&#x20B1;@Model.Unit.AdvancePayment.ToString("N0")</dd>
-
-                                <dt class="col-5">Capacity</dt>
-                                <dd class="col-7">@Model.Unit.Capacity person(s)</dd>
-                            </dl>
-                        }
-                        else
-                        {
-                            <p class="text-muted small mb-0">No unit yet — open <strong>My Unit</strong> to apply for an available one.</p>
-                        }
-                    </div>
-                </a>
-
-            </div>
+                <div class="bg-@m.Colour" style="height:3px"></div>
+            </a>
         </div>
+    }
+</div>
 
-        <!-- RIGHT column: Date Occupancy stretches (h-100) to match the left stack's full height -->
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm h-100 hover-lift">
-                <div class="card-header bg-success text-white d-flex align-items-center gap-2 py-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z" />
+<div class="row g-3">
+
+    @* ── Main column: the notification feed ── *@
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white d-flex align-items-center justify-content-between py-2">
+                <span class="fw-semibold small">Notifications</span>
+                @if (Model.TotalUnread > 0)
+                {
+                    <form asp-controller="Notifications" asp-action="MarkAllRead" method="post" class="m-0">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-link btn-sm p-0 text-decoration-none">Mark all as read</button>
+                    </form>
+                }
+            </div>
+
+            @if (Model.TotalUnread == 0)
+            {
+                <div class="card-body text-center py-5">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="42" height="42" fill="currentColor" class="text-success mb-3" viewBox="0 0 16 16">
+                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
                     </svg>
-                    <span class="fw-semibold small">Date Occupancy</span>
+                    <p class="fw-semibold mb-1 text-secondary">You're all caught up.</p>
+                    <p class="small text-muted mb-0">New bills, maintenance updates and unit requests will show up here.</p>
                 </div>
-                <div class="card-body pb-2">
+            }
+            else
+            {
+                <div class="list-group list-group-flush">
+                    @foreach (var n in Model.Unread)
+                    {
+                        <a href="/Notifications/Open/@n.NotificationID" class="list-group-item list-group-item-action py-3">
+                            <div class="d-flex justify-content-between align-items-start gap-3">
+                                <div>
+                                    <span class="badge @Badge(n.Module) me-2">@Label(n.Module)</span>
+                                    <span class="fw-semibold">@n.Message</span>
+                                </div>
+                                <span class="text-muted small text-nowrap">@n.CreatedAt.ToString("MMM dd, h:mm tt")</span>
+                            </div>
+                        </a>
+                    }
+                </div>
+                <div class="card-footer bg-white text-end py-2">
+                    <a asp-controller="Notifications" asp-action="Index" class="small text-decoration-none">See all notifications</a>
+                </div>
+            }
+        </div>
+    </div>
+
+    @* ── Side column: a compact tenancy summary so the page is never empty ── *@
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white py-2"><span class="fw-semibold small">My Tenancy</span></div>
+            <div class="card-body">
+                @if (Model.Tenant == null)
+                {
+                    <p class="small text-muted mb-0">
+                        No tenant profile is linked to your account yet. Please contact the administrator.
+                    </p>
+                }
+                else
+                {
                     <dl class="row mb-0 info-list">
-                        <dt class="col-5">Date Recorded</dt>
-                        <dd class="col-7">@Model.DateRecorded.ToString("MMM dd, yyyy")</dd>
+                        <dt class="col-6">Unit</dt>
+                        <dd class="col-6 fw-semibold">@(Model.Tenant.Unit?.UnitNumber ?? "—")</dd>
+
+                        <dt class="col-6">Monthly Rent</dt>
+                        <dd class="col-6">&#x20B1;@((Model.Tenant.Unit?.RentPrice ?? 0m).ToString("N0"))</dd>
+
+                        <dt class="col-6">Outstanding</dt>
+                        <dd class="col-6 @(Model.Outstanding > 0 ? "text-danger fw-semibold" : "")">
+                            &#x20B1;@Model.Outstanding.ToString("N0")
+                        </dd>
+
+                        <dt class="col-6">Advance Payment</dt>
+                        <dd class="col-6">&#x20B1;@Model.AdvanceCredit.ToString("N0")</dd>
+
+                        <dt class="col-6">Occupied Since</dt>
+                        <dd class="col-6">@Model.Tenant.DateRecorded.ToString("MMM dd, yyyy")</dd>
                     </dl>
-                </div>
+                }
             </div>
         </div>
-
     </div>
-}
+
+</div>

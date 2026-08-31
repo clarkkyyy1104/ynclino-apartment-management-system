@@ -1,0 +1,106 @@
+@model YnclinoApartmentManagementSystem.Models.ViewModels.MaintenanceViewModel
+@{
+    ViewData["Title"] = "Update Request";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white fw-semibold">
+                Update Request #@Model.RequestID — Unit @Model.UnitNumber
+            </div>
+            <div class="card-body">
+
+                @* read-only context: the staff member reports on the job, they don't redefine it *@
+                <dl class="row info-list small mb-3">
+                    <dt class="col-sm-4">Unit</dt>
+                    <dd class="col-sm-8 fw-semibold">@(Model.UnitNumber ?? "—")</dd>
+
+                    <dt class="col-sm-4">Tenant</dt>
+                    <dd class="col-sm-8">@Model.TenantName</dd>
+
+                    <dt class="col-sm-4">Issue Type</dt>
+                    <dd class="col-sm-8">@Model.Category</dd>
+
+                    <dt class="col-sm-4">Priority</dt>
+                    <dd class="col-sm-8">
+                        @{
+                            var pbadge = Model.Priority switch {
+                                "Urgent"   => "bg-danger",
+                                "Major"    => "bg-warning text-dark",
+                                "Moderate" => "bg-info text-dark",
+                                _          => "bg-secondary"
+                            };
+                        }
+                        <span class="badge @pbadge">@Model.Priority</span>
+                    </dd>
+
+                    <dt class="col-sm-4">Description</dt>
+                    <dd class="col-sm-8">@Model.Description</dd>
+
+                    <dt class="col-sm-4">Date Submitted</dt>
+                    <dd class="col-sm-8">@Model.DateSubmitted.ToString("MMM dd, yyyy")</dd>
+                </dl>
+
+                @if (!string.IsNullOrEmpty(Model.ImagePath))
+                {
+                    <a href="@Model.ImagePath" target="_blank">
+                        <img src="@Model.ImagePath" alt="Reported photo" class="img-fluid rounded border mb-3" style="max-height:180px" />
+                    </a>
+                }
+
+                <hr />
+
+                <form asp-action="Work" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="RequestID" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Status" class="form-label fw-semibold small"></label>
+                        @{
+                            var allowedStatuses = ViewBag.AllowedStatuses as List<string> ?? new List<string>();
+                        }
+                        <select asp-for="Status" class="form-select">
+                            @foreach (var st in allowedStatuses)
+                            {
+                                <option value="@st">@st</option>
+                            }
+                        </select>
+                        <div class="form-text text-muted small">
+                            A status can only move forward. Once you mark this
+                            <strong>Resolved</strong> it is closed and can no longer be changed.
+                        </div>
+                        <span asp-validation-for="Status" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Cost" class="form-label fw-semibold small"></label>
+                        <div class="input-group">
+                            <span class="input-group-text">&#x20B1;</span>
+                            <input asp-for="Cost" class="form-control" type="number" min="0" step="1" />
+                        </div>
+                        <div class="form-text text-muted small">Materials and labour for this repair. Leave 0 if there was no cost.</div>
+                        <span asp-validation-for="Cost" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="StaffNotes" class="form-label fw-semibold small"></label>
+                        <textarea asp-for="StaffNotes" class="form-control" rows="3"
+                                  placeholder="What did you find, and what did you do?"></textarea>
+                        <span asp-validation-for="StaffNotes" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-sm">Save Update</button>
+                        <a asp-action="Index" class="btn btn-secondary btn-sm">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

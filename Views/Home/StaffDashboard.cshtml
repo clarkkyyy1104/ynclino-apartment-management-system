@@ -1,0 +1,108 @@
+@model YnclinoApartmentManagementSystem.Models.ViewModels.StaffDashboardViewModel
+@{
+    ViewData["Title"] = "My Work";
+}
+
+<div class="mb-4">
+    <h4 class="fw-semibold mb-0">Welcome, @Model.StaffName</h4>
+    <p class="text-muted small mb-0">These are the maintenance requests assigned to you.</p>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body py-3">
+                <div class="text-muted small">Urgent</div>
+                <div class="fs-4 fw-semibold @(Model.UrgentCount > 0 ? "text-danger" : "text-secondary")">@Model.UrgentCount</div>
+            </div>
+            <div class="bg-danger" style="height:3px"></div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body py-3">
+                <div class="text-muted small">Pending</div>
+                <div class="fs-4 fw-semibold text-warning">@Model.PendingCount</div>
+            </div>
+            <div class="bg-warning" style="height:3px"></div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body py-3">
+                <div class="text-muted small">In Progress</div>
+                <div class="fs-4 fw-semibold text-primary">@Model.InProgressCount</div>
+            </div>
+            <div class="bg-primary" style="height:3px"></div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body py-3">
+                <div class="text-muted small">Resolved</div>
+                <div class="fs-4 fw-semibold text-success">@Model.ResolvedCount</div>
+            </div>
+            <div class="bg-success" style="height:3px"></div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-2"><span class="fw-semibold small">My Open Requests</span></div>
+
+    @if (!Model.MyOpenRequests.Any())
+    {
+        <div class="card-body text-center py-5">
+            <svg xmlns="http://www.w3.org/2000/svg" width="42" height="42" fill="currentColor" class="text-success mb-3" viewBox="0 0 16 16">
+                <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+            </svg>
+            <p class="fw-semibold mb-1 text-secondary">No open work assigned to you.</p>
+            <p class="small text-muted mb-0">The administrator will assign requests to you as they come in.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Unit</th>
+                        <th>Issue Type</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Date Submitted</th>
+                        <th style="width:170px">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.MyOpenRequests)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@(r.Unit?.UnitNumber ?? "—")</td>
+                            <td>@r.Category</td>
+                            <td>
+                                @{
+                                    var pbadge = r.Priority switch {
+                                        "Urgent"   => "bg-danger",
+                                        "Major"    => "bg-warning text-dark",
+                                        "Moderate" => "bg-info text-dark",
+                                        _          => "bg-secondary"
+                                    };
+                                }
+                                <span class="badge @pbadge">@r.Priority</span>
+                            </td>
+                            <td>
+                                <span class="badge @(r.Status == "In Progress" ? "bg-primary" : "bg-warning text-dark")">@r.Status</span>
+                            </td>
+                            <td>@r.DateSubmitted.ToString("MMM dd, yyyy")</td>
+                            <td>
+                                <a asp-controller="Maintenance" asp-action="Details" asp-route-id="@r.RequestID" class="btn btn-sm btn-outline-info">Details</a>
+                                <a asp-controller="Maintenance" asp-action="Work" asp-route-id="@r.RequestID" class="btn btn-sm btn-outline-primary">Update</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

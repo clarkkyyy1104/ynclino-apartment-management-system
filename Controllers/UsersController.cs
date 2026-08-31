@@ -57,6 +57,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return View(vm);
         }
 
+        // the two staff roles this module can create; "Tenant" is deliberately absent
+        private static readonly string[] StaffRoles = { "Admin", "Maintenance" };
+
         // POST: Users/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -65,8 +68,12 @@ namespace YnclinoApartmentManagementSystem.Controllers
             bool isMainAdmin = CurrentUserIsMainAdmin();
             bool isAdmin = User.IsInRole("Admin");
 
-            // staff accounts are always Admins; tenant accounts come from the Tenants module
-            vm.Role = "Admin";
+            // this module creates staff accounts only — Admin or Maintenance. Anything
+            // else (a forged "Tenant", say) is REFUSED, never quietly turned into an
+            // Admin: silently granting more power than was asked for is the worst
+            // possible default.
+            if (!StaffRoles.Contains(vm.Role))
+                ModelState.AddModelError("Role", "Choose Administrator or Maintenance Staff. Tenant accounts are created from the Tenants module.");
 
             if (string.IsNullOrWhiteSpace(vm.Password))
                 ModelState.AddModelError("Password", "Password is required when creating an account.");
@@ -94,8 +101,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 Role         = vm.Role,
                 IsActive     = vm.IsActive,
                 IsMainAdmin = false,
-                // only tenants are forced to change their password on first login — never admins
-                MustChangePassword = vm.Role == "Tenant",
+                // an account created FOR someone else must have its password changed on
+                // first login. Admins set their own password, so they are never forced.
+                MustChangePassword = vm.Role != "Admin",
                 DateCreated  = DateTime.Now
             };
 
@@ -172,8 +180,12 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 ModelState.Remove("ConfirmPassword");
             }
 
-            // staff accounts stay Admins; only the username, password, and active flag change here
-            vm.Role = "Admin";
+            // the Main Admin must always stay an Admin; every other staff account may be
+            // switched between the two staff roles, and nothing else is accepted
+            if (user.IsMainAdmin)
+                vm.Role = user.Role;
+            else if (!StaffRoles.Contains(vm.Role))
+                ModelState.AddModelError("Role", "Choose Administrator or Maintenance Staff.");
 
             if (user.IsMainAdmin && !vm.IsActive)
                 ModelState.AddModelError("IsActive", "The Main Admin account cannot be deactivated.");

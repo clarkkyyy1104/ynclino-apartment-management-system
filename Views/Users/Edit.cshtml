@@ -60,14 +60,21 @@
 
                     <div class="mb-3">
                         <label asp-for="Role" class="form-label fw-semibold small"></label>
+                                                <label asp-for="Role" class="form-label fw-semibold small"></label>
                         @if (ViewBag.TargetIsMainAdmin == true)
                         {
+                            @* the Main Admin must always stay an Admin *@
                             <input type="text" class="form-control" value="Admin (Main Admin)" disabled />
+                            <input asp-for="Role" type="hidden" value="Admin" />
                         }
                         else
                         {
-                            <input type="text" class="form-control" value="Admin" disabled />
+                            <select asp-for="Role" class="form-select">
+                                <option value="Admin">Administrator</option>
+                                <option value="Maintenance">Maintenance Staff</option>
+                            </select>
                         }
+                        <span asp-validation-for="Role" class="text-danger small"></span>
                         <input asp-for="Role" type="hidden" value="Admin" />
                     </div>
 

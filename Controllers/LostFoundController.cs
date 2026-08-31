@@ -9,7 +9,7 @@ using YnclinoApartmentManagementSystem.Models.ViewModels;
 
 namespace YnclinoApartmentManagementSystem.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin,Tenant")]
     public class LostFoundController : Controller
     {
         private readonly ApplicationDbContext _context;

@@ -52,9 +52,16 @@
 
                     <div class="mb-3">
                         <label asp-for="Role" class="form-label fw-semibold small"></label>
-                        <input type="text" class="form-control" value="Admin" disabled />
-                        <input asp-for="Role" type="hidden" value="Admin" />
-                        <div class="form-text small text-muted">To add a tenant account, go to the Tenants module.</div>
+                        <label asp-for="Role" class="form-label fw-semibold small"></label>
+                        <select asp-for="Role" class="form-select">
+                            <option value="Admin">Administrator</option>
+                            <option value="Maintenance">Maintenance Staff</option>
+                        </select>
+                        <div class="form-text small text-muted">
+                            Maintenance Staff can only see the maintenance requests assigned to them.
+                            To add a tenant account, go to the Tenants module.
+                        </div>
+                        <span asp-validation-for="Role" class="text-danger small"></span>
                     </div>
 
                     <div class="mb-4 form-check">

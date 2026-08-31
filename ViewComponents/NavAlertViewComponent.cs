@@ -16,6 +16,9 @@ namespace YnclinoApartmentManagementSystem.ViewComponents
             _context = context;
         }
 
+                // "module" may name ONE module ("Billing"), SEVERAL separated by commas
+        // ("Billing,Transfer" — used by a dropdown parent so it shows the total of
+        // everything inside it), or "All" for the user's whole unread count.
         public async Task<IViewComponentResult> InvokeAsync(string module)
         {
             int uid = CurrentUserId() ?? 0;
@@ -23,7 +26,13 @@ namespace YnclinoApartmentManagementSystem.ViewComponents
             if (uid != 0)
             {
                 var q = _context.tblNotifications.Where(n => n.UserID == uid && !n.IsRead);
-                if (module != "All") q = q.Where(n => n.Module == module);   // "All" = total unread
+
+                if (module != "All")
+                {
+                    var modules = module.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    q = q.Where(n => modules.Contains(n.Module));
+                }
+
                 count = await q.CountAsync();
             }
             return View(count);

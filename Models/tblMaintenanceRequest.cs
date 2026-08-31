@@ -11,6 +11,16 @@ namespace YnclinoApartmentManagementSystem.Models
         [Required]
         public int TenantID { get; set; }
 
+        // The unit the repair belongs to. Copied from the tenant's unit when the
+        // request is made, and then kept forever — so the repair history stays with
+        // the APARTMENT even after that tenant transfers or moves out.
+        [Display(Name = "Unit")]
+        public int? UnitID { get; set; }
+
+        // Which maintenance staff account is handling this request.
+        [Display(Name = "Assigned Staff")]
+        public int? AssignedStaffID { get; set; }
+
         [Required, MaxLength(50)]
         public string Category { get; set; } = "Other";   // Plumbing | Electrical | Structural | Appliance | Other
 
@@ -33,11 +43,28 @@ namespace YnclinoApartmentManagementSystem.Models
         [Display(Name = "Admin Notes")]
         public string? AdminNotes { get; set; }
 
+        // What the maintenance staff reported after doing the work. Kept separate
+        // from AdminNotes so neither one overwrites the other.
+        [MaxLength(500)]
+        [Display(Name = "Work Notes")]
+        public string? StaffNotes { get; set; }
+
+        // What the repair cost. Feeds the "maintenance costs" report.
+        [Column(TypeName = "decimal(10,2)")]
+        [Display(Name = "Repair Cost")]
+        public decimal Cost { get; set; }
+
         [MaxLength(260)]
         [Display(Name = "Photo")]
         public string? ImagePath { get; set; }
 
         [ForeignKey("TenantID")]
         public tblTenant? Tenant { get; set; }
+
+        [ForeignKey("UnitID")]
+        public tblUnit? Unit { get; set; }
+
+        [ForeignKey("AssignedStaffID")]
+        public tblUser? AssignedStaff { get; set; }
     }
 }

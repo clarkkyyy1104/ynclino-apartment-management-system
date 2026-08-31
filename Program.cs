@@ -111,6 +111,22 @@ using (var scope = app.Services.CreateScope())
     AddColumnIfMissing("tblBillings", "Deposit", "decimal(10,2) NOT NULL DEFAULT 0");
     AddColumnIfMissing("tblBillings", "Advance", "decimal(10,2) NOT NULL DEFAULT 0");
     AddColumnIfMissing("tblTenants", "AdvanceCredit", "decimal(10,2) NOT NULL DEFAULT 0");
+    AddColumnIfMissing("tblMaintenanceRequests", "UnitID", "int NULL");
+    AddColumnIfMissing("tblMaintenanceRequests", "AssignedStaffID", "int NULL");
+    AddColumnIfMissing("tblMaintenanceRequests", "StaffNotes", "varchar(500) NULL");
+    AddColumnIfMissing("tblMaintenanceRequests", "Cost", "decimal(10,2) NOT NULL DEFAULT 0");
+
+    // Requests created before UnitID existed have no unit on them. Fill it in once
+    // from the tenant's current unit, so the per-unit repair history is complete.
+    try
+    {
+        db.Database.ExecuteSqlRaw(
+            "UPDATE tblMaintenanceRequests m " +
+            "JOIN tblTenants t ON t.TenantID = m.TenantID " +
+            "SET m.UnitID = t.UnitID " +
+            "WHERE m.UnitID IS NULL AND t.UnitID IS NOT NULL");
+    }
+    catch (Exception ex) { Console.WriteLine($"[schema] Could not backfill UnitID: {ex.Message}"); }
 
     // Payments live in their own table so one bill can be settled in instalments.
     // CREATE TABLE IF NOT EXISTS *is* valid MySQL, so this safely adds the table to an
@@ -180,6 +196,22 @@ using (var scope = app.Services.CreateScope())
         db.SaveChanges();
     }
 
+    // create a default maintenance staff account the first time the app runs, so the
+    // Maintenance Staff role from the manuscript can be demonstrated immediately
+    if (!db.tblUsers.Any(u => u.Role == "Maintenance"))
+    {
+        db.tblUsers.Add(new tblUser
+        {
+            Username = "maintenance",
+            Password = PasswordHelper.Hash("Staff@123"),
+            Role = "Maintenance",
+            IsActive = true,
+            IsMainAdmin = false,
+            MustChangePassword = true,
+            DateCreated = DateTime.Now
+        });
+        db.SaveChanges();
+    }
     // migrate any maintenance rows still using the old priority labels to the
     // current vocabulary (Low->Minor, Medium->Moderate, High->Major; Urgent kept)
     if (db.tblMaintenanceRequests.Any(m => m.Priority == "Low" || m.Priority == "Medium" || m.Priority == "High"))

@@ -10,7 +10,9 @@ using YnclinoApartmentManagementSystem.Models.ViewModels;
 
 namespace YnclinoApartmentManagementSystem.Controllers
 {
-    [Authorize]
+    // maintenance staff have no business in billing — lock the whole module to the
+    // two roles that do, so a typed URL cannot get in either
+    [Authorize(Roles = "Admin,Tenant")]
     public class BillingController : Controller
     {
         private readonly ApplicationDbContext _context;
