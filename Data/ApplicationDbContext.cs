@@ -95,7 +95,7 @@ namespace YnclinoApartmentManagementSystem.Data
                 entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
                 entity.Property(e => e.Priority).IsRequired().HasMaxLength(20);
                 entity.Property(e => e.Status).IsRequired().HasMaxLength(30).HasDefaultValue("Pending");
-                entity.Property(e => e.AdminNotes).HasMaxLength(500);
+                entity.Property(e => e.StaffNotes).HasMaxLength(500);
 
                 entity.HasOne(m => m.Tenant)
                       .WithMany()

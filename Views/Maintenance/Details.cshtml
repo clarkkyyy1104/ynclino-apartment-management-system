@@ -86,11 +86,6 @@
                         <dt class="col-sm-4">Work Notes</dt>
                         <dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.StaffNotes) ? "—" : Model.StaffNotes)</dd>
                     }
-                    @if (User.IsInRole("Admin"))
-                    {
-                        <dt class="col-sm-4">Admin Notes</dt>
-                        <dd class="col-sm-8">@(Model.AdminNotes ?? "—")</dd>
-                    }
                 </dl>
 
                 <div class="d-flex gap-2 mt-3">

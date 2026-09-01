@@ -39,10 +39,6 @@ namespace YnclinoApartmentManagementSystem.Models
         [Display(Name = "Date Resolved")]
         public DateTime? DateResolved { get; set; }
 
-        [MaxLength(500)]
-        [Display(Name = "Admin Notes")]
-        public string? AdminNotes { get; set; }
-
         // What the maintenance staff reported after doing the work. Kept separate
         // from AdminNotes so neither one overwrites the other.
         [MaxLength(500)]

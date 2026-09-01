@@ -195,13 +195,24 @@ using (var scope = app.Services.CreateScope())
         db.SaveChanges();
     }
 
-    // create a default maintenance staff account the first time the app runs, so the
-    // Maintenance Staff role from the manuscript can be demonstrated immediately
-    if (!db.tblUsers.Any(u => u.Role == "Maintenance"))
+    // The apartment employs two repair staff, so seed BOTH — the manuscript's
+    // Maintenance Staff role can then be shown with real assignment between them.
+    // An older single "maintenance" account is renamed rather than left orphaned.
+    var legacyStaff = db.tblUsers.FirstOrDefault(u => u.Username == "maintenance");
+    if (legacyStaff != null && !db.tblUsers.Any(u => u.Username == "maintenance1"))
     {
+        legacyStaff.Username = "maintenance1";
+        db.SaveChanges();
+        Console.WriteLine("[seed] Renamed 'maintenance' to 'maintenance1'.");
+    }
+
+    foreach (var staffName in new[] { "maintenance1", "maintenance2" })
+    {
+        if (db.tblUsers.Any(u => u.Username == staffName)) continue;
+
         db.tblUsers.Add(new tblUser
         {
-            Username = "maintenance",
+            Username = staffName,
             Password = PasswordHelper.Hash("Staff@123"),
             Role = "Maintenance",
             IsActive = true,

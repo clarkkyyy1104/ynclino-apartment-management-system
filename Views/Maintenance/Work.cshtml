@@ -54,7 +54,7 @@
                 <form asp-action="Work" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="RequestID" />
-                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+                    <div asp-validation-summary="All" class="alert alert-danger py-2 small"></div>
 
                     <div class="mb-3">
                         <label asp-for="Status" class="form-label fw-semibold small"></label>

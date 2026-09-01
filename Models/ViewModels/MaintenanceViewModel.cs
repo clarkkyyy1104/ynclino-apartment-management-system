@@ -37,10 +37,6 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         public DateTime? DateResolved { get; set; }
 
         [MaxLength(500)]
-        [Display(Name = "Admin Notes")]
-        public string? AdminNotes { get; set; }
-
-        [MaxLength(500)]
         [Display(Name = "Work Notes")]
         public string? StaffNotes { get; set; }
 

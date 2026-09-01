@@ -10,7 +10,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
 {
     // Reports & Records. Everything here is READ-ONLY — the system only displays
     // reports on screen; it never edits data and has no export or print feature.
-    [Authorize]
+    // maintenance staff only ever see their own assigned work — never the
+    // apartment's reports. Locked at the controller so a typed URL fails too.
+    [Authorize(Roles = "Admin,Tenant")]
     public class ReportsController : Controller
     {
         private readonly ApplicationDbContext _context;

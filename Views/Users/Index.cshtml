@@ -64,18 +64,16 @@
                     <td>@user.DateCreated.ToString("MM/dd/yyyy")</td>
                     <td>
                         @{
-                            bool canEdit = isAdmin;
+                            // Staff accounts are created, then deleted — never edited here.
+                            // Nobody may change another person's password: each user sets
+                            // their own from Change Password.
                             bool canDelete = isAdmin && !user.IsMainAdmin;
-                        }
-                        @if (canEdit)
-                        {
-                            <a asp-action="Edit" asp-route-id="@user.UserID" class="btn btn-outline-secondary btn-sm">Edit</a>
                         }
                         @if (canDelete)
                         {
                             <a asp-action="Delete" asp-route-id="@user.UserID" class="btn btn-outline-danger btn-sm">Delete</a>
                         }
-                        @if (!canEdit && !canDelete)
+                        else
                         {
                             <span class="text-muted small">—</span>
                         }
