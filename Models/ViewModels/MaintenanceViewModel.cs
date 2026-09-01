@@ -48,9 +48,6 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         [Display(Name = "Assign To")]
         public int AssignedStaffID { get; set; }
 
-        [Range(0, 9999999, ErrorMessage = "Repair cost cannot be negative.")]
-        [Display(Name = "Repair Cost")]
-        public decimal Cost { get; set; }
 
         [Display(Name = "Photo (optional)")]
         public IFormFile? ImageUpload { get; set; }

@@ -173,40 +173,38 @@
     </div>
 </div>
 <div class="row g-3 mt-1">
-    @* ── Maintenance costs ── *@
+    @* ── Maintenance requests by issue type ── *@
     <div class="col-lg-5">
         <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-secondary text-white py-2"><span class="fw-semibold small">Maintenance Costs</span></div>
+            <div class="card-header bg-secondary text-white py-2"><span class="fw-semibold small">Maintenance by Issue Type</span></div>
             <div class="card-body p-0">
                 <table class="table table-sm small mb-0">
                     <thead class="table-light">
-                        <tr><th>Issue Type</th><th class="text-end">Requests</th><th class="text-end">Cost</th></tr>
+                        <tr><th>Issue Type</th><th class="text-end">Requests</th></tr>
                     </thead>
                     <tbody>
-                        @{ decimal peakCost = Model.MaintenanceByCategory.Count == 0 ? 1m : Math.Max(Model.MaintenanceByCategory.Max(c => c.Cost), 1m); }
+                        @{ int peakRequests = Model.MaintenanceByCategory.Count == 0 ? 1 : Math.Max(Model.MaintenanceByCategory.Max(c => c.Requests), 1); }
                         @foreach (var c in Model.MaintenanceByCategory)
                         {
                             <tr>
                                 <td>
                                     @c.Category
                                     <div class="progress mt-1" style="height:4px;">
-                                        <div class="progress-bar bg-secondary" style="width:@((c.Cost / peakCost * 100).ToString("N0"))%"></div>
+                                        <div class="progress-bar bg-secondary" style="width:@((c.Requests * 100 / peakRequests))%"></div>
                                     </div>
                                 </td>
-                                <td class="text-end">@c.Requests</td>
-                                <td class="text-end fw-semibold">₱@c.Cost.ToString("N0")</td>
+                                <td class="text-end fw-semibold">@c.Requests</td>
                             </tr>
                         }
                         @if (!Model.MaintenanceByCategory.Any())
                         {
-                            <tr><td colspan="3" class="text-center text-muted py-3">No maintenance requests yet.</td></tr>
+                            <tr><td colspan="2" class="text-center text-muted py-3">No maintenance requests yet.</td></tr>
                         }
                     </tbody>
                     <tfoot class="table-light">
                         <tr>
-                            <th>Total spent</th>
-                            <th class="text-end"></th>
-                            <th class="text-end">₱@Model.MaintenanceCostTotal.ToString("N0")</th>
+                            <th>Total requests</th>
+                            <th class="text-end">@Model.MaintenanceByCategory.Sum(c => c.Requests)</th>
                         </tr>
                     </tfoot>
                 </table>

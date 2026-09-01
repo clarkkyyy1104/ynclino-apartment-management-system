@@ -33,20 +33,15 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         public List<MonthlyIncomeRow> MonthlyIncome { get; set; } = new List<MonthlyIncomeRow>();
         public List<TenantBalanceRow> Outstanding { get; set; } = new List<TenantBalanceRow>();
                 public List<MaintenanceCountRow> MaintenanceByStatus { get; set; } = new List<MaintenanceCountRow>();
-        public List<MaintenanceCostRow> MaintenanceByCategory { get; set; } = new List<MaintenanceCostRow>();
+        public List<MaintenanceCategoryRow> MaintenanceByCategory { get; set; } = new List<MaintenanceCategoryRow>();
         public List<TenantHistoryRow> TenantHistory { get; set; } = new List<TenantHistoryRow>();
-
-        // total spent on repairs
-        public decimal MaintenanceCostTotal { get; set; }
-        public decimal MaintenanceCostThisMonth { get; set; }
     }
 
-    // one row of the "maintenance costs" report, grouped by issue type
-    public class MaintenanceCostRow
+    // one row of the maintenance report, grouped by issue type
+    public class MaintenanceCategoryRow
     {
         public string Category { get; set; } = string.Empty;
         public int Requests { get; set; }
-        public decimal Cost { get; set; }
     }
 
     // one row of the "tenant histories" report

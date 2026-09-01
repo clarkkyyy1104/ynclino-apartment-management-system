@@ -49,10 +49,6 @@ namespace YnclinoApartmentManagementSystem.Models
         [Display(Name = "Work Notes")]
         public string? StaffNotes { get; set; }
 
-        // What the repair cost. Feeds the "maintenance costs" report.
-        [Column(TypeName = "decimal(10,2)")]
-        [Display(Name = "Repair Cost")]
-        public decimal Cost { get; set; }
 
         [MaxLength(260)]
         [Display(Name = "Photo")]

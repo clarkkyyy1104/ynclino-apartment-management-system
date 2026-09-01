@@ -115,22 +115,16 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 .OrderByDescending(g => g.Count)
                 .ToList();
 
-            // ── Maintenance COSTS by issue type ──
+            // ── Maintenance requests by issue type ──
             vm.MaintenanceByCategory = requests
                 .GroupBy(m => m.Category)
-                .Select(g => new MaintenanceCostRow
+                .Select(g => new MaintenanceCategoryRow
                 {
                     Category = g.Key,
-                    Requests = g.Count(),
-                    Cost = g.Sum(m => m.Cost)
+                    Requests = g.Count()
                 })
-                .OrderByDescending(x => x.Cost)
+                .OrderByDescending(x => x.Requests)
                 .ToList();
-
-            vm.MaintenanceCostTotal = requests.Sum(m => m.Cost);
-            vm.MaintenanceCostThisMonth = requests
-                .Where(m => m.DateSubmitted >= firstOfMonth)
-                .Sum(m => m.Cost);
 
             // ── Tenant histories ──
             var allTenants = await _context.tblTenants.AsNoTracking()

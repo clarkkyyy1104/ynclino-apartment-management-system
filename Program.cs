@@ -114,7 +114,6 @@ using (var scope = app.Services.CreateScope())
     AddColumnIfMissing("tblMaintenanceRequests", "UnitID", "int NULL");
     AddColumnIfMissing("tblMaintenanceRequests", "AssignedStaffID", "int NULL");
     AddColumnIfMissing("tblMaintenanceRequests", "StaffNotes", "varchar(500) NULL");
-    AddColumnIfMissing("tblMaintenanceRequests", "Cost", "decimal(10,2) NOT NULL DEFAULT 0");
 
     // Requests created before UnitID existed have no unit on them. Fill it in once
     // from the tenant's current unit, so the per-unit repair history is complete.

@@ -257,7 +257,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 AdminNotes = request.AdminNotes,
                 StaffNotes = request.StaffNotes,
                 AssignedStaffID = request.AssignedStaffID ?? 0,
-                Cost = request.Cost,
                 ImagePath = request.ImagePath
             };
             vm.AvailableStaff = await GetStaffListAsync();
@@ -326,7 +325,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             request.Priority = vm.Priority;
             request.Status = vm.Status;
             request.AdminNotes = vm.AdminNotes;
-            request.Cost = vm.Cost;
             request.AssignedStaffID = vm.AssignedStaffID == 0 ? null : vm.AssignedStaffID;
 
             if (vm.ImageUpload != null)
@@ -389,7 +387,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 Status = request.Status,
                 DateSubmitted = request.DateSubmitted,
                 StaffNotes = request.StaffNotes,
-                Cost = request.Cost,
                 ImagePath = request.ImagePath
             });
         }
@@ -445,7 +442,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             // the priority, the tenant, or who the job is assigned to
             request.Status = vm.Status;
             request.StaffNotes = vm.StaffNotes;
-            request.Cost = vm.Cost;
 
             if (vm.Status == "Resolved" && request.DateResolved == null)
                 request.DateResolved = DateTime.Now;

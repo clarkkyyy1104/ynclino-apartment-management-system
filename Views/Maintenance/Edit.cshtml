@@ -78,35 +78,15 @@
                             cannot be reopened.
                         </div>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label asp-for="Cost" class="form-label fw-semibold small"></label>
-                        <div class="input-group">
-                            <span class="input-group-text">₱</span>
-                            <input asp-for="Cost" type="number" min="0" step="1" class="form-control" placeholder="0" />
-                        </div>
-                        <div class="form-text text-muted small">What the repair cost — shown in the maintenance cost report.</div>
-                        <span asp-validation-for="Cost" class="text-danger small"></span>
-                    </div>
 
-                        <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label asp-for="AssignedStaffID" class="form-label fw-semibold small"></label>
-                            <select asp-for="AssignedStaffID" class="form-select"
-                                    asp-items="Model.AvailableStaff">
-                                <option value="0">— Unassigned —</option>
-                            </select>
-                            <div class="form-text text-muted small">The staff member is notified as soon as you assign them.</div>
-                            <span asp-validation-for="AssignedStaffID" class="text-danger small"></span>
-                        </div>
-                        <div class="col-md-6">
-                            <label asp-for="Cost" class="form-label fw-semibold small"></label>
-                            <div class="input-group">
-                                <span class="input-group-text">&#x20B1;</span>
-                                <input asp-for="Cost" class="form-control" type="number" min="0" step="1" />
-                            </div>
-                            <span asp-validation-for="Cost" class="text-danger small"></span>
-                        </div>
+                    <div class="mb-3">
+                        <label asp-for="AssignedStaffID" class="form-label fw-semibold small"></label>
+                        <select asp-for="AssignedStaffID" class="form-select"
+                                asp-items="Model.AvailableStaff">
+                            <option value="0">— Unassigned —</option>
+                        </select>
+                        <div class="form-text text-muted small">The staff member is notified as soon as you assign them.</div>
+                        <span asp-validation-for="AssignedStaffID" class="text-danger small"></span>
                     </div>
 
                     <div class="mb-3">
