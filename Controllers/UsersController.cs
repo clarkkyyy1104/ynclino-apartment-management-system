@@ -29,16 +29,33 @@ namespace YnclinoApartmentManagementSystem.Controllers
         private int? CurrentUserID() =>
             int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int id) ? id : null;
 
-        // GET: Users — staff accounts only (Admins)
+        // GET: Users — EVERY account the system issues a login to. The manuscript
+        // scopes User Account Management to "Admin/Owner, Administrators, Tenants,
+        // and Maintenance Staff", so all four appear here.
+        //
+        // Include(Tenants) so a tenant row can show the person's real name instead of
+        // their login, and so we can link straight to their tenant record.
         public async Task<IActionResult> Index()
         {
             var users = await _context.tblUsers
-                .Where(u => u.Role != "Tenant")
-                .OrderBy(u => u.Username)
+                .Include(u => u.Tenants)
                 .ToListAsync();
+
+            // Admins first, then maintenance staff, then tenants — the order an admin
+            // thinks in, rather than alphabetical across three different kinds of account
+            ViewBag.Accounts = users
+                .OrderBy(u => u.Role switch { "Admin" => 0, "Maintenance" => 1, _ => 2 })
+                .ThenByDescending(u => u.IsMainAdmin)
+                .ThenBy(u => u.DisplayName)
+                .ToList();
+
+            ViewBag.AdminCount = users.Count(u => u.Role == "Admin");
+            ViewBag.StaffCount = users.Count(u => u.Role == "Maintenance");
+            ViewBag.TenantCount = users.Count(u => u.Role == "Tenant");
+
             ViewBag.IsMainAdmin = CurrentUserIsMainAdmin();
             ViewBag.IsAdmin = User.IsInRole("Admin");
-            return View(users);
+            return View((ViewBag.Accounts as List<tblUser>)!);
         }
 
         // GET: Users/Create — staff accounts only

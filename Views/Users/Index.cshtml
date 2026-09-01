@@ -1,19 +1,58 @@
 @model IEnumerable<YnclinoApartmentManagementSystem.Models.tblUser>
 @{
-    ViewData["Title"] = "User Management";
-    bool isMainAdmin = ViewBag.IsMainAdmin == true;
+    ViewData["Title"] = "User Accounts";
     bool isAdmin = ViewBag.IsAdmin == true;
+
+    // the three kinds of account the manuscript names, described in one place
+    string RoleBadge(string role) => role switch
+    {
+        "Admin"       => "bg-danger",
+        "Maintenance" => "bg-info text-dark",
+        _             => "bg-secondary"
+    };
+    string RoleLabel(string role) => role switch
+    {
+        "Admin"       => "Administrator",
+        "Maintenance" => "Maintenance Staff",
+        _             => "Tenant"
+    };
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
     <div>
-        <h4 class="mb-0">User Management</h4>
-        <p class="text-muted small mb-0">Staff accounts only. Tenant accounts are managed in the Tenants module.</p>
+        <h4 class="mb-1">User Accounts</h4>
+        <p class="text-muted small mb-0">
+            Every account that can sign in to the system. Administrators and Maintenance
+            Staff are created here; a Tenant account is created together with the tenant's
+            record in the <a asp-controller="Tenants" asp-action="Index">Tenants</a> module.
+        </p>
     </div>
-    @if (ViewBag.IsAdmin == true)
+    @if (isAdmin)
     {
         <a asp-action="Create" class="btn btn-primary btn-sm">Add Staff Account</a>
     }
+</div>
+
+@* what each account type can actually do — this is the part that was unclear *@
+<div class="row g-2 mb-3">
+    <div class="col-md-4">
+        <div class="border rounded p-2 h-100">
+            <span class="badge bg-danger">Administrator</span>
+            <div class="small text-muted mt-1">Full access to every module. @ViewBag.AdminCount account(s).</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="border rounded p-2 h-100">
+            <span class="badge bg-info text-dark">Maintenance Staff</span>
+            <div class="small text-muted mt-1">Only the repair requests assigned to them. @ViewBag.StaffCount account(s).</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="border rounded p-2 h-100">
+            <span class="badge bg-secondary">Tenant</span>
+            <div class="small text-muted mt-1">Their own unit, bills and requests. @ViewBag.TenantCount account(s).</div>
+        </div>
+    </div>
 </div>
 
 <div class="table-responsive">
@@ -21,20 +60,22 @@
         <thead class="table-light">
             <tr>
                 <th>#</th>
+                <th>Name</th>
                 <th>Username</th>
-                <th>Role</th>
+                <th>Account Type</th>
                 <th>Status</th>
                 <th>Date Created</th>
-                <th style="width:140px">Actions</th>
+                <th style="width:150px">Actions</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var user in Model)
             {
+                var tenant = user.Tenants?.FirstOrDefault();
                 <tr>
                     <td>@user.UserID</td>
-                    <td>
-                        @user.Username
+                    <td class="fw-semibold">
+                        @user.DisplayName
                         @if (user.IsMainAdmin)
                         {
                             <span class="badge bg-danger ms-1" title="Main Admin — undeletable">
@@ -45,17 +86,8 @@
                             </span>
                         }
                     </td>
-                    <td>
-                        @{
-                            var badgeClass = user.Role switch {
-                                "Admin"       => "bg-danger",
-                                "Maintenance" => "bg-info text-dark",
-                                _             => "bg-secondary"
-                            };
-                            var roleLabel = user.Role == "Maintenance" ? "Maintenance Staff" : user.Role;
-                        }
-                        <span class="badge @badgeClass">@roleLabel</span>
-                    </td>
+                    <td class="text-muted small">@user.Username</td>
+                    <td><span class="badge @RoleBadge(user.Role)">@RoleLabel(user.Role)</span></td>
                     <td>
                         <span class="badge @(user.IsActive ? "bg-success" : "bg-warning text-dark")">
                             @(user.IsActive ? "Active" : "Inactive")
@@ -63,13 +95,19 @@
                     </td>
                     <td>@user.DateCreated.ToString("MM/dd/yyyy")</td>
                     <td>
-                        @{
-                            // Staff accounts are created, then deleted — never edited here.
-                            // Nobody may change another person's password: each user sets
-                            // their own from Change Password.
-                            bool canDelete = isAdmin && !user.IsMainAdmin;
+                        @if (user.Role == "Tenant" && tenant != null)
+                        {
+                            @* a tenant login belongs to a tenant record — manage it there,
+                               where the unit, lease and billing live with it *@
+                            <a asp-controller="Tenants" asp-action="Details" asp-route-id="@tenant.TenantID"
+                               class="btn btn-outline-info btn-sm" title="View in Tenants" aria-label="View in Tenants">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
+                                    <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
+                                </svg>
+                            </a>
                         }
-                        @if (canDelete)
+                        else if (isAdmin && !user.IsMainAdmin && user.Role != "Tenant")
                         {
                             <a asp-action="Delete" asp-route-id="@user.UserID" class="btn btn-outline-danger btn-sm">Delete</a>
                         }
