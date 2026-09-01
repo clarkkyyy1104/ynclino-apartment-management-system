@@ -94,11 +94,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
                         .Take(20)
                         .ToListAsync();
 
-                    vm.BillingCount     = vm.Unread.Count(n => n.Module == "Billing");
-                    vm.MaintenanceCount = vm.Unread.Count(n => n.Module == "Maintenance");
-                    vm.LostFoundCount   = vm.Unread.Count(n => n.Module == "LostFound");
-                    vm.TransferCount    = vm.Unread.Count(n => n.Module == "Transfer");
-
                     if (vm.Tenant != null)
                     {
                         vm.AdvanceCredit = vm.Tenant.AdvanceCredit;
