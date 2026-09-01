@@ -1,12 +1,12 @@
 @model YnclinoApartmentManagementSystem.Models.ViewModels.UnitViewModel
 @{
-    ViewData["Title"] = "Edit Unit";
+    ViewData["Title"] = "Update Unit";
 }
 
 <div class="row justify-content-center">
     <div class="col-md-7">
         <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white fw-semibold">Edit Unit — @Model.UnitNumber</div>
+            <div class="card-header bg-primary text-white fw-semibold">Update Unit — @Model.UnitNumber</div>
             <div class="card-body">
                 <form asp-action="Edit" method="post">
                     <input type="hidden" asp-for="UnitID" />

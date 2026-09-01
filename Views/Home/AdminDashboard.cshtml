@@ -149,3 +149,8 @@
     </div>
 
 </div>
+
+@* the same unread feed the tenant and staff dashboards show *@
+<div class="mt-4">
+    <partial name="_NotificationFeed" model="(List<YnclinoApartmentManagementSystem.Models.tblNotification>)ViewBag.Unread" />
+</div>

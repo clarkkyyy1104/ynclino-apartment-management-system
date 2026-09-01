@@ -18,6 +18,20 @@ namespace YnclinoApartmentManagementSystem.Controllers
             _context = context;
         }
 
+        // the unread notifications for whoever is signed in — every dashboard shows
+        // the same feed, so they all read from here
+        private async Task<List<tblNotification>> MyUnreadAsync()
+        {
+            if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int uid))
+                return new List<tblNotification>();
+
+            return await _context.tblNotifications
+                .Where(n => n.UserID == uid && !n.IsRead)
+                .OrderByDescending(n => n.CreatedAt)
+                .Take(20)
+                .ToListAsync();
+        }
+
         public async Task<IActionResult> Index()
         {
             if (User.IsInRole("Admin"))
@@ -30,6 +44,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 ViewBag.ActiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Active");
                 ViewBag.InactiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Inactive");
                 ViewBag.TotalUsers = await _context.tblUsers.CountAsync(u => u.IsActive);
+                ViewBag.Unread = await MyUnreadAsync();
                 return View("AdminDashboard");
             }
             else if (User.IsInRole("Maintenance"))
@@ -56,6 +71,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                     ResolvedCount = mine.Count(m => m.Status == "Resolved")
                 };
                 vm.UrgentCount = vm.MyOpenRequests.Count(m => m.Priority == "Urgent");
+                ViewBag.Unread = await MyUnreadAsync();
 
                 return View("StaffDashboard", vm);
             }

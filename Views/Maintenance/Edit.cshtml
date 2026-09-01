@@ -1,13 +1,13 @@
 @model YnclinoApartmentManagementSystem.Models.ViewModels.MaintenanceViewModel
 @{
-    ViewData["Title"] = "Edit Request";
+    ViewData["Title"] = "Update Request";
 }
 
 <div class="row justify-content-center">
     <div class="col-md-7">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-secondary text-white fw-semibold">
-                Edit Request #@Model.RequestID — @Model.TenantName
+                Update Request #@Model.RequestID — @Model.TenantName
             </div>
             <div class="card-body">
                 <form asp-action="Edit" method="post" enctype="multipart/form-data">

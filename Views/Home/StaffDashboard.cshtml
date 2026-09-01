@@ -47,6 +47,11 @@
     </div>
 </div>
 
+@* the same unread feed the admin and tenant dashboards show *@
+<div class="mb-4">
+    <partial name="_NotificationFeed" model="(List<YnclinoApartmentManagementSystem.Models.tblNotification>)ViewBag.Unread" />
+</div>
+
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-white py-2"><span class="fw-semibold small">My Open Requests</span></div>
 
