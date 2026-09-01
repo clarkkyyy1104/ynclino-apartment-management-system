@@ -14,7 +14,7 @@
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="RequestID" />
                     <input type="hidden" asp-for="TenantID" />
-                    <div asp-validation-summary="All" class="alert alert-danger py-2 small"></div>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
 
                     <p class="text-muted small mb-3">
                         Tenant: <strong>@Model.TenantName</strong> — Unit @Model.UnitNumber
@@ -79,7 +79,17 @@
                         </div>
                     </div>
                     
-                    <div class="row mb-3">
+                    <div class="mb-3">
+                        <label asp-for="Cost" class="form-label fw-semibold small"></label>
+                        <div class="input-group">
+                            <span class="input-group-text">₱</span>
+                            <input asp-for="Cost" type="number" min="0" step="1" class="form-control" placeholder="0" />
+                        </div>
+                        <div class="form-text text-muted small">What the repair cost — shown in the maintenance cost report.</div>
+                        <span asp-validation-for="Cost" class="text-danger small"></span>
+                    </div>
+
+                        <div class="row mb-3">
                         <div class="col-md-6">
                             <label asp-for="AssignedStaffID" class="form-label fw-semibold small"></label>
                             <select asp-for="AssignedStaffID" class="form-select"

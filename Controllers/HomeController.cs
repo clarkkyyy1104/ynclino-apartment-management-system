@@ -30,37 +30,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 ViewBag.ActiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Active");
                 ViewBag.InactiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Inactive");
                 ViewBag.TotalUsers = await _context.tblUsers.CountAsync(u => u.IsActive);
-                ViewBag.TotalUsers = await _context.tblUsers.CountAsync(u => u.IsActive);
-
-                // ── Operations summary the manuscript asks the Admin Dashboard to show:
-                // monthly income, pending maintenance requests, and overdue tenants.
-                var monthStart = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-                var nextMonth = monthStart.AddMonths(1);
-
-                ViewBag.IncomeThisMonth = await _context.tblPayments
-                    .Where(p => p.DatePaid >= monthStart && p.DatePaid < nextMonth)
-                    .SumAsync(p => (decimal?)p.Amount) ?? 0m;
-
-                ViewBag.PendingMaintenance = await _context.tblMaintenanceRequests
-                    .CountAsync(m => m.Status == "Pending" || m.Status == "In Progress");
-
-                // one count per TENANT, not per bill — a tenant with three late bills
-                // is still just one overdue tenant
-                ViewBag.OverdueTenants = await _context.tblBillings
-                    .Where(b => b.Status != "Paid" && b.DueDate < DateTime.Today)
-                    .Select(b => b.TenantID)
-                    .Distinct()
-                    .CountAsync();
-
-                // the unread notifications the sidebar badge is counting, so clicking
-                // Dashboard actually shows what it promised
-                int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int adminId);
-                ViewBag.Unread = await _context.tblNotifications
-                    .Where(n => n.UserID == adminId && !n.IsRead)
-                    .OrderByDescending(n => n.CreatedAt)
-                    .Take(10)
-                    .ToListAsync();
-
                 return View("AdminDashboard");
             }
             else if (User.IsInRole("Maintenance"))
