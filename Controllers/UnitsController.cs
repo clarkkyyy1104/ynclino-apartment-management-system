@@ -334,7 +334,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
                     Status = status,
                     DateSubmitted = submitted,
                     DateResolved = status == "Resolved" ? resolved : (DateTime?)null,
-                    AdminNotes = status == "Resolved" ? "Handled by maintenance staff." : null
                 });
             }
 

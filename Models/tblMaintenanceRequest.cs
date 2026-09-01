@@ -39,20 +39,12 @@ namespace YnclinoApartmentManagementSystem.Models
         [Display(Name = "Date Resolved")]
         public DateTime? DateResolved { get; set; }
 
-        [MaxLength(500)]
-        [Display(Name = "Admin Notes")]
-        public string? AdminNotes { get; set; }
-
         // What the maintenance staff reported after doing the work. Kept separate
         // from AdminNotes so neither one overwrites the other.
         [MaxLength(500)]
         [Display(Name = "Work Notes")]
         public string? StaffNotes { get; set; }
 
-        // What the repair cost. Feeds the "maintenance costs" report.
-        [Column(TypeName = "decimal(10,2)")]
-        [Display(Name = "Repair Cost")]
-        public decimal Cost { get; set; }
 
         [MaxLength(260)]
         [Display(Name = "Photo")]

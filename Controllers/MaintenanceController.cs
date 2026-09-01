@@ -159,8 +159,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             if (!Categories.Contains(vm.Category))
                 ModelState.AddModelError("Category", "Select a valid issue type.");
-            if (!Priorities.Contains(vm.Priority))
-                ModelState.AddModelError("Priority", "Select a valid priority.");
 
             // a description is only required when the issue type is "Other";
             // for the preset types we fall back to the type itself
@@ -175,11 +173,26 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 var tenant = await GetCurrentTenantAsync();
                 if (tenant == null) return Forbid();
                 vm.TenantID = tenant.TenantID;
+
+                // The tenant's form has no Priority field — the admin decides how urgent
+                // a repair is. Defaulting it HERE (not with a hidden input) means a tenant
+                // cannot post "Urgent" to jump the queue.
+                vm.Priority = "Moderate";
+                ModelState.Remove(nameof(vm.Priority));
+
+                // keep the header filled in if the form has to be redisplayed
+                vm.TenantName = tenant.FullName;
+                vm.UnitNumber = tenant.Unit?.UnitNumber;
             }
             else if (!await _context.tblTenants.AnyAsync(t => t.TenantID == vm.TenantID && t.Status == "Active"))
             {
                 ModelState.AddModelError("TenantID", "Select a valid tenant.");
             }
+
+            // checked AFTER the tenant default above, so it only ever judges a value
+            // that was actually chosen on the admin's form
+            if (!Priorities.Contains(vm.Priority))
+                ModelState.AddModelError("Priority", "Select a valid priority.");
 
             if (!ModelState.IsValid)
             {
@@ -254,10 +267,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 Status = request.Status,
                 DateSubmitted = request.DateSubmitted,
                 DateResolved = request.DateResolved,
-                AdminNotes = request.AdminNotes,
                 StaffNotes = request.StaffNotes,
                 AssignedStaffID = request.AssignedStaffID ?? 0,
-                Cost = request.Cost,
                 ImagePath = request.ImagePath
             };
             vm.AvailableStaff = await GetStaffListAsync();
@@ -325,8 +336,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             request.Description = vm.Description ?? string.Empty;
             request.Priority = vm.Priority;
             request.Status = vm.Status;
-            request.AdminNotes = vm.AdminNotes;
-            request.Cost = vm.Cost;
             request.AssignedStaffID = vm.AssignedStaffID == 0 ? null : vm.AssignedStaffID;
 
             if (vm.ImageUpload != null)
@@ -389,7 +398,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 Status = request.Status,
                 DateSubmitted = request.DateSubmitted,
                 StaffNotes = request.StaffNotes,
-                Cost = request.Cost,
                 ImagePath = request.ImagePath
             });
         }
@@ -445,7 +453,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             // the priority, the tenant, or who the job is assigned to
             request.Status = vm.Status;
             request.StaffNotes = vm.StaffNotes;
-            request.Cost = vm.Cost;
 
             if (vm.Status == "Resolved" && request.DateResolved == null)
                 request.DateResolved = DateTime.Now;
