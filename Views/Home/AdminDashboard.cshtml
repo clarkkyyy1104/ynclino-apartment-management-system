@@ -149,3 +149,126 @@
     </div>
 
 </div>
+@* ── Operations: the three figures the manuscript names for this dashboard ── *@
+<div class="mb-2 mt-4">
+    <h6 class="section-label">Operations</h6>
+</div>
+<div class="row g-3 mb-4">
+
+    <div class="col-sm-6 col-lg-4">
+        <a asp-controller="Billing" asp-action="History" class="card stat-card border-0 shadow-sm text-decoration-none">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon bg-success-subtle text-success">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M4 10.781c.148 1.667 1.513 2.85 3.591 3.003V15h1.043v-1.216c2.27-.179 3.678-1.438 3.678-3.3 0-1.59-.947-2.51-2.956-3.028l-.722-.187V3.467c1.122.11 1.879.714 2.07 1.616h1.47c-.166-1.6-1.54-2.748-3.54-2.875V1H7.591v1.233c-1.939.23-3.27 1.472-3.27 3.156 0 1.454.966 2.483 2.661 2.917l.61.162v4.031c-1.149-.17-1.94-.8-2.131-1.718zm3.391-3.836c-1.043-.263-1.6-.825-1.6-1.616 0-.944.704-1.641 1.87-1.828v3.495zm1.246 1.986c1.278.332 1.851.848 1.851 1.723 0 1.001-.856 1.657-2.174 1.805V8.931z" />
+                    </svg>
+                </div>
+                <div>
+                    <div class="stat-value text-success">&#x20B1;@(((decimal)ViewBag.IncomeThisMonth).ToString("N0"))</div>
+                    <div class="stat-label">Income This Month</div>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-sm-6 col-lg-4">
+        <a asp-controller="Maintenance" asp-action="Index" class="card stat-card border-0 shadow-sm text-decoration-none">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon bg-warning-subtle text-warning">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M1 0 0 1l2.2 3.081a1 1 0 0 0 .815.419h.07a1 1 0 0 1 .708.293l2.675 2.675-2.617 2.654A3.003 3.003 0 0 0 0 13a3 3 0 1 0 5.878-.851l2.653-2.617.968.968-.305.914a1 1 0 0 0 .242 1.023l3.356 3.356a1 1 0 0 0 1.414 0l1.586-1.586a1 1 0 0 0 0-1.414l-3.356-3.356a1 1 0 0 0-1.023-.242L10.5 9.5l-.96-.96 2.68-2.643A3.005 3.005 0 0 0 16 3q0-.405-.102-.777l-2.14 2.141L12 4l-.364-1.757L13.777.102a3 3 0 0 0-3.675 3.68L7.462 6.46 4.793 3.793a1 1 0 0 1-.293-.707v-.071a1 1 0 0 0-.419-.814zm9.646 10.646a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708M3 11l.471.242.529.026.287.445.445.287.026.529L5 13l-.242.471-.026.529-.445.287-.287.445-.529.026L3 15l-.471-.242L2 14.732l-.287-.445L1.268 14l-.026-.529L1 13l.242-.471.026-.529.445-.287.287-.445.529-.026z" />
+                    </svg>
+                </div>
+                <div>
+                    <div class="stat-value text-warning">@ViewBag.PendingMaintenance</div>
+                    <div class="stat-label">Open Maintenance Requests</div>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-sm-6 col-lg-4">
+        <a asp-controller="Billing" asp-action="Index" asp-route-statusFilter="Overdue" class="card stat-card border-0 shadow-sm text-decoration-none">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon bg-danger-subtle text-danger">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2" />
+                    </svg>
+                </div>
+                <div>
+                    <div class="stat-value text-danger">@ViewBag.OverdueTenants</div>
+                    <div class="stat-label">Overdue Tenants</div>
+                </div>
+            </div>
+        </a>
+    </div>
+
+</div>
+
+@* ── What the sidebar's Dashboard badge is actually counting ── *@
+@{
+    var unread = ViewBag.Unread as List<YnclinoApartmentManagementSystem.Models.tblNotification>
+                 ?? new List<YnclinoApartmentManagementSystem.Models.tblNotification>();
+
+    string NoteBadge(string module) => module switch
+    {
+        "Billing" => "bg-primary",
+        "Maintenance" => "bg-warning text-dark",
+        "LostFound" => "bg-info text-dark",
+        "Transfer" => "bg-success",
+        _ => "bg-secondary"
+    };
+
+    // the database stores "LostFound"; people read "Lost & Found"
+    string NoteLabel(string module) => module switch
+    {
+        "LostFound" => "Lost & Found",
+        "Transfer" => "Unit Request",
+        _ => module
+    };
+}
+
+<div class="mb-2 mt-4">
+    <h6 class="section-label">Notifications</h6>
+</div>
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white d-flex align-items-center justify-content-between py-2">
+        <span class="fw-semibold small">
+            @(unread.Count == 0 ? "No unread notifications" : $"{unread.Count} unread")
+        </span>
+        @if (unread.Count > 0)
+        {
+            <form asp-controller="Notifications" asp-action="MarkAllRead" method="post" class="m-0">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-link btn-sm p-0 text-decoration-none">Mark all as read</button>
+            </form>
+        }
+    </div>
+
+    @if (unread.Count == 0)
+    {
+        <div class="card-body text-center py-4">
+            <p class="small text-muted mb-0">You're all caught up. New requests and payments will show up here.</p>
+        </div>
+    }
+    else
+    {
+        <div class="list-group list-group-flush">
+            @foreach (var n in unread)
+            {
+                <a href="/Notifications/Open/@n.NotificationID" class="list-group-item list-group-item-action py-3">
+                    <div class="d-flex justify-content-between align-items-start gap-3">
+                        <div>
+                            <span class="badge @NoteBadge(n.Module) me-2">@NoteLabel(n.Module)</span>
+                            <span class="fw-semibold">@n.Message</span>
+                        </div>
+                        <span class="text-muted small text-nowrap">@n.CreatedAt.ToString("MMM dd, h:mm tt")</span>
+                    </div>
+                </a>
+            }
+        </div>
+        <div class="card-footer bg-white text-end py-2">
+            <a asp-controller="Notifications" asp-action="Index" class="small text-decoration-none">See all notifications</a>
+        </div>
+    }
+</div>
