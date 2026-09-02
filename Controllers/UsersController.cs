@@ -130,12 +130,16 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // POST: Users/ToggleActive/5 — switch a login on or off.
+        // POST: Users/ToggleActive/5 — switch an account on or off.
         //
-        // This turns off the ACCOUNT, not the tenancy. tblUser.IsActive controls
-        // whether the person can sign in; tblTenant.Status is a separate flag for
-        // whether they still rent a unit. A deactivated tenant keeps their unit,
-        // bills and history — they simply cannot log in any more.
+        // For a TENANT the two states move together: the login is switched and the
+        // tenancy follows it, so deactivating here has exactly the same effect as
+        // archiving them from the Tenants module. Move-out date and unit occupancy
+        // are kept in step, the same way TenantsController does it — otherwise a
+        // deactivated tenant would still be holding their apartment.
+        //
+        // For an ADMIN or MAINTENANCE account there is no tenancy, so only the
+        // login changes.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleActive(int id)
@@ -158,11 +162,32 @@ namespace YnclinoApartmentManagementSystem.Controllers
             }
 
             user.IsActive = !user.IsActive;
+            bool activating = user.IsActive;
+
+            // a tenant's record follows their account
+            var tenant = user.Tenants?.FirstOrDefault();
+            if (tenant != null)
+            {
+                tenant.Status = activating ? "Active" : "Inactive";
+
+                // an active tenant has no move-out date; a deactivated one is stamped
+                // with today unless a date was already recorded
+                tenant.MoveOutDate = activating ? null : (tenant.MoveOutDate ?? DateTime.Now);
+            }
+
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = user.IsActive
-                ? $"{user.DisplayName} can sign in again."
-                : $"{user.DisplayName} has been deactivated and can no longer sign in. Their tenant record and billing history are unchanged.";
+            // the unit's Available/Occupied state is derived from how many ACTIVE
+            // tenants it holds, so it has to be recomputed after the change
+            if (tenant?.UnitID != null)
+            {
+                await UnitStatusHelper.RefreshAsync(_context, tenant.UnitID.Value);
+                await _context.SaveChangesAsync();
+            }
+
+            TempData["Success"] = activating
+                ? $"{user.DisplayName} can sign in again" + (tenant != null ? " and their tenancy is Active." : ".")
+                : $"{user.DisplayName} has been deactivated" + (tenant != null ? " and their tenancy is now Inactive." : ".");
 
             return RedirectToAction(nameof(Index));
         }
