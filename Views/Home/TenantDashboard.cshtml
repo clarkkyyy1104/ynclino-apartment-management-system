@@ -46,7 +46,7 @@
                         <dt class="col-6">Monthly Rent</dt>
                         <dd class="col-6">&#x20B1;@((Model.Tenant.Unit?.RentPrice ?? 0m).ToString("N0"))</dd>
 
-                        <dt class="col-6">Outstanding</dt>
+                        <dt class="col-6">Balance</dt>
                         <dd class="col-6 @(Model.Outstanding > 0 ? "text-danger fw-semibold" : "")">
                             &#x20B1;@Model.Outstanding.ToString("N0")
                         </dd>
