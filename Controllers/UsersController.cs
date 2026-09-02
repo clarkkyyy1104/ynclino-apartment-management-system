@@ -130,6 +130,43 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // POST: Users/ToggleActive/5 — switch a login on or off.
+        //
+        // This turns off the ACCOUNT, not the tenancy. tblUser.IsActive controls
+        // whether the person can sign in; tblTenant.Status is a separate flag for
+        // whether they still rent a unit. A deactivated tenant keeps their unit,
+        // bills and history — they simply cannot log in any more.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleActive(int id)
+        {
+            var user = await _context.tblUsers.Include(u => u.Tenants).FirstOrDefaultAsync(u => u.UserID == id);
+            if (user == null) return NotFound();
+
+            // the Main Admin must always be able to get back in
+            if (user.IsMainAdmin)
+            {
+                TempData["Error"] = "The Main Admin account cannot be deactivated.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // locking yourself out of the system you administer
+            if (user.UserID == CurrentUserID())
+            {
+                TempData["Error"] = "You cannot deactivate the account you are signed in with.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            user.IsActive = !user.IsActive;
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = user.IsActive
+                ? $"{user.DisplayName} can sign in again."
+                : $"{user.DisplayName} has been deactivated and can no longer sign in. Their tenant record and billing history are unchanged.";
+
+            return RedirectToAction(nameof(Index));
+        }
+
         // GET: Users/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
