@@ -29,7 +29,6 @@
     <table class="table table-hover align-middle">
         <thead class="table-primary">
             <tr>
-                <th>Username (ID)</th>
                 <th>Name</th>
                 <th>Unit</th>
                 <th>Contact</th>
@@ -41,7 +40,6 @@
             @foreach (var tenant in Model)
             {
                 <tr>
-                    <td>@(tenant.User?.Username ?? "—")</td>
                     <td class="fw-semibold">@tenant.LastName, @tenant.FirstName</td>
                     <td>@(tenant.Unit?.UnitNumber ?? "—")</td>
                     <td>@(tenant.ContactNumber ?? "—")</td>
