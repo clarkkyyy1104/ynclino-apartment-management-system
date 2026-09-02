@@ -1,6 +1,6 @@
 @model IEnumerable<YnclinoApartmentManagementSystem.Models.tblUser>
 @{
-    ViewData["Title"] = "User Accounts";
+    ViewData["Title"] = "User Management";
     bool isAdmin = ViewBag.IsAdmin == true;
 
     // the three kinds of account the manuscript names, described in one place
@@ -20,7 +20,7 @@
 
 <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
     <div>
-        <h4 class="mb-1">User Accounts</h4>
+        <h4 class="mb-1">User Management</h4>
         <p class="text-muted small mb-0">
             Every account that can sign in to the system. Administrators and Maintenance
             Staff are created here; a Tenant account is created together with the tenant's
@@ -65,7 +65,7 @@
                 <th>Account Type</th>
                 <th>Status</th>
                 <th>Date Created</th>
-                <th style="width:150px">Actions</th>
+                <th style="width:190px">Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -106,6 +106,18 @@
                                     <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
                                 </svg>
                             </a>
+
+                            @* Switches the LOGIN off, not the tenancy — the unit, bills
+                               and history stay exactly as they are. *@
+                            <form asp-action="ToggleActive" asp-route-id="@user.UserID" method="post" class="d-inline"
+                                  onsubmit="return confirm('@(user.IsActive
+                                      ? user.DisplayName + " will no longer be able to sign in. Their tenant record, unit and bills are not affected. Continue?"
+                                      : "Allow " + user.DisplayName + " to sign in again?")');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm @(user.IsActive ? "btn-outline-warning" : "btn-outline-success")">
+                                    @(user.IsActive ? "Deactivate" : "Reactivate")
+                                </button>
+                            </form>
                         }
                         else if (isAdmin && !user.IsMainAdmin && user.Role != "Tenant")
                         {
