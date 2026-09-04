@@ -49,12 +49,23 @@
                         @{
                             var allowed = ViewBag.AllowedStatuses as List<string> ?? new List<string> { "Reported", "Claimed"};
                         }
-                        <select asp-for="Status" class="form-select">
+                        <select asp-for="Status" id="statusSelect" class="form-select">
                             @foreach (var st in allowed)
                             {
                                 <option value="@st">@st</option>
                             }
                         </select>
+                    </div>
+
+                    @* An item marked Claimed must say WHO collected it — "Claimed" on
+                       its own tells the admin nothing a month later. *@
+                    <div class="mb-3" id="claimedByWrap">
+                        <label asp-for="ClaimedByUserID" class="form-label fw-semibold small"></label>
+                        <select asp-for="ClaimedByUserID" class="form-select" asp-items="Model.AvailableTenants">
+                            <option value="0">— Select tenant —</option>
+                        </select>
+                        <div class="form-text text-muted small">The tenant who collected this item.</div>
+                        <span asp-validation-for="ClaimedByUserID" class="text-danger small"></span>
                     </div>
 
                     <div class="mb-4">
@@ -82,4 +93,14 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        // the claimant only matters once the item is being marked Claimed
+        var statusSel = document.getElementById('statusSelect');
+        var claimedWrap = document.getElementById('claimedByWrap');
+        function toggleClaimedBy() {
+            claimedWrap.style.display = (statusSel.value === 'Claimed') ? '' : 'none';
+        }
+        statusSel.addEventListener('change', toggleClaimedBy);
+        toggleClaimedBy();
+    </script>
 }

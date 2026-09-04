@@ -114,6 +114,20 @@ using (var scope = app.Services.CreateScope())
     AddColumnIfMissing("tblMaintenanceRequests", "UnitID", "int NULL");
     AddColumnIfMissing("tblMaintenanceRequests", "AssignedStaffID", "int NULL");
     AddColumnIfMissing("tblMaintenanceRequests", "StaffNotes", "varchar(500) NULL");
+    AddColumnIfMissing("tblLostFoundItems", "ClaimedByUserID", "int NULL");
+    AddColumnIfMissing("tblLostFoundItems", "DateClaimed", "datetime(6) NULL");
+
+    // Items claimed before the claimant was stored on the item: recover the name
+    // from the approved claim request, so old records are not left blank.
+    try
+    {
+        db.Database.ExecuteSqlRaw(
+            "UPDATE tblLostFoundItems i " +
+            "JOIN tblClaimRequests c ON c.ItemID = i.ItemID AND c.Status = 'Approved' " +
+            "SET i.ClaimedByUserID = c.ClaimantUserID, i.DateClaimed = c.SubmittedAt " +
+            "WHERE i.Status = 'Claimed' AND i.ClaimedByUserID IS NULL");
+    }
+    catch (Exception ex) { Console.WriteLine($"[schema] Could not backfill ClaimedByUserID: {ex.Message}"); }
 
     // Requests created before UnitID existed have no unit on them. Fill it in once
     // from the tenant's current unit, so the per-unit repair history is complete.

@@ -48,6 +48,15 @@
                         <span class="badge @sbadge">@Model.Status</span>
                     </dd>
 
+                    @if (Model.Status == "Claimed")
+                    {
+                        <dt class="col-sm-4">Claimed By</dt>
+                        <dd class="col-sm-8 fw-semibold">@(Model.ClaimedBy?.DisplayName ?? "—")</dd>
+
+                        <dt class="col-sm-4">Date Claimed</dt>
+                        <dd class="col-sm-8">@(Model.DateClaimed?.ToString("MMM dd, yyyy hh:mm tt") ?? "—")</dd>
+                    }
+
                     <dt class="col-sm-4">Reported By</dt>
                     <dd class="col-sm-8">@(Model.ReportedBy?.DisplayName ?? "—")</dd>
 

@@ -117,6 +117,11 @@ namespace YnclinoApartmentManagementSystem.Data
                       .WithMany()
                       .HasForeignKey(l => l.ReportedByUserID)
                       .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(l => l.ClaimedBy)
+                      .WithMany()
+                      .HasForeignKey(l => l.ClaimedByUserID)
+                      .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<tblClaimRequest>(entity =>

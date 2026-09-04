@@ -257,6 +257,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             // so deleting this account would fail at the database level
             bool hasLostFoundRecords =
                 await _context.tblLostFoundItems.AnyAsync(l => l.ReportedByUserID == id) ||
+                await _context.tblLostFoundItems.AnyAsync(l => l.ClaimedByUserID == id) ||
                 await _context.tblClaimRequests.AnyAsync(c => c.ClaimantUserID == id);
             if (hasLostFoundRecords)
             {

@@ -21,6 +21,20 @@ namespace YnclinoApartmentManagementSystem.Controllers
             _env = env;
         }
 
+        // every active tenant, so an admin can name who collected an item
+        private async Task<IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>> GetTenantListAsync()
+        {
+            return await _context.tblTenants
+                .Where(t => t.Status == "Active" && t.UserID != null)
+                .OrderBy(t => t.LastName).ThenBy(t => t.FirstName)
+                .Select(t => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                {
+                    Value = t.UserID!.Value.ToString(),
+                    Text = t.LastName + ", " + t.FirstName
+                })
+                .ToListAsync();
+        }
+
         private int? CurrentUserID() =>
             int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int id) ? id : null;
 
@@ -28,7 +42,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
         public async Task<IActionResult> Index(string? typeFilter, string? statusFilter, string? searchTerm)
         {
             IQueryable<tblLostFoundItem> query = _context.tblLostFoundItems
-                .Include(l => l.ReportedBy).ThenInclude(u => u!.Tenants);
+                .Include(l => l.ReportedBy).ThenInclude(u => u!.Tenants)
+                .Include(l => l.ClaimedBy).ThenInclude(u => u!.Tenants);
 
             // tenants see their own reports plus anything marked Found
             if (User.IsInRole("Tenant"))
@@ -66,6 +81,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             var item = await _context.tblLostFoundItems
                 .Include(l => l.ReportedBy).ThenInclude(u => u!.Tenants)
+                .Include(l => l.ClaimedBy).ThenInclude(u => u!.Tenants)
                 .FirstOrDefaultAsync(l => l.ItemID == id);
 
             if (item == null) return NotFound();
@@ -169,8 +185,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 Status = item.Status,
                 DateReported = item.DateReported,
                 Notes = item.Notes,
-                ImagePath = item.ImagePath
+                ImagePath = item.ImagePath,
+                ClaimedByUserID = item.ClaimedByUserID ?? 0,
+                DateClaimed = item.DateClaimed
             };
+            vm.AvailableTenants = await GetTenantListAsync();
             // a claimed item can never go back to "Reported"
             ViewBag.AllowedStatuses = StatusFlowHelper.AllowedLostFound(item.Status);
             return View(vm);
@@ -202,11 +221,22 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (vm.ImageUpload != null && !ImageUploadHelper.IsValid(vm.ImageUpload, out var imgErr))
                 ModelState.AddModelError(nameof(vm.ImageUpload), imgErr);
 
+            // "Claimed" is meaningless without saying WHO collected the item, so the
+            // admin has to name them; and the name must be a real active tenant.
+            if (vm.Status == "Claimed")
+            {
+                if (vm.ClaimedByUserID == 0)
+                    ModelState.AddModelError(nameof(vm.ClaimedByUserID), "Select the tenant who claimed this item.");
+                else if (!await _context.tblTenants.AnyAsync(t => t.UserID == vm.ClaimedByUserID && t.Status == "Active"))
+                    ModelState.AddModelError(nameof(vm.ClaimedByUserID), "Select a valid active tenant.");
+            }
+
             if (!ModelState.IsValid)
             {
                 vm.ReportedByName = (await _context.tblUsers
                     .Include(u => u.Tenants)
                     .FirstOrDefaultAsync(u => u.UserID == vm.ReportedByUserID))?.DisplayName;
+                vm.AvailableTenants = await GetTenantListAsync();
                 ViewBag.AllowedStatuses = StatusFlowHelper.AllowedLostFound(currentItem?.Status);
                 return View(vm);
             }
@@ -220,6 +250,12 @@ namespace YnclinoApartmentManagementSystem.Controllers
             item.Location = vm.Location;
             item.Status = vm.Status;
             item.Notes = vm.Notes;
+
+            if (vm.Status == "Claimed")
+            {
+                item.ClaimedByUserID = vm.ClaimedByUserID;
+                item.DateClaimed ??= DateTime.Now;
+            }
 
             if (vm.ImageUpload != null)
                 item.ImagePath = await ImageUploadHelper.SaveAsync(vm.ImageUpload, "lostfound", _env);
@@ -379,6 +415,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (decision == "Approved" && claim.Item != null)
             {
                 claim.Item.Status = "Claimed";
+
+                // the item now belongs to whoever's claim was approved
+                claim.Item.ClaimedByUserID = claim.ClaimantUserID;
+                claim.Item.DateClaimed = DateTime.Now;
 
                 // any other pending claims on the same item lose automatically
                 var others = await _context.tblClaimRequests
