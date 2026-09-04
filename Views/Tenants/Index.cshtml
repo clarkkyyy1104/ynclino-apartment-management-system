@@ -33,7 +33,6 @@
                 <th>Unit</th>
                 <th>Contact</th>
                 <th>Status</th>
-                <th>Account</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -45,22 +44,16 @@
                     <td>@(tenant.Unit?.UnitNumber ?? "—")</td>
                     <td>@(tenant.ContactNumber ?? "—")</td>
                     <td>
-                        <span class="badge @(tenant.Status == "Active" ? "bg-success" : "bg-secondary")">
+                        @* One badge: the tenancy and the login are switched together,
+                           so Status says both. The only thing it cannot say is that a
+                           tenant has no login at all, which is noted underneath. *@
+                        <span class="badge @(tenant.Status == "Active" ? "bg-success" : "bg-secondary")"
+                              title="@(tenant.Status == "Active" ? "Renting, and can sign in" : "Not renting, and cannot sign in")">
                             @tenant.Status
                         </span>
-                    </td>
-                    @* Status is the TENANCY; Account is whether they can still sign in.
-                       Deactivating from User Management switches both. *@
-                    <td>
                         @if (tenant.User == null)
                         {
-                            <span class="text-muted small">No account</span>
-                        }
-                        else
-                        {
-                            <span class="badge @(tenant.User.IsActive ? "bg-success" : "bg-warning text-dark")">
-                                @(tenant.User.IsActive ? "Active" : "Deactivated")
-                            </span>
+                            <div class="text-muted small">No login account</div>
                         }
                     </td>
                     <td>
@@ -71,7 +64,7 @@
             @if (!Model.Any())
             {
                 <tr>
-                    <td colspan="6" class="text-center text-muted py-4">No tenants found.</td>
+                    <td colspan="5" class="text-center text-muted py-4">No tenants found.</td>
                 </tr>
             }
         </tbody>
