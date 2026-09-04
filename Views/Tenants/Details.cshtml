@@ -68,6 +68,9 @@
                         @if (Model.User != null)
                         {
                             @Model.User.Username
+                            <span class="badge ms-1 @(Model.User.IsActive ? "bg-success" : "bg-warning text-dark")">
+                                @(Model.User.IsActive ? "Active" : "Deactivated")
+                            </span>
                         }
                         else
                         {
