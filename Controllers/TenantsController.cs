@@ -410,6 +410,119 @@ namespace YnclinoApartmentManagementSystem.Controllers
             await _context.SaveChangesAsync();
         }
 
+        // GET: Tenants/DeletePermanent/5 — the confirmation screen. It counts up
+        // everything that would be destroyed so the admin sees the damage BEFORE
+        // agreeing to it, not after.
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeletePermanent(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var tenant = await _context.tblTenants
+                .Include(t => t.Unit)
+                .Include(t => t.User)
+                .FirstOrDefaultAsync(t => t.TenantID == id);
+            if (tenant == null) return NotFound();
+
+            // Archive first, delete second. An active tenant is somebody currently
+            // renting a unit — removing them outright is almost never what was meant.
+            if (tenant.Status == "Active")
+            {
+                TempData["Error"] = $"Archive {tenant.FullName} first. An active tenant cannot be permanently deleted.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            await LoadDeleteCountsAsync(tenant);
+            return View(tenant);
+        }
+
+        // POST: Tenants/DeletePermanent/5 — remove the tenant and everything of theirs
+        [HttpPost, ActionName("DeletePermanent")]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeletePermanentConfirmed(int id)
+        {
+            var tenant = await _context.tblTenants
+                .Include(t => t.Unit)
+                .FirstOrDefaultAsync(t => t.TenantID == id);
+            if (tenant == null) return NotFound();
+
+            // re-check on the POST: hiding the button is not the safeguard
+            if (tenant.Status == "Active")
+            {
+                TempData["Error"] = $"Archive {tenant.FullName} first. An active tenant cannot be permanently deleted.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            int? userId = tenant.UserID;
+            int? unitId = tenant.UnitID;
+            string name = tenant.FullName;
+
+            // Lost & Found rows keep a hard reference to whoever reported or claimed
+            // them, and they belong to the shared board rather than to this tenant.
+            // Rather than quietly destroying or orphaning them, refuse and say so.
+            if (userId != null)
+            {
+                bool hasLostFound =
+                    await _context.tblLostFoundItems.AnyAsync(l => l.ReportedByUserID == userId) ||
+                    await _context.tblLostFoundItems.AnyAsync(l => l.ClaimedByUserID == userId) ||
+                    await _context.tblClaimRequests.AnyAsync(c => c.ClaimantUserID == userId);
+
+                if (hasLostFound)
+                {
+                    TempData["Error"] = $"{name} has Lost & Found records. Delete those items first, or leave this tenant archived.";
+                    return RedirectToAction(nameof(Details), new { id });
+                }
+            }
+
+            // Deleted in dependency order. Payments hang off bills, so they go first
+            // even though the database would cascade them anyway — being explicit
+            // means the order is obvious to whoever reads this next.
+            await _context.tblPayments
+                .Where(p => p.Billing!.TenantID == id).ExecuteDeleteAsync();
+            await _context.tblBillings
+                .Where(b => b.TenantID == id).ExecuteDeleteAsync();
+            await _context.tblMaintenanceRequests
+                .Where(m => m.TenantID == id).ExecuteDeleteAsync();
+            await _context.tblUnitTransferRequests
+                .Where(r => r.TenantID == id).ExecuteDeleteAsync();
+
+            if (userId != null)
+                await _context.tblNotifications.Where(n => n.UserID == userId).ExecuteDeleteAsync();
+
+            _context.tblTenants.Remove(tenant);
+            await _context.SaveChangesAsync();
+
+            // the login exists only to serve the tenant record, so it goes too
+            if (userId != null)
+                await _context.tblUsers.Where(u => u.UserID == userId).ExecuteDeleteAsync();
+
+            // their unit is now one tenant lighter — recompute Available/Occupied
+            if (unitId != null)
+            {
+                await SyncUnitStatusAsync(unitId.Value);
+                await _context.SaveChangesAsync();
+            }
+
+            TempData["Success"] = $"{name} and all of their records have been permanently deleted.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // what the confirmation screen shows: exactly what is about to be destroyed
+        private async Task LoadDeleteCountsAsync(tblTenant tenant)
+        {
+            int id = tenant.TenantID;
+            ViewBag.BillCount = await _context.tblBillings.CountAsync(b => b.TenantID == id);
+            ViewBag.PaymentCount = await _context.tblPayments.CountAsync(p => p.Billing!.TenantID == id);
+            ViewBag.MaintenanceCount = await _context.tblMaintenanceRequests.CountAsync(m => m.TenantID == id);
+            ViewBag.TransferCount = await _context.tblUnitTransferRequests.CountAsync(r => r.TenantID == id);
+            ViewBag.NotificationCount = tenant.UserID == null ? 0
+                : await _context.tblNotifications.CountAsync(n => n.UserID == tenant.UserID);
+            ViewBag.LostFoundCount = tenant.UserID == null ? 0
+                : await _context.tblLostFoundItems.CountAsync(l => l.ReportedByUserID == tenant.UserID || l.ClaimedByUserID == tenant.UserID)
+                + await _context.tblClaimRequests.CountAsync(c => c.ClaimantUserID == tenant.UserID);
+        }
+
         // GET: Tenants/Delete/5 (soft delete confirmation)
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
