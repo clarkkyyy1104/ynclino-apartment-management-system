@@ -1,0 +1,5 @@
+{
+  // Point the C# extension straight at the solution so it loads on open
+  // instead of asking which project to use.
+  "dotnet.defaultSolution": "ynclino-apartment-management-system.sln"
+}
