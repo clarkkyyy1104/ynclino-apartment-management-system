@@ -1,19 +1,21 @@
 @model YnclinoApartmentManagementSystem.Models.tblTenant
 @{
-    ViewData["Title"] = "Deactivate Tenant";
+    ViewData["Title"] = "Archive Tenant";
 }
 
 <div class="row justify-content-center">
     <div class="col-md-6">
         <div class="card border-warning shadow-sm">
-            <div class="card-header bg-warning text-dark fw-semibold">Confirm Deactivation</div>
+            <div class="card-header bg-warning text-dark fw-semibold">Confirm Archive</div>
             <div class="card-body">
                 <div class="alert alert-info">
-                    <strong>Note:</strong> This is a soft delete. The tenant record will be preserved
-                    for billing and maintenance history — only the status will be set to <em>Inactive</em>.
+                    <strong>Note:</strong> Archiving keeps the record. Their billing and maintenance
+                    history is preserved and the status is set to <em>Inactive</em>; their login is
+                    switched off. To remove them from the database entirely, archive them first and
+                    then use <em>Delete permanently</em>.
                 </div>
 
-                <p>Are you sure you want to deactivate this tenant?</p>
+                <p>Are you sure you want to archive this tenant?</p>
 
                 <dl class="row">
                     <dt class="col-sm-4">Name</dt>
@@ -27,7 +29,7 @@
                 <form asp-action="Delete" method="post">
                     <input type="hidden" name="id" value="@Model.TenantID" />
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-warning text-dark">Yes, Deactivate</button>
+                        <button type="submit" class="btn btn-warning text-dark">Yes, Archive</button>
                         <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
                     </div>
                 </form>
