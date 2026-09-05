@@ -14,7 +14,7 @@
         <div class="card shadow-sm h-100">
             <div class="card-header fw-semibold">Active</div>
             <div class="card-body p-0">
-                @{ ViewData["EmptyText"] = "No active requests."; }
+                @{ ViewData["EmptyText"] = "No active requests."; ViewData["IsArchive"] = false; }
                 <partial name="_RequestList" model="Model" />
             </div>
         </div>
@@ -23,7 +23,7 @@
         <div class="card shadow-sm h-100">
             <div class="card-header fw-semibold text-muted">Archive</div>
             <div class="card-body p-0">
-                @{ ViewData["EmptyText"] = "Nothing in the archive yet."; }
+                @{ ViewData["EmptyText"] = "Nothing in the archive yet."; ViewData["IsArchive"] = true; }
                 <partial name="_RequestList" model="archivedList" />
             </div>
         </div>

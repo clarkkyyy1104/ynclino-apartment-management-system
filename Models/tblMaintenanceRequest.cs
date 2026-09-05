@@ -39,6 +39,16 @@ namespace YnclinoApartmentManagementSystem.Models
         [Display(Name = "Date Resolved")]
         public DateTime? DateResolved { get; set; }
 
+        // A finished record stays in the ACTIVE list until somebody chooses to file
+        // it away. Each side archives independently: the tenant clearing their own
+        // list does not touch what the admin and maintenance staff see, and the
+        // other way round. Null means "still in my active list".
+        [Display(Name = "Archived by Tenant")]
+        public DateTime? TenantArchivedAt { get; set; }
+
+        [Display(Name = "Archived by Staff")]
+        public DateTime? StaffArchivedAt { get; set; }
+
         // What the maintenance staff reported after doing the work. Kept separate
         // from AdminNotes so neither one overwrites the other.
         [MaxLength(500)]

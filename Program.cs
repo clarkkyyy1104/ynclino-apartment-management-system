@@ -114,6 +114,24 @@ using (var scope = app.Services.CreateScope())
     AddColumnIfMissing("tblMaintenanceRequests", "UnitID", "int NULL");
     AddColumnIfMissing("tblMaintenanceRequests", "AssignedStaffID", "int NULL");
     AddColumnIfMissing("tblMaintenanceRequests", "StaffNotes", "varchar(500) NULL");
+    AddColumnIfMissing("tblMaintenanceRequests", "TenantArchivedAt", "datetime(6) NULL");
+    AddColumnIfMissing("tblMaintenanceRequests", "StaffArchivedAt", "datetime(6) NULL");
+    AddColumnIfMissing("tblUnitTransferRequests", "TenantArchivedAt", "datetime(6) NULL");
+    AddColumnIfMissing("tblUnitTransferRequests", "StaffArchivedAt", "datetime(6) NULL");
+
+    // Archiving used to happen automatically the moment a record closed. Records
+    // that closed before the button existed are filed away once, on both sides, so
+    // the lists look exactly as they did instead of suddenly filling with old work.
+    try
+    {
+        db.Database.ExecuteSqlRaw(
+            "UPDATE tblMaintenanceRequests SET TenantArchivedAt = DateSubmitted, StaffArchivedAt = DateSubmitted " +
+            "WHERE Status IN ('Resolved','Cancelled') AND TenantArchivedAt IS NULL AND StaffArchivedAt IS NULL");
+        db.Database.ExecuteSqlRaw(
+            "UPDATE tblUnitTransferRequests SET TenantArchivedAt = DateRequested, StaffArchivedAt = DateRequested " +
+            "WHERE Status IN ('Approved','Rejected','Cancelled') AND TenantArchivedAt IS NULL AND StaffArchivedAt IS NULL");
+    }
+    catch (Exception ex) { Console.WriteLine($"[schema] Could not backfill archive dates: {ex.Message}"); }
     AddColumnIfMissing("tblLostFoundItems", "ClaimedByUserID", "int NULL");
     AddColumnIfMissing("tblLostFoundItems", "DateClaimed", "datetime(6) NULL");
 

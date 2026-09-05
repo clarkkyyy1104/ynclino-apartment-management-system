@@ -4,6 +4,9 @@
     var unreadIds = ViewBag.UnreadIds as HashSet<int> ?? new HashSet<int>();
     var readIds = ViewBag.ReadIds as HashSet<int> ?? new HashSet<int>();
     string emptyText = ViewData["EmptyText"] as string ?? "Nothing here.";
+    // the same partial draws both columns, so it has to know which one it is
+    bool isArchiveColumn = ViewData["IsArchive"] as bool? ?? false;
+    var closedStatuses = ViewBag.ClosedStatuses as string[] ?? new[] { "Approved", "Rejected", "Cancelled" };    
 }
 @if (!Model.Any())
 {
@@ -59,13 +62,28 @@ else
                                     <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
                                 </form>
                             }
-                            else if (!string.IsNullOrEmpty(r.AdminNotes))
-                            {
-                                <span class="text-muted">Note: @r.AdminNotes</span>
-                            }
                             else
                             {
-                                <span class="text-muted">@(r.DateReviewed?.ToString("MMM dd") ?? "—")</span>
+                                @* A reviewed request stays here until you file it away,
+                                   and only for YOU — the other side keeps their copy. *@
+                                @if (!isArchiveColumn && closedStatuses.Contains(r.Status))
+                                {
+                                    <form asp-action="Archive" asp-route-id="@r.TransferID" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">Archive</button>
+                                    </form>
+                                }
+                                else if (isArchiveColumn)
+                                {
+                                    <form asp-action="Unarchive" asp-route-id="@r.TransferID" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-success">Restore</button>
+                                    </form>
+                                }
+                                @if (!string.IsNullOrEmpty(r.AdminNotes))
+                                {
+                                    <div class="text-muted small mt-1">Note: @r.AdminNotes</div>
+                                }
                             }
                         </td>
                     </tr>

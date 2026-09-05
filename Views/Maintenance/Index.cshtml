@@ -121,6 +121,22 @@
                         {
                             <a asp-action="Work" asp-route-id="@r.RequestID" class="btn btn-sm btn-outline-primary">Update</a>
                         }
+                        @* A finished request only leaves this list when you file it away,
+                           and it is filed for YOU — the other side keeps their own copy. *@
+                        @if (!archived && YnclinoApartmentManagementSystem.Helpers.StatusFlowHelper.IsClosedMaintenance(r.Status))
+                        {
+                            <form asp-action="Archive" asp-route-id="@r.RequestID" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">Archive</button>
+                            </form>
+                        }
+                        @if (archived)
+                        {
+                            <form asp-action="Unarchive" asp-route-id="@r.RequestID" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-success">Restore</button>
+                            </form>
+                        }                        
                         @if (isAdmin)
                         {
                             @* archived requests are closed history — no editing *@

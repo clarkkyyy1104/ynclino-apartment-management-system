@@ -37,6 +37,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // maintenance staff see ONLY the requests assigned to them
         private bool IsStaff() => User.IsInRole("Maintenance");
 
+        // Archiving is per side. A tenant files away their own copy; the admin and
+        // the maintenance staff share the staff copy. Neither side's click changes
+        // what the other one sees.
+        private bool ViewingAsTenant() => User.IsInRole("Tenant");
+
         // every active maintenance staff account, for the "Assign To" dropdown
         private async Task<IEnumerable<SelectListItem>> GetStaffListAsync()
         {
@@ -74,11 +79,15 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 query = query.Where(m => m.AssignedStaffID == me);
             }
 
-            // the archive holds resolved/cancelled requests; the main list holds active ones
+            // A request leaves the active list only when THIS side archives it, so a
+            // resolved request stays visible until the person is done with it.
+            bool asTenant = ViewingAsTenant();
             if (archived)
-                query = query.Where(m => ArchivedStatuses.Contains(m.Status));
+                query = asTenant ? query.Where(m => m.TenantArchivedAt != null)
+                                 : query.Where(m => m.StaffArchivedAt != null);
             else
-                query = query.Where(m => !ArchivedStatuses.Contains(m.Status));
+                query = asTenant ? query.Where(m => m.TenantArchivedAt == null)
+                                 : query.Where(m => m.StaffArchivedAt == null);
 
             if (!string.IsNullOrEmpty(statusFilter))
                 query = query.Where(m => m.Status == statusFilter);
@@ -474,6 +483,68 @@ namespace YnclinoApartmentManagementSystem.Controllers
             TempData["Success"] = "Request updated.";
             return RedirectToAction(nameof(Index));
         }
+
+        // POST: Maintenance/Archive/5 — file a finished request away, for MY side only
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Archive(int id)
+        {
+            var request = await _context.tblMaintenanceRequests
+                .Include(m => m.Tenant)
+                .FirstOrDefaultAsync(m => m.RequestID == id);
+            if (request == null) return NotFound();
+
+            if (!await CanTouchAsync(request)) return Forbid();
+
+            // an open request still needs attention — it cannot be filed away
+            if (!ArchivedStatuses.Contains(request.Status))
+            {
+                TempData["Error"] = "Only a resolved or cancelled request can be archived.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (ViewingAsTenant()) request.TenantArchivedAt = DateTime.Now;
+            else                   request.StaffArchivedAt = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Request moved to your archive.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // POST: Maintenance/Unarchive/5 — pull it back into MY active list
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Unarchive(int id)
+        {
+            var request = await _context.tblMaintenanceRequests
+                .Include(m => m.Tenant)
+                .FirstOrDefaultAsync(m => m.RequestID == id);
+            if (request == null) return NotFound();
+
+            if (!await CanTouchAsync(request)) return Forbid();
+
+            if (ViewingAsTenant()) request.TenantArchivedAt = null;
+            else                   request.StaffArchivedAt = null;
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Request restored to your active list.";
+            return RedirectToAction(nameof(Index), new { archived = true });
+        }
+
+        // a tenant may only archive their own request; staff only what they are assigned
+        private async Task<bool> CanTouchAsync(tblMaintenanceRequest request)
+        {
+            if (User.IsInRole("Admin")) return true;
+
+            if (ViewingAsTenant())
+            {
+                var tenant = await GetCurrentTenantAsync();
+                return tenant != null && request.TenantID == tenant.TenantID;
+            }
+
+            return IsStaff() && request.AssignedStaffID == CurrentUserID();
+        }
+
 
         // POST: Maintenance/Cancel/5 — a tenant withdraws their own pending request
         [HttpPost]

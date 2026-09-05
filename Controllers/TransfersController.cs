@@ -31,8 +31,12 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 .FirstOrDefaultAsync(t => t.UserID == uid && t.Status == "Active");
         }
 
-        // reviewed/closed requests move out of the active list into the archive
-        private static readonly string[] ArchivedStatuses = { "Approved", "Rejected", "Cancelled" };
+        // a request may only be filed away once it has actually been reviewed
+        private static readonly string[] ClosedStatuses = { "Approved", "Rejected", "Cancelled" };
+
+        // Archiving is per side: the tenant clears their own list without touching
+        // the admin's, and the other way round.
+        private bool ViewingAsTenant() => User.IsInRole("Tenant");
 
         // GET: Transfers  — shows Active and Archived side by side (two columns)
         public async Task<IActionResult> Index()
@@ -55,17 +59,74 @@ namespace YnclinoApartmentManagementSystem.Controllers
             }
 
             var all = await query.ToListAsync();
-            var active = all.Where(r => !ArchivedStatuses.Contains(r.Status))
+
+            // A reviewed request stays in Active until THIS side archives it.
+            bool asTenant = ViewingAsTenant();
+            bool IsFiled(tblUnitTransferRequest r) =>
+                asTenant ? r.TenantArchivedAt != null : r.StaffArchivedAt != null;
+
+            var active = all.Where(r => !IsFiled(r))
                             .OrderByDescending(r => r.DateRequested).ToList();
-            var archived = all.Where(r => ArchivedStatuses.Contains(r.Status))
+            var archived = all.Where(IsFiled)
                               .OrderByDescending(r => r.DateReviewed).ToList();
             ViewBag.ArchivedList = archived;
+            ViewBag.ClosedStatuses = ClosedStatuses;
 
             var meId = CurrentUserID();
             ViewBag.UnreadIds = meId == null ? new HashSet<int>() : await NotificationHelper.UnreadTargetIdsAsync(_context, meId.Value, "Transfer");
             ViewBag.ReadIds = meId == null ? new HashSet<int>() : await NotificationHelper.ReadTargetIdsAsync(_context, meId.Value, "Transfer");
             return View(active);
         }
+
+        // POST: Transfers/Archive/5 — file a reviewed request away, for MY side only
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Archive(int id)
+        {
+            var req = await _context.tblUnitTransferRequests.FindAsync(id);
+            if (req == null) return NotFound();
+            if (!await CanTouchAsync(req)) return Forbid();
+
+            // a pending request is still waiting on the admin — it stays in Active
+            if (!ClosedStatuses.Contains(req.Status))
+            {
+                TempData["Error"] = "A pending request cannot be archived.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (ViewingAsTenant()) req.TenantArchivedAt = DateTime.Now;
+            else                   req.StaffArchivedAt = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Request moved to your archive.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // POST: Transfers/Unarchive/5 — pull it back into MY active list
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Unarchive(int id)
+        {
+            var req = await _context.tblUnitTransferRequests.FindAsync(id);
+            if (req == null) return NotFound();
+            if (!await CanTouchAsync(req)) return Forbid();
+
+            if (ViewingAsTenant()) req.TenantArchivedAt = null;
+            else                   req.StaffArchivedAt = null;
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Request restored to your active list.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // a tenant may only archive their own request
+        private async Task<bool> CanTouchAsync(tblUnitTransferRequest req)
+        {
+            if (User.IsInRole("Admin")) return true;
+            var tenant = await GetCurrentTenantAsync();
+            return tenant != null && req.TenantID == tenant.TenantID;
+        }
+
 
         // GET: Transfers/Create  (tenant picks a available unit and gives a reason)
         [Authorize(Roles = "Tenant")]
