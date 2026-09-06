@@ -29,30 +29,8 @@
     </div>
     @if (isAdmin)
     {
-        <a asp-action="Create" class="btn btn-primary btn-sm">Add Staff Account</a>
+        <a asp-action="Create" class="btn btn-primary btn-sm">Add User Account</a>
     }
-</div>
-
-@* what each account type can actually do — this is the part that was unclear *@
-<div class="row g-2 mb-3">
-    <div class="col-md-4">
-        <div class="border rounded p-2 h-100">
-            <span class="badge bg-danger">Administrator</span>
-            <div class="small text-muted mt-1">Full access to every module. @ViewBag.AdminCount account(s).</div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="border rounded p-2 h-100">
-            <span class="badge bg-info text-dark">Maintenance Staff</span>
-            <div class="small text-muted mt-1">Only the repair requests assigned to them. @ViewBag.StaffCount account(s).</div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="border rounded p-2 h-100">
-            <span class="badge bg-secondary">Tenant</span>
-            <div class="small text-muted mt-1">Their own unit, bills and requests. @ViewBag.TenantCount account(s).</div>
-        </div>
-    </div>
 </div>
 
 <div class="table-responsive">
