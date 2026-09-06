@@ -112,6 +112,7 @@ using (var scope = app.Services.CreateScope())
     AddColumnIfMissing("tblBillings", "Advance", "decimal(10,2) NOT NULL DEFAULT 0");
     AddColumnIfMissing("tblTenants", "AdvanceCredit", "decimal(10,2) NOT NULL DEFAULT 0");
     AddColumnIfMissing("tblBillings", "AdvanceFromOverpayment", "decimal(10,2) NOT NULL DEFAULT 0");
+    AddColumnIfMissing("tblBillings", "IssuedFromAdvance", "tinyint(1) NOT NULL DEFAULT 0");
     AddColumnIfMissing("tblMaintenanceRequests", "UnitID", "int NULL");
     AddColumnIfMissing("tblMaintenanceRequests", "AssignedStaffID", "int NULL");
     AddColumnIfMissing("tblMaintenanceRequests", "StaffNotes", "varchar(500) NULL");

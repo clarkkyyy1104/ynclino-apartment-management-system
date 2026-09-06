@@ -278,6 +278,17 @@ a.hover-lift {
 .money-deposit { color: #0a86a8; font-weight: 600; }   /* sky blue */
 .money-dest    { color: #c05600; font-weight: 600; }   /* orange */
 
+/* Advance payment made by overpaying, and any bill later issued out of it, share
+   this blue so the money can be followed from the bill it came from to the month
+   it paid for. A deeper blue than .money-deposit so the two never blur together. */
+.money-advance { color: #1d4ed8; font-weight: 600; }   /* blue */
+.badge-advance {
+    background: #e7edfd;
+    color: #1d4ed8;
+    border: 1px solid #c3d3fb;
+    font-weight: 600;
+}
+
 /* the two halves of a split payment, indented under the total they add up to */
 .money-split {
     font-size: .875rem;
