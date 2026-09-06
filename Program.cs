@@ -111,6 +111,7 @@ using (var scope = app.Services.CreateScope())
     AddColumnIfMissing("tblBillings", "Deposit", "decimal(10,2) NOT NULL DEFAULT 0");
     AddColumnIfMissing("tblBillings", "Advance", "decimal(10,2) NOT NULL DEFAULT 0");
     AddColumnIfMissing("tblTenants", "AdvanceCredit", "decimal(10,2) NOT NULL DEFAULT 0");
+    AddColumnIfMissing("tblBillings", "AdvanceFromOverpayment", "decimal(10,2) NOT NULL DEFAULT 0");
     AddColumnIfMissing("tblMaintenanceRequests", "UnitID", "int NULL");
     AddColumnIfMissing("tblMaintenanceRequests", "AssignedStaffID", "int NULL");
     AddColumnIfMissing("tblMaintenanceRequests", "StaffNotes", "varchar(500) NULL");
@@ -119,19 +120,12 @@ using (var scope = app.Services.CreateScope())
     AddColumnIfMissing("tblUnitTransferRequests", "TenantArchivedAt", "datetime(6) NULL");
     AddColumnIfMissing("tblUnitTransferRequests", "StaffArchivedAt", "datetime(6) NULL");
 
-    // Archiving used to happen automatically the moment a record closed. Records
-    // that closed before the button existed are filed away once, on both sides, so
-    // the lists look exactly as they did instead of suddenly filling with old work.
-    try
-    {
-        db.Database.ExecuteSqlRaw(
-            "UPDATE tblMaintenanceRequests SET TenantArchivedAt = DateSubmitted, StaffArchivedAt = DateSubmitted " +
-            "WHERE Status IN ('Resolved','Cancelled') AND TenantArchivedAt IS NULL AND StaffArchivedAt IS NULL");
-        db.Database.ExecuteSqlRaw(
-            "UPDATE tblUnitTransferRequests SET TenantArchivedAt = DateRequested, StaffArchivedAt = DateRequested " +
-            "WHERE Status IN ('Approved','Rejected','Cancelled') AND TenantArchivedAt IS NULL AND StaffArchivedAt IS NULL");
-    }
-    catch (Exception ex) { Console.WriteLine($"[schema] Could not backfill archive dates: {ex.Message}"); }
+    // NOTE: nothing archives records automatically any more. A backfill used to run
+    // here stamping every closed request as archived, but it could not tell an old
+    // record from one closed a minute ago — so a finished request vanished from the
+    // list on the next restart, and anything a user restored was filed away again.
+    // Archiving is now entirely manual: only the Archive button sets these dates.
+
     AddColumnIfMissing("tblLostFoundItems", "ClaimedByUserID", "int NULL");
     AddColumnIfMissing("tblLostFoundItems", "DateClaimed", "datetime(6) NULL");
 

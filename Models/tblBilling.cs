@@ -32,9 +32,24 @@ namespace YnclinoApartmentManagementSystem.Models
         [Display(Name = "Due Date")]
         public DateTime DueDate { get; set; }
 
+        // What the payment rows on this bill add up to — i.e. the part of the money
+        // that settled THIS bill. It never exceeds AmountDue.
         [Column(TypeName = "decimal(10,2)")]
         [Display(Name = "Amount Paid")]
         public decimal? AmountPaid { get; set; }
+
+        // The part of a payment made against this bill that was MORE than the bill
+        // asked for, and was therefore kept as advance payment for the next month.
+        // Pay 12,000 on a 6,000 bill and this holds the extra 6,000, so the bill can
+        // show where the whole 12,000 went instead of silently reporting only 6,000.
+        [Column(TypeName = "decimal(10,2)")]
+        [Display(Name = "Paid to Advance")]
+        public decimal AdvanceFromOverpayment { get; set; }
+
+        // Everything the tenant actually handed over against this bill.
+        [NotMapped]
+        [Display(Name = "Total Received")]
+        public decimal TotalReceived => (AmountPaid ?? 0m) + AdvanceFromOverpayment;
 
         [Display(Name = "Date Paid")]
         public DateTime? DatePaid { get; set; }

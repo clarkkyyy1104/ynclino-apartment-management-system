@@ -28,7 +28,7 @@
 
                     <dt class="col-sm-4">Deposit on File</dt>
                     <dd class="col-sm-8">
-                        ₱@((Model.Tenant?.Unit?.Deposit ?? 0m).ToString("N0"))
+                        <span class="money-deposit">₱@((Model.Tenant?.Unit?.Deposit ?? 0m).ToString("N0"))</span>
                         <span class="badge bg-info text-dark ms-1">covers the final month at move-out</span>
                     </dd>
 
@@ -62,8 +62,57 @@
                     <dt class="col-sm-4">Due Date</dt>
                     <dd class="col-sm-8">@Model.DueDate.ToString("MMM dd, yyyy")</dd>
 
+                    @* Amount Paid is what the tenant actually handed over, NOT what the
+                       bill happened to ask for. Pay 12,000 on a 6,000 bill and it says
+                       12,000, then breaks down where each half of it went. *@
                     <dt class="col-sm-4">Amount Paid</dt>
-                    <dd class="col-sm-8">@(Model.AmountPaid.HasValue ? "₱" + Model.AmountPaid.Value.ToString("N0") : "—")</dd>
+                    <dd class="col-sm-8">
+                        @if (Model.TotalReceived > 0)
+                        {
+                            <span class="money-paid">₱@Model.TotalReceived.ToString("N0")</span>
+
+                            @* only worth splitting when the money went two ways *@
+                            @if (Model.AdvanceFromOverpayment > 0)
+                            {
+                                <div class="money-split mt-2">
+                                    <div>
+                                        Monthly Rent
+                                        <span class="money-dest ms-1">₱@((Model.AmountPaid ?? 0m).ToString("N0"))</span>
+                                    </div>
+                                    <div>
+                                        Advance Payment
+                                        <span class="money-dest ms-1">₱@Model.AdvanceFromOverpayment.ToString("N0")</span>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted">—</span>
+                        }
+                    </dd>
+
+                    @* One line naming where the money ended up, so it reads at a glance. *@
+                    @if (Model.TotalReceived > 0)
+                    {
+                        <dt class="col-sm-4">Payment Applied To</dt>
+                        <dd class="col-sm-8">
+                            <span class="money-dest">
+                                @if (Model.AdvanceFromOverpayment > 0 && (Model.AmountPaid ?? 0m) > 0)
+                                {
+                                    <text>Monthly Rent &amp; Advance Payment</text>
+                                }
+                                else if (Model.AdvanceFromOverpayment > 0)
+                                {
+                                    <text>Advance Payment</text>
+                                }
+                                else
+                                {
+                                    <text>Monthly Rent</text>
+                                }
+                            </span>
+                        </dd>
+                    }
 
                     <dt class="col-sm-4">Date Paid</dt>
                     <dd class="col-sm-8">@(Model.DatePaid?.ToString("MMM dd, yyyy") ?? "—")</dd>

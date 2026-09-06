@@ -86,11 +86,29 @@
                         }
                     </td>
                     <td>@b.DueDate.ToString("MMM dd, yyyy")</td>
-                    <td>₱@((b.Tenant?.Unit?.Deposit ?? 0m).ToString("N0"))</td>
+                    <td class="money-deposit">₱@((b.Tenant?.Unit?.Deposit ?? 0m).ToString("N0"))</td>
                     <td>₱@b.Advance.ToString("N0")</td>
                     <td>₱@((b.AmountDue - b.Deposit - b.Advance).ToString("N0"))</td>
                     <td>₱@((b.AmountDue - (b.AmountPaid ?? 0m)).ToString("N0"))</td>
-                    <td>@(b.AmountPaid.HasValue ? "₱" + b.AmountPaid.Value.ToString("N0") : "—")</td>
+                    @* the whole amount handed over, with the overpaid part named
+                       underneath so the row still adds up to what was received *@
+                    <td>
+                        @if (b.TotalReceived > 0)
+                        {
+                            <span class="money-paid">₱@b.TotalReceived.ToString("N0")</span>
+                            @if (b.AdvanceFromOverpayment > 0)
+                            {
+                                <div class="money-dest small">
+                                    ₱@((b.AmountPaid ?? 0m).ToString("N0")) rent ·
+                                    ₱@b.AdvanceFromOverpayment.ToString("N0") advance
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted">—</span>
+                        }
+                    </td>
                     <td>
                         @{
                             var badge = b.Status switch {

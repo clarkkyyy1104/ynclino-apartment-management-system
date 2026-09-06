@@ -74,6 +74,13 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         public decimal TotalPaid { get; set; }
         public decimal Balance => AmountDue - TotalPaid;
 
+        // the part of a payment made here that was more than the bill asked for and
+        // went to the tenant's advance payment instead
+        public decimal AdvanceFromOverpayment { get; set; }
+
+        // everything actually handed over against this bill
+        public decimal TotalReceived => TotalPaid + AdvanceFromOverpayment;
+
         // this bill's payments, newest first
         public List<tblPayment> Payments { get; set; } = new List<tblPayment>();
 

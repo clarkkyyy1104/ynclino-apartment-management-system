@@ -51,7 +51,15 @@
                         <div class="col-4">
                             <div class="border rounded py-2">
                                 <div class="small text-muted">Total Paid</div>
-                                <div class="fw-bold text-success">₱@Model.TotalPaid.ToString("N0")</div>
+                                @* the full amount received, then where it went *@
+                                <div class="fw-bold money-paid">₱@Model.TotalReceived.ToString("N0")</div>
+                                @if (Model.AdvanceFromOverpayment > 0)
+                                {
+                                    <div class="money-dest small">
+                                        ₱@Model.TotalPaid.ToString("N0") rent ·
+                                        ₱@Model.AdvanceFromOverpayment.ToString("N0") advance
+                                    </div>
+                                }
                             </div>
                         </div>
                         <div class="col-4">
@@ -65,9 +73,10 @@
                     @if (Model.Deposit > 0 || Model.Advance > 0)
                     {
                         <p class="form-text mt-0 mb-3">
-                            This bill includes a <strong>₱@Model.Deposit.ToString("N0")</strong> deposit
+                            This bill includes a
+                            <span class="money-deposit">₱@Model.Deposit.ToString("N0")</span> deposit
                             (held until the tenant moves out) and
-                            <strong>₱@Model.Advance.ToString("N0")</strong> advance payment.
+                            <span class="money-dest">₱@Model.Advance.ToString("N0")</span> advance payment.
                         </p>
                     }
 

@@ -257,8 +257,22 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 ModelState.Remove("ConfirmPassword");
             }
 
-            if (string.IsNullOrWhiteSpace(vm.Username))
-                ModelState.AddModelError("Username", "Username is required.");
+            var tenant = await _context.tblTenants.FindAsync(id);
+            if (tenant == null) return NotFound();
+
+            // The username is bound to the account from the moment it is created and is
+            // never editable. Whatever the form posted is discarded here and replaced
+            // with the stored one, so a tampered request cannot rename an account.
+            var existingUser = tenant.UserID.HasValue
+                ? await _context.tblUsers.FindAsync(tenant.UserID.Value)
+                : null;
+
+            if (existingUser != null)
+                vm.Username = existingUser.Username;
+            else if (!string.IsNullOrWhiteSpace(vm.FirstName) && !string.IsNullOrWhiteSpace(vm.LastName))
+                vm.Username = GenerateUsername(vm.FirstName, vm.LastName);   // no login yet: issue one
+
+            ModelState.Remove(nameof(vm.Username));
 
             if (!ModelState.IsValid)
             {
@@ -267,24 +281,27 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 return View(vm);
             }
 
-            var tenant = await _context.tblTenants.FindAsync(id);
-            if (tenant == null) return NotFound();
-
             // the tenant's unit is managed through the unit-application/approval flow,
             // not edited here, so it is left untouched below
             int? previousUnitID = tenant.UnitID;
             string previousStatus = tenant.Status;
             bool becomingActive = vm.Status == "Active";
 
-            // the username must be free (ignoring this tenant's own account)
-            bool duplicateUsername = await _context.tblUsers
-                .AnyAsync(u => u.Username.ToLower() == vm.Username!.ToLower() && u.UserID != tenant.UserID);
-            if (duplicateUsername)
+            // An existing account keeps the username it was issued, so there is nothing
+            // to check. Only a tenant getting their FIRST login needs one, and a
+            // generated name can collide with an account registered the same month.
+            if (existingUser == null)
             {
-                ModelState.AddModelError("Username", "Username already exists.");
-                ViewBag.IsMainAdmin = isMainAdmin;
-                vm.AvailableUnits = await GetAllUnitsAsync();
-                return View(vm);
+                bool duplicateUsername = await _context.tblUsers
+                    .AnyAsync(u => u.Username.ToLower() == vm.Username!.ToLower());
+                if (duplicateUsername)
+                {
+                    ModelState.AddModelError("Username",
+                        $"The generated username '{vm.Username}' is already taken. Please contact the administrator.");
+                    ViewBag.IsMainAdmin = isMainAdmin;
+                    vm.AvailableUnits = await GetAllUnitsAsync();
+                    return View(vm);
+                }
             }
 
             if (tenant.UserID.HasValue)
@@ -293,7 +310,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 var linkedUser = await _context.tblUsers.FindAsync(tenant.UserID.Value);
                 if (linkedUser != null)
                 {
-                    linkedUser.Username = vm.Username!;
+                    // username deliberately NOT touched — it is fixed at creation
                     if (isMainAdmin && !string.IsNullOrWhiteSpace(vm.Password))
                         linkedUser.Password = PasswordHelper.Hash(vm.Password);
 

@@ -18,8 +18,15 @@
 
                     <div class="mb-4">
                         <label asp-for="Username" class="form-label fw-semibold small"></label>
-                        <input asp-for="Username" class="form-control" autocomplete="username"/>
-                        <span asp-validation-for="Username" class="text-danger small"></span>
+                        @* The username is issued by the system when the tenant is
+                           registered and never changes: it is the tenant's permanent ID,
+                           and it is what their whole login history is tied to. Shown
+                           here for reference only — the server ignores it on save. *@
+                        <input asp-for="Username" class="form-control-plaintext fw-semibold ps-2"
+                               readonly disabled autocomplete="username" />
+                        <div class="form-text">
+                            Issued by the system when this tenant was registered and cannot be changed.
+                        </div>
                     </div>
 
                     @if (ViewBag.IsMainAdmin == true)

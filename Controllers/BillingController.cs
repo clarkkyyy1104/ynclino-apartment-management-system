@@ -311,6 +311,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 Status = billing.Status,
                 Notes = billing.Notes,
                 AdvanceCredit = billing.Tenant?.AdvanceCredit ?? 0m,
+                AdvanceFromOverpayment = billing.AdvanceFromOverpayment,
                 TotalPaid = await TotalPaidAsync(billing.BillingID),
                 Payments = await _context.tblPayments
                     .Where(p => p.BillingID == billing.BillingID)
@@ -377,6 +378,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 if (tenant != null)
                 {
                     tenant.AdvanceCredit += left;
+
+                    // remember it on THIS bill as well, so the bill can account for
+                    // every peso that was handed over against it — not just the part
+                    // that happened to fit inside the amount due
+                    bill.AdvanceFromOverpayment += left;
                     await _context.SaveChangesAsync();
                 }
             }

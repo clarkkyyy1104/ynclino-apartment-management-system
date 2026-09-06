@@ -263,3 +263,24 @@ a.hover-lift {
     padding: 14px 16px;
     background: #fff;
 }
+
+/* ── Billing money colours ───────────────────────────────────────────────────
+   A bill shows three different kinds of money, and they used to be printed in
+   the same black text, which is what made an overpayment confusing to read.
+   Each one now has its own colour, used consistently on the bill list, the bill
+   details page and the payment form:
+     paid    – green : what the tenant actually handed over
+     deposit – blue  : money held on file, returned at move-out
+     destination – orange : where that money went (monthly rent / advance payment)
+   Colours are darkened past the plain Bootstrap versions so they stay readable
+   as small text on white.                                                     */
+.money-paid    { color: #157347; font-weight: 600; }   /* green  */
+.money-deposit { color: #0a86a8; font-weight: 600; }   /* sky blue */
+.money-dest    { color: #c05600; font-weight: 600; }   /* orange */
+
+/* the two halves of a split payment, indented under the total they add up to */
+.money-split {
+    font-size: .875rem;
+    padding-left: 1rem;
+    border-left: 3px solid #f1d3b2;
+}
