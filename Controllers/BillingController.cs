@@ -543,7 +543,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 suggestedAmount = tenant.Unit.RentPrice,
                 unpaidMonths = unpaidCount,
                 suggestedPeriod = period.ToString("yyyy-MM"),
-                suggestedDueDate = DateTime.Today.AddDays(30).ToString("yyyy-MM-dd"),
+                // the deadline belongs to the month being billed: rent for October is
+                // due by the end of October, whenever the bill happens to be issued
+                suggestedDueDate = new DateTime(period.Year, period.Month,
+                                                DateTime.DaysInMonth(period.Year, period.Month))
+                                   .ToString("yyyy-MM-dd"),
                 advanceCredit = tenant.AdvanceCredit
             });
         }

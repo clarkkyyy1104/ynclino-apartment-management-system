@@ -59,6 +59,30 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
+        // Rent for a month is due at the end of that month, so the deadline is
+        // derived from whichever month is picked rather than from today. Worked out
+        // in the browser so the date moves the instant the month changes.
+        function setDeadlineFromMonth(yyyymm) {
+            var parts = (yyyymm || '').split('-');
+            if (parts.length < 2) return;
+
+            var year = parseInt(parts[0], 10);
+            var month = parseInt(parts[1], 10);        // 1-12
+            if (isNaN(year) || isNaN(month)) return;
+
+            // day 0 of the NEXT month is the last day of this one
+            var lastDay = new Date(year, month, 0);
+            var iso = lastDay.getFullYear() + '-' +
+                      String(lastDay.getMonth() + 1).padStart(2, '0') + '-' +
+                      String(lastDay.getDate()).padStart(2, '0');
+            document.getElementById('dueDateInput').value = iso;
+        }
+
+        // the admin picking a different month re-adjusts the deadline with it
+        document.getElementById('periodInput').addEventListener('change', function () {
+            setDeadlineFromMonth(this.value);
+        });
+
         document.getElementById('tenantSelect').addEventListener('change', function () {
             var tid = this.value;
             if (!tid) { document.getElementById('amountHint').textContent = ''; return; }
@@ -73,9 +97,9 @@
                     if (data.suggestedPeriod)
                         document.getElementById('periodInput').value = data.suggestedPeriod;
 
-                    // deadline = 30 days from today (still editable)
-                    if (data.suggestedDueDate)
-                        document.getElementById('dueDateInput').value = data.suggestedDueDate;
+                    // deadline follows the billing month (still editable afterwards)
+                    if (data.suggestedPeriod)
+                        setDeadlineFromMonth(data.suggestedPeriod);
 
                     var hint = 'Suggested: one month of rent';
                     if (data.advanceCredit > 0)
