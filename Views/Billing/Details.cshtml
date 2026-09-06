@@ -32,9 +32,32 @@
                         <span class="badge bg-info text-dark ms-1">covers the final month at move-out</span>
                     </dd>
 
-                    <dt class="col-sm-4">Advance Payment</dt>
-                    <dd class="col-sm-8">₱@Model.Advance.ToString("N0")</dd>
+                    @* Two different things used to share the name "Advance Payment".
+                       This one is part of what the bill CHARGES — the one-month advance
+                       collected at move-in. It only exists on the move-in bill. *@
+                    @if (Model.Advance > 0)
+                    {
+                        <dt class="col-sm-4">Advance Payment Charged</dt>
+                        <dd class="col-sm-8">
+                            ₱@Model.Advance.ToString("N0")
+                            <span class="badge bg-info text-dark ms-1">one month, collected at move-in</span>
+                        </dd>
+                    }
 
+                    @* This one is CHANGE, not a charge: whatever the tenant paid beyond
+                       what the bill asked for is kept here and settles their next bill. *@
+                    <dt class="col-sm-4">Advance Payment on File</dt>
+                    <dd class="col-sm-8">
+                        ₱@((Model.Tenant?.AdvanceCredit ?? 0m).ToString("N0"))
+                        @if ((Model.Tenant?.AdvanceCredit ?? 0m) > 0)
+                        {
+                            <span class="badge bg-success ms-1">applied automatically to the next bill</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted small ms-1">— no overpayment being held</span>
+                        }
+                    </dd>
 
                     <dt class="col-sm-4">Due Date</dt>
                     <dd class="col-sm-8">@Model.DueDate.ToString("MMM dd, yyyy")</dd>
@@ -60,6 +83,49 @@
                     <dt class="col-sm-4">Date Issued</dt>
                     <dd class="col-sm-8">@Model.DateIssued.ToString("MMM dd, yyyy hh:mm tt")</dd>
                 </dl>
+
+                @{
+                    var payments = ViewBag.Payments as List<YnclinoApartmentManagementSystem.Models.tblPayment>
+                                   ?? new List<YnclinoApartmentManagementSystem.Models.tblPayment>();
+                }
+                @if (payments.Any())
+                {
+                    <h6 class="fw-semibold mt-4 mb-2">Payment History</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date Paid</th>
+                                    <th>Method</th>
+                                    <th class="text-end">Amount</th>
+                                    <th>Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var p in payments)
+                                {
+                                    <tr>
+                                        <td>@p.DatePaid.ToString("MMM dd, yyyy")</td>
+                                        <td>
+                                            @* money that came out of held advance payment
+                                               rather than cash handed over today *@
+                                            @if (p.Method == "Advance")
+                                            {
+                                                <span class="badge bg-success">Advance</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">@p.Method</span>
+                                            }
+                                        </td>
+                                        <td class="text-end">₱@p.Amount.ToString("N0")</td>
+                                        <td class="text-muted small">@(string.IsNullOrWhiteSpace(p.Remarks) ? "—" : p.Remarks)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
 
                 <div class="d-flex gap-2 mt-3">
                     <a asp-action="Index" class="btn btn-secondary btn-sm">Back</a>

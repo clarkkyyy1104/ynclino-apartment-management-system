@@ -202,6 +202,14 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var uid = CurrentUserID();
             if (uid != null) await NotificationHelper.MarkRecordReadAsync(_context, uid.Value, "Billing", billing.BillingID);
 
+            // A fully paid bill sends the admin here instead of Edit, so this page has to
+            // show the whole money story on its own: every payment that settled the bill,
+            // and any change from an overpayment that is now held as advance payment.
+            ViewBag.Payments = await _context.tblPayments
+                .Where(p => p.BillingID == billing.BillingID)
+                .OrderByDescending(p => p.DatePaid).ThenByDescending(p => p.PaymentID)
+                .ToListAsync();
+
             return View(billing);
         }
 
