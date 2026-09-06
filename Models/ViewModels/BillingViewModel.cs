@@ -31,6 +31,16 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         // for display only
         public string? TenantName { get; set; }
 
+        // used by the Update (top-up a partial payment) screen
+        [Display(Name = "Monthly Rent")]
+        public decimal TenantRent { get; set; }
+
+        [Display(Name = "Already Paid")]
+        public decimal AlreadyPaid { get; set; }
+
+        [Display(Name = "Remaining Balance")]
+        public decimal RemainingBalance { get; set; }
+
         public IEnumerable<SelectListItem> AvailableTenants { get; set; } = new List<SelectListItem>();
     }
 }

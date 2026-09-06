@@ -131,7 +131,7 @@ using (var scope = app.Services.CreateScope())
         SeedTenant("4 Students", 4000m);
         SeedTenant("Crime", 3500m);
         SeedTenant("Christine", 3500m);
-        SeedTenant("Vincent", 3500m);
+        SeedTenant("Vincent", 5000m);
         SeedTenant("Raymund", 1300m);
         SeedTenant("Vic", 2650m);
         SeedTenant("Yadz Barber", 3000m);

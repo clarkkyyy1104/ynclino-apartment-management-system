@@ -48,10 +48,19 @@
                             };
                         }
                         <span class="badge @badge">@b.PaymentStatus</span>
+                        @if (b.PaymentStatus == "Partial")
+                        {
+                            var remaining = (b.Tenant?.MonthlyRent ?? 0m) - b.AmountPaid;
+                            <div class="small text-muted mt-1">₱@remaining.ToString("N0") left</div>
+                        }
                     </td>
                     <td>@b.DateIssued.ToString("MMM dd, yyyy")</td>
                     <td>
                         <a asp-action="Details" asp-route-id="@b.BillingID" class="btn btn-sm btn-outline-info">Details</a>
+                        @if (b.PaymentStatus == "Partial")
+                        {
+                            <a asp-action="Edit" asp-route-id="@b.BillingID" class="btn btn-sm btn-outline-primary">Update</a>
+                        }
                         <a asp-action="Delete" asp-route-id="@b.BillingID" class="btn btn-sm btn-outline-danger">Delete</a>
                     </td>
                 </tr>

@@ -47,6 +47,10 @@
 
                 <div class="d-flex gap-2 mt-3">
                     <a asp-action="Index" class="btn btn-secondary btn-sm">Back</a>
+                    @if (Model.PaymentStatus == "Partial")
+                    {
+                        <a asp-action="Edit" asp-route-id="@Model.BillingID" class="btn btn-primary btn-sm">Update Payment</a>
+                    }
                     <a asp-action="Delete" asp-route-id="@Model.BillingID" class="btn btn-outline-danger btn-sm">Delete</a>
                 </div>
             </div>
