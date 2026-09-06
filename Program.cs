@@ -120,6 +120,28 @@ using (var scope = app.Services.CreateScope())
     AddColumnIfMissing("tblUnitTransferRequests", "TenantArchivedAt", "datetime(6) NULL");
     AddColumnIfMissing("tblUnitTransferRequests", "StaffArchivedAt", "datetime(6) NULL");
 
+    // Bills overpaid BEFORE AdvanceFromOverpayment existed never recorded the extra
+    // money — the payment row was capped at the amount due and the remainder went
+    // straight onto the tenant. Recover it once from the credit the tenant is still
+    // holding and pin it to their most recent settled bill, which is where it came
+    // from. Skipped for any tenant whose bills already carry the figure, so this
+    // runs once and never touches data the app itself has written.
+    try
+    {
+        db.Database.ExecuteSqlRaw(
+            "UPDATE tblBillings b " +
+            "JOIN tblTenants t ON t.TenantID = b.TenantID " +
+            "JOIN (SELECT TenantID, MAX(BillingID) AS LastPaidID FROM tblBillings " +
+            "      WHERE Status = 'Paid' GROUP BY TenantID) lp " +
+            "  ON lp.TenantID = b.TenantID AND lp.LastPaidID = b.BillingID " +
+            "LEFT JOIN (SELECT DISTINCT TenantID FROM tblBillings " +
+            "           WHERE AdvanceFromOverpayment > 0) done " +
+            "  ON done.TenantID = b.TenantID " +
+            "SET b.AdvanceFromOverpayment = t.AdvanceCredit " +
+            "WHERE t.AdvanceCredit > 0 AND done.TenantID IS NULL");
+    }
+    catch (Exception ex) { Console.WriteLine($"[schema] Could not backfill AdvanceFromOverpayment: {ex.Message}"); }
+
     // NOTE: nothing archives records automatically any more. A backfill used to run
     // here stamping every closed request as archived, but it could not tell an old
     // record from one closed a minute ago — so a finished request vanished from the
