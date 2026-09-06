@@ -59,7 +59,7 @@
                         <a asp-action="Details" asp-route-id="@b.BillingID" class="btn btn-sm btn-outline-info">Details</a>
                         @if (b.PaymentStatus == "Partial")
                         {
-                            <a asp-action="Edit" asp-route-id="@b.BillingID" class="btn btn-sm btn-outline-primary">Update</a>
+                            <a asp-action="Edit" asp-route-id="@b.BillingID" class="btn btn-sm btn-success">Update</a>
                         }
                         <a asp-action="Delete" asp-route-id="@b.BillingID" class="btn btn-sm btn-outline-danger">Delete</a>
                     </td>
