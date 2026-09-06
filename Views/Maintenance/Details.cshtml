@@ -67,25 +67,32 @@
                     <dt class="col-sm-4">Date Resolved</dt>
                     <dd class="col-sm-8">@(Model.DateResolved?.ToString("MMM dd, yyyy") ?? "—")</dd>
 
-                    @* the tenant does not need to see who was sent or what it cost *@
-                    @if (!User.IsInRole("Tenant"))
-                    {
-                        <dt class="col-sm-4">Assigned Staff</dt>
-                        <dd class="col-sm-8">
-                            @if (Model.AssignedStaff != null)
-                            {
-                                <span class="badge bg-info text-dark">@Model.AssignedStaff.Username</span>
-                            }
-                            else
-                            {
-                                <span class="text-muted">Unassigned</span>
-                            }
-                        </dd>
+                    @* The tenant sees this too: knowing who was sent and what they did
+                       is the whole point of following up a repair. (Repair cost, the one
+                       thing that was private, no longer exists in the system.) *@
+                    <dt class="col-sm-4">Assigned Staff</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.AssignedStaff != null)
+                        {
+                            <span class="badge bg-info text-dark">@Model.AssignedStaff.Username</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Not yet assigned</span>
+                        }
+                    </dd>
 
-
-                        <dt class="col-sm-4">Work Notes</dt>
-                        <dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.StaffNotes) ? "—" : Model.StaffNotes)</dd>
-                    }
+                    <dt class="col-sm-4">Work Notes</dt>
+                    <dd class="col-sm-8">
+                        @if (string.IsNullOrWhiteSpace(Model.StaffNotes))
+                        {
+                            <span class="text-muted">No work has been reported yet.</span>
+                        }
+                        else
+                        {
+                            @Model.StaffNotes
+                        }
+                    </dd>
                 </dl>
 
                 <div class="d-flex gap-2 mt-3">

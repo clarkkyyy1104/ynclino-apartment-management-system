@@ -54,6 +54,12 @@
                         <dt class="col-6">Advance Payment</dt>
                         <dd class="col-6">&#x20B1;@Model.AdvanceCredit.ToString("N0")</dd>
 
+                        @* the money held back at move-in and returned at move-out —
+                           the tenant used to find this on the Reports page, which now
+                           leaves the tenancy summary to this card alone *@
+                        <dt class="col-6">Deposit on File</dt>
+                        <dd class="col-6">&#x20B1;@((Model.Tenant.Unit?.Deposit ?? 0m).ToString("N0"))</dd>
+
                         <dt class="col-6">Occupied Since</dt>
                         <dd class="col-6">@Model.Tenant.DateRecorded.ToString("MMM dd, yyyy")</dd>
                     </dl>

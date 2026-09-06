@@ -59,7 +59,8 @@
                 <th>Issue Type</th>
                 <th>Priority</th>
                 <th>Status</th>
-                @if (isAdmin) { <th>Assigned To</th> }
+                @* the tenant sees this too — they should know who is handling their repair *@
+                @if (isAdmin || !isStaff) { <th>Assigned To</th> }
                 <th>Date Submitted</th>
                 <th>Actions</th>
             </tr>
@@ -101,7 +102,7 @@
                         }
                         <span class="badge @sbadge">@r.Status</span>
                     </td>
-                    @if (isAdmin)
+                    @if (isAdmin || !isStaff)
                     {
                         <td>
                             @if (r.AssignedStaff != null)
@@ -110,7 +111,7 @@
                             }
                             else
                             {
-                                <span class="text-muted small">Unassigned</span>
+                                <span class="text-muted small">@(isAdmin ? "Unassigned" : "Not yet assigned")</span>
                             }
                         </td>
                     }
@@ -151,7 +152,8 @@
             }
             @if (!Model.Any())
             {
-                <tr><td colspan="@(isAdmin ? 8 : isStaff ? 6 : 5)" class="text-center text-muted py-4">No maintenance requests found.</td></tr>
+                @* tenants now get an "Assigned To" column too, so their row is 6 wide *@
+                <tr><td colspan="@(isAdmin ? 8 : isStaff ? 6 : 6)" class="text-center text-muted py-4">No maintenance requests found.</td></tr>
             }
         </tbody>
     </table>
