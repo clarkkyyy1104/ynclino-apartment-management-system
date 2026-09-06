@@ -32,6 +32,9 @@
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-white d-flex align-items-center justify-content-between py-2">
         <span class="fw-semibold small">Notifications</span>
+        <a asp-controller="Notifications" asp-action="index" class="card stat-card border-0 shadow-sm text-decoration-none">
+            <span class="stat-label small">Show All</span>
+        </a>
         @if (unread.Count > 0)
         {
             <form asp-controller="Notifications" asp-action="MarkAllRead" method="post" class="m-0">

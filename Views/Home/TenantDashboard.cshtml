@@ -25,47 +25,4 @@
     <div class="col-lg-8">
         <partial name="_NotificationFeed" model="Model.Unread" />
     </div>
-
-    @* ── Side column: a compact tenancy summary so the page is never empty ── *@
-    <div class="col-lg-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white py-2"><span class="fw-semibold small">My Tenancy</span></div>
-            <div class="card-body">
-                @if (Model.Tenant == null)
-                {
-                    <p class="small text-muted mb-0">
-                        No tenant profile is linked to your account yet. Please contact the administrator.
-                    </p>
-                }
-                else
-                {
-                    <dl class="row mb-0 info-list">
-                        <dt class="col-6">Unit</dt>
-                        <dd class="col-6 fw-semibold">@(Model.Tenant.Unit?.UnitNumber ?? "—")</dd>
-
-                        <dt class="col-6">Monthly Rent</dt>
-                        <dd class="col-6">&#x20B1;@((Model.Tenant.Unit?.RentPrice ?? 0m).ToString("N0"))</dd>
-
-                        <dt class="col-6">Balance</dt>
-                        <dd class="col-6 @(Model.Outstanding > 0 ? "text-danger fw-semibold" : "")">
-                            &#x20B1;@Model.Outstanding.ToString("N0")
-                        </dd>
-
-                        <dt class="col-6">Advance Payment</dt>
-                        <dd class="col-6">&#x20B1;@Model.AdvanceCredit.ToString("N0")</dd>
-
-                        @* the money held back at move-in and returned at move-out —
-                           the tenant used to find this on the Reports page, which now
-                           leaves the tenancy summary to this card alone *@
-                        <dt class="col-6">Deposit on File</dt>
-                        <dd class="col-6">&#x20B1;@((Model.Tenant.Unit?.Deposit ?? 0m).ToString("N0"))</dd>
-
-                        <dt class="col-6">Occupied Since</dt>
-                        <dd class="col-6">@Model.Tenant.DateRecorded.ToString("MMM dd, yyyy")</dd>
-                    </dl>
-                }
-            </div>
-        </div>
-    </div>
-
 </div>
