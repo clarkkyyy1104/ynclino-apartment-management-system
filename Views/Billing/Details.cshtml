@@ -18,7 +18,19 @@
                     <dd class="col-sm-8">@(Model.Tenant?.Unit?.UnitNumber ?? "—")</dd>
 
                     <dt class="col-sm-4">Billing Period</dt>
-                    <dd class="col-sm-8">@Model.BillingPeriod.ToString("MMMM yyyy")</dd>
+                    @* a bill the system issued out of an overpayment is shown in the
+                       same blue as the advance payment it was paid with *@
+                    <dd class="col-sm-8">
+                        @if (Model.IssuedFromAdvance)
+                        {
+                            <span class="money-advance">@Model.BillingPeriod.ToString("MMMM yyyy")</span>
+                            <span class="badge badge-advance ms-1">issued from advance payment</span>
+                        }
+                        else
+                        {
+                            @Model.BillingPeriod.ToString("MMMM yyyy")
+                        }
+                    </dd>
 
                     <dt class="col-sm-4">Amount Due</dt>
                     <dd class="col-sm-8">₱@Model.AmountDue.ToString("N0")</dd>
@@ -48,10 +60,15 @@
                        what the bill asked for is kept here and settles their next bill. *@
                     <dt class="col-sm-4">Advance Payment on File</dt>
                     <dd class="col-sm-8">
-                        ₱@((Model.Tenant?.AdvanceCredit ?? 0m).ToString("N0"))
+                        @* only colour it while there is actually credit being held *@
                         @if ((Model.Tenant?.AdvanceCredit ?? 0m) > 0)
                         {
-                            <span class="badge bg-success ms-1">applied automatically to the next bill</span>
+                            <span class="money-advance">₱@((Model.Tenant!.AdvanceCredit).ToString("N0"))</span>
+                            <span class="badge badge-advance ms-1">applied automatically to the next bill</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">₱0</span>
                         }
                         else
                         {
@@ -81,7 +98,7 @@
                                     </div>
                                     <div>
                                         Advance Payment
-                                        <span class="money-dest ms-1">₱@Model.AdvanceFromOverpayment.ToString("N0")</span>
+                                        <span class="money-advance ms-1">₱@Model.AdvanceFromOverpayment.ToString("N0")</span>
                                     </div>
                                 </div>
                             }
@@ -97,20 +114,20 @@
                     {
                         <dt class="col-sm-4">Payment Applied To</dt>
                         <dd class="col-sm-8">
-                            <span class="money-dest">
-                                @if (Model.AdvanceFromOverpayment > 0 && (Model.AmountPaid ?? 0m) > 0)
-                                {
-                                    <text>Monthly Rent &amp; Advance Payment</text>
-                                }
-                                else if (Model.AdvanceFromOverpayment > 0)
-                                {
-                                    <text>Advance Payment</text>
-                                }
-                                else
-                                {
-                                    <text>Monthly Rent</text>
-                                }
-                            </span>
+                            @* each destination keeps its own colour, so the sentence
+                               reads the same way as the split above it *@
+                            @if ((Model.AmountPaid ?? 0m) > 0)
+                            {
+                                <span class="money-dest">Monthly Rent</span>
+                            }
+                            @if (Model.AdvanceFromOverpayment > 0 && (Model.AmountPaid ?? 0m) > 0)
+                            {
+                                <span class="text-muted">&amp;</span>
+                            }
+                            @if (Model.AdvanceFromOverpayment > 0)
+                            {
+                                <span class="money-advance">Advance Payment</span>
+                            }
                         </dd>
                     }
 

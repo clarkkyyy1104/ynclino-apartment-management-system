@@ -1,0 +1,417 @@
+@model YnclinoApartmentManagementSystem.Models.ViewModels.LandingViewModel
+@{
+    // The public page stands on its own: the app layout is all sidebar and account
+    // menu, none of which means anything to a visitor who has not signed in.
+    Layout = null;
+    ViewData["Title"] = "Ynclino Apartment";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ynclino Apartment — Apartment Rentals in Cebu</title>
+    <meta name="description" content="Ynclino Apartment offers studio units for rent. Check current vacancies, rates and requirements, and sign in to manage your tenancy online." />
+    <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" />
+    <style>
+        :root {
+            --ink:   #0f2a47;
+            --brand: #1d4ed8;
+            --soft:  #f4f7fb;
+        }
+
+        body { color: var(--ink); }
+
+        /* ── top bar ─────────────────────────────────────────────────────── */
+        .top-bar {
+            background: #fff;
+            border-bottom: 1px solid #e6ecf3;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+        .top-bar .brand {
+            font-weight: 700;
+            letter-spacing: -.01em;
+            color: var(--ink);
+            text-decoration: none;
+        }
+        .brand-mark {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px; height: 34px;
+            border-radius: 9px;
+            background: var(--brand);
+            color: #fff;
+            font-weight: 700;
+        }
+
+        /* ── hero ────────────────────────────────────────────────────────── */
+        .hero {
+            background: linear-gradient(160deg, #0f2a47 0%, #1d4ed8 100%);
+            color: #fff;
+        }
+        .hero h1 {
+            font-weight: 700;
+            letter-spacing: -.02em;
+            line-height: 1.12;
+        }
+        .hero .lead { color: #d6e2f7; }
+
+        .pill {
+            display: inline-block;
+            background: rgba(255,255,255,.14);
+            border: 1px solid rgba(255,255,255,.22);
+            border-radius: 999px;
+            padding: .3rem .85rem;
+            font-size: .8rem;
+            font-weight: 600;
+        }
+
+        /* ── stat strip ──────────────────────────────────────────────────── */
+        .stat-strip {
+            background: #fff;
+            border: 1px solid #e6ecf3;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(15,42,71,.10);
+        }
+        .stat-strip .stat + .stat { border-left: 1px solid #e6ecf3; }
+        .stat-value { font-size: 1.65rem; font-weight: 700; line-height: 1; }
+        .stat-label { font-size: .78rem; color: #6b7f96; text-transform: uppercase; letter-spacing: .04em; }
+
+        /* ── cards ───────────────────────────────────────────────────────── */
+        .unit-card, .feature-card {
+            border: 1px solid #e6ecf3;
+            border-radius: 14px;
+            background: #fff;
+            height: 100%;
+        }
+        .unit-card .rent { font-size: 1.35rem; font-weight: 700; color: var(--brand); }
+        .feature-icon {
+            width: 38px; height: 38px;
+            border-radius: 10px;
+            background: var(--soft);
+            color: var(--brand);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .section-soft { background: var(--soft); }
+
+        .step-num {
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            background: var(--brand);
+            color: #fff;
+            font-weight: 700;
+            font-size: .85rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+        }
+
+        footer { background: var(--ink); color: #b9c9dc; }
+        footer a { color: #dbe6f5; text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <!-- ── top bar ─────────────────────────────────────────────────────── -->
+    <nav class="top-bar">
+        <div class="container d-flex align-items-center justify-content-between py-2">
+            <a href="#" class="brand d-flex align-items-center gap-2">
+                <span class="brand-mark">Y</span>
+                <span>Ynclino Apartment</span>
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <a href="#vacancies" class="d-none d-md-inline text-decoration-none small fw-semibold text-secondary">Vacancies</a>
+                <a href="#how" class="d-none d-md-inline text-decoration-none small fw-semibold text-secondary">How to Apply</a>
+                <a href="#contact" class="d-none d-md-inline text-decoration-none small fw-semibold text-secondary">Contact</a>
+                <a asp-controller="Account" asp-action="Login" class="btn btn-primary btn-sm px-3">Sign In</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ── hero ────────────────────────────────────────────────────────── -->
+    <header class="hero">
+        <div class="container py-5">
+            <div class="row align-items-center g-4 py-lg-4">
+                <div class="col-lg-7">
+                    @* nothing to boast about on a system with no units on it yet *@
+                    @if (Model.AvailableUnits > 0)
+                    {
+                        <span class="pill mb-3">
+                            @Model.AvailableUnits unit@(Model.AvailableUnits == 1 ? "" : "s") available now
+                        </span>
+                    }
+                    else if (Model.TotalUnits > 0)
+                    {
+                        <span class="pill mb-3">Fully occupied — enquiries welcome</span>
+                    }
+
+                    <h1 class="display-5 mt-3 mb-3">
+                        A place to stay,<br />managed properly.
+                    </h1>
+                    <p class="lead mb-4" style="max-width:38rem;">
+                        Ynclino Apartment offers clean, secure studio units for rent. Rent, repairs
+                        and requests are all handled through one system, so nothing gets lost in a
+                        notebook or a group chat.
+                    </p>
+
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="#vacancies" class="btn btn-light btn-lg px-4 fw-semibold">See available units</a>
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-outline-light btn-lg px-4">Tenant sign in</a>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <div class="stat-strip p-3 p-md-4">
+                        <div class="row text-center g-0">
+                            <div class="col-4 stat py-2">
+                                <div class="stat-value text-dark">@Model.TotalUnits</div>
+                                <div class="stat-label mt-1">Total Units</div>
+                            </div>
+                            <div class="col-4 stat py-2">
+                                <div class="stat-value" style="color:#157347;">@Model.AvailableUnits</div>
+                                <div class="stat-label mt-1">Available</div>
+                            </div>
+                            <div class="col-4 stat py-2">
+                                <div class="stat-value text-dark">@Model.OccupancyRate<span class="fs-6">%</span></div>
+                                <div class="stat-label mt-1">Occupied</div>
+                            </div>
+                        </div>
+                        @if (Model.StartingRent > 0)
+                        {
+                            <hr class="my-3" />
+                            <div class="text-center small text-secondary">
+                                Rates start at
+                                <span class="fw-bold" style="color:var(--brand);">₱@Model.StartingRent.ToString("N0")</span>
+                                per month
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ── vacancies ───────────────────────────────────────────────────── -->
+    <section id="vacancies" class="py-5">
+        <div class="container">
+            <div class="d-flex flex-wrap align-items-end justify-content-between mb-4 gap-2">
+                <div>
+                    <h2 class="h3 fw-bold mb-1">Available Units</h2>
+                    <p class="text-secondary mb-0">Current vacancies, updated as tenants move in and out.</p>
+                </div>
+                @if (Model.AvailableUnits > Model.Vacancies.Count)
+                {
+                    <span class="text-secondary small">
+                        Showing @Model.Vacancies.Count of @Model.AvailableUnits — enquire for the full list.
+                    </span>
+                }
+            </div>
+
+            @if (!Model.Vacancies.Any())
+            {
+                <div class="unit-card p-4 p-md-5 text-center">
+                    @* "all taken" only makes sense once there are units to take *@
+                    @if (Model.TotalUnits > 0)
+                    {
+                        <h5 class="fw-semibold mb-2">Every unit is currently taken</h5>
+                        <p class="text-secondary mb-3">
+                            Units free up regularly. Get in touch and we will let you know
+                            as soon as one becomes available.
+                        </p>
+                    }
+                    else
+                    {
+                        <h5 class="fw-semibold mb-2">No units listed yet</h5>
+                        <p class="text-secondary mb-3">
+                            Vacancies will appear here as soon as they are posted.
+                            In the meantime, please get in touch.
+                        </p>
+                    }
+                    <a href="#contact" class="btn btn-primary px-4">Enquire about a unit</a>
+                </div>
+            }
+            else
+            {
+                <div class="row g-3">
+                    @foreach (var unit in Model.Vacancies)
+                    {
+                        <div class="col-md-6 col-lg-4">
+                            <div class="unit-card p-4">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <div class="fw-bold fs-5">Unit @unit.UnitNumber</div>
+                                        <div class="text-secondary small">@unit.UnitType</div>
+                                    </div>
+                                    <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">
+                                        Available
+                                    </span>
+                                </div>
+
+                                <div class="rent mb-3">
+                                    ₱@unit.RentPrice.ToString("N0")
+                                    <span class="fs-6 fw-normal text-secondary">/ month</span>
+                                </div>
+
+                                <dl class="row small mb-0">
+                                    <dt class="col-7 fw-normal text-secondary">Good for</dt>
+                                    <dd class="col-5 text-end mb-1">@unit.Capacity person@(unit.Capacity == 1 ? "" : "s")</dd>
+
+                                    <dt class="col-7 fw-normal text-secondary">Security deposit</dt>
+                                    <dd class="col-5 text-end mb-1">₱@unit.Deposit.ToString("N0")</dd>
+
+                                    <dt class="col-7 fw-normal text-secondary">One month advance</dt>
+                                    <dd class="col-5 text-end mb-0">₱@unit.AdvancePayment.ToString("N0")</dd>
+                                </dl>
+
+                                <hr class="my-3" />
+                                <div class="small text-secondary">
+                                    Move-in total
+                                    <span class="fw-bold text-dark">
+                                        ₱@((unit.Deposit + unit.AdvancePayment).ToString("N0"))
+                                    </span>
+                                    <span class="d-block">deposit plus one month advance</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </section>
+
+    <!-- ── what tenants get ────────────────────────────────────────────── -->
+    <section class="py-5 section-soft">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="h3 fw-bold mb-2">Everything handled in one place</h2>
+                <p class="text-secondary mb-0" style="max-width:40rem; margin:0 auto;">
+                    Once you move in, you get your own account. No more chasing receipts
+                    or wondering whether a repair was ever reported.
+                </p>
+            </div>
+
+            <div class="row g-3">
+                @{
+                    var features = new[]
+                    {
+                        ("₱", "Bills and payments", "See every bill, what you have paid and what is still owed. Overpay and the extra automatically covers your next month."),
+                        ("🔧", "Repair requests", "Report a leak or a broken light and follow it through — who was assigned, and what they did about it."),
+                        ("🏠", "Unit transfers", "Ask to move to a different unit and track the decision, without having to catch the admin in person."),
+                        ("🔎", "Lost and found", "Items found around the building are logged here, so you can claim what is yours."),
+                        ("🔔", "Notifications", "A new bill, an approved request or a resolved repair shows up on your dashboard straight away."),
+                        ("📄", "Your own records", "Your billing history stays available to you for as long as you are a tenant.")
+                    };
+                }
+                @foreach (var (icon, title, text) in features)
+                {
+                    <div class="col-md-6 col-lg-4">
+                        <div class="feature-card p-4">
+                            <span class="feature-icon mb-3">@icon</span>
+                            <h6 class="fw-bold mb-2">@title</h6>
+                            <p class="text-secondary small mb-0">@text</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+
+    <!-- ── how to apply ────────────────────────────────────────────────── -->
+    <section id="how" class="py-5">
+        <div class="container">
+            <div class="row g-5 align-items-start">
+                <div class="col-lg-5">
+                    <h2 class="h3 fw-bold mb-2">How to apply</h2>
+                    <p class="text-secondary">
+                        Applications are handled in person by the apartment administrator.
+                        Bring a valid ID and the move-in payment, and your account is set up
+                        for you on the same day.
+                    </p>
+                    <a href="#contact" class="btn btn-primary px-4 mt-2">Enquire now</a>
+                </div>
+
+                <div class="col-lg-7">
+                    @{
+                        var steps = new[]
+                        {
+                            ("Enquire", "Contact the administrator and say which unit you are interested in."),
+                            ("Visit the unit", "Have a look around and confirm the unit suits you."),
+                            ("Settle the move-in payment", "One month deposit plus one month advance, receipted on the spot."),
+                            ("Get your account", "Your login is created for you. From then on your bills and requests are all online.")
+                        };
+                    }
+                    @for (int i = 0; i < steps.Length; i++)
+                    {
+                        <div class="d-flex gap-3 mb-4">
+                            <span class="step-num">@(i + 1)</span>
+                            <div>
+                                <div class="fw-semibold">@steps[i].Item1</div>
+                                <div class="text-secondary small">@steps[i].Item2</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── contact ─────────────────────────────────────────────────────── -->
+    <section id="contact" class="py-5 section-soft">
+        <div class="container">
+            <div class="row g-4 align-items-center">
+                <div class="col-lg-7">
+                    <h2 class="h3 fw-bold mb-2">Visit or get in touch</h2>
+                    <p class="text-secondary mb-4">
+                        Walk-ins are welcome during office hours. If you are already a tenant,
+                        you can raise anything you need directly from your account.
+                    </p>
+                    <div class="row g-3 small">
+                        <div class="col-sm-6">
+                            <div class="text-secondary">Address</div>
+                            <div class="fw-semibold">Ynclino Apartment, Cebu City, Philippines</div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="text-secondary">Office hours</div>
+                            <div class="fw-semibold">Monday to Saturday, 8:00 AM – 5:00 PM</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="unit-card p-4 text-center">
+                        <h6 class="fw-bold mb-2">Already a tenant?</h6>
+                        <p class="text-secondary small mb-3">
+                            Sign in to view your bills, report a repair or check a request.
+                        </p>
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-primary w-100">Sign in to your account</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── footer ──────────────────────────────────────────────────────── -->
+    <footer class="py-4">
+        <div class="container">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 small">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="brand-mark" style="width:26px;height:26px;font-size:.8rem;">Y</span>
+                    <span class="text-white fw-semibold">Ynclino Apartment</span>
+                </div>
+                <div>&copy; @DateTime.Now.Year Ynclino Apartment. All rights reserved.</div>
+                <a asp-controller="Account" asp-action="Login">Administrator sign in</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

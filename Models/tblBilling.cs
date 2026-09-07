@@ -51,6 +51,12 @@ namespace YnclinoApartmentManagementSystem.Models
         [Display(Name = "Total Received")]
         public decimal TotalReceived => (AmountPaid ?? 0m) + AdvanceFromOverpayment;
 
+        // True when the system issued this bill by itself because the tenant had
+        // already paid for the month in advance. Nobody typed it in — it exists so the
+        // month the overpayment covers is on record and cannot be billed twice.
+        [Display(Name = "Issued from Advance Payment")]
+        public bool IssuedFromAdvance { get; set; }
+
         [Display(Name = "Date Paid")]
         public DateTime? DatePaid { get; set; }
 

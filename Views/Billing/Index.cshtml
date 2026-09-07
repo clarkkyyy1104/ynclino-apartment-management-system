@@ -79,7 +79,17 @@
                         <td>@(b.Tenant?.Unit?.UnitNumber ?? "—")</td>
                     }
                     <td>
-                        @b.BillingPeriod.ToString("MMMM yyyy")
+                        @* bills the system issued out of an overpayment carry the same
+                           blue as the advance payment that paid for them *@
+                        @if (b.IssuedFromAdvance)
+                        {
+                            <span class="money-advance">@b.BillingPeriod.ToString("MMMM yyyy")</span>
+                            <div><span class="badge badge-advance">from advance payment</span></div>
+                        }
+                        else
+                        {
+                            @b.BillingPeriod.ToString("MMMM yyyy")
+                        }
                         @if (!isAdmin && !string.IsNullOrEmpty(b.Notes))
                         {
                             <div class="text-muted small">@b.Notes</div>
@@ -98,9 +108,10 @@
                             <span class="money-paid">₱@b.TotalReceived.ToString("N0")</span>
                             @if (b.AdvanceFromOverpayment > 0)
                             {
-                                <div class="money-dest small">
-                                    ₱@((b.AmountPaid ?? 0m).ToString("N0")) rent ·
-                                    ₱@b.AdvanceFromOverpayment.ToString("N0") advance
+                                <div class="small">
+                                    <span class="money-dest">₱@((b.AmountPaid ?? 0m).ToString("N0")) rent</span>
+                                    <span class="text-muted">·</span>
+                                    <span class="money-advance">₱@b.AdvanceFromOverpayment.ToString("N0") advance</span>
                                 </div>
                             }
                         }

@@ -55,9 +55,10 @@
                                 <div class="fw-bold money-paid">₱@Model.TotalReceived.ToString("N0")</div>
                                 @if (Model.AdvanceFromOverpayment > 0)
                                 {
-                                    <div class="money-dest small">
-                                        ₱@Model.TotalPaid.ToString("N0") rent ·
-                                        ₱@Model.AdvanceFromOverpayment.ToString("N0") advance
+                                    <div class="small">
+                                        <span class="money-dest">₱@Model.TotalPaid.ToString("N0") rent</span>
+                                        <span class="text-muted">·</span>
+                                        <span class="money-advance">₱@Model.AdvanceFromOverpayment.ToString("N0") advance</span>
                                     </div>
                                 }
                             </div>
