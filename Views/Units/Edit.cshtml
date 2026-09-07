@@ -95,9 +95,10 @@
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     <script>
+        // standard pricing per unit type (deposit = 1 month, advance = 1 month)
         var presets = {
             'Studio':    { rent: 6000, deposit: 6000, advance: 6000, capacity: 2 },
-            'Bedspacer': { rent: 1300, deposit: 1300, advance: 1300, capacity: 4 }
+            'Bedspacer': { rent: 1500, deposit: 1500, advance: 1500, capacity: 4 }
         };
 
         var roomTypeSelect = document.getElementById('roomTypeSelect');
