@@ -255,7 +255,7 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine("[seed] Renamed 'maintenance' to 'maintenance1'.");
     }
 
-    foreach (var staffName in new[] { "maintenance1", "maintenance2" })
+    foreach (var staffName in new[] { "maintenance1"})
     {
         if (db.tblUsers.Any(u => u.Username == staffName)) continue;
 
