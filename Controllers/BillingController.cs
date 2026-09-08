@@ -345,10 +345,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // Applies a payment: it settles THIS bill up to what it owes, and anything paid
         // beyond that is kept on the tenant as advance payment, which is deducted
         // automatically from their next bill.
-        private async Task<(decimal here, decimal advance)> ApplyPaymentAsync(
+        private async Task<(decimal here, decimal advance, List<DateTime> monthsPaid)> ApplyPaymentAsync(
             tblBilling bill, decimal amount, string? remarks)
         {
             decimal left = amount;
+            var monthsPaid = new List<DateTime>();
 
             // 1) this bill, up to what it still owes
             decimal balanceHere = bill.AmountDue - await TotalPaidAsync(bill.BillingID);
@@ -387,37 +388,51 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
                     // the overpayment has already bought the following month(s), so the
                     // bills for them are issued now and settled from that credit
-                    await IssueBillsFromAdvanceAsync(bill, tenant);
+                    monthsPaid = await IssueBillsFromAdvanceAsync(bill, tenant);
                 }
             }
 
-            return (here, left);
+            return (here, left, monthsPaid);
         }
 
         // Turns held advance payment into actual bills. Overpaying is the tenant paying
         // next month early, so the next month's bill is issued straight away and settled
         // from the credit — the month is then on record and cannot be billed twice.
         // Enough credit for several months issues several bills, oldest month first.
-        private async Task IssueBillsFromAdvanceAsync(tblBilling sourceBill, tblTenant tenant)
+        private async Task<List<DateTime>> IssueBillsFromAdvanceAsync(tblBilling sourceBill, tblTenant tenant)
         {
+            var monthsPaid = new List<DateTime>();
             await _context.Entry(tenant).Reference(t => t.Unit).LoadAsync();
 
+            // Work out a month's rent. The unit is the right answer, but a tenant with
+            // no unit on file must NOT make the overpayment disappear, so fall back to
+            // what this bill itself charged for rent, and then to the bill total.
             decimal rent = tenant.Unit?.RentPrice ?? 0m;
-            if (rent <= 0) return;   // no unit or no rent set: nothing to bill
+            if (rent <= 0) rent = sourceBill.AmountDue - sourceBill.Deposit - sourceBill.Advance;
+            if (rent <= 0) rent = sourceBill.AmountDue;
+            if (rent <= 0) return monthsPaid;   // a bill for ₱0: there is genuinely nothing to bill
 
             var period = new DateTime(sourceBill.BillingPeriod.Year, sourceBill.BillingPeriod.Month, 1);
 
-            // the guard stops a runaway loop if anything above ever stops decreasing
-            for (int issued = 0; issued < 12 && tenant.AdvanceCredit >= rent; issued++)
+            // Every peso of the overpayment turns into a bill. A remainder smaller than
+            // a month still issues the next month's bill and part-pays it, rather than
+            // sitting as a credit nobody can see. The guard stops a runaway loop.
+            for (int issued = 0; issued < 12 && tenant.AdvanceCredit > 0; issued++)
             {
                 period = period.AddMonths(1);
 
-                // never issue a second bill for a month that already has one
-                bool alreadyBilled = await _context.tblBillings.AnyAsync(b =>
+                // Never issue a second bill for a month that already has one. If that
+                // existing bill still owes something, the credit pays it here rather
+                // than skipping the month and leaving both the bill and the credit open.
+                var existing = await _context.tblBillings.FirstOrDefaultAsync(b =>
                     b.TenantID == tenant.TenantID &&
                     b.BillingPeriod.Year == period.Year &&
                     b.BillingPeriod.Month == period.Month);
-                if (alreadyBilled) continue;
+                if (existing != null)
+                {
+                    if (await UseAdvanceCreditAsync(existing) > 0) monthsPaid.Add(period);
+                    continue;
+                }
 
                 var next = new tblBilling
                 {
@@ -440,7 +455,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 // settles it from the credit and drops AdvanceCredit, which is what
                 // ends this loop once the money runs out
                 await UseAdvanceCreditAsync(next);
+                monthsPaid.Add(period);
             }
+
+            return monthsPaid;
         }
 
         // Uses any advance payment the tenant is holding to settle a newly issued bill.
@@ -517,8 +535,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
             decimal paidNow = vm.PaymentAmount ?? 0m;
             bool paymentRecorded = paidNow > 0;
             decimal toAdvance = 0m;
+            var monthsCovered = new List<DateTime>();
             if (paymentRecorded)
-                (_, toAdvance) = await ApplyPaymentAsync(billing, paidNow, vm.PaymentRemarks);
+                (_, toAdvance, monthsCovered) = await ApplyPaymentAsync(billing, paidNow, vm.PaymentRemarks);
 
             // 3) recompute the running total, last payment date and status
             await RefreshBillTotalsAsync(billing);
@@ -530,21 +549,23 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
                 // name the months the overpayment actually bought, so the admin can see
                 // that bills were issued rather than money vanishing into a balance
+                // name the months the overpayment actually bought, so the admin can see
+                // that bills were issued rather than money vanishing into a balance
                 string extra = "";
                 if (toAdvance > 0)
                 {
-                    var coveredMonths = await _context.tblBillings
-                        .Where(b => b.TenantID == billing.TenantID
-                                    && b.IssuedFromAdvance
-                                    && b.BillingPeriod > billing.BillingPeriod)
-                        .OrderBy(b => b.BillingPeriod)
-                        .Select(b => b.BillingPeriod)
-                        .ToListAsync();
-
-                    extra = coveredMonths.Count > 0
-                        ? $" ₱{toAdvance:N0} was advance payment, and it has already paid "
-                          + string.Join(" and ", coveredMonths.Select(m => m.ToString("MMMM yyyy"))) + "."
-                        : $" ₱{toAdvance:N0} became advance payment and will be deducted from the next bill.";
+                    if (monthsCovered.Count > 0)
+                    {
+                        var names = monthsCovered.OrderBy(m => m).Select(m => m.ToString("MMMM yyyy")).ToList();
+                        string list = names.Count == 1
+                            ? names[0]
+                            : string.Join(", ", names.Take(names.Count - 1)) + " and " + names[^1];
+                        extra = $" ₱{toAdvance:N0} was advance payment, and it has paid {list}.";
+                    }
+                    else
+                    {
+                        extra = $" ₱{toAdvance:N0} became advance payment and will be deducted from the next bill.";
+                    }
                 }
 
                 // tell the tenant their payment was posted
