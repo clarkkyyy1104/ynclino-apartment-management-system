@@ -97,7 +97,22 @@
                     </td>
                     <td>@b.DueDate.ToString("MMM dd, yyyy")</td>
                     <td class="money-deposit">₱@((b.Tenant?.Unit?.Deposit ?? 0m).ToString("N0"))</td>
-                    <td>₱@b.Advance.ToString("N0")</td>
+                    @* Two things are advance payment and both belong in this column:
+                       the one month charged at move-in, and anything the tenant
+                       overpaid. Only the second is ever non-zero on a normal rent
+                       bill, which is why this column used to read ₱0 forever. *@
+                    <td>
+                        @{ var advanceOnBill = b.Advance + b.AdvanceFromOverpayment; }
+                        @if (b.AdvanceFromOverpayment > 0)
+                        {
+                            <span class="money-advance">₱@advanceOnBill.ToString("N0")</span>
+                            <div class="small text-secondary">from overpayment</div>
+                        }
+                        else
+                        {
+                            <text>₱@advanceOnBill.ToString("N0")</text>
+                        }
+                    </td>
                     <td>₱@((b.AmountDue - b.Deposit - b.Advance).ToString("N0"))</td>
                     <td>₱@((b.AmountDue - (b.AmountPaid ?? 0m)).ToString("N0"))</td>
                     @* the whole amount handed over, with the overpaid part named
