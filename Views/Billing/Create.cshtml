@@ -3,52 +3,52 @@
     ViewData["Title"] = "Issue Bill";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-7">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-primary text-white fw-semibold">Issue New Bill</div>
-            <div class="card-body">
+<div>
+    <div>
+        <div>
+            <div>Issue New Bill</div>
+            <div>
                 <form asp-action="Create" method="post">
                     @Html.AntiForgeryToken()
-                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+                    <div asp-validation-summary="ModelOnly"></div>
 
-                    <div class="mb-3">
-                        <label asp-for="TenantID" class="form-label fw-semibold small"></label>
-                        <select asp-for="TenantID" id="tenantSelect" asp-items="Model.AvailableTenants" class="form-select">
+                    <div>
+                        <label asp-for="TenantID"></label>
+                        <select asp-for="TenantID" id="tenantSelect" asp-items="Model.AvailableTenants">
                             <option value="">— Select Tenant —</option>
                         </select>
-                        <span asp-validation-for="TenantID" class="text-danger small"></span>
+                        <span asp-validation-for="TenantID"></span>
                     </div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label asp-for="BillingPeriod" class="form-label fw-semibold small">Billing Period (Month)</label>
-                            <input asp-for="BillingPeriod" id="periodInput" type="month" class="form-control"
+                    <div>
+                        <div>
+                            <label asp-for="BillingPeriod">Billing Period (Month)</label>
+                            <input asp-for="BillingPeriod" id="periodInput" type="month"
                                    value="@Model.BillingPeriod.ToString("yyyy-MM")" />
-                            <div class="form-text text-muted small">Filled in automatically from the tenant's last bill.</div>
-                            <span asp-validation-for="BillingPeriod" class="text-danger small"></span>
+                            <div>Filled in automatically from the tenant's last bill.</div>
+                            <span asp-validation-for="BillingPeriod"></span>
                         </div>
-                        <div class="col-md-6">
-                            <label asp-for="DueDate" class="form-label fw-semibold small"></label>
-                            <input asp-for="DueDate" id="dueDateInput" type="date" class="form-control" />
-                            <div class="form-text text-muted small">Defaults to 30 days from today — you can change it.</div>
-                            <span asp-validation-for="DueDate" class="text-danger small"></span>
+                        <div>
+                            <label asp-for="DueDate"></label>
+                            <input asp-for="DueDate" id="dueDateInput" type="date" />
+                            <div>Defaults to 30 days from today — you can change it.</div>
+                            <span asp-validation-for="DueDate"></span>
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="AmountDue" class="form-label fw-semibold small"></label>
-                        <div class="input-group">
-                            <span class="input-group-text">₱</span>
-                            <input asp-for="AmountDue" id="amountDueInput" type="number" min="0" step="1" class="form-control" placeholder="0" />
+                    <div>
+                        <label asp-for="AmountDue"></label>
+                        <div>
+                            <span>₱</span>
+                            <input asp-for="AmountDue" id="amountDueInput" type="number" min="0" step="1" placeholder="0" />
                         </div>
-                        <div id="amountHint" class="form-text text-muted small"></div>
-                        <span asp-validation-for="AmountDue" class="text-danger small"></span>
+                        <div id="amountHint"></div>
+                        <span asp-validation-for="AmountDue"></span>
                     </div>
 
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary btn-sm">Issue Bill</button>
-                        <a asp-action="Index" class="btn btn-secondary btn-sm">Cancel</a>
+                    <div>
+                        <button type="submit">Issue Bill</button>
+                        <a asp-action="Index">Cancel</a>
                     </div>
                 </form>
             </div>

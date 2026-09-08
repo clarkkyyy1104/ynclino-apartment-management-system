@@ -5,17 +5,17 @@
     bool isTenant = User.IsInRole("Tenant");
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="fw-bold mb-0">Units</h3>
+<div>
+    <h3>Units</h3>
     @if (isStaff)
     {
-        <div class="d-flex gap-2">
+        <div>
             @* @if (ViewBag.HasUnits != true)
             {
                 <form asp-action="GenerateSampleData" method="post"
                       onsubmit="return confirm('Load the sample data (5 units, 5 tenants, and connected records)?')">
                     @Html.AntiForgeryToken()
-                    <button type="submit" class="btn btn-outline-secondary">Load Sample Data</button>
+                    <button type="submit">Load Sample Data</button>
                 </form>
             }
             else
@@ -23,15 +23,15 @@
                 <form asp-action="ReloadSampleData" method="post"
                       onsubmit="return confirm('Reload the sample data? This DELETES the current units, tenants, bills, maintenance, and lost &amp; found records (admin accounts are kept) and regenerates a fresh set of 5 units and 5 tenants.')">
                     @Html.AntiForgeryToken()
-                    <button type="submit" class="btn btn-outline-secondary">Reload Sample Data</button>
+                    <button type="submit">Reload Sample Data</button>
                 </form>
             } *@
-            <a asp-action="Create" class="btn btn-primary">+ Add Unit</a>
+            <a asp-action="Create">+ Add Unit</a>
         </div>
     }
     @if (isTenant)
     {
-        <a asp-controller="Transfers" asp-action="Create" class="btn btn-primary">+ Request Transfer</a>
+        <a asp-controller="Transfers" asp-action="Create">+ Request Transfer</a>
     }
 </div>
 
@@ -40,13 +40,13 @@
     @await Component.InvokeAsync("ModuleNotifications", new { module = "Transfer" })
 }
 
-<form method="get" class="row g-2 mb-4">
-    <div class="col-auto">
-        <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" class="form-control" style="width:229px"
+<form method="get">
+    <div>
+        <input type="text" name="searchTerm" value="@ViewBag.SearchTerm"
                placeholder="Search unit number or type…" />
     </div>
-    <div class="col-auto">
-        <select name="statusFilter" class="form-select" style="width:229px" onchange="this.form.submit()">
+    <div>
+        <select name="statusFilter" onchange="this.form.submit()">
             <option value="">All Statuses</option>
             <option value="Available" selected="@(ViewBag.StatusFilter == "Available")">Available</option>
             <option value="Reserved" selected="@(ViewBag.StatusFilter == "Reserved")">Reserved</option>
@@ -54,14 +54,14 @@
             <option value="Under Maintenance" selected="@(ViewBag.StatusFilter == "Under Maintenance")">Under Maintenance</option>
         </select>
     </div>
-    <div class="col-auto">
-        <a asp-action="Index" class="btn btn-link">Clear</a>
+    <div>
+        <a asp-action="Index">Clear</a>
     </div>
 </form>
 
-<div class="table-responsive">
-    <table class="table table-hover align-middle">
-        <thead class="table-primary">
+<div>
+    <table>
+        <thead>
             <tr>
                 <th>Unit Number</th>
                 <th>Unit Type</th>
@@ -77,29 +77,21 @@
             @foreach (var unit in Model)
             {
                 <tr>
-                    <td class="fw-semibold">@unit.UnitNumber</td>
+                    <td>@unit.UnitNumber</td>
                     <td>@unit.UnitType</td>
                     <td>₱@unit.RentPrice.ToString("N0")</td>
                     <td>₱@unit.Deposit.ToString("N0")</td>
                     <td>₱@unit.AdvancePayment.ToString("N0")</td>
                     <td>@unit.Capacity</td>
                     <td>
-                        @{
-                            var badge = unit.Status switch {
-                                "Occupied" => "bg-warning text-dark",
-                                "Available" => "bg-success",
-                                "Reserved" => "bg-info text-dark",
-                                _ => "bg-secondary"
-                            };
-                        }
-                        <span class="badge @badge">@unit.Status</span>
+                        <span>@unit.Status</span>
                     </td>
                     <td>
-                        <a asp-action="Details" asp-route-id="@unit.UnitID" class="btn btn-sm btn-outline-info" title="View" aria-label="View"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/></svg></a>
+                        <a asp-action="Details" asp-route-id="@unit.UnitID" title="View" aria-label="View"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/></svg></a>
                         @if (isStaff)
                         {
-                            <a asp-action="Edit" asp-route-id="@unit.UnitID" class="btn btn-sm btn-outline-primary">Update</a>
-                            <a asp-action="Delete" asp-route-id="@unit.UnitID" class="btn btn-sm btn-outline-danger">Delete</a>
+                            <a asp-action="Edit" asp-route-id="@unit.UnitID">Update</a>
+                            <a asp-action="Delete" asp-route-id="@unit.UnitID">Delete</a>
                         }
                     </td>
                 </tr>
@@ -107,7 +99,7 @@
             @if (!Model.Any())
             {
                 <tr>
-                    <td colspan="8" class="text-center text-muted py-4">No units found.</td>
+                    <td colspan="8">No units found.</td>
                 </tr>
             }
         </tbody>

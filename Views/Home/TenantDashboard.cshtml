@@ -3,13 +3,13 @@
     ViewData["Title"] = "Dashboard";
 }
 
-<div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
+<div>
     <div>
-        <h4 class="fw-semibold mb-0">Welcome, @(Model.Tenant?.FullName ?? User.Identity?.Name)</h4>
-        <p class="text-muted small mb-0">
+        <h4>Welcome, @(Model.Tenant?.FullName ?? User.Identity?.Name)</h4>
+        <p>
             @if (Model.TotalUnread > 0)
             {
-                <text>You have <strong class="text-danger">@Model.TotalUnread</strong> unread notification@(Model.TotalUnread > 1 ? "s" : "").</text>
+                <text>You have <strong>@Model.TotalUnread</strong> unread notification@(Model.TotalUnread > 1 ? "s" : "").</text>
             }
             else
             {
@@ -19,10 +19,10 @@
     </div>
 </div>
 
-<div class="row g-3">
+<div>
 
     @* ── Main column: the notification feed ── *@
-    <div class="col-lg-8">
+    <div>
         <partial name="_NotificationFeed" model="Model.Unread" />
     </div>
 </div>

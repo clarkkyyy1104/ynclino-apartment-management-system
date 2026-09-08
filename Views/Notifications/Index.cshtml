@@ -4,35 +4,34 @@
     int unread = Model.Count(n => !n.IsRead);
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="fw-bold mb-0">Notifications @if (unread > 0) { <span class="badge rounded-pill bg-danger">@unread</span> }</h3>
+<div>
+    <h3>Notifications @if (unread > 0) { <span>@unread</span> }</h3>
     @if (unread > 0)
     {
         <form asp-action="MarkAllRead" method="post">
             @Html.AntiForgeryToken()
-            <button type="submit" class="btn btn-sm btn-outline-secondary">Mark all as read</button>
+            <button type="submit">Mark all as read</button>
         </form>
     }
 </div>
 
 @if (!Model.Any())
 {
-    <div class="card"><div class="card-body text-center text-muted py-5">You have no notifications.</div></div>
+    <div><div>You have no notifications.</div></div>
 }
 else
 {
-    <div class="list-group">
+    <div>
         @foreach (var n in Model)
         {
-            <a asp-action="Open" asp-route-id="@n.NotificationID"
-               class="list-group-item list-group-item-action @(n.IsRead ? "" : "list-group-item-light")">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div class="@(n.IsRead ? "text-muted" : "fw-bold")">
-                        <span class="badge bg-secondary me-2">@n.Module</span>
+            <a asp-action="Open" asp-route-id="@n.NotificationID">
+                <div>
+                    <div>
+                        <span>@n.Module</span>
                         @n.Message
                     </div>
-                    <div class="text-nowrap ms-3 small @(n.IsRead ? "text-muted" : "text-dark")">
-                        @if (!n.IsRead) { <span class="badge rounded-pill bg-danger me-1">new</span> }
+                    <div>
+                        @if (!n.IsRead) { <span>new</span> }
                         @n.CreatedAt.ToString("MMM dd, h:mm tt")
                     </div>
                 </div>

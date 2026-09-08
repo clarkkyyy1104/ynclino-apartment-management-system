@@ -18,31 +18,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             _context = context;
         }
 
-        // Figures for the public landing page. Only unit information is read here —
-        // nothing about tenants, bills or requests — so an anonymous visitor cannot
-        // learn anything private from this page.
-        private async Task<LandingViewModel> BuildLandingAsync()
-        {
-            var vm = new LandingViewModel
-            {
-                TotalUnits = await _context.tblUnits.CountAsync(),
-                AvailableUnits = await _context.tblUnits.CountAsync(u => u.Status == "Available"),
-                OccupiedUnits = await _context.tblUnits.CountAsync(u => u.Status == "Occupied"),
-                Vacancies = await _context.tblUnits
-                    .Where(u => u.Status == "Available")
-                    .OrderBy(u => u.UnitNumber)
-                    .Take(6)
-                    .ToListAsync()
-            };
-
-            // SQL MIN() over no rows is NULL, so ask for a nullable and fall back
-            vm.StartingRent = await _context.tblUnits
-                .Where(u => u.Status == "Available")
-                .MinAsync(u => (decimal?)u.RentPrice) ?? 0m;
-
-            return vm;
-        }
-
         // the unread notifications for whoever is signed in — every dashboard shows
         // the same feed, so they all read from here
         private async Task<List<tblNotification>> MyUnreadAsync()
@@ -57,15 +32,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 .ToListAsync();
         }
 
-        // "/" serves two different pages. A visitor who is not signed in gets the public
-        // landing page; everyone else gets their own dashboard. AllowAnonymous overrides
-        // the [Authorize] on this controller for this action only.
-        [AllowAnonymous]
         public async Task<IActionResult> Index()
         {
-            if (User.Identity?.IsAuthenticated != true)
-                return View("Landing", await BuildLandingAsync());
-
             if (User.IsInRole("Admin"))
             {
                 ViewBag.TotalUnits = await _context.tblUnits.CountAsync();

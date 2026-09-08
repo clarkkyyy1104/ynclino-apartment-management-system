@@ -7,37 +7,10 @@
     var transfers = ViewBag.Transfers as IEnumerable<tblUnitTransferRequest> ?? Enumerable.Empty<tblUnitTransferRequest>();
 }
 
-<style>
-        .profile-avatar {
-            position: relative;
-            display: inline-block;
-            cursor: pointer;
-            line-height: 0;
-        }
-        .profile-avatar .avatar-overlay {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0, 0, 0, 0.45);
-            opacity: 0;
-            transition: opacity 0.15s ease-in-out;
-        }
-        .profile-avatar:hover .avatar-overlay,
-        .profile-avatar:focus-within .avatar-overlay {
-            opacity: 1;
-        }
-        .avatar-overlay-text {
-            font-size: 1.6rem;
-            line-height: 1;
-        }
-</style>
-
 @if (Model == null)
 {
-    <div class="card">
-        <div class="card-body text-center text-muted py-5">
+    <div>
+        <div>
             No tenant profile is linked to your account. Please contact the administrator.
         </div>
     </div>
@@ -52,46 +25,43 @@
 @await Component.InvokeAsync("ModuleNotifications", new { module = "Transfer" })
 
 <!-- Cover + identity header (Facebook-style) -->
-<div class="card mb-3 overflow-hidden">
-    <div class="bg-dark" style="height:120px;"></div>
-    <div class="card-body">
-        <div class="d-flex align-items-end flex-wrap" style="margin-top:-64px;">
+<div>
+    <div></div>
+    <div>
+        <div>
             <form asp-action="UploadPhoto" method="post" enctype="multipart/form-data" id="photoForm">
                 @Html.AntiForgeryToken()
-                <input type="file" name="photo" accept="image/*" id="photoInput" class="d-none"
+                <input type="file" name="photo" accept="image/*" id="photoInput"
                        onchange="document.getElementById('photoForm').submit();" />
-                <label for="photoInput" class="profile-avatar" role="button"
+                <label for="photoInput" role="button"
                        title="@(string.IsNullOrEmpty(Model.PhotoPath) ? "Add a profile photo" : "Change your profile photo")">
                     @if (!string.IsNullOrEmpty(Model.PhotoPath))
                     {
-                        <img src="@Model.PhotoPath" alt="Profile photo"
-                             class="rounded-circle border border-3 border-white"
-                             style="width:96px;height:96px;object-fit:cover;" />
+                        <img src="@Model.PhotoPath" alt="Profile photo" />
                     }
                     else
                     {
-                        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center border border-3 border-white"
-                             style="width:96px;height:96px;font-size:2rem;font-weight:600;">
+                        <div>
                             @initials.ToUpper()
                         </div>
                     }
-                    <span class="avatar-overlay rounded-circle">
-                        <span class="avatar-overlay-text">📷</span>
+                    <span>
+                        <span>📷</span>
                     </span>
                 </label>
             </form>
-            <div class="ms-3 pb-1">
-                <h4 class="fw-bold mb-0">@Model.FullName</h4>
-                <div class="text-muted small">
+            <div>
+                <h4>@Model.FullName</h4>
+                <div>
                     Unit @(Model.Unit?.UnitNumber ?? "—")
                 </div>
             </div>
             @if (!string.IsNullOrEmpty(Model.PhotoPath))
             {
-                <div class="ms-auto pb-1">
+                <div>
                     <form asp-action="RemovePhoto" method="post" onsubmit="return confirm('Remove your profile photo?');">
                         @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-sm btn-outline-danger">Remove Photo</button>
+                        <button type="submit">Remove Photo</button>
                     </form>
                 </div>
             }
@@ -99,17 +69,17 @@
     </div>
 </div>
 
-<div class="row g-3">
+<div>
     <!-- Left column: About -->
-    <div class="col-lg-5">
-        <div class="card mb-3">
-            <div class="card-header fw-semibold">Personal Information</div>
-            <div class="card-body">
-                <dl class="row mb-0 small">
-                    <dt class="col-5">Full Name</dt><dd class="col-7">@Model.FullName</dd>
-                    <dt class="col-5">Contact No.</dt><dd class="col-7">@(string.IsNullOrEmpty(Model.ContactNumber) ? "—" : Model.ContactNumber)</dd>
-                    <dt class="col-5">Emergency Contact</dt>
-                    <dd class="col-7">
+    <div>
+        <div>
+            <div>Personal Information</div>
+            <div>
+                <dl>
+                    <dt>Full Name</dt><dd>@Model.FullName</dd>
+                    <dt>Contact No.</dt><dd>@(string.IsNullOrEmpty(Model.ContactNumber) ? "—" : Model.ContactNumber)</dd>
+                    <dt>Emergency Contact</dt>
+                    <dd>
                         @if (string.IsNullOrEmpty(Model.EmergencyContactName)) { <text>—</text> }
                         else
                         {
@@ -118,33 +88,33 @@
                             @if (!string.IsNullOrEmpty(Model.EmergencyContactNumber)) { <text> — @Model.EmergencyContactNumber</text> }
                         }
                     </dd>
-                    <dt class="col-5">Login</dt><dd class="col-7">@(Model.User?.Username ?? "—")</dd>
+                    <dt>Login</dt><dd>@(Model.User?.Username ?? "—")</dd>
                 </dl>
             </div>
         </div>
 
-        <div class="card mb-3">
-            <div class="card-header fw-semibold">Unit Information</div>
-            <div class="card-body">
+        <div>
+            <div>Unit Information</div>
+            <div>
                 @if (Model.Unit != null)
                 {
-                    <dl class="row mb-0 small">
-                        <dt class="col-5">Unit Number</dt><dd class="col-7 fw-semibold">@Model.Unit.UnitNumber</dd>
-                        <dt class="col-5">Unit Type</dt><dd class="col-7">@Model.Unit.UnitType</dd>
-                        <dt class="col-5">Monthly Rent</dt><dd class="col-7">₱@Model.Unit.RentPrice.ToString("N0")</dd>
-                        <dt class="col-5">Capacity</dt><dd class="col-7">@Model.Unit.Capacity person(s)</dd>
+                    <dl>
+                        <dt>Unit Number</dt><dd>@Model.Unit.UnitNumber</dd>
+                        <dt>Unit Type</dt><dd>@Model.Unit.UnitType</dd>
+                        <dt>Monthly Rent</dt><dd>₱@Model.Unit.RentPrice.ToString("N0")</dd>
+                        <dt>Capacity</dt><dd>@Model.Unit.Capacity person(s)</dd>
                     </dl>
-                    <div class="mt-3 d-flex gap-2 flex-wrap">
-                        <a asp-controller="Transfers" asp-action="Create" class="btn btn-sm btn-outline-primary">Request Transfer</a>
-                        <a asp-controller="Transfers" asp-action="Index" class="btn btn-sm btn-outline-secondary">My Transfer Requests @await Component.InvokeAsync("NavAlert", new { module = "Transfer" })</a>
+                    <div>
+                        <a asp-controller="Transfers" asp-action="Create">Request Transfer</a>
+                        <a asp-controller="Transfers" asp-action="Index">My Transfer Requests @await Component.InvokeAsync("NavAlert", new { module = "Transfer" })</a>
                     </div>
                 }
                 else
                 {
-                    <p class="text-muted small mb-2">You don't have a unit yet.</p>
-                    <div class="d-flex gap-2 flex-wrap">
-                        <a asp-controller="Transfers" asp-action="Create" class="btn btn-sm btn-primary">Apply for a Unit</a>
-                        <a asp-controller="Transfers" asp-action="Index" class="btn btn-sm btn-outline-secondary">My Requests @await Component.InvokeAsync("NavAlert", new { module = "Transfer" })</a>
+                    <p>You don't have a unit yet.</p>
+                    <div>
+                        <a asp-controller="Transfers" asp-action="Create">Apply for a Unit</a>
+                        <a asp-controller="Transfers" asp-action="Index">My Requests @await Component.InvokeAsync("NavAlert", new { module = "Transfer" })</a>
                     </div>
                 }
             </div>
@@ -152,42 +122,42 @@
     </div>
 
     <!-- Right column: Activity feed -->
-    <div class="col-lg-7">
-        <div class="card">
-            <div class="card-header fw-semibold">Recent Activity</div>
-            <div class="list-group list-group-flush">
+    <div>
+        <div>
+            <div>Recent Activity</div>
+            <div>
                 @if (!bills.Any() && !maintenance.Any() && !transfers.Any())
                 {
-                    <div class="list-group-item text-center text-muted py-4">No recent activity.</div>
+                    <div>No recent activity.</div>
                 }
                 @foreach (var b in bills)
                 {
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
                         <div>
-                            <span class="badge bg-secondary me-2">Billing</span>
+                            <span>Billing</span>
                             Bill for @b.BillingPeriod.ToString("MMMM yyyy") — ₱@b.AmountDue.ToString("N0")
                         </div>
-                        <span class="badge @(b.Status == "Paid" ? "bg-success" : b.Status == "Partial" ? "bg-info text-dark" : b.Status == "Overdue" ? "bg-danger" : "bg-warning text-dark")">@b.Status</span>
+                        <span>@b.Status</span>
                     </div>
                 }
                 @foreach (var m in maintenance)
                 {
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
                         <div>
-                            <span class="badge bg-secondary me-2">Maintenance</span>
+                            <span>Maintenance</span>
                             @m.Category — @m.DateSubmitted.ToString("MMM dd, yyyy")
                         </div>
-                        <span class="badge bg-light text-dark border">@m.Status</span>
+                        <span>@m.Status</span>
                     </div>
                 }
                 @foreach (var r in transfers)
                 {
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
                         <div>
-                            <span class="badge bg-secondary me-2">Transfer</span>
+                            <span>Transfer</span>
                             Requested Unit @(r.RequestedUnit?.UnitNumber ?? "—") — @r.DateRequested.ToString("MMM dd, yyyy")
                         </div>
-                        <span class="badge @(r.Status == "Approved" ? "bg-success" : r.Status == "Rejected" ? "bg-danger" : r.Status == "Cancelled" ? "bg-secondary" : "bg-warning text-dark")">@r.Status</span>
+                        <span>@r.Status</span>
                     </div>
                 }
             </div>

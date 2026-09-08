@@ -3,53 +3,53 @@
     ViewData["Title"] = "Update Item";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-7">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-secondary text-white fw-semibold">Update Item Report</div>
-            <div class="card-body">
+<div>
+    <div>
+        <div>
+            <div>Update Item Report</div>
+            <div>
                 <form asp-action="Edit" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="ItemID" />
                     <input type="hidden" asp-for="ReportedByUserID" />
                     <input type="hidden" asp-for="ReportedByName" />
-                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+                    <div asp-validation-summary="ModelOnly"></div>
 
                     @if (!string.IsNullOrEmpty(Model.ReportedByName))
                     {
-                        <p class="text-muted small mb-3">Reported by: <strong>@Model.ReportedByName</strong></p>
+                        <p>Reported by: <strong>@Model.ReportedByName</strong></p>
                     }
 
-                    <div class="mb-3">
-                        <label asp-for="ItemType" class="form-label fw-semibold small"></label>
-                        <select asp-for="ItemType" class="form-select">
+                    <div>
+                        <label asp-for="ItemType"></label>
+                        <select asp-for="ItemType">
                             <option>Lost</option>
                             <option>Found</option>
                         </select>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="ItemName" class="form-label fw-semibold small"></label>
-                        <input asp-for="ItemName" class="form-control" />
-                        <span asp-validation-for="ItemName" class="text-danger small"></span>
+                    <div>
+                        <label asp-for="ItemName"></label>
+                        <input asp-for="ItemName" />
+                        <span asp-validation-for="ItemName"></span>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Description" class="form-label fw-semibold small"></label>
-                        <textarea asp-for="Description" class="form-control" rows="2"></textarea>
+                    <div>
+                        <label asp-for="Description"></label>
+                        <textarea asp-for="Description" rows="2"></textarea>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Location" class="form-label fw-semibold small"></label>
-                        <input asp-for="Location" class="form-control" />
+                    <div>
+                        <label asp-for="Location"></label>
+                        <input asp-for="Location" />
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Status" class="form-label fw-semibold small"></label>
+                    <div>
+                        <label asp-for="Status"></label>
                         @{
                             var allowed = ViewBag.AllowedStatuses as List<string> ?? new List<string> { "Reported", "Claimed"};
                         }
-                        <select asp-for="Status" id="statusSelect" class="form-select">
+                        <select asp-for="Status" id="statusSelect">
                             @foreach (var st in allowed)
                             {
                                 <option value="@st">@st</option>
@@ -59,31 +59,31 @@
 
                     @* An item marked Claimed must say WHO collected it — "Claimed" on
                        its own tells the admin nothing a month later. *@
-                    <div class="mb-3" id="claimedByWrap">
-                        <label asp-for="ClaimedByUserID" class="form-label fw-semibold small"></label>
-                        <select asp-for="ClaimedByUserID" class="form-select" asp-items="Model.AvailableTenants">
+                    <div id="claimedByWrap">
+                        <label asp-for="ClaimedByUserID"></label>
+                        <select asp-for="ClaimedByUserID" asp-items="Model.AvailableTenants">
                             <option value="0">— Select tenant —</option>
                         </select>
-                        <div class="form-text text-muted small">The tenant who collected this item.</div>
-                        <span asp-validation-for="ClaimedByUserID" class="text-danger small"></span>
+                        <div>The tenant who collected this item.</div>
+                        <span asp-validation-for="ClaimedByUserID"></span>
                     </div>
 
-                    <div class="mb-4">
-                        <label asp-for="ImageUpload" class="form-label fw-semibold small"></label>
+                    <div>
+                        <label asp-for="ImageUpload"></label>
                         @if (!string.IsNullOrEmpty(Model.ImagePath))
                         {
-                            <div class="mb-2">
-                                <img src="@Model.ImagePath" alt="Current photo" class="img-fluid rounded border" style="max-height:160px" />
+                            <div>
+                                <img src="@Model.ImagePath" alt="Current photo" />
                             </div>
                         }
-                        <input asp-for="ImageUpload" class="form-control" type="file" accept="image/*" />
-                        <div class="form-text text-muted small">Upload to replace the current photo. JPG, PNG, GIF, or WEBP — up to 5 MB.</div>
-                        <span asp-validation-for="ImageUpload" class="text-danger small"></span>
+                        <input asp-for="ImageUpload" type="file" accept="image/*" />
+                        <div>Upload to replace the current photo. JPG, PNG, GIF, or WEBP — up to 5 MB.</div>
+                        <span asp-validation-for="ImageUpload"></span>
                     </div>
 
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
-                        <a asp-action="Index" class="btn btn-secondary btn-sm">Cancel</a>
+                    <div>
+                        <button type="submit">Save Changes</button>
+                        <a asp-action="Index">Cancel</a>
                     </div>
                 </form>
             </div>

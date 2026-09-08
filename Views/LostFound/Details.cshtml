@@ -3,65 +3,59 @@
     ViewData["Title"] = "Item Details";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-7">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-primary text-white fw-semibold">
+<div>
+    <div>
+        <div>
+            <div>
                 @Model.ItemType Item — @Model.ItemName
             </div>
-            <div class="card-body">
-                <dl class="row info-list">
-                    <dt class="col-sm-4">Item Name</dt>
-                    <dd class="col-sm-8">@Model.ItemName</dd>
+            <div>
+                <dl>
+                    <dt>Item Name</dt>
+                    <dd>@Model.ItemName</dd>
 
-                    <dt class="col-sm-4">Category</dt>
-                    <dd class="col-sm-8">
-                        <span class="badge @(Model.ItemType == "Lost" ? "bg-danger" : "bg-info text-dark")">
+                    <dt>Category</dt>
+                    <dd>
+                        <span>
                             @Model.ItemType
                         </span>
                     </dd>
 
-                    <dt class="col-sm-4">Description</dt>
-                    <dd class="col-sm-8">@(Model.Description ?? "—")</dd>
+                    <dt>Description</dt>
+                    <dd>@(Model.Description ?? "—")</dd>
 
                     @if (!string.IsNullOrEmpty(Model.ImagePath))
                     {
-                        <dt class="col-sm-4">Photo</dt>
-                        <dd class="col-sm-8">
+                        <dt>Photo</dt>
+                        <dd>
                             <a href="@Model.ImagePath" target="_blank">
-                                <img src="@Model.ImagePath" alt="Item photo" class="img-fluid rounded border" style="max-height:220px" />
+                                <img src="@Model.ImagePath" alt="Item photo" />
                             </a>
                         </dd>
                     }
 
-                    <dt class="col-sm-4">Location</dt>
-                    <dd class="col-sm-8">@(Model.Location ?? "—")</dd>
+                    <dt>Location</dt>
+                    <dd>@(Model.Location ?? "—")</dd>
 
-                    <dt class="col-sm-4">Status</dt>
-                    <dd class="col-sm-8">
-                        @{
-                            var sbadge = Model.Status switch {
-                                "Claimed"  => "bg-success",
-                                _          => "bg-warning text-dark"
-                            };
-                        }
-                        <span class="badge @sbadge">@Model.Status</span>
+                    <dt>Status</dt>
+                    <dd>
+                        <span>@Model.Status</span>
                     </dd>
 
                     @if (Model.Status == "Claimed")
                     {
-                        <dt class="col-sm-4">Claimed By</dt>
-                        <dd class="col-sm-8 fw-semibold">@(Model.ClaimedBy?.DisplayName ?? "—")</dd>
+                        <dt>Claimed By</dt>
+                        <dd>@(Model.ClaimedBy?.DisplayName ?? "—")</dd>
 
-                        <dt class="col-sm-4">Date Claimed</dt>
-                        <dd class="col-sm-8">@(Model.DateClaimed?.ToString("MMM dd, yyyy hh:mm tt") ?? "—")</dd>
+                        <dt>Date Claimed</dt>
+                        <dd>@(Model.DateClaimed?.ToString("MMM dd, yyyy hh:mm tt") ?? "—")</dd>
                     }
 
-                    <dt class="col-sm-4">Reported By</dt>
-                    <dd class="col-sm-8">@(Model.ReportedBy?.DisplayName ?? "—")</dd>
+                    <dt>Reported By</dt>
+                    <dd>@(Model.ReportedBy?.DisplayName ?? "—")</dd>
 
-                    <dt class="col-sm-4">Date Reported</dt>
-                    <dd class="col-sm-8">@Model.DateReported.ToString("MMM dd, yyyy hh:mm tt")</dd>
+                    <dt>Date Reported</dt>
+                    <dd>@Model.DateReported.ToString("MMM dd, yyyy hh:mm tt")</dd>
 
                 </dl>
 
@@ -71,30 +65,30 @@
                     if (claims.Any())
                     {
                         <hr />
-                        <h6 class="fw-semibold mb-2">Ownership Claims</h6>
+                        <h6>Ownership Claims</h6>
                         @foreach (var claim in claims)
                         {
-                            <div class="border rounded p-3 mb-2 @(claim.Status == "Pending" ? "border-warning" : claim.Status == "Approved" ? "border-success" : "border-secondary")">
-                                <div class="d-flex justify-content-between align-items-start mb-1">
-                                    <span class="fw-semibold small">@(claim.Claimant?.DisplayName ?? "—")</span>
-                                    <span class="badge @(claim.Status == "Pending" ? "bg-warning text-dark" : claim.Status == "Approved" ? "bg-success" : "bg-secondary")">@claim.Status</span>
+                            <div>
+                                <div>
+                                    <span>@(claim.Claimant?.DisplayName ?? "—")</span>
+                                    <span>@claim.Status</span>
                                 </div>
-                                <p class="small mb-1">@claim.VerificationDetails</p>
+                                <p>@claim.VerificationDetails</p>
                                 @if (!string.IsNullOrEmpty(claim.ImagePath))
                                 {
                                     <a href="@claim.ImagePath" target="_blank">
-                                        <img src="@claim.ImagePath" alt="Proof photo" class="img-fluid rounded border mb-2" style="max-height:160px" />
+                                        <img src="@claim.ImagePath" alt="Proof photo" />
                                     </a>
                                 }
-                                <p class="text-muted small mb-2">Submitted: @claim.SubmittedAt.ToString("MMM dd, yyyy hh:mm tt")</p>
+                                <p>Submitted: @claim.SubmittedAt.ToString("MMM dd, yyyy hh:mm tt")</p>
                                 @if (claim.Status == "Pending")
                                 {
                                     <form asp-action="ReviewClaim" method="post">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="claimId" value="@claim.ClaimID" />
-                                        <div class="d-flex gap-2">
-                                            <button type="submit" name="decision" value="Approved" class="btn btn-success btn-sm">Approve</button>
-                                            <button type="submit" name="decision" value="Rejected" class="btn btn-outline-danger btn-sm">Reject</button>
+                                        <div>
+                                            <button type="submit" name="decision" value="Approved">Approve</button>
+                                            <button type="submit" name="decision" value="Rejected">Reject</button>
                                         </div>
                                     </form>
                                 }
@@ -109,19 +103,19 @@
                     if (myClaims.Any())
                     {
                         <hr />
-                        <h6 class="fw-semibold mb-2">My Claim</h6>
+                        <h6>My Claim</h6>
                         @foreach (var claim in myClaims)
                         {
-                            <div class="border rounded p-3 mb-2 @(claim.Status == "Pending" ? "border-warning" : claim.Status == "Approved" ? "border-success" : "border-secondary")">
-                                <div class="d-flex justify-content-between align-items-start mb-1">
-                                    <span class="text-muted small">Submitted @claim.SubmittedAt.ToString("MMM dd, yyyy")</span>
-                                    <span class="badge @(claim.Status == "Pending" ? "bg-warning text-dark" : claim.Status == "Approved" ? "bg-success" : "bg-secondary")">@claim.Status</span>
+                            <div>
+                                <div>
+                                    <span>Submitted @claim.SubmittedAt.ToString("MMM dd, yyyy")</span>
+                                    <span>@claim.Status</span>
                                 </div>
-                                <p class="small mb-1">@claim.VerificationDetails</p>
+                                <p>@claim.VerificationDetails</p>
                                 @if (!string.IsNullOrEmpty(claim.ImagePath))
                                 {
                                     <a href="@claim.ImagePath" target="_blank">
-                                        <img src="@claim.ImagePath" alt="Proof photo" class="img-fluid rounded border mb-2" style="max-height:140px" />
+                                        <img src="@claim.ImagePath" alt="Proof photo" />
                                     </a>
                                 }
                             </div>
@@ -129,8 +123,8 @@
                     }
                 }
 
-                <div class="d-flex gap-2 mt-3">
-                    <a asp-action="Index" class="btn btn-secondary btn-sm">Back</a>
+                <div>
+                    <a asp-action="Index">Back</a>
                 </div>
             </div>
         </div>

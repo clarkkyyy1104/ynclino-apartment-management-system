@@ -3,54 +3,54 @@
     ViewData["Title"] = "Report Item";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-7">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-primary text-white fw-semibold">Report Lost or Found Item</div>
-            <div class="card-body">
+<div>
+    <div>
+        <div>
+            <div>Report Lost or Found Item</div>
+            <div>
                 <form asp-action="Create" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
-                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+                    <div asp-validation-summary="ModelOnly"></div>
 
-                    <div class="mb-3">
-                        <label asp-for="ItemType" class="form-label fw-semibold small"></label>
-                        <select asp-for="ItemType" class="form-select" required>
+                    <div>
+                        <label asp-for="ItemType"></label>
+                        <select asp-for="ItemType" required>
                             <option value="">— Select —</option>
                             <option>Lost</option>
                             <option>Found</option>
                         </select>
-                        <span asp-validation-for="ItemType" class="text-danger small"></span>
+                        <span asp-validation-for="ItemType"></span>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="ItemName" class="form-label fw-semibold small"></label>
-                        <input asp-for="ItemName" class="form-control" placeholder="e.g. Black Wallet, Phone Charger" />
-                        <span asp-validation-for="ItemName" class="text-danger small"></span>
+                    <div>
+                        <label asp-for="ItemName"></label>
+                        <input asp-for="ItemName" placeholder="e.g. Black Wallet, Phone Charger" />
+                        <span asp-validation-for="ItemName"></span>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Description" class="form-label fw-semibold small"></label>
-                        <textarea asp-for="Description" class="form-control" rows="2"
+                    <div>
+                        <label asp-for="Description"></label>
+                        <textarea asp-for="Description" rows="2"
                                   placeholder="Color, brand, distinguishing features…"></textarea>
-                        <span asp-validation-for="Description" class="text-danger small"></span>
+                        <span asp-validation-for="Description"></span>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Location" class="form-label fw-semibold small"></label>
-                        <input asp-for="Location" class="form-control" placeholder="e.g. Lobby, Floor 2 hallway" />
-                        <span asp-validation-for="Location" class="text-danger small"></span>
+                    <div>
+                        <label asp-for="Location"></label>
+                        <input asp-for="Location" placeholder="e.g. Lobby, Floor 2 hallway" />
+                        <span asp-validation-for="Location"></span>
                     </div>
 
-                    <div class="mb-4">
-                        <label asp-for="ImageUpload" class="form-label fw-semibold small"></label>
-                        <input asp-for="ImageUpload" class="form-control" type="file" accept="image/*" />
-                        <div class="form-text text-muted small">JPG, PNG, GIF, or WEBP — up to 5 MB.</div>
-                        <span asp-validation-for="ImageUpload" class="text-danger small"></span>
+                    <div>
+                        <label asp-for="ImageUpload"></label>
+                        <input asp-for="ImageUpload" type="file" accept="image/*" />
+                        <div>JPG, PNG, GIF, or WEBP — up to 5 MB.</div>
+                        <span asp-validation-for="ImageUpload"></span>
                     </div>
 
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary btn-sm">Submit Report</button>
-                        <a asp-action="Index" class="btn btn-secondary btn-sm">Cancel</a>
+                    <div>
+                        <button type="submit">Submit Report</button>
+                        <a asp-action="Index">Cancel</a>
                     </div>
                 </form>
             </div>

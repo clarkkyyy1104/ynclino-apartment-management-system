@@ -3,49 +3,49 @@
     ViewData["Title"] = "Reports & Records";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div>
     <div>
-        <h3 class="fw-bold mb-0">Reports &amp; Records</h3>
-        <div class="text-muted small">Summary of apartment operations · viewable on screen only</div>
+        <h3>Reports &amp; Records</h3>
+        <div>Summary of apartment operations · viewable on screen only</div>
     </div>
-    <span class="text-muted small">As of @DateTime.Today.ToString("MMMM dd, yyyy")</span>
+    <span>As of @DateTime.Today.ToString("MMMM dd, yyyy")</span>
 </div>
 
 @* ── Headline figures ── *@
-<div class="row g-3 mb-4">
-    <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body text-center py-3">
-                <div class="text-muted small">Total Units</div>
-                <div class="fs-3 fw-bold text-primary">@Model.TotalUnits</div>
-                <div class="small text-muted">@Model.OccupancyRate.ToString("N0")% occupied</div>
+<div>
+    <div>
+        <div>
+            <div>
+                <div>Total Units</div>
+                <div>@Model.TotalUnits</div>
+                <div>@Model.OccupancyRate.ToString("N0")% occupied</div>
             </div>
         </div>
     </div>
-    <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body text-center py-3">
-                <div class="text-muted small">Income This Month</div>
-                <div class="fs-3 fw-bold text-success">₱@Model.IncomeThisMonth.ToString("N0")</div>
-                <div class="small text-muted">₱@Model.IncomeAllTime.ToString("N0") all time</div>
+    <div>
+        <div>
+            <div>
+                <div>Income This Month</div>
+                <div>₱@Model.IncomeThisMonth.ToString("N0")</div>
+                <div>₱@Model.IncomeAllTime.ToString("N0") all time</div>
             </div>
         </div>
     </div>
-    <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body text-center py-3">
-                <div class="text-muted small">Outstanding</div>
-                <div class="fs-3 fw-bold text-danger">₱@Model.OutstandingTotal.ToString("N0")</div>
-                <div class="small text-muted">@Model.OverdueTenants overdue tenant(s)</div>
+    <div>
+        <div>
+            <div>
+                <div>Outstanding</div>
+                <div>₱@Model.OutstandingTotal.ToString("N0")</div>
+                <div>@Model.OverdueTenants overdue tenant(s)</div>
             </div>
         </div>
     </div>
-    <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body text-center py-3">
-                <div class="text-muted small">Pending Requests</div>
-                <div class="fs-3 fw-bold text-warning">@(Model.PendingMaintenance + Model.PendingTransfers + Model.OpenLostFound)</div>
-                <div class="small text-muted">
+    <div>
+        <div>
+            <div>
+                <div>Pending Requests</div>
+                <div>@(Model.PendingMaintenance + Model.PendingTransfers + Model.OpenLostFound)</div>
+                <div>
                     @Model.PendingMaintenance maintenance · @Model.PendingTransfers transfer · @Model.OpenLostFound lost &amp; found
                 </div>
             </div>
@@ -56,28 +56,27 @@
 @* ── Graphs ── *@
 <partial name="_Charts" model="Model" />
 
-<div class="row g-3">
+<div>
     @* ── Occupancy report ── *@
-    <div class="col-lg-5">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-primary text-white py-2"><span class="fw-semibold small">Occupancy Report</span></div>
-            <div class="card-body">
-                <table class="table table-sm small mb-3">
+    <div>
+        <div>
+            <div><span>Occupancy Report</span></div>
+            <div>
+                <table>
                     <tbody>
-                        <tr><td>Occupied</td><td class="text-end fw-semibold">@Model.OccupiedUnits</td></tr>
-                        <tr><td>Available</td><td class="text-end fw-semibold">@Model.AvailableUnits</td></tr>
-                        <tr><td>Reserved</td><td class="text-end fw-semibold">@Model.ReservedUnits</td></tr>
-                        <tr><td>Under Maintenance</td><td class="text-end fw-semibold">@Model.MaintenanceUnits</td></tr>
-                        <tr class="border-top"><td class="fw-semibold">Total Units</td><td class="text-end fw-bold">@Model.TotalUnits</td></tr>
+                        <tr><td>Occupied</td><td>@Model.OccupiedUnits</td></tr>
+                        <tr><td>Available</td><td>@Model.AvailableUnits</td></tr>
+                        <tr><td>Reserved</td><td>@Model.ReservedUnits</td></tr>
+                        <tr><td>Under Maintenance</td><td>@Model.MaintenanceUnits</td></tr>
+                        <tr><td>Total Units</td><td>@Model.TotalUnits</td></tr>
                     </tbody>
                 </table>
-                <div class="progress" style="height:20px;">
-                    <div class="progress-bar bg-success" role="progressbar"
-                         style="width:@Model.OccupancyRate.ToString("N0")%">
+                <div>
+                    <div role="progressbar">
                         @Model.OccupancyRate.ToString("N0")%
                     </div>
                 </div>
-                <div class="small text-muted mt-2">
+                <div>
                     Active tenants: <strong>@Model.ActiveTenants</strong> ·
                     Inactive: <strong>@Model.InactiveTenants</strong>
                 </div>
@@ -86,22 +85,22 @@
     </div>
 
     @* ── Monthly income summary ── *@
-    <div class="col-lg-7">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-success text-white py-2"><span class="fw-semibold small">Monthly Income Summary</span></div>
-            <div class="card-body p-0">
-                <table class="table table-sm small mb-0">
-                    <thead class="table-light">
-                        <tr><th>Month</th><th class="text-end">Billed</th><th class="text-end">Collected</th><th class="text-end">Uncollected</th></tr>
+    <div>
+        <div>
+            <div><span>Monthly Income Summary</span></div>
+            <div>
+                <table>
+                    <thead>
+                        <tr><th>Month</th><th>Billed</th><th>Collected</th><th>Uncollected</th></tr>
                     </thead>
                     <tbody>
                         @foreach (var m in Model.MonthlyIncome)
                         {
                             <tr>
                                 <td>@m.Month.ToString("MMMM yyyy")</td>
-                                <td class="text-end">₱@m.Billed.ToString("N0")</td>
-                                <td class="text-end text-success">₱@m.Collected.ToString("N0")</td>
-                                <td class="text-end @(m.Uncollected > 0 ? "text-danger" : "text-muted")">₱@m.Uncollected.ToString("N0")</td>
+                                <td>₱@m.Billed.ToString("N0")</td>
+                                <td>₱@m.Collected.ToString("N0")</td>
+                                <td>₱@m.Uncollected.ToString("N0")</td>
                             </tr>
                         }
                     </tbody>
@@ -111,38 +110,38 @@
     </div>
 
     @* ── Outstanding balances ── *@
-    <div class="col-lg-7">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-danger text-white py-2"><span class="fw-semibold small">Outstanding Balances</span></div>
-            <div class="card-body p-0">
-                <table class="table table-sm small mb-0">
-                    <thead class="table-light">
-                        <tr><th>Tenant</th><th>Unit</th><th class="text-end">Billed</th><th class="text-end">Paid</th><th class="text-end">Balance</th><th class="text-center">Overdue</th></tr>
+    <div>
+        <div>
+            <div><span>Outstanding Balances</span></div>
+            <div>
+                <table>
+                    <thead>
+                        <tr><th>Tenant</th><th>Unit</th><th>Billed</th><th>Paid</th><th>Balance</th><th>Overdue</th></tr>
                     </thead>
                     <tbody>
                         @foreach (var t in Model.Outstanding)
                         {
                             <tr>
-                                <td class="fw-semibold">@t.TenantName</td>
+                                <td>@t.TenantName</td>
                                 <td>@(t.UnitNumber ?? "—")</td>
-                                <td class="text-end">₱@t.Billed.ToString("N0")</td>
-                                <td class="text-end text-success">₱@t.Paid.ToString("N0")</td>
-                                <td class="text-end text-danger fw-semibold">₱@t.Balance.ToString("N0")</td>
-                                <td class="text-center">
+                                <td>₱@t.Billed.ToString("N0")</td>
+                                <td>₱@t.Paid.ToString("N0")</td>
+                                <td>₱@t.Balance.ToString("N0")</td>
+                                <td>
                                     @if (t.OverdueBills > 0)
                                     {
-                                        <span class="badge bg-danger">@t.OverdueBills</span>
+                                        <span>@t.OverdueBills</span>
                                     }
                                     else
                                     {
-                                        <span class="text-muted">—</span>
+                                        <span>—</span>
                                     }
                                 </td>
                             </tr>
                         }
                         @if (!Model.Outstanding.Any())
                         {
-                            <tr><td colspan="6" class="text-center text-muted py-3">No outstanding balances — everyone is paid up.</td></tr>
+                            <tr><td colspan="6">No outstanding balances — everyone is paid up.</td></tr>
                         }
                     </tbody>
                 </table>
@@ -151,20 +150,20 @@
     </div>
 
     @* ── Maintenance records ── *@
-    <div class="col-lg-5">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-warning text-dark py-2"><span class="fw-semibold small">Maintenance Records</span></div>
-            <div class="card-body p-0">
-                <table class="table table-sm small mb-0">
-                    <thead class="table-light"><tr><th>Status</th><th class="text-end">Requests</th></tr></thead>
+    <div>
+        <div>
+            <div><span>Maintenance Records</span></div>
+            <div>
+                <table>
+                    <thead><tr><th>Status</th><th>Requests</th></tr></thead>
                     <tbody>
                         @foreach (var m in Model.MaintenanceByStatus)
                         {
-                            <tr><td>@m.Status</td><td class="text-end fw-semibold">@m.Count</td></tr>
+                            <tr><td>@m.Status</td><td>@m.Count</td></tr>
                         }
                         @if (!Model.MaintenanceByStatus.Any())
                         {
-                            <tr><td colspan="2" class="text-center text-muted py-3">No maintenance requests yet.</td></tr>
+                            <tr><td colspan="2">No maintenance requests yet.</td></tr>
                         }
                     </tbody>
                 </table>
@@ -172,15 +171,15 @@
         </div>
     </div>
 </div>
-<div class="row g-3 mt-1">
+<div>
     @* ── Maintenance requests by issue type ── *@
-    <div class="col-lg-5">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-secondary text-white py-2"><span class="fw-semibold small">Maintenance by Issue Type</span></div>
-            <div class="card-body p-0">
-                <table class="table table-sm small mb-0">
-                    <thead class="table-light">
-                        <tr><th>Issue Type</th><th class="text-end">Requests</th></tr>
+    <div>
+        <div>
+            <div><span>Maintenance by Issue Type</span></div>
+            <div>
+                <table>
+                    <thead>
+                        <tr><th>Issue Type</th><th>Requests</th></tr>
                     </thead>
                     <tbody>
                         @{ int peakRequests = Model.MaintenanceByCategory.Count == 0 ? 1 : Math.Max(Model.MaintenanceByCategory.Max(c => c.Requests), 1); }
@@ -189,22 +188,22 @@
                             <tr>
                                 <td>
                                     @c.Category
-                                    <div class="progress mt-1" style="height:4px;">
-                                        <div class="progress-bar bg-secondary" style="width:@((c.Requests * 100 / peakRequests))%"></div>
+                                    <div>
+                                        <div></div>
                                     </div>
                                 </td>
-                                <td class="text-end fw-semibold">@c.Requests</td>
+                                <td>@c.Requests</td>
                             </tr>
                         }
                         @if (!Model.MaintenanceByCategory.Any())
                         {
-                            <tr><td colspan="2" class="text-center text-muted py-3">No maintenance requests yet.</td></tr>
+                            <tr><td colspan="2">No maintenance requests yet.</td></tr>
                         }
                     </tbody>
-                    <tfoot class="table-light">
+                    <tfoot>
                         <tr>
                             <th>Total requests</th>
-                            <th class="text-end">@Model.MaintenanceByCategory.Sum(c => c.Requests)</th>
+                            <th>@Model.MaintenanceByCategory.Sum(c => c.Requests)</th>
                         </tr>
                     </tfoot>
                 </table>
@@ -213,39 +212,39 @@
     </div>
 
     @* ── Tenant histories ── *@
-    <div class="col-lg-7">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-dark text-white py-2"><span class="fw-semibold small">Tenant Histories</span></div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-sm small mb-0">
-                        <thead class="table-light">
+    <div>
+        <div>
+            <div><span>Tenant Histories</span></div>
+            <div>
+                <div>
+                    <table>
+                        <thead>
                             <tr>
                                 <th>Tenant</th><th>Unit</th><th>Status</th>
                                 <th>Move-In</th><th>Move-Out</th>
-                                <th class="text-end">Months</th>
-                                <th class="text-end">Paid</th><th class="text-end">Balance</th>
-                                <th class="text-center">Req.</th>
+                                <th>Months</th>
+                                <th>Paid</th><th>Balance</th>
+                                <th>Req.</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var h in Model.TenantHistory)
                             {
                                 <tr>
-                                    <td class="fw-semibold">@h.TenantName</td>
+                                    <td>@h.TenantName</td>
                                     <td>@(h.UnitNumber ?? "—")</td>
-                                    <td><span class="badge @(h.Status == "Active" ? "bg-success" : "bg-secondary")">@h.Status</span></td>
+                                    <td><span>@h.Status</span></td>
                                     <td>@(h.MoveInDate?.ToString("MMM dd, yyyy") ?? "—")</td>
                                     <td>@(h.MoveOutDate?.ToString("MMM dd, yyyy") ?? "—")</td>
-                                    <td class="text-end">@h.MonthsBilled</td>
-                                    <td class="text-end text-success">₱@h.TotalPaid.ToString("N0")</td>
-                                    <td class="text-end @(h.Balance > 0 ? "text-danger fw-semibold" : "text-muted")">₱@h.Balance.ToString("N0")</td>
-                                    <td class="text-center">@(h.MaintenanceRequests + h.TransferRequests)</td>
+                                    <td>@h.MonthsBilled</td>
+                                    <td>₱@h.TotalPaid.ToString("N0")</td>
+                                    <td>₱@h.Balance.ToString("N0")</td>
+                                    <td>@(h.MaintenanceRequests + h.TransferRequests)</td>
                                 </tr>
                             }
                             @if (!Model.TenantHistory.Any())
                             {
-                                <tr><td colspan="9" class="text-center text-muted py-3">No tenants on record yet.</td></tr>
+                                <tr><td colspan="9">No tenants on record yet.</td></tr>
                             }
                         </tbody>
                     </table>

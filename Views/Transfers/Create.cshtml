@@ -5,17 +5,17 @@
                       ?? Enumerable.Empty<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>();
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-7">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-primary text-white fw-semibold">@("Request a Unit Transfer")</div>
-            <div class="card-body">
+<div>
+    <div>
+        <div>
+            <div>@("Request a Unit Transfer")</div>
+            <div>
                 @if (!ViewData.ModelState.IsValid)
                 {
-                    <div asp-validation-summary="All" class="alert alert-danger py-2 small"></div>
+                    <div asp-validation-summary="All"></div>
                 }
 
-                <p class="text-muted small mb-3">
+                <p>
                     @if (hasUnit)
                     {
                         <text>You are currently in <strong>Unit @ViewBag.CurrentUnit</strong>. Choose an available unit you'd like to move to.</text>
@@ -25,17 +25,17 @@
 
                 @if (!availableUnits.Any())
                 {
-                    <div class="alert alert-warning small">There are no available units right now.</div>
-                    <a asp-action="Index" class="btn btn-secondary btn-sm">Back</a>
+                    <div>There are no available units right now.</div>
+                    <a asp-action="Index">Back</a>
                 }
                 else
                 {
                     <form asp-action="Create" method="post">
                         @Html.AntiForgeryToken()
 
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold small">Preferred Unit</label>
-                            <select name="requestedUnitID" class="form-select" required>
+                        <div>
+                            <label>Preferred Unit</label>
+                            <select name="requestedUnitID" required>
                                 <option value="">— Select an available unit —</option>
                                 @foreach (var u in availableUnits)
                                 {
@@ -44,9 +44,9 @@
                             </select>
                         </div>
 
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary btn-sm">Submit Request</button>
-                            <a asp-action="Index" class="btn btn-secondary btn-sm">Cancel</a>
+                        <div>
+                            <button type="submit">Submit Request</button>
+                            <a asp-action="Index">Cancel</a>
                         </div>
                     </form>
                 }

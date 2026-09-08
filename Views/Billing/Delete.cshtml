@@ -3,27 +3,27 @@
     ViewData["Title"] = "Delete Bill";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card border-danger shadow-sm">
-            <div class="card-header bg-danger text-white fw-semibold">Confirm Delete</div>
-            <div class="card-body">
-                <p class="mb-1">Are you sure you want to delete this billing record?</p>
-                <dl class="row info-list mt-3">
-                    <dt class="col-sm-5">Tenant</dt>
-                    <dd class="col-sm-7">@Model.Tenant?.FullName</dd>
-                    <dt class="col-sm-5">Billing Period</dt>
-                    <dd class="col-sm-7">@Model.BillingPeriod.ToString("MMMM yyyy")</dd>
-                    <dt class="col-sm-5">Amount Due</dt>
-                    <dd class="col-sm-7">₱@Model.AmountDue.ToString("N0")</dd>
-                    <dt class="col-sm-5">Status</dt>
-                    <dd class="col-sm-7">@Model.Status</dd>
+<div>
+    <div>
+        <div>
+            <div>Confirm Delete</div>
+            <div>
+                <p>Are you sure you want to delete this billing record?</p>
+                <dl>
+                    <dt>Tenant</dt>
+                    <dd>@Model.Tenant?.FullName</dd>
+                    <dt>Billing Period</dt>
+                    <dd>@Model.BillingPeriod.ToString("MMMM yyyy")</dd>
+                    <dt>Amount Due</dt>
+                    <dd>₱@Model.AmountDue.ToString("N0")</dd>
+                    <dt>Status</dt>
+                    <dd>@Model.Status</dd>
                 </dl>
-                <form asp-action="Delete" method="post" class="d-flex gap-2 mt-3">
+                <form asp-action="Delete" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@Model.BillingID" />
-                    <button type="submit" class="btn btn-danger btn-sm">Yes, Delete</button>
-                    <a asp-action="Index" class="btn btn-secondary btn-sm">Cancel</a>
+                    <button type="submit">Yes, Delete</button>
+                    <a asp-action="Index">Cancel</a>
                 </form>
             </div>
         </div>

@@ -3,24 +3,23 @@
     ViewData["Title"] = "Payment History";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="fw-bold mb-0">Payment History</h3>
+<div>
+    <h3>Payment History</h3>
 </div>
 
-<form method="get" class="row g-2 mb-4">
-    <div class="col-auto">
-        <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" class="form-control"
-               style="width:229px" placeholder="Search tenant name..." />
+<form method="get">
+    <div>
+        <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" placeholder="Search tenant name..." />
     </div>
-    <div class="col-auto">
-        <button type="submit" class="btn btn-outline-primary">Search</button>
-        <a asp-action="History" class="btn btn-link">Clear</a>
+    <div>
+        <button type="submit">Search</button>
+        <a asp-action="History">Clear</a>
     </div>
 </form>
 
-<div class="table-responsive">
-    <table class="table table-hover align-middle table-sm small">
-        <thead class="table-primary">
+<div>
+    <table>
+        <thead>
             <tr>
                 <th>Tenant</th>
                 <th>Unit</th>
@@ -34,20 +33,19 @@
             @foreach (var t in Model)
             {
                 <tr>
-                    <td class="fw-semibold">@t.TenantName</td>
+                    <td>@t.TenantName</td>
                     <td>@(t.UnitNumber ?? "—")</td>
                     <td>@t.PaymentCount</td>
-                    <td class="text-success fw-semibold">₱@t.TotalPaid.ToString("N0")</td>
+                    <td>₱@t.TotalPaid.ToString("N0")</td>
                     <td>@(t.LastPaymentDate?.ToString("MMM dd, yyyy") ?? "—")</td>
                     <td>
-                        <a asp-action="TenantHistory" asp-route-id="@t.TenantID"
-                           class="btn btn-sm btn-outline-info" title="View" aria-label="View"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/></svg></a>
+                        <a asp-action="TenantHistory" asp-route-id="@t.TenantID" title="View" aria-label="View"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/></svg></a>
                     </td>
                 </tr>
             }
             @if (!Model.Any())
             {
-                <tr><td colspan="6" class="text-center text-muted py-4">No tenants found.</td></tr>
+                <tr><td colspan="6">No tenants found.</td></tr>
             }
         </tbody>
     </table>

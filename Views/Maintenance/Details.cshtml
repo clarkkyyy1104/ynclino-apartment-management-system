@@ -3,90 +3,74 @@
     ViewData["Title"] = "Request Details";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-7">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-primary text-white fw-semibold">
+<div>
+    <div>
+        <div>
+            <div>
                 Maintenance Request #@Model.RequestID
             </div>
-            <div class="card-body">
-                <dl class="row info-list">
-                    <dt class="col-sm-4">Tenant</dt>
-                    <dd class="col-sm-8">@Model.Tenant?.FullName</dd>
+            <div>
+                <dl>
+                    <dt>Tenant</dt>
+                    <dd>@Model.Tenant?.FullName</dd>
 
                     @* the unit stamped on the request itself, so the history stays with
                        the apartment even after the tenant transfers or moves out *@
-                    <dt class="col-sm-4">Unit</dt>
-                    <dd class="col-sm-8">@(Model.Unit?.UnitNumber ?? Model.Tenant?.Unit?.UnitNumber ?? "—")</dd>
+                    <dt>Unit</dt>
+                    <dd>@(Model.Unit?.UnitNumber ?? Model.Tenant?.Unit?.UnitNumber ?? "—")</dd>
 
-                    <dt class="col-sm-4">Issue Type</dt>
-                    <dd class="col-sm-8">@Model.Category</dd>
+                    <dt>Issue Type</dt>
+                    <dd>@Model.Category</dd>
 
-                    <dt class="col-sm-4">Description</dt>
-                    <dd class="col-sm-8">@Model.Description</dd>
+                    <dt>Description</dt>
+                    <dd>@Model.Description</dd>
 
                     @if (!string.IsNullOrEmpty(Model.ImagePath))
                     {
-                        <dt class="col-sm-4">Photo</dt>
-                        <dd class="col-sm-8">
+                        <dt>Photo</dt>
+                        <dd>
                             <a href="@Model.ImagePath" target="_blank">
-                                <img src="@Model.ImagePath" alt="Maintenance photo" class="img-fluid rounded border" style="max-height:220px" />
+                                <img src="@Model.ImagePath" alt="Maintenance photo" />
                             </a>
                         </dd>
                     }
 
-                    <dt class="col-sm-4">Priority</dt>
-                    <dd class="col-sm-8">
-                        @{
-                            var pbadge = Model.Priority switch {
-                                "Urgent"   => "bg-danger",
-                                "Major"    => "bg-warning text-dark",
-                                "Moderate" => "bg-info text-dark",
-                                _          => "bg-secondary"
-                            };
-                        }
-                        <span class="badge @pbadge">@Model.Priority</span>
+                    <dt>Priority</dt>
+                    <dd>
+                        <span>@Model.Priority</span>
                     </dd>
 
-                    <dt class="col-sm-4">Status</dt>
-                    <dd class="col-sm-8">
-                        @{
-                            var sbadge = Model.Status switch {
-                                "Resolved"    => "bg-success",
-                                "In Progress" => "bg-primary",
-                                "Cancelled"   => "bg-secondary",
-                                _             => "bg-warning text-dark"
-                            };
-                        }
-                        <span class="badge @sbadge">@Model.Status</span>
+                    <dt>Status</dt>
+                    <dd>
+                        <span>@Model.Status</span>
                     </dd>
 
-                    <dt class="col-sm-4">Date Submitted</dt>
-                    <dd class="col-sm-8">@Model.DateSubmitted.ToString("MMM dd, yyyy hh:mm tt")</dd>
+                    <dt>Date Submitted</dt>
+                    <dd>@Model.DateSubmitted.ToString("MMM dd, yyyy hh:mm tt")</dd>
 
-                    <dt class="col-sm-4">Date Resolved</dt>
-                    <dd class="col-sm-8">@(Model.DateResolved?.ToString("MMM dd, yyyy") ?? "—")</dd>
+                    <dt>Date Resolved</dt>
+                    <dd>@(Model.DateResolved?.ToString("MMM dd, yyyy") ?? "—")</dd>
 
                     @* The tenant sees this too: knowing who was sent and what they did
                        is the whole point of following up a repair. (Repair cost, the one
                        thing that was private, no longer exists in the system.) *@
-                    <dt class="col-sm-4">Assigned Staff</dt>
-                    <dd class="col-sm-8">
+                    <dt>Assigned Staff</dt>
+                    <dd>
                         @if (Model.AssignedStaff != null)
                         {
-                            <span class="badge bg-info text-dark">@Model.AssignedStaff.Username</span>
+                            <span>@Model.AssignedStaff.Username</span>
                         }
                         else
                         {
-                            <span class="text-muted">Not yet assigned</span>
+                            <span>Not yet assigned</span>
                         }
                     </dd>
 
-                    <dt class="col-sm-4">Work Notes</dt>
-                    <dd class="col-sm-8">
+                    <dt>Work Notes</dt>
+                    <dd>
                         @if (string.IsNullOrWhiteSpace(Model.StaffNotes))
                         {
-                            <span class="text-muted">No work has been reported yet.</span>
+                            <span>No work has been reported yet.</span>
                         }
                         else
                         {
@@ -95,22 +79,22 @@
                     </dd>
                 </dl>
 
-                <div class="d-flex gap-2 mt-3">
+                <div>
                     @* the staff member's one action: report on the job *@
                     @if (User.IsInRole("Maintenance") &&
                          !YnclinoApartmentManagementSystem.Helpers.StatusFlowHelper.IsClosedMaintenance(Model.Status))
                     {
-                        <a asp-action="Work" asp-route-id="@Model.RequestID" class="btn btn-primary btn-sm">Update Request</a>
+                        <a asp-action="Work" asp-route-id="@Model.RequestID">Update Request</a>
                     }
                     @if (User.IsInRole("Tenant") && Model.Status == "Pending")
                     {
-                        <form asp-action="Cancel" asp-route-id="@Model.RequestID" method="post" class="d-inline"
+                        <form asp-action="Cancel" asp-route-id="@Model.RequestID" method="post"
                               onsubmit="return confirm('Cancel this request?')">
                             @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-outline-danger btn-sm">Cancel Request</button>
+                            <button type="submit">Cancel Request</button>
                         </form>
                     }
-                    <a asp-action="Index" class="btn btn-secondary btn-sm">Back</a>
+                    <a asp-action="Index">Back</a>
                 </div>
             </div>
         </div>

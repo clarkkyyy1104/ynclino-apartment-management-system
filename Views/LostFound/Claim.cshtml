@@ -3,36 +3,36 @@
     var item = (YnclinoApartmentManagementSystem.Models.tblLostFoundItem)ViewBag.Item;
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-7">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-info text-white fw-semibold">Claim Found Item — @item.ItemName</div>
-            <div class="card-body">
-                <div class="alert alert-info small mb-3">
+<div>
+    <div>
+        <div>
+            <div>Claim Found Item — @item.ItemName</div>
+            <div>
+                <div>
                     <strong>How this works:</strong> Describe how you can prove this item is yours (colour, markings, contents, where you lost it, etc.). An admin will verify your claim before confirming.
                 </div>
 
-                <dl class="row small mb-3">
-                    <dt class="col-sm-4">Item</dt><dd class="col-sm-8">@item.ItemName</dd>
-                    <dt class="col-sm-4">Description</dt><dd class="col-sm-8">@(item.Description ?? "—")</dd>
-                    <dt class="col-sm-4">Found at</dt><dd class="col-sm-8">@(item.Location ?? "—")</dd>
+                <dl>
+                    <dt>Item</dt><dd>@item.ItemName</dd>
+                    <dt>Description</dt><dd>@(item.Description ?? "—")</dd>
+                    <dt>Found at</dt><dd>@(item.Location ?? "—")</dd>
                 </dl>
 
                 <form asp-action="Claim" asp-route-id="@item.ItemID" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold small">Proof of Ownership <span class="text-danger">*</span></label>
-                        <textarea name="verificationDetails" class="form-control" rows="5" required
+                    <div>
+                        <label>Proof of Ownership <span>*</span></label>
+                        <textarea name="verificationDetails" rows="5" required
                                   placeholder="Describe unique details that prove this item belongs to you…"></textarea>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold small">Proof Photo <span class="text-muted">(optional)</span></label>
-                        <input type="file" name="proofImage" accept="image/*" class="form-control" />
-                        <div class="form-text small">Attach a photo that helps prove the item is yours (e.g. a picture of the item, a receipt).</div>
+                    <div>
+                        <label>Proof Photo <span>(optional)</span></label>
+                        <input type="file" name="proofImage" accept="image/*" />
+                        <div>Attach a photo that helps prove the item is yours (e.g. a picture of the item, a receipt).</div>
                     </div>
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary btn-sm">Claim</button>
-                        <a asp-action="Index" class="btn btn-secondary btn-sm">Cancel</a>
+                    <div>
+                        <button type="submit">Claim</button>
+                        <a asp-action="Index">Cancel</a>
                     </div>
                 </form>
             </div>

@@ -2,45 +2,39 @@
 @{
     ViewData["Title"] = $"Unit {Model.UnitNumber}";
     bool isStaff = User.IsInRole("Admin");
-    var badge = Model.Status switch {
-        "Occupied" => "bg-warning text-dark",
-        "Available" => "bg-success",
-        "Reserved" => "bg-info text-dark",
-        _ => "bg-secondary"
-    };
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-7">
-        <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white fw-semibold">Unit @Model.UnitNumber</div>
-            <div class="card-body">
-                <dl class="row mb-0">
-                    <dt class="col-sm-4">Unit Type</dt>
-                    <dd class="col-sm-8">@Model.UnitType</dd>
-                    <dt class="col-sm-4">Rent Price</dt>
-                    <dd class="col-sm-8">₱@Model.RentPrice.ToString("N0")</dd>
-                    <dt class="col-sm-4">Deposit</dt>
-                    <dd class="col-sm-8">₱@Model.Deposit.ToString("N0")</dd>
-                    <dt class="col-sm-4">One Month Advance</dt>
-                    <dd class="col-sm-8">₱@Model.AdvancePayment.ToString("N0")</dd>
-                    <dt class="col-sm-4">Capacity</dt>
-                    <dd class="col-sm-8">@Model.Capacity</dd>
-                    <dt class="col-sm-4">Status</dt>
-                    <dd class="col-sm-8"><span class="badge @badge">@Model.Status</span></dd>
+<div>
+    <div>
+        <div>
+            <div>Unit @Model.UnitNumber</div>
+            <div>
+                <dl>
+                    <dt>Unit Type</dt>
+                    <dd>@Model.UnitType</dd>
+                    <dt>Rent Price</dt>
+                    <dd>₱@Model.RentPrice.ToString("N0")</dd>
+                    <dt>Deposit</dt>
+                    <dd>₱@Model.Deposit.ToString("N0")</dd>
+                    <dt>One Month Advance</dt>
+                    <dd>₱@Model.AdvancePayment.ToString("N0")</dd>
+                    <dt>Capacity</dt>
+                    <dd>@Model.Capacity</dd>
+                    <dt>Status</dt>
+                    <dd><span>@Model.Status</span></dd>
                 </dl>
             </div>
         </div>
 
         @if (isStaff)
         {
-            <div class="card shadow-sm mt-3">
-                <div class="card-header fw-semibold">Tenancy History</div>
-                <div class="card-body p-0">
+            <div>
+                <div>Tenancy History</div>
+                <div>
                     @if (Model.Tenants.Any())
                     {
-                        <table class="table table-sm table-hover align-middle mb-0">
-                            <thead class="table-light">
+                        <table>
+                            <thead>
                                 <tr>
                                     <th>Tenant</th>
                                     <th>Recorded</th>
@@ -53,14 +47,14 @@
                                 @foreach (var tenant in Model.Tenants.OrderByDescending(t => t.Status == "Active").ThenByDescending(t => t.DateRecorded))
                                 {
                                     <tr>
-                                        <td class="fw-semibold">@tenant.LastName, @tenant.FirstName</td>
+                                        <td>@tenant.LastName, @tenant.FirstName</td>
                                         <td>@tenant.DateRecorded.ToString("MMM dd, yyyy")</td>
                                         <td>@(tenant.MoveOutDate?.ToString("MMM dd, yyyy") ?? "—")</td>
                                         <td>
-                                            <span class="badge @(tenant.Status == "Active" ? "bg-success" : "bg-secondary")">@tenant.Status</span>
+                                            <span>@tenant.Status</span>
                                         </td>
                                         <td>
-                                            <a asp-controller="Tenants" asp-action="Details" asp-route-id="@tenant.TenantID" class="btn btn-sm btn-outline-info">View</a>
+                                            <a asp-controller="Tenants" asp-action="Details" asp-route-id="@tenant.TenantID">View</a>
                                         </td>
                                     </tr>
                                 }
@@ -69,14 +63,14 @@
                     }
                     else
                     {
-                        <p class="text-muted text-center py-3 mb-0">No tenants have been assigned to this unit yet.</p>
+                        <p>No tenants have been assigned to this unit yet.</p>
                     }
                 </div>
             </div>
         }
 
-        <div class="d-flex gap-2 mt-3">
-            <a asp-action="Index" class="btn btn-outline-secondary">Back to Units</a>
+        <div>
+            <a asp-action="Index">Back to Units</a>
         </div>
     </div>
 </div>

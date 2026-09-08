@@ -7,22 +7,20 @@
                        ?? Enumerable.Empty<YnclinoApartmentManagementSystem.Models.tblUnitTransferRequest>();
 }
 
-
-
-<div class="row g-3">
-    <div class="col-lg-6">
-        <div class="card shadow-sm h-100">
-            <div class="card-header fw-semibold">Active</div>
-            <div class="card-body p-0">
+<div>
+    <div>
+        <div>
+            <div>Active</div>
+            <div>
                 @{ ViewData["EmptyText"] = "No active requests."; ViewData["IsArchive"] = false; }
                 <partial name="_RequestList" model="Model" />
             </div>
         </div>
     </div>
-    <div class="col-lg-6">
-        <div class="card shadow-sm h-100">
-            <div class="card-header fw-semibold text-muted">Archive</div>
-            <div class="card-body p-0">
+    <div>
+        <div>
+            <div>Archive</div>
+            <div>
                 @{ ViewData["EmptyText"] = "Nothing in the archive yet."; ViewData["IsArchive"] = true; }
                 <partial name="_RequestList" model="archivedList" />
             </div>

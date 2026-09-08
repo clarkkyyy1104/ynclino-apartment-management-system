@@ -5,8 +5,8 @@
 
 @if (Model == null)
 {
-    <div class="card border-0 shadow-sm">
-        <div class="card-body text-center text-muted py-5">Your account could not be loaded.</div>
+    <div>
+        <div>Your account could not be loaded.</div>
     </div>
     return;
 }
@@ -17,80 +17,79 @@
 }
 
 <!-- Identity header -->
-<div class="card mb-3 overflow-hidden border-0 shadow-sm">
-    <div class="bg-dark" style="height:96px;"></div>
-    <div class="card-body">
-        <div class="d-flex align-items-end flex-wrap" style="margin-top:-56px;">
-            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center border border-3 border-white"
-                 style="width:88px;height:88px;font-size:2rem;font-weight:600;">
+<div>
+    <div></div>
+    <div>
+        <div>
+            <div>
                 @initial
             </div>
-            <div class="ms-3 pb-1">
-                <h4 class="fw-bold mb-0">@Model.Username</h4>
-                <span class="badge @(Model.IsMainAdmin ? "bg-warning text-dark" : "bg-primary")">@roleLabel</span>
+            <div>
+                <h4>@Model.Username</h4>
+                <span>@roleLabel</span>
             </div>
-            <div class="ms-auto pb-1">
-                <a asp-controller="Account" asp-action="ChangePassword" class="btn btn-sm btn-outline-primary">Change Password</a>
+            <div>
+                <a asp-controller="Account" asp-action="ChangePassword">Change Password</a>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row g-3">
+<div>
     <!-- Account details -->
-    <div class="col-lg-5">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-primary text-white d-flex align-items-center gap-2 py-2">
+    <div>
+        <div>
+            <div>
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
                     <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
                 </svg>
-                <span class="fw-semibold small">Account Information</span>
+                <span>Account Information</span>
             </div>
-            <div class="card-body">
-                <dl class="row mb-0 small info-list">
-                    <dt class="col-5">Username</dt><dd class="col-7 fw-semibold">@Model.Username</dd>
-                    <dt class="col-5">Role</dt><dd class="col-7">@roleLabel</dd>
-                    <dt class="col-5">Status</dt>
-                    <dd class="col-7"><span class="badge @(Model.IsActive ? "bg-success" : "bg-secondary")">@(Model.IsActive ? "Active" : "Inactive")</span></dd>
-                    <dt class="col-5">Member Since</dt><dd class="col-7">@Model.DateCreated.ToString("MMMM dd, yyyy")</dd>
+            <div>
+                <dl>
+                    <dt>Username</dt><dd>@Model.Username</dd>
+                    <dt>Role</dt><dd>@roleLabel</dd>
+                    <dt>Status</dt>
+                    <dd><span>@(Model.IsActive ? "Active" : "Inactive")</span></dd>
+                    <dt>Member Since</dt><dd>@Model.DateCreated.ToString("MMMM dd, yyyy")</dd>
                 </dl>
             </div>
         </div>
     </div>
 
     <!-- Quick overview -->
-    <div class="col-lg-7">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-info text-white d-flex align-items-center gap-2 py-2">
+    <div>
+        <div>
+            <div>
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
                     <path d="M0 0h1v15h15v1H0zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07"/>
                 </svg>
-                <span class="fw-semibold small">At a Glance</span>
+                <span>At a Glance</span>
             </div>
-            <div class="card-body">
-                <div class="row g-3 text-center">
-                    <div class="col-6 col-md-3">
-                        <a asp-controller="Units" asp-action="Index" class="text-decoration-none text-reset d-block p-2 rounded hover-lift border">
-                            <div class="fs-4 fw-bold text-primary">@ViewBag.TotalUnits</div>
-                            <div class="small text-muted">Units</div>
+            <div>
+                <div>
+                    <div>
+                        <a asp-controller="Units" asp-action="Index">
+                            <div>@ViewBag.TotalUnits</div>
+                            <div>Units</div>
                         </a>
                     </div>
-                    <div class="col-6 col-md-3">
-                        <a asp-controller="Tenants" asp-action="Index" class="text-decoration-none text-reset d-block p-2 rounded hover-lift border">
-                            <div class="fs-4 fw-bold text-success">@ViewBag.ActiveTenants</div>
-                            <div class="small text-muted">Active Tenants</div>
+                    <div>
+                        <a asp-controller="Tenants" asp-action="Index">
+                            <div>@ViewBag.ActiveTenants</div>
+                            <div>Active Tenants</div>
                         </a>
                     </div>
-                    <div class="col-6 col-md-3">
-                        <a asp-controller="Transfers" asp-action="Index" class="text-decoration-none text-reset d-block p-2 rounded hover-lift border">
-                            <div class="fs-4 fw-bold text-warning">@ViewBag.PendingTransfers</div>
-                            <div class="small text-muted">Pending Requests</div>
+                    <div>
+                        <a asp-controller="Transfers" asp-action="Index">
+                            <div>@ViewBag.PendingTransfers</div>
+                            <div>Pending Requests</div>
                         </a>
                     </div>
-                    <div class="col-6 col-md-3">
-                        <div class="d-block p-2 rounded border">
-                            <div class="fs-4 fw-bold text-info">@ViewBag.AdminCount</div>
-                            <div class="small text-muted">Admins</div>
+                    <div>
+                        <div>
+                            <div>@ViewBag.AdminCount</div>
+                            <div>Admins</div>
                         </div>
                     </div>
                 </div>

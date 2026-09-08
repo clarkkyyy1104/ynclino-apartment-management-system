@@ -9,63 +9,62 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login — Apartment Management System</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/ynclino.css" asp-append-version="true" />
 </head>
-<body class="bg-body-tertiary">
-    <div class="container" style="max-width:420px;">
-        <div class="mt-5 mb-4 text-center">
-            <h4 class="fw-semibold mb-0">Apartment Management System</h4>
-            <p class="text-muted small mb-0">Please sign in to your account</p>
+<body>
+    <div>
+        <div>
+            <h4>Apartment Management System</h4>
+            <p>Please sign in to your account</p>
         </div>
 
-        <div class="card shadow-sm">
-            <div class="card-body p-4">
+        <div>
+            <div>
                 <form asp-action="Login" method="post">
                     <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
                     @Html.AntiForgeryToken()
 
                     @if (!ViewData.ModelState.IsValid)
                     {
-                        <div class="alert alert-danger py-2 small mb-3">
+                        <div>
                             <div asp-validation-summary="All"></div>
                         </div>
                     }
 
-                    <div class="mb-3">
-                        <label asp-for="Username" class="form-label small fw-semibold"></label>
-                        <input asp-for="Username" class="form-control" placeholder="Username" autofocus autocomplete="username" />
+                    <div>
+                        <label asp-for="Username"></label>
+                        <input asp-for="Username" placeholder="Username" autofocus autocomplete="username" />
                     </div>
 
-                    <div class="mb-4">
-                        <label asp-for="Password" class="form-label small fw-semibold"></label>
-                        <div class="input-group">
-                            <input asp-for="Password" id="loginPassword" class="form-control" placeholder="Password" autocomplete="current-password" />
-                            <button type="button" class="btn btn-outline-secondary" onclick="togglePassword('loginPassword', this)" tabindex="-1">Show</button>
+                    <div>
+                        <label asp-for="Password"></label>
+                        <div>
+                            <input asp-for="Password" id="loginPassword" placeholder="Password" autocomplete="current-password" />
+                            <button type="button" onclick="togglePassword('loginPassword', this)" tabindex="-1">Show</button>
                         </div>
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100">Sign In</button>
+                    <button type="submit">Sign In</button>
                 </form>
 
-                <hr class="my-3" />
+                <hr />
 
-                <div class="d-flex gap-2">
-                    <form asp-action="QuickLogin" method="post" class="flex-grow-1">
+                <div>
+                    <form asp-action="QuickLogin" method="post">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="role" value="Admin" />
-                        <button type="submit" class="btn btn-outline-dark w-100">Login as Admin</button>
+                        <button type="submit">Login as Admin</button>
                     </form>
-                    <form asp-action="QuickLogin" method="post" class="flex-grow-1">
+                    <form asp-action="QuickLogin" method="post">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="role" value="Tenant" />
-                        <button type="submit" class="btn btn-outline-secondary w-100">Login as Tenant</button>
+                        <button type="submit">Login as Tenant</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="~/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script>
         function togglePassword(inputId, btn) {
             var input = document.getElementById(inputId);
@@ -73,5 +72,6 @@
             else { input.type = 'password'; btn.textContent = 'Show'; }
         }
     </script>
+    <script src="~/js/ynclino.js" asp-append-version="true"></script>
 </body>
 </html>

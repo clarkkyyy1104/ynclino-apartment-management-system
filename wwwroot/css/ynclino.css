@@ -1,0 +1,42 @@
+/* ==========================================================================
+   YNCLINO APARTMENT MANAGEMENT SYSTEM — stylesheet
+   Every view is plain semantic HTML with no classes, so start from the
+   elements themselves and add your own class names as you need hooks.
+
+   Things already in the markup that you can target today:
+     a[aria-current="page"]      the nav link for the page you are on
+     [hidden]                    closed menus and collapsed groups (browser default)
+     aside#appSidebar            the sidebar
+     aside#appSidebar[data-open] the sidebar opened on a phone
+     [data-flash]                a success / error message
+     nav a                       sidebar links
+     main                        the page body
+     table / thead / tbody       every list screen
+   ========================================================================== */
+
+
+/* 1. TOKENS — put your palette here first, then use var(--name) below */
+
+
+/* 2. RESET & TYPOGRAPHY */
+
+
+/* 3. LAYOUT — the sidebar + main column */
+
+
+/* 4. NAVIGATION */
+
+
+/* 5. TABLES */
+
+
+/* 6. FORMS */
+
+
+/* 7. BUTTONS & LINKS */
+
+
+/* 8. MESSAGES (flash, validation) */
+
+
+/* 9. RESPONSIVE */

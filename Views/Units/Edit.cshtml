@@ -3,88 +3,88 @@
     ViewData["Title"] = "Update Unit";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-7">
-        <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white fw-semibold">Update Unit — @Model.UnitNumber</div>
-            <div class="card-body">
+<div>
+    <div>
+        <div>
+            <div>Update Unit — @Model.UnitNumber</div>
+            <div>
                 <form asp-action="Edit" method="post">
                     <input type="hidden" asp-for="UnitID" />
-                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+                    <div asp-validation-summary="ModelOnly"></div>
 
-                    <div class="mb-3">
-                        <label asp-for="UnitNumber" class="form-label fw-semibold"></label>
-                        <input asp-for="UnitNumber" class="form-control"
+                    <div>
+                        <label asp-for="UnitNumber"></label>
+                        <input asp-for="UnitNumber"
                                inputmode="numeric" pattern="[0-9]+" />
-                        <span asp-validation-for="UnitNumber" class="text-danger small"></span>
+                        <span asp-validation-for="UnitNumber"></span>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="UnitType" class="form-label fw-semibold"></label>
-                        <select id="roomTypeSelect" class="form-select">
+                    <div>
+                        <label asp-for="UnitType"></label>
+                        <select id="roomTypeSelect">
                             <option value="">— Select Unit Type —</option>
                             <option value="Studio">Studio</option>
                             <option value="Bedspacer">Bedspacer</option>
                             <option value="Custom">Custom (choose bedrooms)</option>
                         </select>
                         <input asp-for="UnitType" type="hidden" id="unitTypeHidden" />
-                        <span asp-validation-for="UnitType" class="text-danger small"></span>
+                        <span asp-validation-for="UnitType"></span>
                     </div>
 
-                    <div class="mb-3" id="bedroomWrap" style="display:none">
-                        <label class="form-label fw-semibold">Number of Bedrooms</label>
-                        <input type="number" id="bedroomCount" class="form-control" min="1" step="1" value="1" />
-                        <div class="form-text text-muted small">Saved as e.g. <em>2-Bedroom</em>.</div>
+                    <div id="bedroomWrap">
+                        <label>Number of Bedrooms</label>
+                        <input type="number" id="bedroomCount" min="1" step="1" value="1" />
+                        <div>Saved as e.g. <em>2-Bedroom</em>.</div>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="RentPrice" class="form-label fw-semibold"></label>
-                        <div class="input-group">
-                            <span class="input-group-text">₱</span>
-                            <input asp-for="RentPrice" class="form-control" type="number" min="0.01" step="100" />
+                    <div>
+                        <label asp-for="RentPrice"></label>
+                        <div>
+                            <span>₱</span>
+                            <input asp-for="RentPrice" type="number" min="0.01" step="100" />
                         </div>
-                        <span asp-validation-for="RentPrice" class="text-danger small"></span>
+                        <span asp-validation-for="RentPrice"></span>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Deposit" class="form-label fw-semibold"></label>
-                        <div class="input-group">
-                            <span class="input-group-text">₱</span>
-                            <input asp-for="Deposit" class="form-control" type="number" min="0" step="100" />
+                    <div>
+                        <label asp-for="Deposit"></label>
+                        <div>
+                            <span>₱</span>
+                            <input asp-for="Deposit" type="number" min="0" step="100" />
                         </div>
-                        <div class="form-text text-muted small">1 month security deposit.</div>
-                        <span asp-validation-for="Deposit" class="text-danger small"></span>
+                        <div>1 month security deposit.</div>
+                        <span asp-validation-for="Deposit"></span>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="AdvancePayment" class="form-label fw-semibold"></label>
-                        <div class="input-group">
-                            <span class="input-group-text">₱</span>
-                            <input asp-for="AdvancePayment" class="form-control" type="number" min="0" step="100" />
+                    <div>
+                        <label asp-for="AdvancePayment"></label>
+                        <div>
+                            <span>₱</span>
+                            <input asp-for="AdvancePayment" type="number" min="0" step="100" />
                         </div>
-                        <div class="form-text text-muted small">1 month advance payment.</div>
-                        <span asp-validation-for="AdvancePayment" class="text-danger small"></span>
+                        <div>1 month advance payment.</div>
+                        <span asp-validation-for="AdvancePayment"></span>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Capacity" class="form-label fw-semibold"></label>
-                        <input asp-for="Capacity" class="form-control" type="number" min="1" step="1" />
-                        <span asp-validation-for="Capacity" class="text-danger small"></span>
+                    <div>
+                        <label asp-for="Capacity"></label>
+                        <input asp-for="Capacity" type="number" min="1" step="1" />
+                        <span asp-validation-for="Capacity"></span>
                     </div>
 
-                    <div class="mb-4">
-                        <label asp-for="Status" class="form-label fw-semibold"></label>
-                        <select asp-for="Status" class="form-select">
+                    <div>
+                        <label asp-for="Status"></label>
+                        <select asp-for="Status">
                             <option>Available</option>
                             <option>Occupied</option>
                             <option>Under Maintenance</option>
                         </select>
-                        <span asp-validation-for="Status" class="text-danger small"></span>
+                        <span asp-validation-for="Status"></span>
                     </div>
 
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary">Update Unit</button>
-                        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                    <div>
+                        <button type="submit">Update Unit</button>
+                        <a asp-action="Index">Cancel</a>
                     </div>
                 </form>
             </div>

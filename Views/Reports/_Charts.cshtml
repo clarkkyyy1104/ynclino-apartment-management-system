@@ -4,18 +4,18 @@
     needed, so the reports render the same on any machine, even offline.
 *@
 
-<div class="row g-3 mb-3">
+<div>
 
     @* ── Occupancy donut ── *@
-    <div class="col-lg-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-primary text-white py-2"><span class="fw-semibold small">Occupancy Rate</span></div>
-            <div class="card-body text-center">
+    <div>
+        <div>
+            <div><span>Occupancy Rate</span></div>
+            <div>
                 @{
                     double circ = 2 * Math.PI * 54;                 // circumference of the ring
                     double filled = Model.OccupancyRate / 100.0 * circ;
                 }
-                <svg viewBox="0 0 140 140" style="width:170px;height:170px;">
+                <svg viewBox="0 0 140 140">
                     <circle cx="70" cy="70" r="54" fill="none" stroke="#e9ecef" stroke-width="16" />
                     <circle cx="70" cy="70" r="54" fill="none" stroke="#198754" stroke-width="16"
                             stroke-dasharray="@filled.ToString("F2") @circ.ToString("F2")"
@@ -25,7 +25,7 @@
                     </text>
                     <text x="70" y="86" text-anchor="middle" font-size="11" fill="#6c757d">occupied</text>
                 </svg>
-                <div class="small text-muted mt-2">
+                <div>
                     @Model.OccupiedUnits of @Model.TotalUnits units
                 </div>
             </div>
@@ -33,10 +33,10 @@
     </div>
 
     @* ── Monthly income bar chart ── *@
-    <div class="col-lg-8">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-success text-white py-2"><span class="fw-semibold small">Monthly Income (last 6 months)</span></div>
-            <div class="card-body">
+    <div>
+        <div>
+            <div><span>Monthly Income (last 6 months)</span></div>
+            <div>
                 @{
                     var months = Model.MonthlyIncome;
                     decimal peak = months.Count == 0 ? 0m
@@ -61,12 +61,12 @@
                         svg.Append($"<text x='{x + 30}' y='{chartH + 38}' text-anchor='middle' font-size='9' fill='#adb5bd'>{m.Month:yy}</text>");
                     }
                 }
-                <svg viewBox="0 0 @(Math.Max(months.Count,1) * slot) 170" style="width:100%;height:190px;">
+                <svg viewBox="0 0 @(Math.Max(months.Count,1) * slot) 170">
                     @Html.Raw(svg.ToString())
                 </svg>
-                <div class="small text-muted mt-1">
-                    <span class="badge" style="background:#adb5bd">&nbsp;</span> Billed
-                    <span class="badge ms-2" style="background:#198754">&nbsp;</span> Collected
+                <div>
+                    <span>&nbsp;</span> Billed
+                    <span>&nbsp;</span> Collected
                 </div>
             </div>
         </div>

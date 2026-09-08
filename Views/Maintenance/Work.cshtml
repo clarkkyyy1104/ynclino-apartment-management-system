@@ -3,49 +3,41 @@
     ViewData["Title"] = "Update Request";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-7">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-primary text-white fw-semibold">
+<div>
+    <div>
+        <div>
+            <div>
                 Update Request #@Model.RequestID — Unit @Model.UnitNumber
             </div>
-            <div class="card-body">
+            <div>
 
                 @* read-only context: the staff member reports on the job, they don't redefine it *@
-                <dl class="row info-list small mb-3">
-                    <dt class="col-sm-4">Unit</dt>
-                    <dd class="col-sm-8 fw-semibold">@(Model.UnitNumber ?? "—")</dd>
+                <dl>
+                    <dt>Unit</dt>
+                    <dd>@(Model.UnitNumber ?? "—")</dd>
 
-                    <dt class="col-sm-4">Tenant</dt>
-                    <dd class="col-sm-8">@Model.TenantName</dd>
+                    <dt>Tenant</dt>
+                    <dd>@Model.TenantName</dd>
 
-                    <dt class="col-sm-4">Issue Type</dt>
-                    <dd class="col-sm-8">@Model.Category</dd>
+                    <dt>Issue Type</dt>
+                    <dd>@Model.Category</dd>
 
-                    <dt class="col-sm-4">Priority</dt>
-                    <dd class="col-sm-8">
-                        @{
-                            var pbadge = Model.Priority switch {
-                                "Urgent"   => "bg-danger",
-                                "Major"    => "bg-warning text-dark",
-                                "Moderate" => "bg-info text-dark",
-                                _          => "bg-secondary"
-                            };
-                        }
-                        <span class="badge @pbadge">@Model.Priority</span>
+                    <dt>Priority</dt>
+                    <dd>
+                        <span>@Model.Priority</span>
                     </dd>
 
-                    <dt class="col-sm-4">Description</dt>
-                    <dd class="col-sm-8">@Model.Description</dd>
+                    <dt>Description</dt>
+                    <dd>@Model.Description</dd>
 
-                    <dt class="col-sm-4">Date Submitted</dt>
-                    <dd class="col-sm-8">@Model.DateSubmitted.ToString("MMM dd, yyyy")</dd>
+                    <dt>Date Submitted</dt>
+                    <dd>@Model.DateSubmitted.ToString("MMM dd, yyyy")</dd>
                 </dl>
 
                 @if (!string.IsNullOrEmpty(Model.ImagePath))
                 {
                     <a href="@Model.ImagePath" target="_blank">
-                        <img src="@Model.ImagePath" alt="Reported photo" class="img-fluid rounded border mb-3" style="max-height:180px" />
+                        <img src="@Model.ImagePath" alt="Reported photo" />
                     </a>
                 }
 
@@ -54,37 +46,36 @@
                 <form asp-action="Work" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="RequestID" />
-                    <div asp-validation-summary="All" class="alert alert-danger py-2 small"></div>
+                    <div asp-validation-summary="All"></div>
 
-                    <div class="mb-3">
-                        <label asp-for="Status" class="form-label fw-semibold small"></label>
+                    <div>
+                        <label asp-for="Status"></label>
                         @{
                             var allowedStatuses = ViewBag.AllowedStatuses as List<string> ?? new List<string>();
                         }
-                        <select asp-for="Status" class="form-select">
+                        <select asp-for="Status">
                             @foreach (var st in allowedStatuses)
                             {
                                 <option value="@st">@st</option>
                             }
                         </select>
-                        <div class="form-text text-muted small">
+                        <div>
                             A status can only move forward. Once you mark this
                             <strong>Resolved</strong> it is closed and can no longer be changed.
                         </div>
-                        <span asp-validation-for="Status" class="text-danger small"></span>
+                        <span asp-validation-for="Status"></span>
                     </div>
 
-
-                    <div class="mb-4">
-                        <label asp-for="StaffNotes" class="form-label fw-semibold small"></label>
-                        <textarea asp-for="StaffNotes" class="form-control" rows="3"
+                    <div>
+                        <label asp-for="StaffNotes"></label>
+                        <textarea asp-for="StaffNotes" rows="3"
                                   placeholder="What did you find, and what did you do?"></textarea>
-                        <span asp-validation-for="StaffNotes" class="text-danger small"></span>
+                        <span asp-validation-for="StaffNotes"></span>
                     </div>
 
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary btn-sm">Save Update</button>
-                        <a asp-action="Index" class="btn btn-secondary btn-sm">Cancel</a>
+                    <div>
+                        <button type="submit">Save Update</button>
+                        <a asp-action="Index">Cancel</a>
                     </div>
                 </form>
             </div>

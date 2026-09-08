@@ -3,36 +3,36 @@
     ViewData["Title"] = "User Management";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-5">
-        <div class="card border-danger shadow-sm">
-            <div class="card-header bg-danger text-white">
-                <h5 class="mb-0">Delete Account</h5>
+<div>
+    <div>
+        <div>
+            <div>
+                <h5>Delete Account</h5>
             </div>
-            <div class="card-body">
+            <div>
                 <p>Are you sure you want to permanently delete this account?</p>
 
-                <dl class="row mb-4">
-                    <dt class="col-sm-4">Username</dt>
-                    <dd class="col-sm-8">@Model.Username</dd>
-                    <dt class="col-sm-4">Role</dt>
-                    <dd class="col-sm-8">@Model.Role</dd>
-                    <dt class="col-sm-4">Status</dt>
-                    <dd class="col-sm-8">@(Model.IsActive ? "Active" : "Inactive")</dd>
-                    <dt class="col-sm-4">Created</dt>
-                    <dd class="col-sm-8">@Model.DateCreated.ToString("MM/dd/yyyy")</dd>
+                <dl>
+                    <dt>Username</dt>
+                    <dd>@Model.Username</dd>
+                    <dt>Role</dt>
+                    <dd>@Model.Role</dd>
+                    <dt>Status</dt>
+                    <dd>@(Model.IsActive ? "Active" : "Inactive")</dd>
+                    <dt>Created</dt>
+                    <dd>@Model.DateCreated.ToString("MM/dd/yyyy")</dd>
                 </dl>
 
-                <div class="alert alert-warning py-2 small">
+                <div>
                     This permanently removes the account. If it has Lost &amp; Found records the delete will be blocked — deactivate the account instead.
                 </div>
 
                 <form asp-action="Delete" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@Model.UserID" />
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-danger">Yes, Delete</button>
-                        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                    <div>
+                        <button type="submit">Yes, Delete</button>
+                        <a asp-action="Index">Cancel</a>
                     </div>
                 </form>
             </div>

@@ -3,12 +3,12 @@
     ViewData["Title"] = "Archive Tenant";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card border-warning shadow-sm">
-            <div class="card-header bg-warning text-dark fw-semibold">Confirm Archive</div>
-            <div class="card-body">
-                <div class="alert alert-info">
+<div>
+    <div>
+        <div>
+            <div>Confirm Archive</div>
+            <div>
+                <div>
                     <strong>Note:</strong> Archiving keeps the record. Their billing and maintenance
                     history is preserved and the status is set to <em>Inactive</em>; their login is
                     switched off. To remove them from the database entirely, archive them first and
@@ -17,20 +17,20 @@
 
                 <p>Are you sure you want to archive this tenant?</p>
 
-                <dl class="row">
-                    <dt class="col-sm-4">Name</dt>
-                    <dd class="col-sm-8">@Model.LastName, @Model.FirstName</dd>
-                    <dt class="col-sm-4">Unit</dt>
-                    <dd class="col-sm-8">@(Model.Unit?.UnitNumber ?? "—")</dd>
-                    <dt class="col-sm-4">Status</dt>
-                    <dd class="col-sm-8">@Model.Status</dd>
+                <dl>
+                    <dt>Name</dt>
+                    <dd>@Model.LastName, @Model.FirstName</dd>
+                    <dt>Unit</dt>
+                    <dd>@(Model.Unit?.UnitNumber ?? "—")</dd>
+                    <dt>Status</dt>
+                    <dd>@Model.Status</dd>
                 </dl>
 
                 <form asp-action="Delete" method="post">
                     <input type="hidden" name="id" value="@Model.TenantID" />
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-warning text-dark">Yes, Archive</button>
-                        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                    <div>
+                        <button type="submit">Yes, Archive</button>
+                        <a asp-action="Index">Cancel</a>
                     </div>
                 </form>
             </div>

@@ -4,53 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] — Apartment Management System</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" />
-    <style>
-        /* show/hide password toggle placed inside the input */
-        .pw-wrapper { position: relative; }
-        .pw-wrapper .form-control { padding-right: 2.5rem; }
-        .pw-toggle {
-            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-            background: none; border: none; padding: 2px 4px; color: #6c757d;
-            cursor: pointer; line-height: 1; z-index: 5; display: inline-flex; align-items: center;
-        }
-        .pw-toggle:hover { color: #343a40; }
-        .pw-rules { margin-top: .4rem; padding: .5rem .75rem; background: #f8f9fa; border-radius: .375rem; border: 1px solid #e9ecef; }
-        .pw-rules li { color: #6c757d; padding: .15rem 0; display: flex; align-items: center; gap: .4rem; }
-        .pw-rules li.rule-pass { color: #198754; }
-        .pw-rules li.rule-fail { color: #dc3545; }
-        .pw-rules .rule-icon { display: inline-flex; align-items: center; flex-shrink: 0; }
-        /* An empty validation summary still renders as <div class="validation-summary-valid">.
-           Without this it shows as a blank red Bootstrap alert on every clean form. */
-        .validation-summary-valid { display: none; }
-        .shake { animation: shake .5s ease; }
-        @@keyframes shake { 0%,100%{transform:translateX(0);} 20%{transform:translateX(-6px);} 40%{transform:translateX(6px);} 60%{transform:translateX(-4px);} 80%{transform:translateX(4px);} }
-
-        /* ── Left sidebar layout ── */
-        body { background:#f4f5f7; }
-        .app-sidebar { width:240px; min-width:240px; background:#1f2a44; color:#cbd5e1; min-height:100vh; }
-        .app-sidebar .brand { color:#fff; font-weight:700; padding:16px 18px; font-size:1.02rem; border-bottom:1px solid rgba(255,255,255,.08); display:block; text-decoration:none; }
-        .app-sidebar .nav-link { color:#cbd5e1; padding:.55rem 1.1rem; display:flex; align-items:center; gap:.5rem; border-radius:0; }
-        .app-sidebar .nav-link:hover { background:rgba(255,255,255,.06); color:#fff; }
-        .app-sidebar .nav-link.active { background:#2f5bd6; color:#fff; }
-        .app-sidebar .sub { background:rgba(0,0,0,.16); }
-        .app-sidebar .sub .nav-link { padding-left:2.4rem; font-size:.9rem; }
-        .app-sidebar .group-toggle { cursor:pointer; }
-        .app-sidebar .group-toggle .caret { margin-left:auto; transition:transform .15s; }
-        .app-sidebar .group-toggle[aria-expanded="true"] .caret { transform:rotate(180deg); }
-        .app-topbar { background:#16203a; color:#e5e7eb; padding:.55rem 1rem; display:flex; align-items:center; gap:.75rem; }
-        .app-topbar .dropdown-toggle { color:#e5e7eb; text-decoration:none; }
-        .app-content { min-width:0; }
-        @@media (max-width:768px){
-            .app-sidebar { position:fixed; z-index:1045; left:-240px; transition:left .2s; height:100%; }
-            .app-sidebar.show { left:0; }
-        }
-    </style>
+    <link rel="stylesheet" href="~/css/ynclino.css" asp-append-version="true" />
 </head>
 <body>
 @{
     var activeController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
-    string Active(string c) => activeController == c ? "active" : "";
+    // marks the current page semantically: style it with a[aria-current="page"]
+    string? Active(string c) => activeController == c ? "page" : null;
     bool isAdmin = User.IsInRole("Admin");
     // three roles now, so "not admin" no longer means "tenant" — name each one
     bool isStaff = User.IsInRole("Maintenance");
@@ -61,22 +21,22 @@
 }
 @if (User.Identity?.IsAuthenticated == true)
 {
-    <div class="d-flex">
-        <aside class="app-sidebar" id="appSidebar">
-            <a class="brand" asp-controller="Home" asp-action="Index">Apartment Management System</a>
-            <nav class="nav flex-column py-2">
+    <div>
+        <aside id="appSidebar">
+            <a asp-controller="Home" asp-action="Index">Apartment Management System</a>
+            <nav>
                 @* No count here: it would only re-total the per-module badges below. *@
-                <a class="nav-link @Active("Home")" asp-controller="Home" asp-action="Index">Dashboard</a>
+                <a aria-current="@Active("Home")" asp-controller="Home" asp-action="Index">Dashboard</a>
 
                 @if (isAdmin)
                 {
-                    <a class="nav-link group-toggle @(unitsOpen ? "active" : "")" data-bs-toggle="collapse" href="#unitsGroup" role="button" aria-expanded="@(unitsOpen ? "true" : "false")">
-                        Units @await Component.InvokeAsync("NavAlert", new { module = "Transfer" }) <span class="caret">▾</span>
+                    <a data-collapse="#unitsGroup" href="#unitsGroup" role="button" aria-expanded="@(unitsOpen ? "true" : "false")">
+                        Units @await Component.InvokeAsync("NavAlert", new { module = "Transfer" }) <span>▾</span>
                     </a>
-                    <div class="collapse @(unitsOpen ? "show" : "")" id="unitsGroup">
-                        <div class="sub">
-                            <a class="nav-link @Active("Units")" asp-controller="Units" asp-action="Index">Units</a>
-                            <a class="nav-link @Active("Transfers")" asp-controller="Transfers" asp-action="Index">
+                    <div id="unitsGroup" hidden="@(unitsOpen ? null : "hidden")">
+                        <div>
+                            <a aria-current="@Active("Units")" asp-controller="Units" asp-action="Index">Units</a>
+                            <a aria-current="@Active("Transfers")" asp-controller="Transfers" asp-action="Index">
                                 Unit Requests @await Component.InvokeAsync("NavAlert", new { module = "Transfer" })
                             </a>
                         </div>
@@ -85,74 +45,74 @@
                 else if (isTenant)
                 {
                     @* tenant: a single Units link (browse); My Unit / Transfer lives in their Profile *@
-                    <a class="nav-link @Active("Units")" asp-controller="Units" asp-action="Index">Units</a>
+                    <a aria-current="@Active("Units")" asp-controller="Units" asp-action="Index">Units</a>
                 }
 
                 @if (isAdmin)
                 {
-                    <a class="nav-link @Active("Users")" asp-controller="Users" asp-action="Index">User Management</a>
-                    <a class="nav-link @Active("Tenants")" asp-controller="Tenants" asp-action="Index">Tenants</a>
+                    <a aria-current="@Active("Users")" asp-controller="Users" asp-action="Index">User Management</a>
+                    <a aria-current="@Active("Tenants")" asp-controller="Tenants" asp-action="Index">Tenants</a>
                 }
 
                 @* maintenance staff only ever see their own module — no billing,
                    no tenants, no units, no lost &amp; found *@
                 @if (!isStaff)
                 {
-                    <a class="nav-link group-toggle @(billingOpen ? "active" : "")" data-bs-toggle="collapse" href="#billingGroup" role="button" aria-expanded="@(billingOpen ? "true" : "false")">
-                        Billing &amp; Payment @await Component.InvokeAsync("NavAlert", new { module = "Billing" }) <span class="caret">▾</span>
+                    <a data-collapse="#billingGroup" href="#billingGroup" role="button" aria-expanded="@(billingOpen ? "true" : "false")">
+                        Billing &amp; Payment @await Component.InvokeAsync("NavAlert", new { module = "Billing" }) <span>▾</span>
                     </a>
-                    <div class="collapse @(billingOpen ? "show" : "")" id="billingGroup">
-                        <div class="sub">
-                            <a class="nav-link @(activeController == "Billing" && activeAction != "History" ? "active" : "")" asp-controller="Billing" asp-action="Index">Bills</a>
-                            <a class="nav-link @(activeController == "Billing" && activeAction == "History" ? "active" : "")" asp-controller="Billing" asp-action="History">Payment History</a>
+                    <div id="billingGroup" hidden="@(billingOpen ? null : "hidden")">
+                        <div>
+                            <a aria-current="@(activeController == "Billing" && activeAction != "History" ? "page" : null)" asp-controller="Billing" asp-action="Index">Bills</a>
+                            <a aria-current="@(activeController == "Billing" && activeAction == "History" ? "page" : null)" asp-controller="Billing" asp-action="History">Payment History</a>
                         </div>
                     </div>
                 }
 
-                <a class="nav-link @Active("Maintenance")" asp-controller="Maintenance" asp-action="Index">Maintenance @await Component.InvokeAsync("NavAlert", new { module = "Maintenance" })</a>
+                <a aria-current="@Active("Maintenance")" asp-controller="Maintenance" asp-action="Index">Maintenance @await Component.InvokeAsync("NavAlert", new { module = "Maintenance" })</a>
 
                 @if (!isStaff)
                 {
-                    <a class="nav-link @Active("LostFound")" asp-controller="LostFound" asp-action="Index">Lost &amp; Found @await Component.InvokeAsync("NavAlert", new { module = "LostFound" })</a>
+                    <a aria-current="@Active("LostFound")" asp-controller="LostFound" asp-action="Index">Lost &amp; Found @await Component.InvokeAsync("NavAlert", new { module = "LostFound" })</a>
                 }
                 @* Reports & Records is for the admin (a tenant lands on their own
                    records); maintenance staff have no business in it at all *@
                 @if (!isStaff)
                 {
-                    <a class="nav-link @Active("Reports")" asp-controller="Reports" asp-action="Index">Reports &amp; Records</a>
+                    <a aria-current="@Active("Reports")" asp-controller="Reports" asp-action="Index">Reports &amp; Records</a>
                 }
             </nav>
         </aside>
 
-        <div class="flex-grow-1 d-flex flex-column min-vh-100 app-content">
-            <header class="app-topbar">
-                <button class="btn btn-sm btn-outline-light d-md-none" type="button" onclick="document.getElementById('appSidebar').classList.toggle('show')">☰</button>
-                <div class="ms-auto dropdown">
-                    <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        @User.Identity.Name <span class="text-secondary">(@(isAdmin ? "Admin" : isStaff ? "Maintenance Staff" : "Tenant"))</span>
+        <div>
+            <header>
+                <button type="button" onclick="document.getElementById('appSidebar').toggleAttribute('data-open')">☰</button>
+                <div>
+                    <a href="#" role="button" data-dropdown aria-expanded="false" aria-controls="accountMenu">
+                        @User.Identity.Name <span>(@(isAdmin ? "Admin" : isStaff ? "Maintenance Staff" : "Tenant"))</span>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
+                    <ul id="accountMenu" hidden>
                         @if (!isStaff)
                         {
                             <li>
-                                <a class="dropdown-item" asp-controller="Profile" asp-action="Index">
+                                <a asp-controller="Profile" asp-action="Index">
                                     My Profile @if (isTenant) { @await Component.InvokeAsync("NavAlert", new { module = "Transfer" }) }
                                 </a>
                             </li>
                         }
-                        <li><a class="dropdown-item" asp-controller="Account" asp-action="ChangePassword">Change Password</a></li>
-                        <li><hr class="dropdown-divider"></li>
+                        <li><a asp-controller="Account" asp-action="ChangePassword">Change Password</a></li>
+                        <li><hr></li>
                         <li>
-                            <form asp-controller="Account" asp-action="Logout" method="post" class="px-3">
+                            <form asp-controller="Account" asp-action="Logout" method="post">
                                 @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-sm btn-outline-danger w-100">Sign Out</button>
+                                <button type="submit">Sign Out</button>
                             </form>
                         </li>
                     </ul>
                 </div>
             </header>
 
-            <main class="p-4 flex-grow-1">
+            <main>
                 @RenderBody()
             </main>
         </div>
@@ -160,38 +120,28 @@
 }
 else
 {
-    <div class="container-fluid py-4 px-4">
+    <div>
         @RenderBody()
     </div>
 }
 
-    <script src="~/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/ynclino.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 
-<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:1100">
-    @if (TempData["Success"] != null)
-    {
-        <div class="toast align-items-center text-bg-success border-0" role="alert">
-            <div class="d-flex">
-                <div class="toast-body fw-semibold">@TempData["Success"]</div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-            </div>
-        </div>
-    }
-    @if (TempData["Error"] != null)
-    {
-        <div class="toast align-items-center text-bg-danger border-0" role="alert">
-            <div class="d-flex">
-                <div class="toast-body fw-semibold">@TempData["Error"]</div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-            </div>
-        </div>
-    }
-</div>
-<script>
-    document.querySelectorAll('.toast').forEach(function (el) {
-        new bootstrap.Toast(el, { delay: 5000 }).show();
-    });
-</script>
+@* flash messages: data-flash is the hook, ynclino.js removes them after 5s *@
+@if (TempData["Success"] != null)
+{
+    <p data-flash="success" role="status">
+        @TempData["Success"]
+        <button type="button" data-dismiss aria-label="Dismiss">&times;</button>
+    </p>
+}
+@if (TempData["Error"] != null)
+{
+    <p data-flash="error" role="alert">
+        @TempData["Error"]
+        <button type="button" data-dismiss aria-label="Dismiss">&times;</button>
+    </p>
+}
 </body>
 </html>

@@ -3,27 +3,27 @@
     ViewData["Title"] = "Update Request";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-7">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-secondary text-white fw-semibold">
+<div>
+    <div>
+        <div>
+            <div>
                 Update Request #@Model.RequestID — @Model.TenantName
             </div>
-            <div class="card-body">
+            <div>
                 <form asp-action="Edit" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="RequestID" />
                     <input type="hidden" asp-for="TenantID" />
-                    <div asp-validation-summary="All" class="alert alert-danger py-2 small"></div>
+                    <div asp-validation-summary="All"></div>
 
-                    <p class="text-muted small mb-3">
+                    <p>
                         Tenant: <strong>@Model.TenantName</strong> — Unit @Model.UnitNumber
                     </p>
 
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label asp-for="Category" class="form-label fw-semibold small"></label>
-                            <select asp-for="Category" id="categorySelect" class="form-select">
+                    <div>
+                        <div>
+                            <label asp-for="Category"></label>
+                            <select asp-for="Category" id="categorySelect">
                                 <option>Plumbing</option>
                                 <option>Electrical</option>
                                 <option>Structural</option>
@@ -31,9 +31,9 @@
                                 <option>Other</option>
                             </select>
                         </div>
-                        <div class="col-md-6">
-                            <label asp-for="Priority" class="form-label fw-semibold small"></label>
-                            <select asp-for="Priority" class="form-select">
+                        <div>
+                            <label asp-for="Priority"></label>
+                            <select asp-for="Priority">
                                 <option>Minor</option>
                                 <option>Moderate</option>
                                 <option>Major</option>
@@ -42,65 +42,64 @@
                         </div>
                     </div>
 
-                    <div class="mb-3" id="descWrap">
-                        <label asp-for="Description" class="form-label fw-semibold small"></label>
-                        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
-                        <span asp-validation-for="Description" class="text-danger small"></span>
+                    <div id="descWrap">
+                        <label asp-for="Description"></label>
+                        <textarea asp-for="Description" rows="3"></textarea>
+                        <span asp-validation-for="Description"></span>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="ImageUpload" class="form-label fw-semibold small"></label>
+                    <div>
+                        <label asp-for="ImageUpload"></label>
                         @if (!string.IsNullOrEmpty(Model.ImagePath))
                         {
-                            <div class="mb-2">
-                                <img src="@Model.ImagePath" alt="Current photo" class="img-fluid rounded border" style="max-height:160px" />
+                            <div>
+                                <img src="@Model.ImagePath" alt="Current photo" />
                             </div>
                         }
-                        <input asp-for="ImageUpload" class="form-control" type="file" accept="image/*" />
-                        <div class="form-text text-muted small">Upload to replace the current photo. JPG, PNG, GIF, or WEBP — up to 5 MB.</div>
-                        <span asp-validation-for="ImageUpload" class="text-danger small"></span>
+                        <input asp-for="ImageUpload" type="file" accept="image/*" />
+                        <div>Upload to replace the current photo. JPG, PNG, GIF, or WEBP — up to 5 MB.</div>
+                        <span asp-validation-for="ImageUpload"></span>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Status" class="form-label fw-semibold small"></label>
+                    <div>
+                        <label asp-for="Status"></label>
                         @{
                             var allowedStatuses = ViewBag.AllowedStatuses as List<string>
                                 ?? new List<string> { "Pending", "In Progress", "Resolved", "Cancelled" };
                         }
-                        <select asp-for="Status" class="form-select">
+                        <select asp-for="Status">
                             @foreach (var st in allowedStatuses)
                             {
                                 <option value="@st">@st</option>
                             }
                         </select>
-                        <div class="form-text text-muted small">
+                        <div>
                             A status can only move forward — a resolved or cancelled request
                             cannot be reopened.
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="AssignedStaffID" class="form-label fw-semibold small"></label>
-                        <select asp-for="AssignedStaffID" class="form-select"
+                    <div>
+                        <label asp-for="AssignedStaffID"></label>
+                        <select asp-for="AssignedStaffID"
                                 asp-items="Model.AvailableStaff">
                             <option value="0">— Unassigned —</option>
                         </select>
-                        <div class="form-text text-muted small">The staff member is notified as soon as you assign them.</div>
-                        <span asp-validation-for="AssignedStaffID" class="text-danger small"></span>
+                        <div>The staff member is notified as soon as you assign them.</div>
+                        <span asp-validation-for="AssignedStaffID"></span>
                     </div>
-
 
                     @if (!string.IsNullOrWhiteSpace(Model.StaffNotes))
                     {
-                        <div class="mb-4">
-                            <label class="form-label fw-semibold small">Work Notes (from maintenance staff)</label>
-                            <p class="form-control-plaintext border rounded bg-light px-2 py-1 small mb-0">@Model.StaffNotes</p>
+                        <div>
+                            <label>Work Notes (from maintenance staff)</label>
+                            <p>@Model.StaffNotes</p>
                         </div>
                     }
 
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
-                        <a asp-action="Index" class="btn btn-secondary btn-sm">Cancel</a>
+                    <div>
+                        <button type="submit">Save Changes</button>
+                        <a asp-action="Index">Cancel</a>
                     </div>
                 </form>
             </div>

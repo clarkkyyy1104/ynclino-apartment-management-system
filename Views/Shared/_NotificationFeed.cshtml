@@ -11,14 +11,6 @@
 @{
     var unread = (Model ?? new List<YnclinoApartmentManagementSystem.Models.tblNotification>()).ToList();
 
-    string NoteBadge(string module) => module switch
-    {
-        "Billing"     => "bg-primary",
-        "Maintenance" => "bg-warning text-dark",
-        "LostFound"   => "bg-info text-dark",
-        "Transfer"    => "bg-success",
-        _             => "bg-secondary"
-    };
 
     // the database stores "LostFound"; people read "Lost & Found"
     string NoteLabel(string module) => module switch
@@ -29,49 +21,49 @@
     };
 }
 
-<div class="card border-0 shadow-sm">
-    <div class="card-header bg-white d-flex align-items-center justify-content-between py-2">
-        <span class="fw-semibold small">Notifications</span>
-        <a asp-controller="Notifications" asp-action="index" class="card stat-card border-0 shadow-sm text-decoration-none">
-            <span class="stat-label small">Show All</span>
+<div>
+    <div>
+        <span>Notifications</span>
+        <a asp-controller="Notifications" asp-action="index">
+            <span>Show All</span>
         </a>
         @if (unread.Count > 0)
         {
-            <form asp-controller="Notifications" asp-action="MarkAllRead" method="post" class="m-0">
+            <form asp-controller="Notifications" asp-action="MarkAllRead" method="post">
                 @Html.AntiForgeryToken()
-                <button type="submit" class="btn btn-link btn-sm p-0 text-decoration-none">Mark all as read</button>
+                <button type="submit">Mark all as read</button>
             </form>
         }
     </div>
 
     @if (unread.Count == 0)
     {
-        <div class="card-body text-center py-5">
-            <svg xmlns="http://www.w3.org/2000/svg" width="42" height="42" fill="currentColor" class="text-success mb-3" viewBox="0 0 16 16">
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="42" height="42" fill="currentColor" viewBox="0 0 16 16">
                 <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
             </svg>
-            <p class="fw-semibold mb-1 text-secondary">You're all caught up.</p>
-            <p class="small text-muted mb-0">New requests, payments and updates will show up here.</p>
+            <p>You're all caught up.</p>
+            <p>New requests, payments and updates will show up here.</p>
         </div>
     }
     else
     {
-        <div class="list-group list-group-flush">
+        <div>
             @foreach (var n in unread)
             {
-                <a href="/Notifications/Open/@n.NotificationID" class="list-group-item list-group-item-action py-3">
-                    <div class="d-flex justify-content-between align-items-start gap-3">
+                <a href="/Notifications/Open/@n.NotificationID">
+                    <div>
                         <div>
-                            <span class="badge @NoteBadge(n.Module) me-2">@NoteLabel(n.Module)</span>
-                            <span class="fw-semibold">@n.Message</span>
+                            <span>@NoteLabel(n.Module)</span>
+                            <span>@n.Message</span>
                         </div>
-                        <span class="text-muted small text-nowrap">@n.CreatedAt.ToString("MMM dd, h:mm tt")</span>
+                        <span>@n.CreatedAt.ToString("MMM dd, h:mm tt")</span>
                     </div>
                 </a>
             }
         </div>
-        <div class="card-footer bg-white text-end py-2">
-            <a asp-controller="Notifications" asp-action="Index" class="small text-decoration-none">See all notifications</a>
+        <div>
+            <a asp-controller="Notifications" asp-action="Index">See all notifications</a>
         </div>
     }
 </div>

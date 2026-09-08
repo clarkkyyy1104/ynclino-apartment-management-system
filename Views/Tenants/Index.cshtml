@@ -3,31 +3,31 @@
     ViewData["Title"] = "Tenants";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="fw-bold mb-0">Tenants</h3>
-    <a asp-action="Create" class="btn btn-primary">+ Register Tenant</a>
+<div>
+    <h3>Tenants</h3>
+    <a asp-action="Create">+ Register Tenant</a>
 </div>
 
-<form method="get" class="row g-2 mb-4">
-    <div class="col-auto">
-        <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" class="form-control" style="width:229px"
+<form method="get">
+    <div>
+        <input type="text" name="searchTerm" value="@ViewBag.SearchTerm"
                placeholder="Search by name…" />
     </div>
-    <div class="col-auto">
-        <select name="statusFilter" class="form-select" style="width:229px" onchange="this.form.submit()">
+    <div>
+        <select name="statusFilter" onchange="this.form.submit()">
             <option value="Active" selected="@(ViewBag.StatusFilter == "Active")">Active</option>
             <option value="Inactive" selected="@(ViewBag.StatusFilter == "Inactive")">Inactive</option>
             <option value="All" selected="@(ViewBag.StatusFilter == "All")">All</option>
         </select>
     </div>
-    <div class="col-auto">
-        <a asp-action="Index" class="btn btn-link">Clear</a>
+    <div>
+        <a asp-action="Index">Clear</a>
     </div>
 </form>
 
-<div class="table-responsive">
-    <table class="table table-hover align-middle">
-        <thead class="table-primary">
+<div>
+    <table>
+        <thead>
             <tr>
                 <th>Name</th>
                 <th>Unit</th>
@@ -40,31 +40,31 @@
             @foreach (var tenant in Model)
             {
                 <tr>
-                    <td class="fw-semibold">@tenant.LastName, @tenant.FirstName</td>
+                    <td>@tenant.LastName, @tenant.FirstName</td>
                     <td>@(tenant.Unit?.UnitNumber ?? "—")</td>
                     <td>@(tenant.ContactNumber ?? "—")</td>
                     <td>
                         @* One badge: the tenancy and the login are switched together,
                            so Status says both. The only thing it cannot say is that a
                            tenant has no login at all, which is noted underneath. *@
-                        <span class="badge @(tenant.Status == "Active" ? "bg-success" : "bg-secondary")"
+                        <span
                               title="@(tenant.Status == "Active" ? "Renting, and can sign in" : "Not renting, and cannot sign in")">
                             @tenant.Status
                         </span>
                         @if (tenant.User == null)
                         {
-                            <div class="text-muted small">No login account</div>
+                            <div>No login account</div>
                         }
                     </td>
                     <td>
-                        <a asp-action="Details" asp-route-id="@tenant.TenantID" class="btn btn-sm btn-outline-info" title="View" aria-label="View"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/></svg></a>
+                        <a asp-action="Details" asp-route-id="@tenant.TenantID" title="View" aria-label="View"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/></svg></a>
                     </td>
                 </tr>
             }
             @if (!Model.Any())
             {
                 <tr>
-                    <td colspan="5" class="text-center text-muted py-4">No tenants found.</td>
+                    <td colspan="5">No tenants found.</td>
                 </tr>
             }
         </tbody>
