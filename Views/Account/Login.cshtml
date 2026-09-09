@@ -14,7 +14,7 @@
 <body>
     <div>
         <div>
-            <h4>Apartment Management System</h4>
+            <img src="~/images/logo.png" alt="Ynclino Apartment Management System" />
             <p>Please sign in to your account</p>
         </div>
 
@@ -44,11 +44,13 @@
                         </div>
                     </div>
 
+                    @* sits above Sign In and to the right, as in the design. No
+                       self-service reset exists: the administrator issues the account
+                       and resets it in person, and this link explains how. *@
+                    <p data-forgot><a asp-action="ForgotPassword">Forgot Password?</a></p>
+
                     <button type="submit">Sign In</button>
 
-                    @* no self-service reset exists: the administrator issues the
-                       account and resets it in person. The link explains how. *@
-                    <p><a asp-action="ForgotPassword">Forgot Password?</a></p>
                 </form>
 
             </div>

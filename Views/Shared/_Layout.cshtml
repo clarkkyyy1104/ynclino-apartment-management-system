@@ -23,7 +23,9 @@
 {
     <div>
         <aside id="appSidebar">
-            <a asp-controller="Home" asp-action="Index">Apartment Management System</a>
+            <a asp-controller="Home" asp-action="Index">
+                <img src="~/images/logo.png" alt="Ynclino Apartment Management System" />
+            </a>
             <nav>
                 @* No count here: it would only re-total the per-module badges below. *@
                 <a aria-current="@Active("Home")" asp-controller="Home" asp-action="Index">Dashboard</a>

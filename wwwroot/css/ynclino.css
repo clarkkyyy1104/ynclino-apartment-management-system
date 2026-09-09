@@ -380,3 +380,72 @@ main > div > div > a:has(> div > div > svg) > div > div:last-child > div:first-c
     aside#appSidebar[data-open] { left: 0; }
     main, header { padding-left: 1rem; padding-right: 1rem; }
 }
+
+/* ── 15. CORRECTIONS ─────────────────────────────────────────────────────────
+   Fixes for three faults visible once the design was on real screens.       */
+
+/* (a) The logo, now that wwwroot/images/logo.png is wired in. */
+aside#appSidebar > a { padding: 20px 18px; }
+aside#appSidebar > a img { display: block; width: 100%; max-width: 190px; margin: 0 auto; }
+body:not(:has(aside)) > div > div:first-child img { max-width: 340px; margin: 0 auto .25rem; }
+
+/* (b) Some pages nest the heading one level deeper —
+       main > div > (div > h4 + p) + a — so the title-row rules missed them and
+       the action rendered as bare orange text instead of a button. */
+main > div:has(> div > h3),
+main > div:has(> div > h4) {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+main > div:has(> div > h3) > a,
+main > div:has(> div > h4) > a {
+    flex: 0 0 auto;
+    display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+    padding: .55rem 1.15rem;
+    font-weight: 700; color: #fff;
+    background: var(--orange-btn);
+    border: 1px solid var(--orange-btn); border-radius: 6px;
+    white-space: nowrap;
+}
+main > div:has(> div > h3) > a:hover,
+main > div:has(> div > h4) > a:hover {
+    background: var(--orange-dark); border-color: var(--orange-dark);
+    color: #fff; text-decoration: none;
+}
+
+/* (c) A row of solid orange buttons in every table row turned the list into a
+       wall of colour and gave four things the same weight. One primary action
+       per screen — the one in the title row. Row actions are quiet, and only
+       Delete carries a warning colour. */
+tbody td button {
+    padding: .35rem .8rem;
+    font-size: .9rem; font-weight: 600;
+    color: var(--ink); background: #fff;
+    border: 1px solid var(--field-line);
+}
+tbody td button:hover { background: var(--field-bg); color: var(--ink); border-color: var(--field-line); }
+tbody td a[asp-action="Delete"], tbody td a[href*="Delete"] { color: var(--red); }
+tbody td form { margin: 0; }
+/* keep every action on one baseline, icons included */
+tbody td:last-child { white-space: nowrap; }
+tbody td:last-child > a,
+tbody td:last-child > span,
+tbody td:last-child > form { display: inline-flex; vertical-align: middle; margin: 0 .15rem; }
+
+/* the one-time temporary password after a reset — it must not look like an
+   ordinary row of text, because it is shown once and never again */
+[data-temp-password] {
+    margin-bottom: 1.25rem; padding: 1rem 1.25rem;
+    background: #fff;
+    border: 1px solid var(--line); border-left: 5px solid var(--orange);
+    border-radius: 8px;
+}
+[data-temp-password] code {
+    display: inline-block; margin-left: .4rem; padding: .25rem .6rem;
+    font-size: 1.15rem; letter-spacing: .06em;
+    background: var(--field-bg); border: 1px solid var(--field-line); border-radius: 6px;
+}
+[data-temp-password] p { margin: .5rem 0 0; font-size: .9rem; }
+
+/* the Forgot Password link sits under the password field, right-aligned */
+body:not(:has(aside)) p[data-forgot] { margin: -.4rem 0 .9rem; text-align: right; font-size: .9rem; }
