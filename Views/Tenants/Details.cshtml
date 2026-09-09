@@ -5,9 +5,9 @@
 
 <div>
     <div>
-        <div>
-            <div>Tenant Details — @Model.FullName</div>
-            <div>
+        <div data-panel>
+            <div data-panel-head>Tenant Details — @Model.FullName</div>
+            <div data-panel-body>
                 @if (!string.IsNullOrEmpty(Model.PhotoPath))
                 {
                     <div>

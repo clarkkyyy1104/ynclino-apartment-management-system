@@ -4,13 +4,13 @@
     needed, so the reports render the same on any machine, even offline.
 *@
 
-<div>
+<div data-chart-row>
 
     @* ── Occupancy donut ── *@
     <div>
-        <div>
-            <div><span>Occupancy Rate</span></div>
-            <div>
+        <div data-panel>
+            <div data-panel-head><span>Occupancy Rate</span></div>
+            <div data-panel-body>
                 @{
                     double circ = 2 * Math.PI * 54;                 // circumference of the ring
                     double filled = Model.OccupancyRate / 100.0 * circ;
@@ -34,9 +34,9 @@
 
     @* ── Monthly income bar chart ── *@
     <div>
-        <div>
-            <div><span>Monthly Income (last 6 months)</span></div>
-            <div>
+        <div data-panel>
+            <div data-panel-head><span>Monthly Income (last 6 months)</span></div>
+            <div data-panel-body>
                 @{
                     var months = Model.MonthlyIncome;
                     decimal peak = months.Count == 0 ? 0m

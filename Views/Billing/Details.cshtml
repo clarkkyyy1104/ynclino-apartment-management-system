@@ -5,11 +5,11 @@
 
 <div>
     <div>
-        <div>
-            <div>
+        <div data-panel>
+            <div data-panel-head>
                 Bill — @Model.Tenant?.FullName · @Model.BillingPeriod.ToString("MMMM yyyy")
             </div>
-            <div>
+            <div data-panel-body>
                 <dl>
                     <dt>Tenant</dt>
                     <dd>@Model.Tenant?.FullName</dd>
@@ -69,9 +69,6 @@
                         else
                         {
                             <span>₱0</span>
-                        }
-                        else
-                        {
                             <span>— no overpayment being held</span>
                         }
                     </dd>

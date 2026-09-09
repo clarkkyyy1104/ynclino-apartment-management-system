@@ -3,7 +3,7 @@
     ViewData["Title"] = "Reports & Records";
 }
 
-<div>
+<div data-page-head>
     <div>
         <h3>Reports &amp; Records</h3>
         <div>Summary of apartment operations · viewable on screen only</div>
@@ -12,9 +12,9 @@
 </div>
 
 @* ── Headline figures ── *@
-<div>
+<div data-stats>
     <div>
-        <div>
+        <div data-stat>
             <div>
                 <div>Total Units</div>
                 <div>@Model.TotalUnits</div>
@@ -23,7 +23,7 @@
         </div>
     </div>
     <div>
-        <div>
+        <div data-stat>
             <div>
                 <div>Income This Month</div>
                 <div>₱@Model.IncomeThisMonth.ToString("N0")</div>
@@ -32,7 +32,7 @@
         </div>
     </div>
     <div>
-        <div>
+        <div data-stat>
             <div>
                 <div>Outstanding</div>
                 <div>₱@Model.OutstandingTotal.ToString("N0")</div>
@@ -41,7 +41,7 @@
         </div>
     </div>
     <div>
-        <div>
+        <div data-stat>
             <div>
                 <div>Pending Requests</div>
                 <div>@(Model.PendingMaintenance + Model.PendingTransfers + Model.OpenLostFound)</div>
@@ -59,9 +59,9 @@
 <div>
     @* ── Occupancy report ── *@
     <div>
-        <div>
-            <div><span>Occupancy Report</span></div>
-            <div>
+        <div data-panel>
+            <div data-panel-head><span>Occupancy Report</span></div>
+            <div data-panel-body>
                 <table>
                     <tbody>
                         <tr><td>Occupied</td><td>@Model.OccupiedUnits</td></tr>
@@ -86,9 +86,9 @@
 
     @* ── Monthly income summary ── *@
     <div>
-        <div>
-            <div><span>Monthly Income Summary</span></div>
-            <div>
+        <div data-panel>
+            <div data-panel-head><span>Monthly Income Summary</span></div>
+            <div data-panel-body>
                 <table>
                     <thead>
                         <tr><th>Month</th><th>Billed</th><th>Collected</th><th>Uncollected</th></tr>
@@ -111,9 +111,9 @@
 
     @* ── Outstanding balances ── *@
     <div>
-        <div>
-            <div><span>Outstanding Balances</span></div>
-            <div>
+        <div data-panel>
+            <div data-panel-head><span>Outstanding Balances</span></div>
+            <div data-panel-body>
                 <table>
                     <thead>
                         <tr><th>Tenant</th><th>Unit</th><th>Billed</th><th>Paid</th><th>Balance</th><th>Overdue</th></tr>
@@ -151,9 +151,9 @@
 
     @* ── Maintenance records ── *@
     <div>
-        <div>
-            <div><span>Maintenance Records</span></div>
-            <div>
+        <div data-panel>
+            <div data-panel-head><span>Maintenance Records</span></div>
+            <div data-panel-body>
                 <table>
                     <thead><tr><th>Status</th><th>Requests</th></tr></thead>
                     <tbody>
@@ -174,9 +174,9 @@
 <div>
     @* ── Maintenance requests by issue type ── *@
     <div>
-        <div>
-            <div><span>Maintenance by Issue Type</span></div>
-            <div>
+        <div data-panel>
+            <div data-panel-head><span>Maintenance by Issue Type</span></div>
+            <div data-panel-body>
                 <table>
                     <thead>
                         <tr><th>Issue Type</th><th>Requests</th></tr>
@@ -213,9 +213,9 @@
 
     @* ── Tenant histories ── *@
     <div>
-        <div>
-            <div><span>Tenant Histories</span></div>
-            <div>
+        <div data-panel>
+            <div data-panel-head><span>Tenant Histories</span></div>
+            <div data-panel-body>
                 <div>
                     <table>
                         <thead>

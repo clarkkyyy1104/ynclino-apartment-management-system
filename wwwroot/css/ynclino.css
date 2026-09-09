@@ -513,3 +513,101 @@ tbody td a[href*="/Delete"] { color: var(--red); border-color: #e5b6bb; }
 tbody td a[href*="/Delete"]:hover { background: var(--red-bg); color: var(--red); }
 /* a disabled action (e.g. Update on a paid bill) reads as unavailable */
 tbody td span[title] { opacity: .45; }
+
+/* ══ 17. PANELS, REPORT FIGURES AND CHARTS ══════════════════════════════════
+   A titled card appears in three places that had nothing in common in the
+   markup: the notification feed, every Details and Delete confirmation, and
+   each section of Reports & Records. They are one component, so they are
+   marked as one — data-panel with a head and a body — rather than each being
+   reached through wherever it happens to sit.                             */
+[data-panel] {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 1.25rem;
+}
+[data-panel-head] {
+    display: flex; align-items: center; gap: .75rem;
+    padding: .7rem 1.15rem;
+    background: var(--navy); color: #fff;
+    font-weight: 600;
+}
+/* actions living in a panel header stay legible on the dark bar */
+[data-panel-head] a { color: #fff; text-decoration: underline; margin-left: auto; }
+[data-panel-head] form { margin: 0 0 0 auto; }
+[data-panel-head] button {
+    padding: .25rem .7rem; font-size: .85rem; font-weight: 600;
+    color: #fff; background: transparent;
+    border: 1px solid rgba(255,255,255,.45); border-radius: 6px; cursor: pointer;
+}
+[data-panel-head] button:hover { background: rgba(255,255,255,.12); color: #fff; }
+[data-panel-body] { padding: 1.25rem; }
+/* a panel whose body is nothing but a table should not double its padding */
+[data-panel-body]:has(> table) { padding: 0; }
+[data-panel-body] > table { border: 0; }
+
+/* detail pages read as label/value pairs, not as a wall of text */
+[data-panel-body] dl { display: grid; grid-template-columns: 12rem 1fr; gap: .55rem 1rem; margin: 0; }
+[data-panel-body] dt { color: var(--ink-soft); }
+[data-panel-body] dd { margin: 0; }
+@media (max-width: 600px) { [data-panel-body] dl { grid-template-columns: 1fr; gap: .15rem; } }
+
+/* the row of buttons at the foot of a detail or confirmation page */
+[data-panel-body] > div:last-child:has(> a + a),
+[data-panel-body] > div:last-child:has(> form + a),
+[data-panel-body] > div:last-child:has(> a + form) {
+    display: flex; gap: .6rem; margin-top: 1.25rem;
+}
+
+/* ── Reports & Records ───────────────────────────────────────────────────── */
+[data-stats] {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+[data-stats] > div { min-width: 0; }
+[data-stat] {
+    height: 100%;
+    padding: 1rem 1.1rem;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-top: 5px solid var(--navy);
+    border-radius: var(--radius);
+    box-shadow: 0 2px 6px rgba(16,24,40,.06);
+}
+[data-stat] > div > div:first-child { color: var(--ink-soft); }
+[data-stat] > div > div:nth-child(2) { font-size: 1.9rem; line-height: 1.15; margin: .2rem 0; }
+[data-stat] > div > div:nth-child(3) { font-size: .875rem; color: var(--muted); }
+
+/* The charts are inline SVG with a viewBox and no size, so they grew to fill
+   whatever space they were given — the occupancy ring alone filled a screen. */
+[data-panel-body] svg { display: block; width: 100%; height: auto; max-height: 220px; margin: 0 auto; }
+[data-panel-body] svg + div { text-align: center; }
+
+/* the occupancy bar under the report table */
+[role="progressbar"] {
+    padding: .3rem .6rem;
+    background: var(--navy); color: #fff;
+    border-radius: 999px;
+    font-size: .85rem; text-align: center;
+}
+
+/* report tables sit flush inside their panel */
+[data-panel-body] table { width: 100%; border-collapse: collapse; }
+[data-panel-body] table td { text-align: left; }
+[data-panel-body] table td:not(:first-child) { text-align: right; }
+[data-panel-body] table th:not(:first-child) { text-align: right; }
+
+/* the two report charts sit side by side; each is capped so an SVG with only a
+   viewBox cannot grow to fill the screen the way the occupancy ring did */
+[data-chart-row] {
+    display: grid;
+    grid-template-columns: minmax(240px, 1fr) minmax(320px, 2fr);
+    gap: 1rem;
+    align-items: start;
+}
+@media (max-width: 900px) { [data-chart-row] { grid-template-columns: 1fr; } }
+[data-chart-row] [data-panel-body] { display: flex; flex-direction: column; align-items: center; }
+[data-chart-row] svg { max-height: 200px; }
