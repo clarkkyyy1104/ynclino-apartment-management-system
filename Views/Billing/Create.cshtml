@@ -5,9 +5,9 @@
 
 <div>
     <div>
-        <div>
-            <div>Issue New Bill</div>
-            <div>
+        <div data-form-panel>
+            <div data-form-head>Issue New Bill</div>
+            <div data-form-body>
                 <form asp-action="Create" method="post">
                     @Html.AntiForgeryToken()
                     <div asp-validation-summary="ModelOnly"></div>

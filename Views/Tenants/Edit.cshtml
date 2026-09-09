@@ -5,9 +5,9 @@
 
 <div>
     <div>
-        <div>
-            <div>Update Tenant — @Model.FullName</div>
-            <div>
+        <div data-form-panel>
+            <div data-form-head>Update Tenant — @Model.FullName</div>
+            <div data-form-body>
                 <form asp-action="Edit" method="post" id="editForm">
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="TenantID" />

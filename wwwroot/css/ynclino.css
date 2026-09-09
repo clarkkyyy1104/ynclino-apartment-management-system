@@ -264,14 +264,18 @@ tbody td:last-child form { display: inline-block; margin: 0 .2rem; }
 /* 11. FORM PANELS (create / edit) ───────────────────────────────────────────
    These views are  div > div > (caption div) + (div > form).  The caption
    becomes the navy bar across the top of the panel, as in the design.     */
-main div:has(> div + div > form[method="post"]) {
+/* A form panel is named, not inferred. The previous rules said "a div followed
+   by a div holding a post form", which also described a page header whose
+   actions group happens to contain one — so the Notifications title was given
+   the navy caption meant for Add New Unit. Naming the parts ends that. */
+[data-form-panel] {
     max-width: 720px;
     border: 1px solid var(--line);
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 2px 10px rgba(16,24,40,.08);
 }
-main div:has(+ div > form[method="post"]) {
+[data-form-head] {
     padding: .85rem 1.5rem;
     background: var(--navy);
     color: #fff;
@@ -279,13 +283,13 @@ main div:has(+ div > form[method="post"]) {
     letter-spacing: .02em;
     text-transform: uppercase;
 }
+[data-form-body] { padding: 1.75rem 1.5rem; background: #fff; }
+
 /* "any div that directly contains a post form" was too broad: it also matched
    the notification panel's header, which holds the Mark-all-as-read form, and
    painted it white — white text on white, an invisible bar. A panel header and
    an actions group are never a form panel, so they are excluded by name. */
-main div:has(> form[method="post"]):not([data-panel-head]):not([data-panel-body]):not([data-actions]) {
-    padding: 1.75rem 1.5rem; background: #fff;
-}
+
 
 form[method="post"] > div { margin-bottom: 1rem; }
 form[method="post"] label { display: block; margin-bottom: .3rem; }
@@ -627,3 +631,43 @@ tbody td span[title] { opacity: .45; }
 [data-panel-body] > a { display: block; padding: .7rem 0; color: var(--ink); }
 [data-panel-body] > a + a { border-top: 1px solid var(--line-soft); }
 [data-panel-body] > a:hover { color: var(--ink); text-decoration: none; }
+
+/* ══ 18. THE NOTIFICATIONS LIST ═════════════════════════════════════════════
+   Every row here is a link, so without rules of its own the whole page came
+   out as a wall of orange text with the timestamps adrift on their own lines.
+   A row is a line of record, not a link to be advertised.                  */
+[data-list] { padding: 0; }
+
+[data-note] {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 1rem;
+    padding: .8rem 1.15rem;
+    color: var(--ink);
+}
+[data-note] + [data-note] { border-top: 1px solid var(--line-soft); }
+[data-note]:hover { background: #f7f8f9; color: var(--ink); text-decoration: none; }
+[data-note] > div:first-child { min-width: 0; }
+
+/* which module the line came from, set apart from the sentence itself */
+[data-module] {
+    display: inline-block; margin-right: .5rem; padding: .15rem .5rem;
+    background: var(--field-bg); border: 1px solid var(--field-line); border-radius: 999px;
+    font-size: .78rem; color: var(--ink-soft);
+}
+[data-meta] { flex: 0 0 auto; display: flex; align-items: center; gap: .5rem;
+              font-size: .875rem; color: var(--muted); white-space: nowrap; }
+
+/* an unread line leads; a read one recedes */
+[data-note][data-unread="true"] { background: #fffaf6; }
+[data-note][data-unread="true"] [data-message] { font-weight: 700; }
+[data-new] {
+    padding: .1rem .45rem; border-radius: 999px;
+    background: var(--orange-btn); color: #fff;
+    font-size: .7rem; font-weight: 700; text-transform: uppercase;
+}
+
+/* the unread tally beside the page title */
+[data-count] {
+    display: inline-block; margin-left: .5rem; padding: .05rem .55rem;
+    background: var(--orange-btn); color: #fff;
+    border-radius: 999px; font-size: .95rem; vertical-align: middle;
+}

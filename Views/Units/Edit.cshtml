@@ -5,9 +5,9 @@
 
 <div>
     <div>
-        <div>
-            <div>Update Unit — @Model.UnitNumber</div>
-            <div>
+        <div data-form-panel>
+            <div data-form-head>Update Unit — @Model.UnitNumber</div>
+            <div data-form-body>
                 <form asp-action="Edit" method="post">
                     <input type="hidden" asp-for="UnitID" />
                     <div asp-validation-summary="ModelOnly"></div>

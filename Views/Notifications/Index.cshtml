@@ -5,7 +5,7 @@
 }
 
 <div data-page-head>
-    <div><h3>Notifications @if (unread > 0) { <span>@unread</span> }</h3></div>
+    <div><h3>Notifications @if (unread > 0) { <span data-count>@unread</span> }</h3></div>
     <div data-actions>
         @if (unread > 0)
         {
@@ -19,25 +19,31 @@
 
 @if (!Model.Any())
 {
-    <div><div>You have no notifications.</div></div>
+    <div data-panel><div data-panel-body data-empty>You have no notifications.</div></div>
 }
 else
 {
-    <div>
-        @foreach (var n in Model)
-        {
-            <a asp-action="Open" asp-route-id="@n.NotificationID">
-                <div>
+    <div data-panel>
+        <div data-panel-body data-list>
+            @foreach (var n in Model)
+            {
+                @* an unread row is marked on the row itself, so the whole line can
+                   carry the emphasis rather than just a badge inside it *@
+                @* an explicit true/false, not a null: Razor renders the attribute
+                   with an empty value rather than dropping it, and [data-unread]
+                   would then match a read row too *@
+                <a data-note data-unread="@(n.IsRead ? "false" : "true")"
+                   asp-action="Open" asp-route-id="@n.NotificationID">
                     <div>
-                        <span>@n.Module</span>
-                        @n.Message
+                        <span data-module>@n.Module</span>
+                        <span data-message>@n.Message</span>
                     </div>
-                    <div>
-                        @if (!n.IsRead) { <span>new</span> }
-                        @n.CreatedAt.ToString("MMM dd, h:mm tt")
+                    <div data-meta>
+                        @if (!n.IsRead) { <span data-new>new</span> }
+                        <span>@n.CreatedAt.ToString("MMM dd, h:mm tt")</span>
                     </div>
-                </div>
-            </a>
-        }
+                </a>
+            }
+        </div>
     </div>
 }

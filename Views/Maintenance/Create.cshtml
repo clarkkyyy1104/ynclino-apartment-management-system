@@ -6,9 +6,9 @@
 
 <div>
     <div>
-        <div>
-            <div>New Maintenance Request</div>
-            <div>
+        <div data-form-panel>
+            <div data-form-head>New Maintenance Request</div>
+            <div data-form-body>
                 <form asp-action="Create" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
                     <div asp-validation-summary="All"></div>

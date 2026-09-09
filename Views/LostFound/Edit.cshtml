@@ -5,9 +5,9 @@
 
 <div>
     <div>
-        <div>
-            <div>Update Item Report</div>
-            <div>
+        <div data-form-panel>
+            <div data-form-head>Update Item Report</div>
+            <div data-form-body>
                 <form asp-action="Edit" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="ItemID" />

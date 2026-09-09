@@ -5,9 +5,9 @@
 
 <div>
     <div>
-        <div>
-            <div>Update Bill</div>
-            <div>
+        <div data-form-panel>
+            <div data-form-head>Update Bill</div>
+            <div data-form-body>
                 <form asp-action="Edit" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="BillingID" />

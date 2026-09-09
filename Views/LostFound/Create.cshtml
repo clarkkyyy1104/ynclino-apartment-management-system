@@ -5,9 +5,9 @@
 
 <div>
     <div>
-        <div>
-            <div>Report Lost or Found Item</div>
-            <div>
+        <div data-form-panel>
+            <div data-form-head>Report Lost or Found Item</div>
+            <div data-form-body>
                 <form asp-action="Create" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
                     <div asp-validation-summary="ModelOnly"></div>

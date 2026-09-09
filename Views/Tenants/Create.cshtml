@@ -5,9 +5,9 @@
 
 <div>
     <div>
-        <div>
-            <div>Register New Tenant</div>
-            <div>
+        <div data-form-panel>
+            <div data-form-head>Register New Tenant</div>
+            <div data-form-body>
                 <form asp-action="Create" method="post" id="tenantForm">
                     @Html.AntiForgeryToken()
                     <div asp-validation-summary="ModelOnly"></div>
