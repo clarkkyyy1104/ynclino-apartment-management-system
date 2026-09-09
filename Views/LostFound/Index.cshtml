@@ -8,9 +8,11 @@
 
 @await Component.InvokeAsync("ModuleNotifications", new { module = "LostFound" })
 
-<div>
-    <h3>Lost &amp; Found</h3>
-    <a asp-action="Create">+ Report Item</a>
+<div data-page-head>
+    <div><h3>Lost &amp; Found</h3></div>
+    <div data-actions>
+        <a data-primary asp-action="Create">+ Report Item</a>
+    </div>
 </div>
 
 <form method="get">

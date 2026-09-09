@@ -4,15 +4,17 @@
     int unread = Model.Count(n => !n.IsRead);
 }
 
-<div>
-    <h3>Notifications @if (unread > 0) { <span>@unread</span> }</h3>
-    @if (unread > 0)
-    {
-        <form asp-action="MarkAllRead" method="post">
-            @Html.AntiForgeryToken()
-            <button type="submit">Mark all as read</button>
-        </form>
-    }
+<div data-page-head>
+    <div><h3>Notifications @if (unread > 0) { <span>@unread</span> }</h3></div>
+    <div data-actions>
+        @if (unread > 0)
+        {
+            <form asp-action="MarkAllRead" method="post">
+                @Html.AntiForgeryToken()
+                <button data-primary type="submit">Mark all as read</button>
+            </form>
+        }
+    </div>
 </div>
 
 @if (!Model.Any())

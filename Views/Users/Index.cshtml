@@ -12,19 +12,21 @@
     };
 }
 
-<div>
+<div data-page-head>
     <div>
-        <h4>User Management</h4>
+        <h3>User Management</h3>
         <p>
             Every account that can sign in to the system. Administrators and Maintenance
             Staff are created here; a Tenant account is created together with the tenant's
             record in the <a asp-controller="Tenants" asp-action="Index">Tenants</a> module.
         </p>
     </div>
-    @if (isAdmin)
-    {
-        <a asp-action="Create">Add User Account</a>
-    }
+    <div data-actions>
+        @if (isAdmin)
+        {
+            <a data-primary asp-action="Create">Add User Account</a>
+        }
+    </div>
 </div>
 
 @if (TempData["TempPassword"] != null)

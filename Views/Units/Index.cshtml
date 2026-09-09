@@ -5,11 +5,11 @@
     bool isTenant = User.IsInRole("Tenant");
 }
 
-<div>
-    <h3>Units</h3>
+<div data-page-head>
+    <div><h3>Units</h3></div>
     @if (isStaff)
     {
-        <div>
+        <div data-actions>
             @* @if (ViewBag.HasUnits != true)
             {
                 <form asp-action="GenerateSampleData" method="post"
@@ -26,7 +26,7 @@
                     <button type="submit">Reload Sample Data</button>
                 </form>
             } *@
-            <a asp-action="Create">+ Add Unit</a>
+            <a data-primary asp-action="Create">+ Add Unit</a>
         </div>
     }
     @if (isTenant)

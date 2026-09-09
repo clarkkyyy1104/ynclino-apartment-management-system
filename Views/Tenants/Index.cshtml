@@ -3,9 +3,11 @@
     ViewData["Title"] = "Tenants";
 }
 
-<div>
-    <h3>Tenants</h3>
-    <a asp-action="Create">+ Register Tenant</a>
+<div data-page-head>
+    <div><h3>Tenants</h3></div>
+    <div data-actions>
+        <a data-primary asp-action="Create">+ Register Tenant</a>
+    </div>
 </div>
 
 @if (TempData["TempPassword"] != null)

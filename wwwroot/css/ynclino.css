@@ -194,12 +194,7 @@ main h3, main h4 { font-size: 1.6rem; text-transform: uppercase; letter-spacing:
 main h6 { font-size: 1.05rem; font-weight: 400; text-transform: uppercase; margin: 1.5rem 0 .6rem; }
 main p { margin: .35rem 0 1rem; color: var(--ink-soft); }
 
-/* a heading with an action link beside it */
-main > div:has(> h3) { margin-bottom: 1.25rem; }
-main > div:has(> h3):has(> a),
-main > div:has(> h4):has(> a) {
-    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
-}
+/* page headers are marked up explicitly now — see section 16 */
 
 /* 8. BUTTONS ────────────────────────────────────────────────────────────── */
 button,
@@ -449,3 +444,72 @@ tbody td:last-child > form { display: inline-flex; vertical-align: middle; margi
 
 /* the Forgot Password link sits under the password field, right-aligned */
 body:not(:has(aside)) p[data-forgot] { margin: -.4rem 0 .9rem; text-align: right; font-size: .9rem; }
+
+
+/* ══ 16. PAGE HEADERS AND ROW ACTIONS ═══════════════════════════════════════
+   Every list page used to nest its heading differently — six shapes in all —
+   so a rule written against the structure matched some pages and silently
+   missed others: the same "primary action" was an orange button on Tenants
+   and bare orange text on Units. The markup now says what a thing IS
+   (data-page-head, data-actions, data-primary) instead of the stylesheet
+   guessing from where it sits, so one rule covers every page and a new page
+   inherits the design by using the same three attributes.               */
+
+[data-page-head] {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+[data-page-head] > div:first-child { min-width: 0; }
+[data-page-head] p { margin: .35rem 0 0; }
+
+[data-page-head] [data-actions] {
+    flex: 0 0 auto;
+    display: flex; align-items: center; gap: .5rem;
+}
+[data-page-head] [data-actions] form { margin: 0; }
+
+/* exactly one primary action per page, and it says so */
+[data-primary] {
+    display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+    padding: .55rem 1.15rem;
+    font-family: var(--serif); font-size: 1rem; font-weight: 700;
+    color: #fff; background: var(--orange-btn);
+    border: 1px solid var(--orange-btn); border-radius: 6px;
+    white-space: nowrap; cursor: pointer;
+}
+[data-primary]:hover {
+    background: var(--orange-dark); border-color: var(--orange-dark);
+    color: #fff; text-decoration: none;
+}
+/* anything else in the header is secondary */
+[data-page-head] [data-actions] a:not([data-primary]),
+[data-page-head] [data-actions] button:not([data-primary]) {
+    padding: .5rem .9rem;
+    color: var(--ink); background: #fff;
+    border: 1px solid var(--field-line); border-radius: 6px;
+    font-weight: 600; white-space: nowrap;
+}
+[data-page-head] [data-actions] a:not([data-primary]):hover { background: var(--field-bg); text-decoration: none; }
+
+/* Row actions are links on some pages and buttons on others. They are the same
+   thing to a user, so they get the same quiet treatment either way — the loud
+   colour belongs to the one primary action, not to every row. */
+tbody td a:not([aria-label="View"]),
+tbody td button {
+    display: inline-flex; align-items: center;
+    padding: .3rem .75rem; margin: 0 .1rem;
+    font-family: var(--serif); font-size: .9rem; font-weight: 600;
+    color: var(--ink); background: #fff;
+    border: 1px solid var(--field-line); border-radius: 6px;
+    white-space: nowrap; cursor: pointer;
+}
+tbody td a:not([aria-label="View"]):hover,
+tbody td button:hover { background: var(--field-bg); color: var(--ink); text-decoration: none; }
+/* deleting is the one row action that should look different */
+tbody td a[href*="/Delete"] { color: var(--red); border-color: #e5b6bb; }
+tbody td a[href*="/Delete"]:hover { background: var(--red-bg); color: var(--red); }
+/* a disabled action (e.g. Update on a paid bill) reads as unavailable */
+tbody td span[title] { opacity: .45; }

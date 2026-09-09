@@ -10,15 +10,17 @@
 
 @await Component.InvokeAsync("ModuleNotifications", new { module = "Maintenance" })
 
-<div>
-    <h3>
-        @(archived ? "Maintenance Archive" : isStaff ? "My Assigned Requests" : "Maintenance Requests")
-    </h3>
+<div data-page-head>
     <div>
+        <h3>
+            @(archived ? "Maintenance Archive" : isStaff ? "My Assigned Requests" : "Maintenance Requests")
+        </h3>
+    </div>
+    <div data-actions>
         @* staff carry out work; they do not raise requests *@
         @if (!archived && !isStaff)
         {
-            <a asp-action="Create">+ New Request</a>
+            <a data-primary asp-action="Create">+ New Request</a>
         }
         <div>
             <a asp-action="Index">Active</a>

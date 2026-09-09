@@ -395,12 +395,32 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return (max + 1).ToString();
         }
 
+        // The whole system treats the deposit and the advance as ONE MONTH each:
+        // the move-in bill charges Deposit + AdvancePayment, and "Deposit on File"
+        // is shown on every bill. A deposit larger than a month's rent is therefore
+        // almost always a typo (a 13,000 deposit typed on a 3,000 unit), and it
+        // quietly corrupts every bill that unit ever produces. Less than a month is
+        // allowed — an admin may discount it — but more is refused.
+        private void ValidateMoveInAmounts(UnitViewModel vm)
+        {
+            if (vm.RentPrice <= 0) return;   // the Required/Range rules already caught this
+
+            if (vm.Deposit > vm.RentPrice)
+                ModelState.AddModelError(nameof(vm.Deposit),
+                    $"The deposit cannot be more than one month's rent (₱{vm.RentPrice:N0}).");
+
+            if (vm.AdvancePayment > vm.RentPrice)
+                ModelState.AddModelError(nameof(vm.AdvancePayment),
+                    $"The advance cannot be more than one month's rent (₱{vm.RentPrice:N0}).");
+        }
+
         // POST: Units/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(UnitViewModel vm)
         {
+            ValidateMoveInAmounts(vm);
             if (!ModelState.IsValid) return View(vm);
 
             bool duplicate = await _context.tblUnits.AnyAsync(u => u.UnitNumber == vm.UnitNumber);
@@ -458,6 +478,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         public async Task<IActionResult> Edit(int id, UnitViewModel vm)
         {
             if (id != vm.UnitID) return NotFound();
+            ValidateMoveInAmounts(vm);
             if (!ModelState.IsValid) return View(vm);
 
             bool duplicate = await _context.tblUnits.AnyAsync(u => u.UnitNumber == vm.UnitNumber && u.UnitID != id);

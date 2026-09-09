@@ -8,12 +8,14 @@
 
 @await Component.InvokeAsync("ModuleNotifications", new { module = "Billing" })
 
-<div>
-    <h3>Billing &amp; Payment</h3>
-    @if (isAdmin)
-    {
-        <a asp-action="Create">+ Issue Bill</a>
-    }
+<div data-page-head>
+    <div><h3>Billing &amp; Payment</h3></div>
+    <div data-actions>
+        @if (isAdmin)
+        {
+            <a data-primary asp-action="Create">+ Issue Bill</a>
+        }
+    </div>
 </div>
 
 @{
