@@ -8,6 +8,19 @@
     <a asp-action="Create">+ Register Tenant</a>
 </div>
 
+@if (TempData["TempPassword"] != null)
+{
+    @* shown once, on this page load only — it is not stored anywhere in plain text *@
+    <div data-temp-password>
+        <strong>First password for @TempData["TempPasswordFor"]:</strong>
+        <code>@TempData["TempPassword"]</code>
+        <p>
+            Write this down or read it out now — it is not shown again. They must set
+            their own password the first time they sign in.
+        </p>
+    </div>
+}
+
 <form method="get">
     <div>
         <input type="text" name="searchTerm" value="@ViewBag.SearchTerm"

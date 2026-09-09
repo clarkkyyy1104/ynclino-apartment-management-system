@@ -36,6 +36,14 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // status until an admin clears it by hand.
         private Task SyncUnitStatusAsync(int unitId) => UnitStatusHelper.RefreshAsync(_context, unitId);
 
+        // The first password is shown to the admin once, on the next page only. It is
+        // never stored in plain text — only its PBKDF2 hash reaches the database.
+        private void StashFirstPassword(string username, string password)
+        {
+            TempData["TempPassword"] = password;
+            TempData["TempPasswordFor"] = username;
+        }
+
         // school-style login username: [2-digit year]-[2-digit month] + the uppercase
         // initials of the first and last name, e.g. Ana Cruz in July 2026 -> "26-07AC"
         private static string GenerateUsername(string firstName, string lastName)
@@ -107,16 +115,16 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (!string.IsNullOrWhiteSpace(vm.FirstName) && !string.IsNullOrWhiteSpace(vm.LastName))
                 vm.Username = GenerateUsername(vm.FirstName, vm.LastName);
 
-            // fall back to a generated password from contact number + initials
-            if (string.IsNullOrWhiteSpace(vm.Password)
-                && !string.IsNullOrWhiteSpace(vm.ContactNumber)
-                && !string.IsNullOrWhiteSpace(vm.FirstName)
-                && !string.IsNullOrWhiteSpace(vm.LastName))
+            // If the admin does not type one, the SYSTEM generates the first password.
+            // It used to be built from the contact number and the tenant's initials,
+            // which meant anyone who knew a neighbour's phone number could work out
+            // their password — and the username is derivable from their name and the
+            // month they moved in. It is now random, and shown to the admin once.
+            bool passwordWasGenerated = false;
+            if (string.IsNullOrWhiteSpace(vm.Password))
             {
-                vm.Password = vm.ContactNumber.Trim()
-                    + "@"
-                    + char.ToUpper(vm.FirstName.Trim()[0])
-                    + char.ToLower(vm.LastName.Trim()[0]);
+                vm.Password = PasswordHelper.GenerateTemporary();
+                passwordWasGenerated = true;
                 ModelState.Remove("Password");
                 ModelState.Remove("ConfirmPassword");
             }
@@ -126,8 +134,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 ModelState.AddModelError("Username", "Username could not be generated. Ensure First Name and Last Name are filled.");
             else if (await _context.tblUsers.AnyAsync(u => u.Username.ToLower() == vm.Username.ToLower()))
                 ModelState.AddModelError(string.Empty, $"Username '{vm.Username}' is already taken (same month and initials). Adjust the name.");
-            if (string.IsNullOrWhiteSpace(vm.Password))
-                ModelState.AddModelError("Password", "Password is required. Enter a password or fill in Contact Number and Name.");
 
             // a unit is not assigned at registration — the tenant applies for one later
             // flag an obvious duplicate registration
@@ -196,10 +202,12 @@ namespace YnclinoApartmentManagementSystem.Controllers
                     await _context.SaveChangesAsync();
                 }
                 TempData["Success"] = $"Tenant {tenant.FullName} has been registered and assigned to unit {unit?.UnitNumber}.";
+                if (passwordWasGenerated) StashFirstPassword(user.Username, vm.Password!);
             }
             else
             {
                 TempData["Success"] = $"Tenant {tenant.FullName} has been registered with account '{user.Username}'.";
+                if (passwordWasGenerated) StashFirstPassword(user.Username, vm.Password!);
             }
             return RedirectToAction(nameof(Index));
         }
@@ -312,7 +320,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 {
                     // username deliberately NOT touched — it is fixed at creation
                     if (isMainAdmin && !string.IsNullOrWhiteSpace(vm.Password))
+                    {
                         linkedUser.Password = PasswordHelper.Hash(vm.Password);
+                        // otherwise the admin would know that password for good
+                        linkedUser.MustChangePassword = true;
+                    }
 
                     // login follows the tenant's active state
                     linkedUser.IsActive = becomingActive;
@@ -323,7 +335,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 // tenant has no account yet — create one, generating a password if none was given
                 string password = !string.IsNullOrWhiteSpace(vm.Password)
                     ? vm.Password!
-                    : $"{vm.ContactNumber}@{char.ToUpper(vm.FirstName[0])}{char.ToLower(vm.LastName[0])}";
+                    : PasswordHelper.GenerateTemporary();   // never derived from the tenant's own details
 
                 var newUser = new tblUser
                 {
@@ -332,9 +344,12 @@ namespace YnclinoApartmentManagementSystem.Controllers
                     Role = "Tenant",
                     IsActive = becomingActive,
                     IsMainAdmin = false,
+                    // a password the admin knows must be replaced by the owner
+                    MustChangePassword = true,
                     DateCreated = DateTime.Now
                 };
                 tenant.User = newUser;
+                if (string.IsNullOrWhiteSpace(vm.Password)) StashFirstPassword(newUser.Username, password);
             }
 
             tenant.FirstName = vm.FirstName;

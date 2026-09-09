@@ -48,15 +48,29 @@ namespace YnclinoApartmentManagementSystem.Controllers
             }
 
             var username = vm.Username.Trim();
+
+            // stop an online guessing run before it starts
+            var wait = LoginThrottle.RetryAfter(username);
+            if (wait != null)
+            {
+                ModelState.AddModelError(string.Empty,
+                    $"Too many failed sign-in attempts. Try again in {Math.Ceiling(wait.Value.TotalMinutes)} minute(s).");
+                ViewBag.ReturnUrl = returnUrl;
+                return View(vm);
+            }
+
             var user = await _context.tblUsers
                 .FirstOrDefaultAsync(u => u.Username.ToLower() == username.ToLower());
 
             if (user == null || !PasswordHelper.Verify(vm.Password, user.Password))
             {
+                LoginThrottle.RecordFailure(username);
                 ModelState.AddModelError(string.Empty, "Invalid username or password.");
                 ViewBag.ReturnUrl = returnUrl;
                 return View(vm);
             }
+
+            LoginThrottle.RecordSuccess(username);
 
             // correct password on a deactivated account gets a clearer message
             if (!user.IsActive)
