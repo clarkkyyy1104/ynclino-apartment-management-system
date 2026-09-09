@@ -279,7 +279,13 @@ main div:has(+ div > form[method="post"]) {
     letter-spacing: .02em;
     text-transform: uppercase;
 }
-main div:has(> form[method="post"]) { padding: 1.75rem 1.5rem; background: #fff; }
+/* "any div that directly contains a post form" was too broad: it also matched
+   the notification panel's header, which holds the Mark-all-as-read form, and
+   painted it white — white text on white, an invisible bar. A panel header and
+   an actions group are never a form panel, so they are excluded by name. */
+main div:has(> form[method="post"]):not([data-panel-head]):not([data-panel-body]):not([data-actions]) {
+    padding: 1.75rem 1.5rem; background: #fff;
+}
 
 form[method="post"] > div { margin-bottom: 1rem; }
 form[method="post"] label { display: block; margin-bottom: .3rem; }
@@ -611,3 +617,13 @@ tbody td span[title] { opacity: .45; }
 @media (max-width: 900px) { [data-chart-row] { grid-template-columns: 1fr; } }
 [data-chart-row] [data-panel-body] { display: flex; flex-direction: column; align-items: center; }
 [data-chart-row] svg { max-height: 200px; }
+
+/* an empty panel says so quietly and centred — no oversized icon */
+[data-empty] { text-align: center; color: var(--muted); padding: 2rem 1.25rem; }
+[data-empty] p { margin: 0 0 .35rem; }
+[data-empty] p:last-child { margin: 0; font-size: .9rem; }
+
+/* the unread list is a stack of rows, not a paragraph of links */
+[data-panel-body] > a { display: block; padding: .7rem 0; color: var(--ink); }
+[data-panel-body] > a + a { border-top: 1px solid var(--line-soft); }
+[data-panel-body] > a:hover { color: var(--ink); text-decoration: none; }
