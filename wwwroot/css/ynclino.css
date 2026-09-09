@@ -671,3 +671,84 @@ tbody td span[title] { opacity: .45; }
     background: var(--orange-btn); color: #fff;
     border-radius: 999px; font-size: .95rem; vertical-align: middle;
 }
+
+/* a caption that carries a heading rather than bare text still reads as one line */
+[data-form-head] h5, [data-form-head] h6 { margin: 0; font-size: inherit; font-weight: inherit; }
+
+/* a checkbox belongs beside its label, not stacked above it */
+[data-form-body] div:has(> input[type="checkbox"]) { display: flex; align-items: center; gap: .5rem; }
+[data-form-body] input[type="checkbox"] { width: auto; margin: 0; accent-color: var(--orange-btn); }
+[data-form-body] div:has(> input[type="checkbox"]) label { margin: 0; }
+
+/* the show/hide control sits inside the field, not as a slab under it */
+[data-form-body] div:has(> input + button) { display: flex; gap: .4rem; }
+[data-form-body] div:has(> input + button) > button {
+    flex: 0 0 auto;
+    padding: .5rem .7rem;
+    color: var(--ink-soft); background: #fff;
+    border: 1px solid var(--field-line); border-radius: 6px;
+}
+[data-form-body] div:has(> input + button) > button:hover { background: var(--field-bg); color: var(--ink); }
+
+/* the password rules list */
+#pwRules { margin: .5rem 0 1rem; padding: .6rem .9rem .6rem 2rem;
+           background: #f7f8f9; border: 1px solid var(--line-soft); border-radius: 6px;
+           font-size: .9rem; color: var(--ink-soft); }
+#pwRules li { padding: .1rem 0; }
+
+/* The row of actions at the foot of a detail page is a sibling of the body,
+   not a child of it, so it needs naming here too — otherwise Update, Archive
+   and Back to List run together as one line of orange text. */
+[data-panel] > div:last-child:not([data-panel-body]):not([data-panel-head]),
+[data-form-panel] > div:last-child:not([data-form-body]):not([data-form-head]) {
+    display: flex; align-items: center; flex-wrap: wrap; gap: .6rem;
+    padding: 1rem 1.25rem;
+    border-top: 1px solid var(--line-soft);
+    background: #fff;
+}
+[data-panel] > div:last-child:not([data-panel-body]):not([data-panel-head]) > a {
+    padding: .45rem 1rem;
+    color: var(--ink); background: #fff;
+    border: 1px solid var(--field-line); border-radius: 6px; font-weight: 600;
+}
+[data-panel] > div:last-child:not([data-panel-body]):not([data-panel-head]) > a:hover {
+    background: var(--field-bg); text-decoration: none;
+}
+/* the destructive one is set apart */
+[data-panel] > div:last-child > a[href*="/DeletePermanent"],
+[data-panel] > div:last-child > a[href*="/Delete"] { color: var(--red); border-color: #e5b6bb; }
+
+/* the unread tally beside a sidebar link — a count, not a word in the label */
+[data-navcount] {
+    margin-left: auto;
+    min-width: 1.35rem;
+    padding: .05rem .4rem;
+    background: var(--orange-btn); color: #fff;
+    border-radius: 999px;
+    font-size: .78rem; font-weight: 700; text-align: center;
+}
+/* a group toggle already sends its caret to the right, so the count stops short */
+aside nav a[data-collapse] [data-navcount] { margin-left: auto; margin-right: .5rem; }
+
+/* the unread banner above a module page is a panel, and it is the one place
+   the header is a sentence rather than a title */
+[data-module-alert] { margin-bottom: 1.25rem; }
+[data-module-alert] [data-panel-head] { font-weight: 400; font-size: .95rem; }
+
+/* a file picker should sit on the same footing as every other field */
+input[type="file"] {
+    width: 100%;
+    padding: .45rem .6rem;
+    background: var(--field-bg);
+    border: 1px solid var(--field-line);
+    border-radius: 6px;
+    font-family: var(--serif);
+}
+input[type="file"]::file-selector-button {
+    margin-right: .75rem;
+    padding: .35rem .9rem;
+    color: var(--ink); background: #fff;
+    border: 1px solid var(--field-line); border-radius: 6px;
+    font-family: var(--serif); font-weight: 600; cursor: pointer;
+}
+input[type="file"]::file-selector-button:hover { background: var(--field-bg); }

@@ -24,9 +24,9 @@
     return;
 }
 
-<div>
+<div data-stats>
     <div>
-        <div>
+        <div data-stat>
             <div>
                 <div>Total Paid</div>
                 <div>₱@Model.IncomeAllTime.ToString("N0")</div>
@@ -34,7 +34,7 @@
         </div>
     </div>
     <div>
-        <div>
+        <div data-stat>
             <div>
                 <div>Outstanding Balance</div>
                 <div>₱@Model.OutstandingTotal.ToString("N0")</div>
@@ -42,7 +42,7 @@
         </div>
     </div>
     <div>
-        <div>
+        <div data-stat>
             <div>
                 <div>Advance Payment</div>
                 <div>₱@tenant.AdvanceCredit.ToString("N0")</div>
@@ -50,7 +50,7 @@
         </div>
     </div>
     <div>
-        <div>
+        <div data-stat>
             <div>
                 <div>Open Requests</div>
                 <div>@(Model.PendingMaintenance + Model.PendingTransfers)</div>

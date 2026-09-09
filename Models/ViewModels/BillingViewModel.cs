@@ -24,7 +24,12 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         [Required(ErrorMessage = "Due Date is required.")]
         [Display(Name = "Due Date")]
         [DataType(DataType.Date)]
-        public DateTime DueDate { get; set; } = DateTime.Today.AddDays(30);
+        // Rent for a month is due at the end of that month, so the starting value
+        // matches the month above it rather than sitting 30 days from today — a
+        // September bill was defaulting to 10 October.
+        public DateTime DueDate { get; set; } =
+            new DateTime(DateTime.Today.Year, DateTime.Today.Month,
+                         DateTime.DaysInMonth(DateTime.Today.Year, DateTime.Today.Month));
 
         [Range(0, double.MaxValue)]
         [Display(Name = "Amount Paid")]

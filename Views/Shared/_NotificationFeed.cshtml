@@ -48,12 +48,14 @@
         <div data-panel-body>
             @foreach (var n in unread)
             {
-                <a href="/Notifications/Open/@n.NotificationID">
+                @* the same row shape as the Notifications page, so a feed entry and
+                   a list entry read identically wherever the reader meets them *@
+                <a data-note data-unread="true" href="/Notifications/Open/@n.NotificationID">
                     <div>
-                        <div>
-                            <span>@NoteLabel(n.Module)</span>
-                            <span>@n.Message</span>
-                        </div>
+                        <span data-module>@NoteLabel(n.Module)</span>
+                        <span data-message>@n.Message</span>
+                    </div>
+                    <div data-meta>
                         <span>@n.CreatedAt.ToString("MMM dd, h:mm tt")</span>
                     </div>
                 </a>

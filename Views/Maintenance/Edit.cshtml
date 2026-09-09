@@ -5,11 +5,11 @@
 
 <div>
     <div>
-        <div>
-            <div>
+        <div data-form-panel>
+            <div data-form-head>
                 Update Request #@Model.RequestID — @Model.TenantName
             </div>
-            <div>
+            <div data-form-body>
                 <form asp-action="Edit" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="RequestID" />

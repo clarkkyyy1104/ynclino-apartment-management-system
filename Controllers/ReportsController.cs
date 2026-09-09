@@ -77,12 +77,18 @@ namespace YnclinoApartmentManagementSystem.Controllers
             for (int i = 5; i >= 0; i--)
             {
                 var monthStart = firstOfMonth.AddMonths(-i);
-                var monthEnd = monthStart.AddMonths(1);
+                var billIds = bills.Where(b => b.BillingPeriod == monthStart)
+                                   .Select(b => b.BillingID).ToHashSet();
                 vm.MonthlyIncome.Add(new MonthlyIncomeRow
                 {
                     Month = monthStart,
                     Billed = bills.Where(b => b.BillingPeriod == monthStart).Sum(b => b.AmountDue),
-                    Collected = payments.Where(p => p.DatePaid >= monthStart && p.DatePaid < monthEnd).Sum(p => p.Amount)
+                    // Collected must be measured on the SAME axis as Billed — money
+                    // received FOR this month's bills, not money that happened to
+                    // arrive during it. Paying a month early put the payment in one
+                    // month and the bill it settled in the next, so the row read
+                    // 12,000 collected against 6,000 billed and a negative balance.
+                    Collected = payments.Where(p => billIds.Contains(p.BillingID)).Sum(p => p.Amount)
                 });
             }
 
@@ -189,12 +195,18 @@ namespace YnclinoApartmentManagementSystem.Controllers
             for (int i = 5; i >= 0; i--)
             {
                 var monthStart = firstOfMonth.AddMonths(-i);
-                var monthEnd = monthStart.AddMonths(1);
+                var billIds = bills.Where(b => b.BillingPeriod == monthStart)
+                                   .Select(b => b.BillingID).ToHashSet();
                 vm.MonthlyIncome.Add(new MonthlyIncomeRow
                 {
                     Month = monthStart,
                     Billed = bills.Where(b => b.BillingPeriod == monthStart).Sum(b => b.AmountDue),
-                    Collected = payments.Where(p => p.DatePaid >= monthStart && p.DatePaid < monthEnd).Sum(p => p.Amount)
+                    // Collected must be measured on the SAME axis as Billed — money
+                    // received FOR this month's bills, not money that happened to
+                    // arrive during it. Paying a month early put the payment in one
+                    // month and the bill it settled in the next, so the row read
+                    // 12,000 collected against 6,000 billed and a negative balance.
+                    Collected = payments.Where(p => billIds.Contains(p.BillingID)).Sum(p => p.Amount)
                 });
             }
 
