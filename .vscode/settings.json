@@ -1,5 +1,9 @@
 {
   // Point the C# extension straight at the solution so it loads on open
   // instead of asking which project to use.
-  "dotnet.defaultSolution": "ynclino-apartment-management-system.sln"
+  "dotnet.defaultSolution": "ynclino-apartment-management-system.sln",
+  "editor.inlineSuggest.edits.renderSideBySide": "never",
+  "editor.inlineSuggest.enabled": false,
+  "editor.suggest.selectionMode": "never",
+  "editor.suggestOnTriggerCharacters": false
 }
