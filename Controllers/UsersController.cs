@@ -130,6 +130,42 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // POST: Users/ResetPassword/5
+        // The administrator's half of "Forgot Password". There is no token and no
+        // link: a random temporary password is generated here, only its hash is
+        // stored, and it is shown to the admin once so they can hand it over in
+        // person. MustChangePassword then forces the owner to replace it before
+        // they can reach anything else, so the admin's knowledge of it dies at the
+        // owner's next sign-in.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(int id)
+        {
+            var user = await _context.tblUsers.FindAsync(id);
+            if (user == null) return NotFound();
+
+            // an administrator's password is not resettable from this screen: the
+            // forced-change flag is cleared for admins on every startup, so the
+            // temporary password would never expire. Admin recovery is a separate,
+            // deliberate, out-of-band job.
+            if (user.Role == "Admin")
+            {
+                TempData["Error"] = "Administrator passwords cannot be reset here.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            string temporary = PasswordHelper.GenerateTemporary();
+            user.Password = PasswordHelper.Hash(temporary);
+            user.MustChangePassword = true;
+            await _context.SaveChangesAsync();
+
+            // shown once, on the next page only; the plain text is never stored
+            TempData["TempPassword"] = temporary;
+            TempData["TempPasswordFor"] = user.Username;
+            TempData["Success"] = $"A temporary password was issued for '{user.Username}'.";
+            return RedirectToAction(nameof(Index));
+        }
+
         // POST: Users/ToggleActive/5 — switch an account on or off.
         //
         // For a TENANT the two states move together: the login is switched and the

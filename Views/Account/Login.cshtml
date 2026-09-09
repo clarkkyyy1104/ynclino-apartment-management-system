@@ -45,22 +45,12 @@
                     </div>
 
                     <button type="submit">Sign In</button>
+
+                    @* no self-service reset exists: the administrator issues the
+                       account and resets it in person. The link explains how. *@
+                    <p><a asp-action="ForgotPassword">Forgot Password?</a></p>
                 </form>
 
-                <hr />
-
-                @* <div>
-                    <form asp-action="QuickLogin" method="post">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="role" value="Admin" />
-                        <button type="submit">Login as Admin</button>
-                    </form>
-                    <form asp-action="QuickLogin" method="post">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="role" value="Tenant" />
-                        <button type="submit">Login as Tenant</button>
-                    </form>
-                </div> *@
             </div>
         </div>
     </div>

@@ -20,6 +20,13 @@ namespace YnclinoApartmentManagementSystem.Controllers
             _context = context;
         }
 
+        // There is no self-service reset. This page carries no form and no input,
+        // touches no table and returns the same bytes to everyone, so it cannot be
+        // used to discover which usernames exist. It only explains the real
+        // procedure: the administrator resets the password in person.
+        [HttpGet]
+        public IActionResult ForgotPassword() => View();
+
         [HttpGet]
         public IActionResult Login(string? returnUrl)
         {
@@ -75,42 +82,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
         // Demo/presentation convenience: sign in as a sample admin or tenant with one
         // click (no password), so the system can be shown/tested without typing logins.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> QuickLogin(string role)
-        {
-            tblUser? user = null;
-            if (role == "Admin")
-            {
-                user = await _context.tblUsers
-                    .Where(u => u.Role == "Admin" && u.IsActive)
-                    .OrderByDescending(u => u.IsMainAdmin)
-                    .FirstOrDefaultAsync();
-            }
-            else if (role == "Tenant")
-            {
-                // prefer a tenant that already has a unit, so the demo shows real data
-                var tenant = await _context.tblTenants
-                    .Include(t => t.User)
-                    .Where(t => t.User!.IsActive && t.User.Role == "Tenant" && t.Status == "Active")
-                    .OrderByDescending(t => t.UnitID != null)
-                    .ThenBy(t => t.TenantID)
-                    .FirstOrDefaultAsync();
-                user = tenant?.User;
-            }
-
-            if (user == null)
-            {
-                TempData["Error"] = role == "Tenant"
-                    ? "No sample tenant found. Ask the admin to load sample data first."
-                    : "No administrator account found.";
-                return RedirectToAction(nameof(Login));
-            }
-
-            await SignInUserAsync(user);
-            return RedirectToAction("Index", "Home");
-        }
-
         private async Task SignInUserAsync(tblUser user)
         {
             var claims = new List<Claim>

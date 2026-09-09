@@ -27,6 +27,19 @@
     }
 </div>
 
+@if (TempData["TempPassword"] != null)
+{
+    @* shown once, on this page load only — it is not stored anywhere in plain text *@
+    <div data-temp-password>
+        <strong>Temporary password for @TempData["TempPasswordFor"]:</strong>
+        <code>@TempData["TempPassword"]</code>
+        <p>
+            Write this down or read it out now — it is not shown again. They must set
+            their own password the next time they sign in.
+        </p>
+    </div>
+}
+
 <div>
     <table>
         <thead>
@@ -89,9 +102,22 @@
                                     @(user.IsActive ? "Deactivate" : "Reactivate")
                                 </button>
                             </form>
+
+                            @* the administrator's half of Forgot Password *@
+                            <form asp-action="ResetPassword" asp-route-id="@user.UserID" method="post"
+                                  onsubmit="return confirm('Issue a new temporary password for @user.Username? Their current password stops working immediately.');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit">Reset Password</button>
+                            </form>
                         }
                         else if (isAdmin && !user.IsMainAdmin && user.Role != "Tenant")
                         {
+                            @* the administrator's half of Forgot Password *@
+                            <form asp-action="ResetPassword" asp-route-id="@user.UserID" method="post"
+                                  onsubmit="return confirm('Issue a new temporary password for @user.Username? Their current password stops working immediately.');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit">Reset Password</button>
+                            </form>
                             <a asp-action="Delete" asp-route-id="@user.UserID">Delete</a>
                         }
                         else
