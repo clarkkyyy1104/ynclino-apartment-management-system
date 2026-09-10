@@ -91,4 +91,27 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
 
         public IEnumerable<SelectListItem> AvailableTenants { get; set; } = new List<SelectListItem>();
     }
+
+    // ── One tenant's billing record, a line per BILL ─────────────────────────
+    // This page used to be built from the payments table, so a bill nobody had
+    // paid produced no line at all: a tenant with seven bills and ₱9,000 owing
+    // showed six rows and ₱3,000, and the report and the record disagreed. The
+    // record is the bills now — the unpaid ones are exactly the rows that
+    // matter — and the payments hang off the bill they settled.
+    public class TenantLedgerRow
+    {
+        public int BillingID { get; set; }
+        public DateTime BillingPeriod { get; set; }
+        public DateTime DueDate { get; set; }
+        public decimal AmountDue { get; set; }
+        public decimal AmountPaid { get; set; }
+        public decimal Balance => AmountDue - AmountPaid;
+        public string Status { get; set; } = string.Empty;
+        public bool IssuedFromAdvance { get; set; }
+
+        public List<tblPayment> Payments { get; set; } = new List<tblPayment>();
+
+        public DateTime? FirstPaymentDate => Payments.Count == 0
+            ? null : Payments.Min(p => p.DatePaid);
+    }
 }

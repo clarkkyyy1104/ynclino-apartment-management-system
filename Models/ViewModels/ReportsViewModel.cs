@@ -31,7 +31,12 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
 
         // ── Tables ──
         public List<MonthlyIncomeRow> MonthlyIncome { get; set; } = new List<MonthlyIncomeRow>();
-        public List<TenantBalanceRow> Outstanding { get; set; } = new List<TenantBalanceRow>();
+
+        // every tenant and where their account stands
+        public List<TenantBalanceRow> TenantAccounts { get; set; } = new List<TenantBalanceRow>();
+
+        // just the ones who owe, kept for the headline figures
+        public List<TenantBalanceRow> Outstanding => TenantAccounts.Where(x => x.Balance > 0).ToList();
                 public List<MaintenanceCountRow> MaintenanceByStatus { get; set; } = new List<MaintenanceCountRow>();
         public List<MaintenanceCategoryRow> MaintenanceByCategory { get; set; } = new List<MaintenanceCategoryRow>();
         public List<TenantHistoryRow> TenantHistory { get; set; } = new List<TenantHistoryRow>();
@@ -57,6 +62,11 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         public decimal TotalBilled { get; set; }
         public decimal TotalPaid { get; set; }
         public decimal Balance { get; set; }
+
+        // shown so the row can be checked rather than taken on trust:
+        // Billed − Paid must equal Balance, on every line
+        public decimal AdvanceCredit { get; set; }
+        public DateTime? LastPaymentDate { get; set; }
         public int MaintenanceRequests { get; set; }
         public int TransferRequests { get; set; }
     }
@@ -69,15 +79,29 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         public decimal Uncollected => Billed - Collected;
     }
 
+    // One tenant's account, as the standing-balance report shows it. Every
+    // tenant gets a row, including the ones who owe nothing and the ones who
+    // have never been billed — a report that only lists debtors cannot be used
+    // to check that the tenants who are square really are square.
     public class TenantBalanceRow
     {
         public int TenantID { get; set; }
         public string TenantName { get; set; } = string.Empty;
         public string? UnitNumber { get; set; }
+        public string Status { get; set; } = string.Empty;
+
+        public int BillsIssued { get; set; }
         public decimal Billed { get; set; }
         public decimal Paid { get; set; }
         public decimal Balance { get; set; }
         public int OverdueBills { get; set; }
+
+        // money the tenant has handed over that no bill has claimed yet
+        public decimal AdvanceCredit { get; set; }
+
+        // when they last paid anything, and how much
+        public DateTime? LastPaymentDate { get; set; }
+        public decimal LastPaymentAmount { get; set; }
     }
 
     public class MaintenanceCountRow

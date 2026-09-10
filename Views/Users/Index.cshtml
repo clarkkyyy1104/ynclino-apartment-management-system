@@ -114,6 +114,20 @@
                         }
                         else if (isAdmin && !user.IsMainAdmin && user.Role != "Tenant")
                         {
+                            @* A staff account is switched off, never deleted. The repairs
+                               they logged, the notes they wrote and the requests they were
+                               assigned stay attached to their name; deleting the account
+                               would leave that work with nobody's name on it. *@
+                            <form asp-action="ToggleActive" asp-route-id="@user.UserID" method="post"
+                                  onsubmit="return confirm('@(user.IsActive
+                                      ? user.DisplayName + " will no longer be able to sign in. The work already recorded under their name is kept. Continue?"
+                                      : "Allow " + user.DisplayName + " to sign in again?")');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit">
+                                    @(user.IsActive ? "Deactivate" : "Reactivate")
+                                </button>
+                            </form>
+
                             @* the administrator's half of Forgot Password *@
                             <form asp-action="ResetPassword" asp-route-id="@user.UserID" method="post"
                                   onsubmit="return confirm('Issue a new temporary password for @user.Username? Their current password stops working immediately.');">

@@ -1,18 +1,23 @@
-@model IEnumerable<YnclinoApartmentManagementSystem.Models.tblPayment>
+@model List<YnclinoApartmentManagementSystem.Models.ViewModels.TenantLedgerRow>
 @{
     var tenant = ViewBag.Tenant as YnclinoApartmentManagementSystem.Models.tblTenant;
-    ViewData["Title"] = "Payment History";
+    ViewData["Title"] = "Billing Record";
     bool isAdmin = User.IsInRole("Admin");
+
+    var totalBilled  = Model.Sum(r => r.AmountDue);
+    var totalPaid    = Model.Sum(r => r.AmountPaid);
+    var totalBalance = Model.Sum(r => r.Balance);
+    var unpaid       = Model.Count(r => r.Balance > 0);
 }
 
-<div>
+<div data-page-head>
     <div>
-        <h3>@(tenant?.FullName ?? "Payment History")</h3>
+        <h3>@(tenant?.FullName ?? "Billing Record")</h3>
         <div>
-            Unit @(tenant?.Unit?.UnitNumber ?? "—") · Payment History
+            Unit @(tenant?.Unit?.UnitNumber ?? "—") · every bill issued to this tenant
         </div>
     </div>
-    <div>
+    <div data-actions>
         @if (isAdmin)
         {
             <a asp-action="History">← All Tenants</a>
@@ -20,43 +25,118 @@
     </div>
 </div>
 
-<div data-table-wrap>
-    <table>
-        <thead>
-            <tr>
-                <th>For the Month</th>
-                <th>Date Paid</th>
-                <th>Amount Paid</th>
-                <th>Balance</th>
-                <th>Bill Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var p in Model)
-            {
-                var bill = p.Billing;
-                <tr>
-                    <td>@(bill != null ? bill.BillingPeriod.ToString("MMMM yyyy") : "—")</td>
-                    <td>@p.DatePaid.ToString("MMM dd, yyyy")</td>
-                    <td>₱@p.Amount.ToString("N0")</td>
-                    @{
-                        var balances = ViewBag.BalanceAfter as Dictionary<int, decimal>;
-                        decimal bal = (balances != null && balances.ContainsKey(p.PaymentID))
-                            ? balances[p.PaymentID] : 0m;
+@* These three figures are the same three the Reports page shows for this
+   tenant, added up from the same bills, so the two can be checked against
+   each other line by line. *@
+<div data-stats>
+    <div>
+        <div data-stat>
+            <div>
+                <div>Total Billed</div>
+                <div>₱@totalBilled.ToString("N0")</div>
+                <div>@Model.Count bill(s) issued</div>
+            </div>
+        </div>
+    </div>
+    <div>
+        <div data-stat>
+            <div>
+                <div>Total Paid</div>
+                <div>₱@totalPaid.ToString("N0")</div>
+                <div>across @Model.Sum(r => r.Payments.Count) payment(s)</div>
+            </div>
+        </div>
+    </div>
+    <div>
+        <div data-stat>
+            <div>
+                <div>Standing Balance</div>
+                <div>₱@totalBalance.ToString("N0")</div>
+                <div>@unpaid bill(s) not fully paid</div>
+            </div>
+        </div>
+    </div>
+    <div>
+        <div data-stat>
+            <div>
+                <div>Advance Payment</div>
+                <div>₱@((tenant?.AdvanceCredit ?? 0m).ToString("N0"))</div>
+                <div>held against the next bill</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div data-panel>
+    <div data-panel-head><span>Bill by Bill</span></div>
+    <div data-panel-body>
+        <div data-table-wrap>
+            <table>
+                <thead>
+                    <tr>
+                        <th>For the Month</th>
+                        <th>Due Date</th>
+                        <th>Amount Due</th>
+                        <th>Paid</th>
+                        <th>Balance</th>
+                        <th>Date Paid</th>
+                        <th>Method</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model)
+                    {
+                        <tr>
+                            <td>
+                                @r.BillingPeriod.ToString("MMMM yyyy")
+                                @if (r.IssuedFromAdvance)
+                                {
+                                    <div>issued from advance payment</div>
+                                }
+                            </td>
+                            <td>@r.DueDate.ToString("MMM dd, yyyy")</td>
+                            <td>₱@r.AmountDue.ToString("N0")</td>
+                            <td>₱@r.AmountPaid.ToString("N0")</td>
+                            <td>@(r.Balance > 0 ? "₱" + r.Balance.ToString("N0") : "Settled")</td>
+                            <td>
+                                @* a bill that was never paid says so, rather than
+                                   dropping off the record altogether *@
+                                @if (r.Payments.Count == 0)
+                                {
+                                    <text>Not paid</text>
+                                }
+                                else
+                                {
+                                    @string.Join(", ", r.Payments.Select(p => p.DatePaid.ToString("MMM dd, yyyy")))
+                                }
+                            </td>
+                            <td>
+                                @(r.Payments.Count == 0
+                                    ? "—"
+                                    : string.Join(", ", r.Payments.Select(p => p.Method).Distinct()))
+                            </td>
+                            <td><span>@r.Status</span></td>
+                        </tr>
                     }
-                    <td>₱@bal.ToString("N0")</td>
-                    <td>
-                        @{
-                            var status = bill?.Status ?? "—";
-                        }
-                        <span>@status</span>
-                    </td>
-                </tr>
-            }
-            @if (!Model.Any())
-            {
-                <tr><td colspan="6">No payments recorded yet.</td></tr>
-            }
-        </tbody>
-    </table>
+                    @if (!Model.Any())
+                    {
+                        <tr><td colspan="8">No bills have been issued to this tenant yet.</td></tr>
+                    }
+                </tbody>
+                @if (Model.Any())
+                {
+                    <tfoot>
+                        <tr>
+                            <th colspan="2">Total</th>
+                            <th>₱@totalBilled.ToString("N0")</th>
+                            <th>₱@totalPaid.ToString("N0")</th>
+                            <th>₱@totalBalance.ToString("N0")</th>
+                            <th colspan="3"></th>
+                        </tr>
+                    </tfoot>
+                }
+            </table>
+        </div>
+    </div>
 </div>

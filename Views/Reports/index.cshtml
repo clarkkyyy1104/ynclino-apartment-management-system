@@ -109,42 +109,74 @@
         </div>
     </div>
 
-    @* ── Outstanding balances ── *@
+    @* ── Standing balance, every tenant ──
+       This used to list only the tenants who owed something, which made it
+       impossible to check the ones who did not: a tenant missing from the
+       report and a tenant who is square looked the same. Every tenant has a
+       line now, the arithmetic on each line is shown in full — Billed − Paid =
+       Balance — and the name opens that tenant's own billing record so the
+       figures can be traced to the bills they came from. *@
     <div>
         <div data-panel>
-            <div data-panel-head><span>Outstanding Balances</span></div>
+            <div data-panel-head><span>Tenant Accounts &amp; Standing Balance</span></div>
             <div data-panel-body>
+                <div data-table-wrap>
                 <table>
                     <thead>
-                        <tr><th>Tenant</th><th>Unit</th><th>Billed</th><th>Paid</th><th>Balance</th><th>Overdue</th></tr>
+                        <tr>
+                            <th>Tenant</th><th>Unit</th><th>Status</th>
+                            <th>Bills</th><th>Billed</th><th>Paid</th>
+                            <th>Advance</th><th>Balance</th>
+                            <th>Overdue</th><th>Last Payment</th>
+                        </tr>
                     </thead>
                     <tbody>
-                        @foreach (var t in Model.Outstanding)
+                        @foreach (var t in Model.TenantAccounts)
                         {
                             <tr>
-                                <td>@t.TenantName</td>
+                                <td>
+                                    <a asp-controller="Billing" asp-action="TenantHistory" asp-route-id="@t.TenantID" data-record-link>@t.TenantName</a>
+                                </td>
                                 <td>@(t.UnitNumber ?? "—")</td>
+                                <td>@t.Status</td>
+                                <td>@t.BillsIssued</td>
                                 <td>₱@t.Billed.ToString("N0")</td>
                                 <td>₱@t.Paid.ToString("N0")</td>
-                                <td>₱@t.Balance.ToString("N0")</td>
+                                <td>@(t.AdvanceCredit > 0 ? "₱" + t.AdvanceCredit.ToString("N0") : "—")</td>
+                                <td>@(t.Balance > 0 ? "₱" + t.Balance.ToString("N0") : "Settled")</td>
+                                <td>@(t.OverdueBills > 0 ? t.OverdueBills.ToString() : "—")</td>
                                 <td>
-                                    @if (t.OverdueBills > 0)
+                                    @if (t.LastPaymentDate.HasValue)
                                     {
-                                        <span>@t.OverdueBills</span>
+                                        @($"{t.LastPaymentDate.Value:MMM dd, yyyy} · ₱{t.LastPaymentAmount:N0}")
                                     }
                                     else
                                     {
-                                        <span>—</span>
+                                        <text>Never paid</text>
                                     }
                                 </td>
                             </tr>
                         }
-                        @if (!Model.Outstanding.Any())
+                        @if (!Model.TenantAccounts.Any())
                         {
-                            <tr><td colspan="6">No outstanding balances — everyone is paid up.</td></tr>
+                            <tr><td colspan="10">No tenants on record yet.</td></tr>
                         }
                     </tbody>
+                    @if (Model.TenantAccounts.Any())
+                    {
+                        <tfoot>
+                            <tr>
+                                <th colspan="4">@Model.TenantAccounts.Count tenants</th>
+                                <th>₱@Model.TenantAccounts.Sum(x => x.Billed).ToString("N0")</th>
+                                <th>₱@Model.TenantAccounts.Sum(x => x.Paid).ToString("N0")</th>
+                                <th>₱@Model.TenantAccounts.Sum(x => x.AdvanceCredit).ToString("N0")</th>
+                                <th>₱@Model.TenantAccounts.Sum(x => x.Balance).ToString("N0")</th>
+                                <th colspan="2">@Model.Outstanding.Count still owing</th>
+                            </tr>
+                        </tfoot>
+                    }
                 </table>
+                </div>
             </div>
         </div>
     </div>
@@ -222,29 +254,40 @@
                             <tr>
                                 <th>Tenant</th><th>Unit</th><th>Status</th>
                                 <th>Move-In</th><th>Move-Out</th>
-                                <th>Months</th>
-                                <th>Paid</th><th>Balance</th>
+                                <th>Bills</th>
+                                <th>Billed</th><th>Paid</th><th>Balance</th>
+                                <th>Advance</th><th>Last Payment</th>
                                 <th>Req.</th>
                             </tr>
                         </thead>
                         <tbody>
+                            @* Billed sat behind this table rather than on it, so a row
+                               read "Paid ₱27,500, Balance ₱2,500" with nothing to check
+                               it against. Billed is on the line now: Billed − Paid is
+                               the Balance, on every row, and the name opens the bills
+                               those totals were added up from. *@
                             @foreach (var h in Model.TenantHistory)
                             {
                                 <tr>
-                                    <td>@h.TenantName</td>
+                                    <td>
+                                        <a asp-controller="Billing" asp-action="TenantHistory" asp-route-id="@h.TenantID" data-record-link>@h.TenantName</a>
+                                    </td>
                                     <td>@(h.UnitNumber ?? "—")</td>
                                     <td><span>@h.Status</span></td>
                                     <td>@(h.MoveInDate?.ToString("MMM dd, yyyy") ?? "—")</td>
                                     <td>@(h.MoveOutDate?.ToString("MMM dd, yyyy") ?? "—")</td>
                                     <td>@h.MonthsBilled</td>
+                                    <td>₱@h.TotalBilled.ToString("N0")</td>
                                     <td>₱@h.TotalPaid.ToString("N0")</td>
-                                    <td>₱@h.Balance.ToString("N0")</td>
+                                    <td>@(h.Balance > 0 ? "₱" + h.Balance.ToString("N0") : "Settled")</td>
+                                    <td>@(h.AdvanceCredit > 0 ? "₱" + h.AdvanceCredit.ToString("N0") : "—")</td>
+                                    <td>@(h.LastPaymentDate?.ToString("MMM dd, yyyy") ?? "—")</td>
                                     <td>@(h.MaintenanceRequests + h.TransferRequests)</td>
                                 </tr>
                             }
                             @if (!Model.TenantHistory.Any())
                             {
-                                <tr><td colspan="9">No tenants on record yet.</td></tr>
+                                <tr><td colspan="12">No tenants on record yet.</td></tr>
                             }
                         </tbody>
                     </table>

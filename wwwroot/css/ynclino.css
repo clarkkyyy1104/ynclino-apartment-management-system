@@ -514,7 +514,7 @@ body:not(:has(aside)) p[data-forgot] { margin: -.4rem 0 .9rem; text-align: right
 /* Row actions are links on some pages and buttons on others. They are the same
    thing to a user, so they get the same quiet treatment either way — the loud
    colour belongs to the one primary action, not to every row. */
-tbody td a:not([aria-label="View"]),
+tbody td a:not([aria-label="View"]):not([data-record-link]),
 tbody td button {
     display: inline-flex; align-items: center;
     padding: .3rem .75rem; margin: 0 .1rem;
@@ -523,8 +523,14 @@ tbody td button {
     border: 1px solid var(--field-line); border-radius: 6px;
     white-space: nowrap; cursor: pointer;
 }
-tbody td a:not([aria-label="View"]):hover,
+tbody td a:not([aria-label="View"]):not([data-record-link]):hover,
 tbody td button:hover { background: var(--field-bg); color: var(--ink); text-decoration: none; }
+
+/* A name in a data column that opens the record behind it is not a row action:
+   it is the reading itself, and giving it a button's box made all 44 tenant
+   names in the standing-balance report look like buttons. */
+tbody td a[data-record-link] { color: var(--ink); font-weight: 600; }
+tbody td a[data-record-link]:hover { color: var(--orange-btn); text-decoration: underline; }
 /* deleting is the one row action that should look different */
 tbody td a[href*="/Delete"] { color: var(--red); border-color: #e5b6bb; }
 tbody td a[href*="/Delete"]:hover { background: var(--red-bg); color: var(--red); }

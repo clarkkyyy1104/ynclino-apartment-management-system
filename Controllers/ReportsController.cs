@@ -92,25 +92,47 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 });
             }
 
-            // ── Outstanding balance per tenant ──
-            vm.Outstanding = bills
-                .GroupBy(b => b.TenantID)
-                .Select(g => new TenantBalanceRow
-                {
-                    TenantID = g.Key,
-                    TenantName = g.First().Tenant?.FullName ?? "—",
-                    UnitNumber = g.First().Tenant?.Unit?.UnitNumber,
-                    Billed = g.Sum(b => b.AmountDue),
-                    Paid = g.Sum(b => b.AmountPaid ?? 0m),
-                    Balance = g.Sum(b => b.AmountDue - (b.AmountPaid ?? 0m)),
-                    OverdueBills = g.Count(b => b.Status == "Overdue")
-                })
-                .Where(x => x.Balance > 0)
-                .OrderByDescending(x => x.Balance)
-                .ToList();
+            // ── Tenants ──
+            var allTenants = await _context.tblTenants.AsNoTracking()
+                .Include(t => t.Unit)
+                .OrderBy(t => t.LastName).ThenBy(t => t.FirstName)
+                .ToListAsync();
 
-            vm.OutstandingTotal = vm.Outstanding.Sum(x => x.Balance);
-            vm.OverdueTenants = vm.Outstanding.Count(x => x.OverdueBills > 0);
+            // ── Where every tenant's account stands ──
+            // Built from the tenant list rather than from the bills, so a tenant
+            // who has never been billed still gets a line. A report that lists
+            // only the people who owe cannot be used to check the people who
+            // don't — and checking is what it is for.
+            vm.TenantAccounts = allTenants.Select(t =>
+            {
+                var theirBills = bills.Where(b => b.TenantID == t.TenantID).ToList();
+                var theirBillIds = theirBills.Select(b => b.BillingID).ToHashSet();
+                var theirPayments = payments.Where(p => theirBillIds.Contains(p.BillingID))
+                                            .OrderByDescending(p => p.DatePaid)
+                                            .ToList();
+                var last = theirPayments.FirstOrDefault();
+
+                return new TenantBalanceRow
+                {
+                    TenantID = t.TenantID,
+                    TenantName = t.FullName,
+                    UnitNumber = t.Unit?.UnitNumber,
+                    Status = t.Status,
+                    BillsIssued = theirBills.Count,
+                    Billed = theirBills.Sum(b => b.AmountDue),
+                    Paid = theirBills.Sum(b => b.AmountPaid ?? 0m),
+                    Balance = theirBills.Sum(b => b.AmountDue - (b.AmountPaid ?? 0m)),
+                    OverdueBills = theirBills.Count(b => b.Status == "Overdue"),
+                    AdvanceCredit = t.AdvanceCredit,
+                    LastPaymentDate = last?.DatePaid,
+                    LastPaymentAmount = last?.Amount ?? 0m
+                };
+            })
+            .OrderByDescending(x => x.Balance).ThenBy(x => x.TenantName)
+            .ToList();
+
+            vm.OutstandingTotal = vm.TenantAccounts.Sum(x => x.Balance);
+            vm.OverdueTenants = vm.TenantAccounts.Count(x => x.OverdueBills > 0);
 
                         // ── Maintenance records by status ──
             var requests = await _context.tblMaintenanceRequests.AsNoTracking()
@@ -135,18 +157,19 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 .ToList();
 
             // ── Tenant histories ──
-            var allTenants = await _context.tblTenants.AsNoTracking()
-                .Include(t => t.Unit)
-                .OrderBy(t => t.LastName).ThenBy(t => t.FirstName)
-                .ToListAsync();
-
             var transfers = await _context.tblUnitTransferRequests.AsNoTracking().ToListAsync();
 
             vm.TenantHistory = allTenants.Select(t =>
             {
                 var theirBills = bills.Where(b => b.TenantID == t.TenantID).ToList();
+                var theirBillIds = theirBills.Select(b => b.BillingID).ToHashSet();
+                var lastPaid = payments.Where(p => theirBillIds.Contains(p.BillingID))
+                                       .OrderByDescending(p => p.DatePaid)
+                                       .FirstOrDefault();
                 return new TenantHistoryRow
                 {
+                    AdvanceCredit = t.AdvanceCredit,
+                    LastPaymentDate = lastPaid?.DatePaid,
                     TenantID = t.TenantID,
                     TenantName = t.FullName,
                     UnitNumber = t.Unit?.UnitNumber,

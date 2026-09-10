@@ -156,29 +156,35 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 .FirstOrDefaultAsync(t => t.TenantID == id);
             if (tenant == null) return NotFound();
 
-            var payments = await _context.tblPayments
-                .Include(p => p.Billing).ThenInclude(b => b!.Tenant).ThenInclude(t => t!.Unit)
-                .Where(p => p.Billing!.TenantID == id)
-                .OrderByDescending(p => p.DatePaid).ThenByDescending(p => p.PaymentID)
+            // Every BILL, not every payment. Reading this page off the payments
+            // table meant a bill nobody had paid produced no row, so the one
+            // month a tenant had skipped was the one month missing from their
+            // record — and the totals here could never match the report.
+            var bills = await _context.tblBillings.AsNoTracking()
+                .Where(b => b.TenantID == id)
+                .OrderByDescending(b => b.BillingPeriod)
                 .ToListAsync();
 
-            // running balance: how much of that bill was still owed AFTER each payment
-            var balanceAfter = new Dictionary<int, decimal>();
-            foreach (var billGroup in payments.GroupBy(p => p.BillingID))
+            var billIds = bills.Select(b => b.BillingID).ToHashSet();
+            var payments = await _context.tblPayments.AsNoTracking()
+                .Where(p => billIds.Contains(p.BillingID))
+                .OrderBy(p => p.DatePaid).ThenBy(p => p.PaymentID)
+                .ToListAsync();
+
+            var ledger = bills.Select(b => new TenantLedgerRow
             {
-                decimal due = billGroup.First().Billing?.AmountDue ?? 0m;
-                decimal running = 0m;
-                foreach (var p in billGroup.OrderBy(p => p.DatePaid).ThenBy(p => p.PaymentID))
-                {
-                    running += p.Amount;
-                    balanceAfter[p.PaymentID] = due - running;
-                }
-            }
+                BillingID = b.BillingID,
+                BillingPeriod = b.BillingPeriod,
+                DueDate = b.DueDate,
+                AmountDue = b.AmountDue,
+                AmountPaid = b.AmountPaid ?? 0m,
+                Status = b.Status,
+                IssuedFromAdvance = b.IssuedFromAdvance,
+                Payments = payments.Where(p => p.BillingID == b.BillingID).ToList()
+            }).ToList();
 
             ViewBag.Tenant = tenant;
-            ViewBag.TotalCollected = payments.Sum(p => p.Amount);
-            ViewBag.BalanceAfter = balanceAfter;
-            return View(payments);
+            return View(ledger);
         }
 
         // GET: Billing/Details/5
