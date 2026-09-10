@@ -259,11 +259,34 @@ tbody td {
     border-top: 1px solid var(--line-soft);
 }
 tbody tr:hover { background: #f7f8f9; }
-tbody td a[aria-label="View"] { color: var(--orange); }
+/* The eye was styled by its exact label, so the one view that says
+   "View in Tenants" instead of "View" missed the rule and came out looking
+   like a different control from the same icon in the other six modules. It is
+   matched on being an icon now, not on its wording, and it wears the same box
+   as the buttons beside it so the row lines up. */
+tbody td a[aria-label^="View"] { color: var(--orange); }
+tbody td a[aria-label] { padding: 0 .6rem; justify-content: center; }
 
-/* the actions column: keep View / Update / Delete on one line so the row
-   does not grow taller than the data in it */
+/* ── The actions column ──────────────────────────────────────────────────────
+   Buttons were centred in their cell, so a row with three of them centred
+   differently from a row with one, and the column came out ragged — 65px of
+   drift down the Billing list, 40px down Lost & Found. Anchoring them to the
+   right edge gives every row the same edge to line up on, however many buttons
+   it happens to have. */
 tbody td:last-child { white-space: nowrap; }
+tbody td:last-child:has(a, button, span) { text-align: right; }
+thead th:last-child { text-align: right; }
+
+/* One height for everything that sits in a row, so the icons stop floating
+   above the buttons beside them: the eye was a bare 14px glyph next to 33px
+   buttons, on a different baseline. */
+tbody td a:not([data-record-link]),
+tbody td button,
+tbody td span[title] { min-height: 33px; }
+tbody td a,
+tbody td button,
+tbody td form,
+tbody td span[title] { vertical-align: middle; }
 tbody td:last-child > a,
 tbody td:last-child > span { display: inline-block; margin: 0 .2rem; }
 tbody td:last-child form { display: inline-block; margin: 0 .2rem; }
@@ -514,7 +537,7 @@ body:not(:has(aside)) p[data-forgot] { margin: -.4rem 0 .9rem; text-align: right
 /* Row actions are links on some pages and buttons on others. They are the same
    thing to a user, so they get the same quiet treatment either way — the loud
    colour belongs to the one primary action, not to every row. */
-tbody td a:not([aria-label="View"]):not([data-record-link]),
+tbody td a:not([data-record-link]),
 tbody td button {
     display: inline-flex; align-items: center;
     padding: .3rem .75rem; margin: 0 .1rem;
@@ -523,7 +546,7 @@ tbody td button {
     border: 1px solid var(--field-line); border-radius: 6px;
     white-space: nowrap; cursor: pointer;
 }
-tbody td a:not([aria-label="View"]):not([data-record-link]):hover,
+tbody td a:not([data-record-link]):hover,
 tbody td button:hover { background: var(--field-bg); color: var(--ink); text-decoration: none; }
 
 /* A name in a data column that opens the record behind it is not a row action:
