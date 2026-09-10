@@ -289,8 +289,13 @@ tbody td form,
 tbody td span[title] { vertical-align: middle; }
 tbody td:last-child > a,
 tbody td:last-child > span { display: inline-block; margin: 0 .2rem; }
-tbody td:last-child form { display: inline-block; margin: 0 .2rem; }
 
+/* A button that needs a form around it was getting the form's margin AND its
+   own, so it sat a few pixels further along than the plain links next to it and
+   the column would not line up. The gap belongs to the control, not to the
+   wrapper that happens to be needed to post it. */
+tbody td:last-child form { display: inline-block; margin: 0 .2rem; }
+tbody td:last-child form { display: inline-block; margin: 0; }
 /* 11. FORM PANELS (create / edit) ───────────────────────────────────────────
    These views are  div > div > (caption div) + (div > form).  The caption
    becomes the navy bar across the top of the panel, as in the design.     */
@@ -538,7 +543,8 @@ body:not(:has(aside)) p[data-forgot] { margin: -.4rem 0 .9rem; text-align: right
    thing to a user, so they get the same quiet treatment either way — the loud
    colour belongs to the one primary action, not to every row. */
 tbody td a:not([data-record-link]),
-tbody td button {
+tbody td button,
+tbody td span[data-ghost] {
     display: inline-flex; align-items: center;
     padding: .3rem .75rem; margin: 0 .1rem;
     font-family: var(--serif); font-size: .9rem; font-weight: 600;
@@ -548,6 +554,12 @@ tbody td button {
 }
 tbody td a:not([data-record-link]):hover,
 tbody td button:hover { background: var(--field-bg); color: var(--ink); text-decoration: none; }
+
+/* A slot that this row has nothing to put in, holding the exact space its real
+   twin takes in the rows above and below. Without it the eye shuffled sideways
+   on the rows that had one less button, and no two rows lined up. */
+tbody td span[data-ghost] { visibility: hidden; pointer-events: none; }
+tbody td span[data-ghost][data-icon] { padding: 0 .6rem; }
 
 /* A name in a data column that opens the record behind it is not a row action:
    it is the reading itself, and giving it a button's box made all 44 tenant
