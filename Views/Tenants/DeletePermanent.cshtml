@@ -59,13 +59,13 @@
                     </div>
                 }
 
-                <div>
+                <div data-actions-row>
                     @if (lostFound == 0)
                     {
                         <form asp-action="DeletePermanent" asp-route-id="@Model.TenantID" method="post"
                               onsubmit="return confirm('Permanently delete @Model.FullName and every record listed? This cannot be undone.');">
                             @Html.AntiForgeryToken()
-                            <button type="submit">Delete permanently</button>
+                            <button type="submit" data-danger>Delete permanently</button>
                         </form>
                     }
                     <a asp-action="Details" asp-route-id="@Model.TenantID">Cancel</a>

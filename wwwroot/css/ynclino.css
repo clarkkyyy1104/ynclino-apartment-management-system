@@ -218,7 +218,10 @@ header > button { background: none; color: var(--ink); border-color: var(--line)
 header > button:hover { background: var(--field-bg); color: var(--ink); }
 
 /* 9. FILTER BAR & FIELDS ────────────────────────────────────────────────── */
-main form[method="get"] { display: flex; align-items: center; gap: .6rem; margin-bottom: 1.25rem; }
+/* the filter bar wraps at any width, not only on a phone: Lost & Found carries
+   a search box, two selects and a Clear link, which was already one control
+   too many for a laptop window */
+main form[method="get"] { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin-bottom: 1.25rem; }
 main form[method="get"] a { font-weight: 600; }
 
 input[type="text"], input[type="number"], input[type="date"],
@@ -242,10 +245,14 @@ main div:has(> table) {
     overflow: hidden;
 }
 table { width: 100%; border-collapse: collapse; background: #fff; }
+/* Headings used to be held on one line each. On a wide table — Billing carries
+   eleven columns — that alone made the table wider than the space it had, and
+   the Update and Delete buttons at the end of every row were pushed off the
+   edge. A two-word heading may take two lines; the table then fits. */
 thead th {
     padding: .8rem .6rem;
     background: var(--navy); color: #fff; font-weight: 700;
-    text-align: center; white-space: nowrap;
+    text-align: center;
 }
 tbody td {
     padding: .7rem .6rem; text-align: center; vertical-align: middle;
@@ -763,22 +770,94 @@ input[type="file"]::file-selector-button:hover { background: var(--field-bg); }
     margin-top: 1.25rem; padding-top: 1rem;
     border-top: 1px solid var(--line-soft);
 }
+/* a confirm button often comes wrapped in its own little form, so the form has
+   to behave as if it were the button itself */
+[data-actions-row] > form { display: contents; }
+
+/* Every way out of a page wears the same shell: a link in the row, a button in
+   the row, a button inside a confirm form, or a lone Back link on a page that
+   has no row at all. Naming them all here is what stops one of them turning up
+   later as bare orange text. */
 [data-actions-row] > a,
-[data-actions-row] > button {
+[data-actions-row] > button,
+[data-actions-row] > form > button,
+[data-back] {
     display: inline-flex; align-items: center; justify-content: center;
     padding: .5rem 1.1rem;
+    max-width: 100%;
     font-family: var(--serif); font-size: 1rem; font-weight: 600;
     color: var(--ink); background: #fff;
     border: 1px solid var(--field-line); border-radius: 6px;
-    cursor: pointer; white-space: nowrap;
+    cursor: pointer; text-align: center;
 }
+[data-back] { margin-top: 1rem; }
 [data-actions-row] > a:hover,
-[data-actions-row] > button:hover { background: var(--field-bg); color: var(--ink); text-decoration: none; }
+[data-actions-row] > button:hover,
+[data-actions-row] > form > button:hover,
+[data-back]:hover { background: var(--field-bg); color: var(--ink); text-decoration: none; }
 
-/* confirming a deletion is the one action that should look like what it does */
-[data-actions-row] > button[type="submit"] {
+/* Saving is the ordinary, expected end of a form, so it keeps the primary
+   colour. Only the actions marked destructive look like what they do. */
+[data-actions-row] > button[type="submit"]:not([data-danger]) {
+    color: #fff; background: var(--orange-btn); border-color: var(--orange-btn); font-weight: 700;
+}
+[data-actions-row] > button[type="submit"]:not([data-danger]):hover {
+    background: var(--orange-dark); border-color: var(--orange-dark); color: #fff;
+}
+[data-actions-row] button[data-danger] {
     color: #fff; background: var(--red); border-color: var(--red); font-weight: 700;
 }
-[data-actions-row] > button[type="submit"]:hover { background: #8f222c; border-color: #8f222c; color: #fff; }
+[data-actions-row] button[data-danger]:hover { background: #8f222c; border-color: #8f222c; color: #fff; }
 [data-actions-row] > a[href*="/Delete"],
 [data-actions-row] > a[href*="/DeletePermanent"] { color: var(--red); border-color: #e5b6bb; }
+
+/* ══ 20. MAKING THE PAGE SURVIVE A SMALL WINDOW ═════════════════════════════
+   A table is the one thing on these pages with a width of its own: it needs
+   every column it has, and it does not care how wide the window is. With
+   nothing to stop it, the table pushed the whole page wider than the screen
+   and the row buttons at the far right — Update, Delete — were left hanging
+   past the edge, sliced in half. The table scrolls inside its own box now, so
+   the page itself always fits and the buttons stay whole.                  */
+[data-table-wrap] { max-width: 100%; overflow-x: auto; }
+
+/* Billing carries eleven columns. At the old size every cell in it wrapped —
+   a due date of "Mar 31, 2027" came out over three lines and the rows stood
+   143px tall. A slightly smaller face and tighter cells give the columns the
+   room they were short of, and the rows come back down to a single line. */
+table { font-size: .9rem; }
+thead th { padding: .65rem .45rem; }
+tbody td { padding: .6rem .45rem; }
+
+/* the same reason, one level up: a flex child refuses to shrink past its
+   contents unless it is told it may */
+main { min-width: 0; }
+main > div, [data-panel], [data-form-panel] { min-width: 0; max-width: 100%; }
+
+/* nothing may reach past the screen, whatever it is */
+img, svg, table, pre { max-width: 100%; }
+
+@media (max-width: 700px) {
+    main { padding: 1.25rem 1rem; }
+
+    /* the header of a page stacks: title first, then its actions on their own
+       line, each one wide enough to read and to tap */
+    [data-page-head] { flex-direction: column; align-items: stretch; gap: .75rem; }
+    [data-page-head] [data-actions] { flex-wrap: wrap; }
+    [data-page-head] [data-actions] > a,
+    [data-page-head] [data-actions] > button { flex: 1 1 auto; }
+
+    /* one card per line rather than four squeezed side by side */
+    [data-stats] { grid-template-columns: 1fr; }
+
+    /* the way out of a page is the last thing that should be hard to hit, so
+       the buttons go full width and stack instead of spilling off the side */
+    [data-actions-row] { flex-direction: column; align-items: stretch; }
+    [data-actions-row] > a,
+    [data-actions-row] > button,
+    [data-actions-row] > form > button,
+    [data-back] { width: 100%; }
+
+    /* a filter bar is several controls on one line; give them a line each */
+    main form[method="get"] { flex-wrap: wrap; }
+    main form[method="get"] > * { flex: 1 1 12rem; }
+}

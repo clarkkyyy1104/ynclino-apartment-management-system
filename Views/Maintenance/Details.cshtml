@@ -91,7 +91,7 @@
                         <form asp-action="Cancel" asp-route-id="@Model.RequestID" method="post"
                               onsubmit="return confirm('Cancel this request?')">
                             @Html.AntiForgeryToken()
-                            <button type="submit">Cancel Request</button>
+                            <button type="submit" data-danger>Cancel Request</button>
                         </form>
                     }
                     <a asp-action="Index">Back</a>

@@ -22,7 +22,7 @@
                 <form asp-action="Delete" method="post" data-actions-row>
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@Model.RequestID" />
-                    <button type="submit">Yes, Delete</button>
+                    <button type="submit" data-danger>Yes, Delete</button>
                     <a asp-action="Index">Cancel</a>
                 </form>
             </div>
