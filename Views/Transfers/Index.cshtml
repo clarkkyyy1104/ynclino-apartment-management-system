@@ -7,23 +7,35 @@
                        ?? Enumerable.Empty<YnclinoApartmentManagementSystem.Models.tblUnitTransferRequest>();
 }
 
-<div>
+<div data-page-head>
     <div>
-        <div>
-            <div>Active</div>
-            <div>
-                @{ ViewData["EmptyText"] = "No active requests."; ViewData["IsArchive"] = false; }
-                <partial name="_RequestList" model="Model" />
-            </div>
-        </div>
+        <h3>@title</h3>
+        <p>
+            @(isAdmin
+                ? "Requests to move to another unit, and applications for a first unit."
+                : "The requests you have sent, and what has become of them.")
+        </p>
     </div>
-    <div>
-        <div>
-            <div>Archive</div>
-            <div>
-                @{ ViewData["EmptyText"] = "Nothing in the archive yet."; ViewData["IsArchive"] = true; }
-                <partial name="_RequestList" model="archivedList" />
-            </div>
+    @if (!isAdmin)
+    {
+        <div data-actions>
+            <a asp-action="Create" data-primary>+ New Request</a>
         </div>
+    }
+</div>
+
+<div data-panel>
+    <div data-panel-head>Active</div>
+    <div data-panel-body>
+        @{ ViewData["EmptyText"] = "No active requests."; ViewData["IsArchive"] = false; }
+        <partial name="_RequestList" model="Model" />
+    </div>
+</div>
+
+<div data-panel>
+    <div data-panel-head>Archive</div>
+    <div data-panel-body>
+        @{ ViewData["EmptyText"] = "Nothing in the archive yet."; ViewData["IsArchive"] = true; }
+        <partial name="_RequestList" model="archivedList" />
     </div>
 </div>

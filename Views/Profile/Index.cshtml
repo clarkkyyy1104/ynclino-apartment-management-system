@@ -9,10 +9,8 @@
 
 @if (Model == null)
 {
-    <div>
-        <div>
-            No tenant profile is linked to your account. Please contact the administrator.
-        </div>
+    <div data-panel>
+        <div data-empty><p>No tenant profile is linked to your account. Please contact the administrator.</p></div>
     </div>
     return;
 }
@@ -24,57 +22,51 @@
 @* Unread unit-request alerts (e.g. "approved") — clicking one marks it read and clears the red badge *@
 @await Component.InvokeAsync("ModuleNotifications", new { module = "Transfer" })
 
-<!-- Cover + identity header (Facebook-style) -->
-<div>
-    <div></div>
-    <div>
-        <div>
-            <form asp-action="UploadPhoto" method="post" enctype="multipart/form-data" id="photoForm">
-                @Html.AntiForgeryToken()
-                <input type="file" name="photo" accept="image/*" id="photoInput"
-                       onchange="document.getElementById('photoForm').submit();" />
-                <label for="photoInput" role="button"
-                       title="@(string.IsNullOrEmpty(Model.PhotoPath) ? "Add a profile photo" : "Change your profile photo")">
-                    @if (!string.IsNullOrEmpty(Model.PhotoPath))
-                    {
-                        <img src="@Model.PhotoPath" alt="Profile photo" />
-                    }
-                    else
-                    {
-                        <div>
-                            @initials.ToUpper()
-                        </div>
-                    }
-                    <span>
-                        <span>📷</span>
-                    </span>
-                </label>
-            </form>
-            <div>
-                <h4>@Model.FullName</h4>
-                <div>
-                    Unit @(Model.Unit?.UnitNumber ?? "—")
-                </div>
-            </div>
-            @if (!string.IsNullOrEmpty(Model.PhotoPath))
-            {
-                <div>
-                    <form asp-action="RemovePhoto" method="post" onsubmit="return confirm('Remove your profile photo?');">
-                        @Html.AntiForgeryToken()
-                        <button type="submit">Remove Photo</button>
-                    </form>
-                </div>
-            }
+@* The identity band. The file input itself is never shown — the photo (or the
+   initials standing in for one) is the label, so clicking the picture is what
+   opens the file picker, and the little camera says so. *@
+<div data-identity>
+    <div data-identity-cover></div>
+    <div data-identity-body>
+        <form asp-action="UploadPhoto" method="post" enctype="multipart/form-data" id="photoForm" data-photo-form>
+            @Html.AntiForgeryToken()
+            <input type="file" name="photo" accept="image/*" id="photoInput"
+                   onchange="document.getElementById('photoForm').submit();" />
+            <label for="photoInput" role="button" data-avatar
+                   title="@(string.IsNullOrEmpty(Model.PhotoPath) ? "Add a profile photo" : "Change your profile photo")">
+                @if (!string.IsNullOrEmpty(Model.PhotoPath))
+                {
+                    <img src="@Model.PhotoPath" alt="Profile photo" />
+                }
+                else
+                {
+                    <div>@initials.ToUpper()</div>
+                }
+                <span data-avatar-camera>📷</span>
+            </label>
+        </form>
+        <div data-identity-name>
+            <h4>@Model.FullName</h4>
+            <span>Unit @(Model.Unit?.UnitNumber ?? "—")</span>
         </div>
+        @if (!string.IsNullOrEmpty(Model.PhotoPath))
+        {
+            <div data-actions>
+                <form asp-action="RemovePhoto" method="post" onsubmit="return confirm('Remove your profile photo?');">
+                    @Html.AntiForgeryToken()
+                    <button type="submit">Remove Photo</button>
+                </form>
+            </div>
+        }
     </div>
 </div>
 
-<div>
+<div data-profile-cols>
     <!-- Left column: About -->
     <div>
-        <div>
-            <div>Personal Information</div>
-            <div>
+        <div data-panel>
+            <div data-panel-head>Personal Information</div>
+            <div data-panel-body>
                 <dl>
                     <dt>Full Name</dt><dd>@Model.FullName</dd>
                     <dt>Contact No.</dt><dd>@(string.IsNullOrEmpty(Model.ContactNumber) ? "—" : Model.ContactNumber)</dd>
@@ -93,9 +85,9 @@
             </div>
         </div>
 
-        <div>
-            <div>Unit Information</div>
-            <div>
+        <div data-panel>
+            <div data-panel-head>Unit Information</div>
+            <div data-panel-body>
                 @if (Model.Unit != null)
                 {
                     <dl>
@@ -104,7 +96,7 @@
                         <dt>Monthly Rent</dt><dd>₱@Model.Unit.RentPrice.ToString("N0")</dd>
                         <dt>Capacity</dt><dd>@Model.Unit.Capacity person(s)</dd>
                     </dl>
-                    <div>
+                    <div data-actions-row>
                         <a asp-controller="Transfers" asp-action="Create">Request Transfer</a>
                         <a asp-controller="Transfers" asp-action="Index">My Transfer Requests @await Component.InvokeAsync("NavAlert", new { module = "Transfer" })</a>
                     </div>
@@ -112,7 +104,7 @@
                 else
                 {
                     <p>You don't have a unit yet.</p>
-                    <div>
+                    <div data-actions-row>
                         <a asp-controller="Transfers" asp-action="Create">Apply for a Unit</a>
                         <a asp-controller="Transfers" asp-action="Index">My Requests @await Component.InvokeAsync("NavAlert", new { module = "Transfer" })</a>
                     </div>
@@ -123,18 +115,18 @@
 
     <!-- Right column: Activity feed -->
     <div>
-        <div>
-            <div>Recent Activity</div>
-            <div>
+        <div data-panel>
+            <div data-panel-head>Recent Activity</div>
+            <div data-panel-body data-list>
                 @if (!bills.Any() && !maintenance.Any() && !transfers.Any())
                 {
-                    <div>No recent activity.</div>
+                    <div data-empty><p>No recent activity.</p></div>
                 }
                 @foreach (var b in bills)
                 {
-                    <div>
+                    <div data-feed-row>
                         <div>
-                            <span>Billing</span>
+                            <span data-module>Billing</span>
                             Bill for @b.BillingPeriod.ToString("MMMM yyyy") — ₱@b.AmountDue.ToString("N0")
                         </div>
                         <span>@b.Status</span>
@@ -142,9 +134,9 @@
                 }
                 @foreach (var m in maintenance)
                 {
-                    <div>
+                    <div data-feed-row>
                         <div>
-                            <span>Maintenance</span>
+                            <span data-module>Maintenance</span>
                             @m.Category — @m.DateSubmitted.ToString("MMM dd, yyyy")
                         </div>
                         <span>@m.Status</span>
@@ -152,9 +144,9 @@
                 }
                 @foreach (var r in transfers)
                 {
-                    <div>
+                    <div data-feed-row>
                         <div>
-                            <span>Transfer</span>
+                            <span data-module>Transfer</span>
                             Requested Unit @(r.RequestedUnit?.UnitNumber ?? "—") — @r.DateRequested.ToString("MMM dd, yyyy")
                         </div>
                         <span>@r.Status</span>

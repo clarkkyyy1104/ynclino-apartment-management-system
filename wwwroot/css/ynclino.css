@@ -570,12 +570,13 @@ tbody td span[title] { opacity: .45; }
 [data-panel-body] dd { margin: 0; }
 @media (max-width: 600px) { [data-panel-body] dl { grid-template-columns: 1fr; gap: .15rem; } }
 
-/* the row of buttons at the foot of a detail or confirmation page */
-[data-panel-body] > div:last-child:has(> a + a),
-[data-panel-body] > div:last-child:has(> form + a),
-[data-panel-body] > div:last-child:has(> a + form) {
-    display: flex; gap: .6rem; margin-top: 1.25rem;
-}
+/* The row of buttons at the foot of a page used to be described here as "the
+   last div in a panel body holding two links". Every such row carries
+   data-actions-row now (section 19), and the old description had started
+   claiming things that merely looked like it — the four At a Glance counts on
+   the profile are also a last div of two links, and this rule was laying them
+   out in a flex row instead of letting them be a grid. Described things are
+   styled by name; nothing is claimed by resemblance. */
 
 /* ── Reports & Records ───────────────────────────────────────────────────── */
 [data-stats] {
@@ -804,6 +805,14 @@ input[type="file"]::file-selector-button:hover { background: var(--field-bg); }
 [data-actions-row] > button[type="submit"]:not([data-danger]):hover {
     background: var(--orange-dark); border-color: var(--orange-dark); color: #fff;
 }
+/* a submit that lives inside its own form in the row still needs to be able to
+   say it is the primary action */
+[data-actions-row] button[data-primary] {
+    color: #fff; background: var(--orange-btn); border-color: var(--orange-btn); font-weight: 700;
+}
+[data-actions-row] button[data-primary]:hover {
+    background: var(--orange-dark); border-color: var(--orange-dark); color: #fff;
+}
 [data-actions-row] button[data-danger] {
     color: #fff; background: var(--red); border-color: var(--red); font-weight: 700;
 }
@@ -860,4 +869,118 @@ img, svg, table, pre { max-width: 100%; }
     /* a filter bar is several controls on one line; give them a line each */
     main form[method="get"] { flex-wrap: wrap; }
     main form[method="get"] > * { flex: 1 1 12rem; }
+}
+
+/* ══ 21. THE PROFILE PAGES ══════════════════════════════════════════════════
+   Both profiles — the tenant's and the administrator's — were written as bare
+   divs and never given a single named part, so they rendered as a plain column
+   of unstyled text while every other module had been dressed. They share one
+   shape: a navy band with the picture sitting over it, then two columns.    */
+[data-identity] {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 1.25rem;
+}
+[data-identity-cover] { height: 110px; background: var(--navy); }
+[data-identity-body] {
+    display: flex; align-items: flex-end; flex-wrap: wrap; gap: 1rem;
+    padding: 0 1.5rem 1.25rem;
+}
+
+/* the picture straddles the band, so it is pulled up out of its own row */
+/* The circle does NOT clip its contents: the camera badge hangs over its edge
+   by design, and an overflow:hidden here sliced it in half. The picture inside
+   is rounded on its own instead. */
+[data-avatar] {
+    position: relative;
+    display: block;
+    width: 104px; height: 104px;
+    margin-top: -52px;
+    border-radius: 50%;
+    border: 4px solid #fff;
+    background: var(--field-bg);
+    cursor: pointer;
+    flex: 0 0 auto;
+}
+[data-avatar] > img {
+    width: 100%; height: 100%; display: block;
+    object-fit: cover; border-radius: 50%;
+}
+/* no photo yet: the initials stand in for one */
+[data-avatar] > div {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; height: 100%;
+    background: var(--navy-soft); color: #fff;
+    border-radius: 50%;
+    font-size: 2.4rem; font-weight: 700; letter-spacing: .02em;
+}
+[data-avatar-camera] {
+    position: absolute; right: -2px; bottom: -2px;
+    display: flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px;
+    background: #fff; border: 1px solid var(--line); border-radius: 50%;
+    font-size: .95rem;
+}
+[data-avatar]:hover [data-avatar-camera] { background: var(--field-bg); }
+
+/* the file picker is opened by clicking the picture, so the input itself has
+   no business being on the page — it was showing as a raw Choose File button */
+[data-photo-form] { margin: 0; }
+/* display:none rather than a clipped 1px box, because the form rules in
+   section 11 set every input to width:100% and out-specify anything narrower —
+   a "hidden" input was still 1300px wide and pushed the page off the screen.
+   A label still opens the picker for an input that is display:none. */
+[data-photo-form] > input[type="file"] { display: none; }
+
+[data-identity-name] { flex: 1 1 12rem; min-width: 0; padding-bottom: .35rem; }
+[data-identity-name] h4 { font-size: 1.75rem; text-transform: uppercase; letter-spacing: .01em; }
+[data-identity-name] > span { color: var(--muted); }
+[data-identity-body] [data-actions] { display: flex; gap: .6rem; padding-bottom: .35rem; }
+[data-identity-body] [data-actions] form { margin: 0; }
+[data-identity-body] [data-actions] a,
+[data-identity-body] [data-actions] button {
+    display: inline-flex; align-items: center;
+    padding: .5rem 1.1rem;
+    color: var(--ink); background: #fff;
+    border: 1px solid var(--field-line); border-radius: 6px;
+    font-family: var(--serif); font-size: 1rem; font-weight: 600; cursor: pointer;
+}
+[data-identity-body] [data-actions] a:hover,
+[data-identity-body] [data-actions] button:hover { background: var(--field-bg); color: var(--ink); text-decoration: none; }
+
+/* details on the left, the feed or the counts on the right */
+[data-profile-cols] { display: grid; grid-template-columns: 1.15fr 1fr; gap: 1.25rem; align-items: start; }
+[data-profile-cols] > div { min-width: 0; }
+
+/* four counts, each one a doorway into the module it counts */
+[data-glance] { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; }
+[data-glance] > a,
+[data-glance] > div {
+    display: block; padding: 1rem .75rem; text-align: center;
+    color: var(--ink); background: #fff;
+    border: 1px solid var(--line); border-radius: 8px;
+}
+[data-glance] > a:hover { border-color: var(--orange); color: var(--ink); text-decoration: none; }
+[data-glance] div:first-child { font-size: 1.9rem; line-height: 1.15; }
+[data-glance] div:last-child { color: var(--ink-soft); font-size: .9rem; }
+
+/* one line of the activity feed: what happened on the left, where it stands
+   on the right */
+[data-feed-row] {
+    display: flex; align-items: center; gap: .75rem;
+    padding: .8rem 1.25rem;
+}
+[data-feed-row] + [data-feed-row] { border-top: 1px solid var(--line-soft); }
+[data-feed-row] > div { flex: 1 1 auto; min-width: 0; }
+[data-feed-row] > span:last-child { color: var(--ink-soft); white-space: nowrap; }
+
+@media (max-width: 900px) {
+    [data-profile-cols] { grid-template-columns: 1fr; }
+}
+@media (max-width: 700px) {
+    [data-identity-body] { justify-content: center; text-align: center; }
+    [data-identity-name] { flex-basis: 100%; }
+    [data-glance] { grid-template-columns: 1fr; }
 }

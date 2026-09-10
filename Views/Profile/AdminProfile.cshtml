@@ -5,8 +5,8 @@
 
 @if (Model == null)
 {
-    <div>
-        <div>Your account could not be loaded.</div>
+    <div data-panel>
+        <div data-empty><p>Your account could not be loaded.</p></div>
     </div>
     return;
 }
@@ -16,36 +16,35 @@
     var roleLabel = Model.IsMainAdmin ? "Main Administrator" : "Administrator";
 }
 
-<!-- Identity header -->
-<div>
-    <div></div>
-    <div>
-        <div>
-            <div>
-                @initial
-            </div>
-            <div>
-                <h4>@Model.Username</h4>
-                <span>@roleLabel</span>
-            </div>
-            <div>
-                <a asp-controller="Account" asp-action="ChangePassword">Change Password</a>
-            </div>
+@* The identity band: the navy strip, the initial in a circle over it, the name
+   and the one action that belongs to an account — changing its password. *@
+<div data-identity>
+    <div data-identity-cover></div>
+    <div data-identity-body>
+        @* same shape as the tenant's avatar, minus the upload — an admin has no
+           photo, so the initial always stands in for one *@
+        <div data-avatar><div>@initial</div></div>
+        <div data-identity-name>
+            <h4>@Model.Username</h4>
+            <span>@roleLabel</span>
+        </div>
+        <div data-actions>
+            <a asp-controller="Account" asp-action="ChangePassword">Change Password</a>
         </div>
     </div>
 </div>
 
-<div>
+<div data-profile-cols>
     <!-- Account details -->
     <div>
-        <div>
-            <div>
+        <div data-panel>
+            <div data-panel-head>
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
                     <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
                 </svg>
                 <span>Account Information</span>
             </div>
-            <div>
+            <div data-panel-body>
                 <dl>
                     <dt>Username</dt><dd>@Model.Username</dd>
                     <dt>Role</dt><dd>@roleLabel</dd>
@@ -59,38 +58,32 @@
 
     <!-- Quick overview -->
     <div>
-        <div>
-            <div>
+        <div data-panel>
+            <div data-panel-head>
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
                     <path d="M0 0h1v15h15v1H0zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07"/>
                 </svg>
                 <span>At a Glance</span>
             </div>
-            <div>
-                <div>
+            <div data-panel-body>
+                @* four counts, each one a way into the module it counts *@
+                <div data-glance>
+                    <a asp-controller="Units" asp-action="Index">
+                        <div>@ViewBag.TotalUnits</div>
+                        <div>Units</div>
+                    </a>
+                    <a asp-controller="Tenants" asp-action="Index">
+                        <div>@ViewBag.ActiveTenants</div>
+                        <div>Active Tenants</div>
+                    </a>
+                    <a asp-controller="Transfers" asp-action="Index">
+                        <div>@ViewBag.PendingTransfers</div>
+                        <div>Pending Requests</div>
+                    </a>
+                    @* there is no admin module to open, so this one is not a link *@
                     <div>
-                        <a asp-controller="Units" asp-action="Index">
-                            <div>@ViewBag.TotalUnits</div>
-                            <div>Units</div>
-                        </a>
-                    </div>
-                    <div>
-                        <a asp-controller="Tenants" asp-action="Index">
-                            <div>@ViewBag.ActiveTenants</div>
-                            <div>Active Tenants</div>
-                        </a>
-                    </div>
-                    <div>
-                        <a asp-controller="Transfers" asp-action="Index">
-                            <div>@ViewBag.PendingTransfers</div>
-                            <div>Pending Requests</div>
-                        </a>
-                    </div>
-                    <div>
-                        <div>
-                            <div>@ViewBag.AdminCount</div>
-                            <div>Admins</div>
-                        </div>
+                        <div>@ViewBag.AdminCount</div>
+                        <div>Admins</div>
                     </div>
                 </div>
             </div>

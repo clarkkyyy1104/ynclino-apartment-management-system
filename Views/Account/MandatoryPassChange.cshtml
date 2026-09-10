@@ -45,12 +45,20 @@
                         <span asp-validation-for="ConfirmPassword"></span>
                     </div>
 
-                    <button type="submit">Update Password</button>
                 </form>
-                <form asp-controller="Account" asp-action="Logout" method="post">
-                    @Html.AntiForgeryToken()
-                    <button type="submit">Sign out instead</button>
-                </form>
+
+                @* Two separate forms end this page — changing the password and
+                   giving up on it — so the buttons are gathered into one row
+                   rather than stacking as two orange blocks. The first stays
+                   tied to the password form by name. Signing out is the way
+                   back, not the thing to do, so it is the quiet one. *@
+                <div data-actions-row>
+                    <button type="submit" form="cpwForm" data-primary>Update Password</button>
+                    <form asp-controller="Account" asp-action="Logout" method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit">Sign out instead</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
