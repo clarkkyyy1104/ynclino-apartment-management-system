@@ -19,7 +19,7 @@
                     <dt>Status</dt>
                     <dd>@Model.Status</dd>
                 </dl>
-                <form asp-action="Delete" method="post">
+                <form asp-action="Delete" method="post" data-actions-row>
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@Model.RequestID" />
                     <button type="submit">Yes, Delete</button>

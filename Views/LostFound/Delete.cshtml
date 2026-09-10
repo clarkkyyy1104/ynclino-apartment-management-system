@@ -19,7 +19,7 @@
                     <dt>Date Reported</dt>
                     <dd>@Model.DateReported.ToString("MMM dd, yyyy")</dd>
                 </dl>
-                <form asp-action="Delete" method="post">
+                <form asp-action="Delete" method="post" data-actions-row>
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@Model.ItemID" />
                     <button type="submit">Yes, Delete</button>

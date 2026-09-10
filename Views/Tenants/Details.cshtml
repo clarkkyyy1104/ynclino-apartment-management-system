@@ -80,7 +80,7 @@
             </div>
             @if (User.IsInRole("Admin"))
             {
-                <div>
+                <div data-actions-row>
                     <a asp-action="Edit" asp-route-id="@Model.TenantID">Update</a>
 
                     @* Archive first, delete second. Archiving keeps the history and is

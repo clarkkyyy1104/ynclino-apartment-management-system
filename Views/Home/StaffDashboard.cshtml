@@ -1,6 +1,6 @@
 @model YnclinoApartmentManagementSystem.Models.ViewModels.StaffDashboardViewModel
 @{
-    ViewData["Title"] = "My Work";
+    ViewData["Title"] = "Dashboard";
 }
 
 <div>
@@ -8,9 +8,9 @@
     <p>These are the maintenance requests assigned to you.</p>
 </div>
 
-<div>
+<div data-stats>
     <div>
-        <div>
+        <div data-stat>
             <div>
                 <div>Urgent</div>
                 <div>@Model.UrgentCount</div>
@@ -19,7 +19,7 @@
         </div>
     </div>
     <div>
-        <div>
+        <div data-stat>
             <div>
                 <div>Pending</div>
                 <div>@Model.PendingCount</div>
@@ -28,7 +28,7 @@
         </div>
     </div>
     <div>
-        <div>
+        <div data-stat>
             <div>
                 <div>In Progress</div>
                 <div>@Model.InProgressCount</div>
@@ -37,7 +37,7 @@
         </div>
     </div>
     <div>
-        <div>
+        <div data-stat>
             <div>
                 <div>Resolved</div>
                 <div>@Model.ResolvedCount</div>

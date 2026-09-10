@@ -752,3 +752,33 @@ input[type="file"]::file-selector-button {
     font-family: var(--serif); font-weight: 600; cursor: pointer;
 }
 input[type="file"]::file-selector-button:hover { background: var(--field-bg); }
+
+/* ══ 19. THE ROW OF ACTIONS AT THE FOOT OF A PAGE ═══════════════════════════
+   These sit in three different places depending on the view — after the panel,
+   inside its body, or inside the confirm form itself — so a rule aimed at any
+   one position styled one page and left ten reading as bare orange text. The
+   row is named now, wherever it happens to sit.                            */
+[data-actions-row] {
+    display: flex; align-items: center; flex-wrap: wrap; gap: .6rem;
+    margin-top: 1.25rem; padding-top: 1rem;
+    border-top: 1px solid var(--line-soft);
+}
+[data-actions-row] > a,
+[data-actions-row] > button {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: .5rem 1.1rem;
+    font-family: var(--serif); font-size: 1rem; font-weight: 600;
+    color: var(--ink); background: #fff;
+    border: 1px solid var(--field-line); border-radius: 6px;
+    cursor: pointer; white-space: nowrap;
+}
+[data-actions-row] > a:hover,
+[data-actions-row] > button:hover { background: var(--field-bg); color: var(--ink); text-decoration: none; }
+
+/* confirming a deletion is the one action that should look like what it does */
+[data-actions-row] > button[type="submit"] {
+    color: #fff; background: var(--red); border-color: var(--red); font-weight: 700;
+}
+[data-actions-row] > button[type="submit"]:hover { background: #8f222c; border-color: #8f222c; color: #fff; }
+[data-actions-row] > a[href*="/Delete"],
+[data-actions-row] > a[href*="/DeletePermanent"] { color: var(--red); border-color: #e5b6bb; }

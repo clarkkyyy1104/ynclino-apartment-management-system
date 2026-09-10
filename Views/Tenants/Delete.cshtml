@@ -28,7 +28,7 @@
 
                 <form asp-action="Delete" method="post">
                     <input type="hidden" name="id" value="@Model.TenantID" />
-                    <div>
+                    <div data-actions-row>
                         <button type="submit">Yes, Archive</button>
                         <a asp-action="Index">Cancel</a>
                     </div>

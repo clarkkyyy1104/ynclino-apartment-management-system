@@ -79,7 +79,7 @@
                     </dd>
                 </dl>
 
-                <div>
+                <div data-actions-row>
                     @* the staff member's one action: report on the job *@
                     @if (User.IsInRole("Maintenance") &&
                          !YnclinoApartmentManagementSystem.Helpers.StatusFlowHelper.IsClosedMaintenance(Model.Status))
