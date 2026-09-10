@@ -53,6 +53,32 @@ namespace YnclinoApartmentManagementSystem.Controllers
             vm.AvailableUnits = units.Count(u => u.Status == "Available");
             vm.ReservedUnits = units.Count(u => u.Status == "Reserved");
             vm.MaintenanceUnits = units.Count(u => u.Status == "Under Maintenance");
+            
+            // The occupancy report used to be five counts and a percentage, which
+            // says nothing a person can act on: knowing five units are empty is
+            // no use without knowing WHICH five, or what leaving them empty costs.
+            // Each state is named in plain words and lists its own units.
+            var states = new[]
+            {
+                ("Occupied",          "Lived in",        "Someone is renting it and paying for it."),
+                ("Available",         "Empty and ready", "Could be rented out tomorrow — nothing is stopping it."),
+                ("Reserved",          "Being held",      "Promised to someone who has not moved in yet."),
+                ("Under Maintenance", "Being repaired",  "Cannot be rented until the work is finished.")
+            };
+
+            vm.UnitStates = states.Select(s => new UnitStateRow
+            {
+                State = s.Item2,
+                Meaning = s.Item3,
+                UnitNumbers = units.Where(u => u.Status == s.Item1)
+                                   .OrderBy(u => u.UnitNumber)
+                                   .Select(u => u.UnitNumber)
+                                   .ToList(),
+                MonthlyRent = units.Where(u => u.Status == s.Item1).Sum(u => u.RentPrice)
+            }).ToList();
+
+            vm.RentBeingEarned = units.Where(u => u.Status == "Occupied").Sum(u => u.RentPrice);
+            vm.RentNotBeingEarned = units.Where(u => u.Status != "Occupied").Sum(u => u.RentPrice);
 
             // ── Tenants ──
             vm.ActiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Active");
