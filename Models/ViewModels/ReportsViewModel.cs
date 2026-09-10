@@ -9,6 +9,11 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         public int AvailableUnits { get; set; }
         public int ReservedUnits { get; set; }
         public int MaintenanceUnits { get; set; }
+        
+        // the same units, named and explained rather than only counted
+        public List<UnitStateRow> UnitStates { get; set; } = new List<UnitStateRow>();
+        public decimal RentBeingEarned { get; set; }
+        public decimal RentNotBeingEarned { get; set; }
 
         // percentage of units currently occupied
         public double OccupancyRate =>
@@ -40,6 +45,17 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
                 public List<MaintenanceCountRow> MaintenanceByStatus { get; set; } = new List<MaintenanceCountRow>();
         public List<MaintenanceCategoryRow> MaintenanceByCategory { get; set; } = new List<MaintenanceCategoryRow>();
         public List<TenantHistoryRow> TenantHistory { get; set; } = new List<TenantHistoryRow>();
+    }
+    // One state a unit can be in — but written the way the owner would say it,
+    // and naming the actual units, because "Available: 5" does not tell anyone
+    // WHICH five to go and advertise.
+    public class UnitStateRow
+    {
+        public string State { get; set; } = string.Empty;      // "Empty and ready"
+        public string Meaning { get; set; } = string.Empty;    // what it means for the owner
+        public List<string> UnitNumbers { get; set; } = new List<string>();
+        public decimal MonthlyRent { get; set; }
+        public int Count => UnitNumbers.Count;
     }
 
     // one row of the maintenance report, grouped by issue type
