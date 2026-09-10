@@ -611,12 +611,35 @@ tbody td span[title] { opacity: .45; }
 [data-panel-body] svg + div { text-align: center; }
 
 /* the occupancy bar under the report table */
-[role="progressbar"] {
-    padding: .3rem .6rem;
-    background: var(--navy); color: #fff;
+/* ── How the building is doing ────────────────────────────────────────────
+   The old bar was a full-width navy pill with the figure printed inside it, so
+   it read as completely full whatever the number said — 14% occupancy drew the
+   same solid bar as 100%. A bar has one job: to be as long as its number. */
+[data-meter] {
+    height: 14px;
+    margin: .25rem 0 .4rem;
+    background: var(--field-bg);
+    border: 1px solid var(--field-line);
     border-radius: 999px;
-    font-size: .85rem; text-align: center;
+    overflow: hidden;
 }
+[data-meter-fill] {
+    height: 100%;
+    background: var(--orange-btn);
+    border-radius: 999px;
+}
+[data-meter-note] { margin-bottom: 1.1rem; color: var(--muted); font-size: .9rem; }
+
+/* the sentence that opens the panel, and the one that closes it */
+[data-lede] { margin: 0 0 .75rem; font-size: 1.05rem; color: var(--ink); }
+[data-takeaway] {
+    margin: 1rem 0 .35rem; padding: .75rem 1rem;
+    background: var(--field-bg); border-radius: 8px; color: var(--ink);
+}
+[data-footnote] { margin: 0; color: var(--muted); font-size: .9rem; }
+
+/* the "what it means" line under each state */
+[data-panel-body] td > div { color: var(--muted); font-size: .85rem; font-weight: 400; }
 
 /* report tables sit flush inside their panel */
 [data-panel-body] table { width: 100%; border-collapse: collapse; }
