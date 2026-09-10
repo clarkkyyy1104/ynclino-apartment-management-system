@@ -57,29 +57,89 @@
 <partial name="_Charts" model="Model" />
 
 <div>
-    @* ── Occupancy report ── *@
+    @* ── How the building is doing ──
+       This was five counts and a percentage. A count on its own is not a report:
+       "Available: 5" cannot be acted on without knowing which five units are
+       empty, or what standing empty is costing. It reads as a sentence now, and
+       every state names its own units. *@
     <div>
         <div data-panel>
-            <div data-panel-head><span>Occupancy Report</span></div>
+            <div data-panel-head><span>How the Building Is Doing</span></div>
             <div data-panel-body>
+                @{
+                    var empty = Model.TotalUnits - Model.OccupiedUnits;
+                    var rate = Model.OccupancyRate.ToString("F0");
+                }
+
+                <p data-lede>
+                    @if (Model.TotalUnits == 0)
+                    {
+                        <text>There are no units on record yet.</text>
+                    }
+                    else if (empty == 0)
+                    {
+                        <text>
+                            All <strong>@Model.TotalUnits</strong> units have someone living in them.
+                            The building is full.
+                        </text>
+                    }
+                    else
+                    {
+                        <text>
+                            <strong>@Model.OccupiedUnits</strong> of the
+                            <strong>@Model.TotalUnits</strong> units have someone living in them.
+                            <strong>@empty</strong> @(empty == 1 ? "does" : "do") not.
+                        </text>
+                    }
+                </p>
+
+                @* a bar that is actually as long as the number it reports — the old
+                   one filled the whole width whatever the figure was *@
+                <div data-meter>
+                    <div data-meter-fill style="width:@rate%"></div>
+                </div>
+                <div data-meter-note>@rate% of the building is earning rent</div>
+
                 <table>
+                    <thead>
+                        <tr><th>Right now</th><th>Units</th><th>Which ones</th><th>Rent a month</th></tr>
+                    </thead>
                     <tbody>
-                        <tr><td>Occupied</td><td>@Model.OccupiedUnits</td></tr>
-                        <tr><td>Available</td><td>@Model.AvailableUnits</td></tr>
-                        <tr><td>Reserved</td><td>@Model.ReservedUnits</td></tr>
-                        <tr><td>Under Maintenance</td><td>@Model.MaintenanceUnits</td></tr>
-                        <tr><td>Total Units</td><td>@Model.TotalUnits</td></tr>
+                        @foreach (var s in Model.UnitStates)
+                        {
+                            <tr>
+                                <td>
+                                    @s.State
+                                    <div>@s.Meaning</div>
+                                </td>
+                                <td>@s.Count</td>
+                                <td>@(s.Count == 0 ? "none" : string.Join(", ", s.UnitNumbers))</td>
+                                <td>@(s.MonthlyRent > 0 ? "₱" + s.MonthlyRent.ToString("N0") : "—")</td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
-                <div>
-                    <div role="progressbar">
-                        @Model.OccupancyRate.ToString("N0")%
-                    </div>
-                </div>
-                <div>
-                    Active tenants: <strong>@Model.ActiveTenants</strong> ·
-                    Inactive: <strong>@Model.InactiveTenants</strong>
-                </div>
+
+                @if (Model.RentNotBeingEarned > 0)
+                {
+                    <p data-takeaway>
+                        The building brings in <strong>₱@Model.RentBeingEarned.ToString("N0")</strong> a month.
+                        The units nobody is renting would add
+                        <strong>₱@Model.RentNotBeingEarned.ToString("N0")</strong> more.
+                    </p>
+                }
+                else if (Model.TotalUnits > 0)
+                {
+                    <p data-takeaway>
+                        Every unit is rented — the building brings in
+                        <strong>₱@Model.RentBeingEarned.ToString("N0")</strong> a month.
+                    </p>
+                }
+
+                <p data-footnote>
+                    @Model.ActiveTenants tenant(s) currently renting ·
+                    @Model.InactiveTenants no longer renting
+                </p>
             </div>
         </div>
     </div>
