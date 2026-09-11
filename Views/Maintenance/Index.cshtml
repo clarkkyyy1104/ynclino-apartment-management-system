@@ -131,6 +131,9 @@
                                 </a>
                             }
                     
+                            @* Update and Archive are the same slot, not two: a request
+                               that can be updated is still open, and one that can be
+                               archived is already closed, so no row ever shows both. *@
                             @if (!archived && YnclinoApartmentManagementSystem.Helpers.StatusFlowHelper.IsClosedMaintenance(r.Status))
                             {
                                 <form asp-action="Archive"
@@ -139,10 +142,6 @@
                                     @Html.AntiForgeryToken()
                                     <button type="submit">Archive</button>
                                 </form>
-                            }
-                            else if (!archived)
-                            {
-                                <span data-ghost>Archive</span>
                             }
                     
                             @if (archived)
@@ -163,10 +162,6 @@
                                        asp-route-id="@r.RequestID">
                                         Update
                                     </a>
-                                }
-                                else if (!archived)
-                                {
-                                    <span data-ghost>Update</span>
                                 }
                             }
                     </td>
