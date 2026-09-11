@@ -114,6 +114,13 @@
                         }
                         else if (isAdmin && !user.IsMainAdmin && user.Role != "Tenant")
                         {
+                            @* a staff account has no tenant record to open, so the
+                               slot the eye occupies on every other row is held
+                               empty rather than closed up *@
+                            <span data-ghost data-icon>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5"/></svg>
+                            </span>
+
                             @* A staff account is switched off, never deleted. The repairs
                                they logged, the notes they wrote and the requests they were
                                assigned stay attached to their name; deleting the account

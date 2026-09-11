@@ -64,7 +64,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // GET: Billing
-        public async Task<IActionResult> Index(string? statusFilter, string? searchTerm)
+        public async Task<IActionResult> Index(string? statusFilter, string? searchTerm, bool archived = false)
         {
             await RefreshStatusesAsync();
 
@@ -78,7 +78,19 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 if (tenant == null) return View(new List<tblBilling>());
                 ViewBag.AdvanceCredit = tenant.AdvanceCredit;
                 query = query.Where(b => b.TenantID == tenant.TenantID);
+
+                // A tenant's own list is their record, so nothing is ever filed
+                // out of it — archiving tidies the ADMIN's working list only.
+                archived = false;
             }
+            else
+            {
+                query = archived
+                    ? query.Where(b => b.ArchivedAt != null)
+                    : query.Where(b => b.ArchivedAt == null);
+            }
+
+            ViewBag.Archived = archived;
 
             if (!string.IsNullOrEmpty(statusFilter))
                 query = query.Where(b => b.Status == statusFilter);
@@ -97,6 +109,44 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 : await NotificationHelper.ReadTargetIdsAsync(_context, uid.Value, "Billing");
 
             return View(await query.OrderByDescending(b => b.BillingPeriod).ToListAsync());
+        }
+
+        // POST: Billing/Archive/5 — file a settled bill out of the working list
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Archive(int id)
+        {
+            var bill = await _context.tblBillings.FirstOrDefaultAsync(b => b.BillingID == id);
+            if (bill == null) return NotFound();
+
+            // A bill still owing money is the whole reason the list exists. Only
+            // a settled one can be put away.
+            if (bill.AmountDue - (bill.AmountPaid ?? 0m) > 0)
+            {
+                TempData["Error"] = "That bill still has a balance, so it cannot be archived yet.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            bill.ArchivedAt = DateTime.Now;
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Bill moved to the archive. It is still on the tenant's record.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // POST: Billing/Unarchive/5 — bring it back into the working list
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Unarchive(int id)
+        {
+            var bill = await _context.tblBillings.FirstOrDefaultAsync(b => b.BillingID == id);
+            if (bill == null) return NotFound();
+
+            bill.ArchivedAt = null;
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Bill restored to the active list.";
+            return RedirectToAction(nameof(Index), new { archived = true });
         }
 
         //GET: Billing/History - read-only log of payments that have been recorded.

@@ -73,7 +73,7 @@ else
                                 {
                                     <form asp-action="Unarchive" asp-route-id="@r.TransferID" method="post">
                                         @Html.AntiForgeryToken()
-                                        <button type="submit">Restore</button>
+                                        <button type="submit">Active</button>
                                     </form>
                                 }
                                 @if (!string.IsNullOrEmpty(r.AdminNotes))

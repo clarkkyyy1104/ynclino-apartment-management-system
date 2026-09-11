@@ -265,7 +265,13 @@ tbody tr:hover { background: #f7f8f9; }
    matched on being an icon now, not on its wording, and it wears the same box
    as the buttons beside it so the row lines up. */
 tbody td a[aria-label^="View"] { color: var(--orange); }
-tbody td a[aria-label] { padding: 0 .6rem; justify-content: center; }
+/* An icon button is a fixed square, and the empty slot that stands in for one
+   is the same square. Left to size themselves they came out 40px and 35px, and
+   the five-pixel difference pushed every button on that row out of line. */
+tbody td a[aria-label],
+tbody td span[data-ghost][data-icon] {
+    width: 2.5rem; padding: 0; justify-content: center;
+}
 
 /* ── The actions column ──────────────────────────────────────────────────────
    Buttons were centred in their cell, so a row with three of them centred
@@ -282,7 +288,17 @@ thead th:last-child { text-align: right; }
    buttons, on a different baseline. */
 tbody td a:not([data-record-link]),
 tbody td button,
-tbody td span[title] { min-height: 33px; }
+tbody td span[title],
+tbody td span[data-ghost] { min-height: 33px; }
+
+/* Every action in a row takes the same width, so a row ending in "Archive"
+   lines up with a row ending in "Update" — a word being one letter longer was
+   enough to shift the eye beside it six pixels sideways, and no two rows
+   agreed. A longer label (Reset Password) simply outgrows the slot; it is the
+   same on every row anyway. */
+tbody td:last-child a:not([aria-label]),
+tbody td:last-child button,
+tbody td:last-child span[data-ghost]:not([data-icon]) { min-width: 5.5rem; }
 tbody td a,
 tbody td button,
 tbody td form,
@@ -294,7 +310,6 @@ tbody td:last-child > span { display: inline-block; margin: 0 .2rem; }
    own, so it sat a few pixels further along than the plain links next to it and
    the column would not line up. The gap belongs to the control, not to the
    wrapper that happens to be needed to post it. */
-tbody td:last-child form { display: inline-block; margin: 0 .2rem; }
 tbody td:last-child form { display: inline-block; margin: 0; }
 /* 11. FORM PANELS (create / edit) ───────────────────────────────────────────
    These views are  div > div > (caption div) + (div > form).  The caption
@@ -457,20 +472,22 @@ main > div:has(> div > h4) > a:hover {
        wall of colour and gave four things the same weight. One primary action
        per screen — the one in the title row. Row actions are quiet, and only
        Delete carries a warning colour. */
-tbody td button {
-    padding: .35rem .8rem;
-    font-size: .9rem; font-weight: 600;
-    color: var(--ink); background: #fff;
-    border: 1px solid var(--field-line);
-}
-tbody td button:hover { background: var(--field-bg); color: var(--ink); border-color: var(--field-line); }
+/* A <button> used to be given its own padding here, a shade wider than the
+   <a> beside it carrying the same word, so Update-the-link and Archive-the-
+   button never sat on the same edge. Every control in a row wears the one
+   shell defined further up; nothing re-describes it. */
 tbody td a[asp-action="Delete"], tbody td a[href*="Delete"] { color: var(--red); }
 tbody td form { margin: 0; }
 /* keep every action on one baseline, icons included */
 tbody td:last-child { white-space: nowrap; }
 tbody td:last-child > a,
 tbody td:last-child > span,
-tbody td:last-child > form { display: inline-flex; vertical-align: middle; margin: 0 .15rem; }
+tbody td:last-child > form { display: inline-flex; vertical-align: middle; margin: 0 .1rem; }
+
+/* The gap belongs to the control, not to the form that happens to be needed to
+   post it — a button inside one was paying the margin twice and sat a few
+   pixels further along than its neighbours. */
+tbody td form > button { margin: 0; }
 
 /* the one-time temporary password after a reset — it must not look like an
    ordinary row of text, because it is shown once and never again */
@@ -488,7 +505,6 @@ tbody td:last-child > form { display: inline-flex; vertical-align: middle; margi
 [data-temp-password] p { margin: .5rem 0 0; font-size: .9rem; }
 
 /* the Forgot Password link sits under the password field, right-aligned */
-body:not(:has(aside)) p[data-forgot] { margin: -.4rem 0 .9rem; text-align: right; font-size: .9rem; }
 
 
 /* ══ 16. PAGE HEADERS AND ROW ACTIONS ═══════════════════════════════════════
@@ -559,36 +575,12 @@ tbody td button:hover { background: var(--field-bg); color: var(--ink); text-dec
    twin takes in the rows above and below. Without it the eye shuffled sideways
    on the rows that had one less button, and no two rows lined up. */
 tbody td span[data-ghost] { visibility: hidden; pointer-events: none; }
-tbody td span[data-ghost][data-icon] { padding: 0 .6rem; }
 
-/* MAINTENANCE ACTION BUTTON ALIGNMENT */
-.maintenance-actions {
-    min-width: 250px;
-    white-space: nowrap;
-}
-
-.maintenance-actions > .action-buttons {
-    display: grid;
-    grid-template-columns: 40px 80px 80px;
-    gap: 6px;
-    align-items: center;
-}
-
-.maintenance-actions .action-buttons > a,
-.maintenance-actions .action-buttons > form {
-    margin: 0;
-}
-
-.maintenance-actions .action-buttons > a,
-.maintenance-actions .action-buttons > form > button {
-    width: 100%;
-    min-width: 0;
-    box-sizing: border-box;
-}
-
-.maintenance-actions .action-buttons > form {
-    display: contents;
-}
+/* Fixed slots were the right idea, but described for one module only and in
+   class names the rest of this sheet does not use — Billing, Users and Lost &
+   Found still drifted, and an 80px column would have clipped a longer word
+   (Reset Password is 122px). The rules above do the same thing for every
+   table, through the attributes everything else here is reached by. */
 
 /* A name in a data column that opens the record behind it is not a row action:
    it is the reading itself, and giving it a button's box made all 44 tenant

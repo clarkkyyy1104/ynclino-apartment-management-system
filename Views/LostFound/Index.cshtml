@@ -92,6 +92,10 @@
                             {
                                 <a asp-action="Edit" asp-route-id="@item.ItemID">Update</a>
                             }
+                            else
+                            {
+                                <span data-ghost>Update</span>
+                            }
                         }
                     </td>
                 </tr>

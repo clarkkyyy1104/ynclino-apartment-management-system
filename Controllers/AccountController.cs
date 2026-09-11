@@ -21,12 +21,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // There is no self-service reset. This page carries no form and no input,
-        // touches no table and returns the same bytes to everyone, so it cannot be
-        // used to discover which usernames exist. It only explains the real
-        // procedure: the administrator resets the password in person.
-        [HttpGet]
-        public IActionResult ForgotPassword() => View();
-
         [HttpGet]
         public IActionResult Login(string? returnUrl)
         {

@@ -69,6 +69,13 @@ namespace YnclinoApartmentManagementSystem.Models
         [Display(Name = "Date Issued")]
         public DateTime DateIssued { get; set; } = DateTime.Now;
 
+        // Filing a settled bill out of the working list. It is put away, not
+        // undone: the tenant still sees it on their own record and the reports
+        // still count it, because the money really was billed and really was
+        // paid. Only the admin's list gets shorter.
+        [Display(Name = "Archived")]
+        public DateTime? ArchivedAt { get; set; }
+
         [ForeignKey("TenantID")]
         public tblTenant? Tenant { get; set; }
     }

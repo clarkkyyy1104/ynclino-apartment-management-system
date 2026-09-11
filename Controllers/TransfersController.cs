@@ -38,8 +38,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // the admin's, and the other way round.
         private bool ViewingAsTenant() => User.IsInRole("Tenant");
 
-        // GET: Transfers  — shows Active and Archived side by side (two columns)
-        public async Task<IActionResult> Index()
+        // GET: Transfers — one list at a time, the active one or the archive,
+        // the same way Billing and Maintenance do it.
+        public async Task<IActionResult> Index(bool archived = false)
         {
             IQueryable<tblUnitTransferRequest> query = _context.tblUnitTransferRequests
                 .Include(r => r.Tenant).ThenInclude(t => t!.Unit)
@@ -51,7 +52,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 var tenant = await GetCurrentTenantAsync();
                 if (tenant == null)
                 {
-                    ViewBag.ArchivedList = new List<tblUnitTransferRequest>();
+                    ViewBag.Archived = archived;
                     return View(new List<tblUnitTransferRequest>());
                 }
                 query = query.Where(r => r.TenantID == tenant.TenantID);
@@ -65,17 +66,17 @@ namespace YnclinoApartmentManagementSystem.Controllers
             bool IsFiled(tblUnitTransferRequest r) =>
                 asTenant ? r.TenantArchivedAt != null : r.StaffArchivedAt != null;
 
-            var active = all.Where(r => !IsFiled(r))
-                            .OrderByDescending(r => r.DateRequested).ToList();
-            var archived = all.Where(IsFiled)
-                              .OrderByDescending(r => r.DateReviewed).ToList();
-            ViewBag.ArchivedList = archived;
+            var shown = archived
+                ? all.Where(IsFiled).OrderByDescending(r => r.DateReviewed).ToList()
+                : all.Where(r => !IsFiled(r)).OrderByDescending(r => r.DateRequested).ToList();
+
+            ViewBag.Archived = archived;
             ViewBag.ClosedStatuses = ClosedStatuses;
 
             var meId = CurrentUserID();
             ViewBag.UnreadIds = meId == null ? new HashSet<int>() : await NotificationHelper.UnreadTargetIdsAsync(_context, meId.Value, "Transfer");
             ViewBag.ReadIds = meId == null ? new HashSet<int>() : await NotificationHelper.ReadTargetIdsAsync(_context, meId.Value, "Transfer");
-            return View(active);
+            return View(shown);
         }
 
         // POST: Transfers/Archive/5 — file a reviewed request away, for MY side only
@@ -116,7 +117,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             await _context.SaveChangesAsync();
             TempData["Success"] = "Request restored to your active list.";
-            return RedirectToAction(nameof(Index));
+            // you were reading the archive, so that is where you stay
+            return RedirectToAction(nameof(Index), new { archived = true });
         }
 
         // a tenant may only archive their own request

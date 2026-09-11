@@ -2,40 +2,53 @@
 @{
     ViewData["Title"] = "Unit Requests";
     bool isAdmin = User.IsInRole("Admin");
+    bool archived = ViewBag.Archived as bool? ?? false;
     string title = isAdmin ? "Unit Requests" : "My Unit Requests";
-    var archivedList = ViewBag.ArchivedList as IEnumerable<YnclinoApartmentManagementSystem.Models.tblUnitTransferRequest>
-                       ?? Enumerable.Empty<YnclinoApartmentManagementSystem.Models.tblUnitTransferRequest>();
 }
 
 <div data-page-head>
     <div>
         <h3>@title</h3>
         <p>
-            @(isAdmin
-                ? "Requests to move to another unit, and applications for a first unit."
-                : "The requests you have sent, and what has become of them.")
+            @if (archived)
+            {
+                <text>Requests you have filed away. They stay on the other side's list.</text>
+            }
+            else if (isAdmin)
+            {
+                <text>Requests to move to another unit, and applications for a first unit.</text>
+            }
+            else
+            {
+                <text>The requests you have sent, and what has become of them.</text>
+            }
         </p>
     </div>
-    @if (!isAdmin)
-    {
-        <div data-actions>
+    <div data-actions>
+        @if (!isAdmin && !archived)
+        {
             <a asp-action="Create" data-primary>+ New Request</a>
-        </div>
-    }
-</div>
-
-<div data-panel>
-    <div data-panel-head>Active</div>
-    <div data-panel-body>
-        @{ ViewData["EmptyText"] = "No active requests."; ViewData["IsArchive"] = false; }
-        <partial name="_RequestList" model="Model" />
+        }
+        @* One button, not a pair of tabs: it names the list you are NOT looking
+           at, so it always reads as somewhere to go. *@
+        @if (archived)
+        {
+            <a asp-action="Index">Active</a>
+        }
+        else
+        {
+            <a asp-action="Index" asp-route-archived="true">Archive</a>
+        }
     </div>
 </div>
 
 <div data-panel>
-    <div data-panel-head>Archive</div>
+    <div data-panel-head>@(archived ? "Archive" : "Active")</div>
     <div data-panel-body>
-        @{ ViewData["EmptyText"] = "Nothing in the archive yet."; ViewData["IsArchive"] = true; }
-        <partial name="_RequestList" model="archivedList" />
+        @{
+            ViewData["EmptyText"] = archived ? "Nothing in the archive yet." : "No active requests.";
+            ViewData["IsArchive"] = archived;
+        }
+        <partial name="_RequestList" model="Model" />
     </div>
 </div>

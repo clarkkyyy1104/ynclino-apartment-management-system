@@ -22,10 +22,17 @@
         {
             <a data-primary asp-action="Create">+ New Request</a>
         }
-        <div>
+        @* One button, not a pair of tabs: it names the list you are NOT looking
+           at, so it always reads as somewhere to go rather than as a choice
+           between two things one of which you are already on. *@
+        @if (archived)
+        {
             <a asp-action="Index">Active</a>
+        }
+        else
+        {
             <a asp-action="Index" asp-route-archived="true">Archive</a>
-        </div>
+        }
     </div>
 </div>
 
@@ -99,8 +106,7 @@
                         </td>
                     }
                     <td>@r.DateSubmitted.ToString("MMM dd, yyyy")</td>
-                    <td class="maintenance-actions">
-                        <div class="action-buttons">
+                    <td>
                         
                             <!-- VIEW -->
                             <a asp-action="Details"
@@ -134,6 +140,10 @@
                                     <button type="submit">Archive</button>
                                 </form>
                             }
+                            else if (!archived)
+                            {
+                                <span data-ghost>Archive</span>
+                            }
                     
                             @if (archived)
                             {
@@ -141,7 +151,7 @@
                                       asp-route-id="@r.RequestID"
                                       method="post">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit">Restore</button>
+                                    <button type="submit">Active</button>
                                 </form>
                             }
                     
@@ -154,9 +164,11 @@
                                         Update
                                     </a>
                                 }
+                                else if (!archived)
+                                {
+                                    <span data-ghost>Update</span>
+                                }
                             }
-                    
-                        </div>
                     </td>
                 </tr>
             }
