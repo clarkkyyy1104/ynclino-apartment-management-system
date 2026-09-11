@@ -561,6 +561,35 @@ tbody td button:hover { background: var(--field-bg); color: var(--ink); text-dec
 tbody td span[data-ghost] { visibility: hidden; pointer-events: none; }
 tbody td span[data-ghost][data-icon] { padding: 0 .6rem; }
 
+/* MAINTENANCE ACTION BUTTON ALIGNMENT */
+.maintenance-actions {
+    min-width: 250px;
+    white-space: nowrap;
+}
+
+.maintenance-actions > .action-buttons {
+    display: grid;
+    grid-template-columns: 40px 80px 80px;
+    gap: 6px;
+    align-items: center;
+}
+
+.maintenance-actions .action-buttons > a,
+.maintenance-actions .action-buttons > form {
+    margin: 0;
+}
+
+.maintenance-actions .action-buttons > a,
+.maintenance-actions .action-buttons > form > button {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.maintenance-actions .action-buttons > form {
+    display: contents;
+}
+
 /* A name in a data column that opens the record behind it is not a row action:
    it is the reading itself, and giving it a button's box made all 44 tenant
    names in the standing-balance report look like buttons. */
