@@ -70,14 +70,21 @@ aside#appSidebar {
     display: flex;
     flex-direction: column;
 }
-/* the first link in the sidebar is the brand */
-aside#appSidebar > a {
-    padding: 26px 18px;
-    color: #fff;
-    font-size: 1.3rem;
-    font-weight: 700;
-    text-align: center;
+/* the brand row: the wordmark, and the control that narrows the sidebar */
+[data-brand] { display: flex; align-items: center; gap: .5rem; padding: 20px 14px; }
+[data-brand-link] { flex: 1 1 auto; min-width: 0; }
+[data-brand-link]:hover { text-decoration: none; }
+[data-logo-mark] { display: none; }          /* shown only on the rail */
+
+[data-rail-toggle] {
+    flex: 0 0 auto;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; padding: 0;
+    color: var(--cream); background: transparent;
+    border: 1px solid rgba(255,255,255,.22); border-radius: 6px;
+    font-size: 1rem; line-height: 1; cursor: pointer;
 }
+[data-rail-toggle]:hover { background: rgba(255,255,255,.1); color: #fff; border-color: rgba(255,255,255,.35); }
 aside#appSidebar > a:hover { text-decoration: none; }
 
 aside#appSidebar + div { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
@@ -139,6 +146,22 @@ aside nav a {
 }
 aside nav a:hover { background: rgba(255,255,255,.06); color: #fff; text-decoration: none; }
 
+/* the slot an icon goes into. Until one is pasted in, data-initial draws the
+   module's first letter so the rail is readable in the meantime. */
+[data-nav-icon] {
+    flex: 0 0 auto;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px;
+}
+[data-nav-icon]:empty::before {
+    content: attr(data-initial);
+    font-size: .95rem; font-weight: 700; opacity: .85;
+}
+[data-nav-icon] svg { width: 100%; height: 100%; }
+[data-nav-label] { flex: 1 1 auto; min-width: 0; }
+[data-caret] { margin-left: auto; transition: transform .15s; }
+aside nav a[aria-expanded="true"] [data-caret] { transform: rotate(180deg); }
+
 /* the page you are on — this is why the markup carries aria-current */
 aside nav a[aria-current="page"] {
     background: var(--navy-soft);
@@ -146,13 +169,64 @@ aside nav a[aria-current="page"] {
     color: #fff;
 }
 
-/* the ▾ on a group toggle sits at the far right and flips when open */
-aside nav a[data-collapse] > span:last-child { margin-left: auto; transition: transform .15s; }
-aside nav a[data-collapse][aria-expanded="true"] > span:last-child { transform: rotate(180deg); }
-
 /* the panel a group opens; [hidden] already keeps it closed with no css */
 aside nav div > div { background: rgba(0,0,0,.18); }
 aside nav div > div a { padding-left: 3.2rem; font-size: .95rem; }
+
+/* ── THE COLLAPSED RAIL ──────────────────────────────────────────────────────
+   One attribute on <html> drives all of it, and the whole thing is a media
+   query deep: below 768px the sidebar is already a drawer that slides in and
+   out, so a rail there would be two ideas fighting.
+
+   Redefining --sidebar-w is what actually moves the edge — the width and the
+   flex-basis both read it, so nothing else has to be told the new number. */
+@media (min-width: 768px) {
+    html[data-rail] { --sidebar-w: 76px; }
+
+    /* the wordmark gives way to the Y */
+    html[data-rail] [data-brand] { flex-direction: column; gap: .55rem; padding: 16px 8px; }
+    html[data-rail] [data-logo-full] { display: none; }
+    html[data-rail] [data-logo-mark] { display: block; width: 100%; max-width: 38px; margin: 0 auto; }
+
+    /* the icon is all that is left of a nav line, centred in the rail */
+    html[data-rail] aside nav a {
+        justify-content: center;
+        gap: 0;
+        padding-left: 0; padding-right: 0;
+        border-left-width: 3px;
+        position: relative;
+    }
+    html[data-rail] [data-nav-label],
+    html[data-rail] [data-caret] { display: none; }
+
+    /* a count still has to be visible, so it rides the corner of the icon */
+    html[data-rail] aside nav a [data-navcount] {
+        position: absolute; top: .3rem; right: .85rem;
+        margin: 0;
+    }
+
+    /* a sub-list has nowhere to go on a rail; the script widens the sidebar
+       on the first click instead, and this keeps any open one out of sight */
+    html[data-rail] aside nav > div { display: none; }
+
+    /* the account keeps its initial only */
+    html[data-rail] [data-account] > a[role="button"] { align-items: center; padding: .9rem .5rem; }
+    html[data-rail] [data-account-name],
+    html[data-rail] [data-account-role] { display: none; }
+    html[data-rail] [data-account] > a[role="button"]::after { display: none; }
+    html[data-rail] [data-account] ul#accountMenu { left: .4rem; width: 13rem; right: auto; }
+}
+
+/* off the rail the initial is not needed */
+[data-account-initial] { display: none; }
+@media (min-width: 768px) {
+    html[data-rail] [data-account-initial] {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 34px; height: 34px;
+        background: var(--navy-soft); border-radius: 50%;
+        font-weight: 700; color: #fff;
+    }
+}
 
 /* 5. THE SIGN-IN SCREEN ─────────────────────────────────────────────────────
    body:not(:has(aside)) means "a page with no sidebar": sign in, access
@@ -490,9 +564,12 @@ main > div > div > a:has(> div > div > svg) > div > div:last-child > div:first-c
 /* ── 15. CORRECTIONS ─────────────────────────────────────────────────────────
    Fixes for three faults visible once the design was on real screens.       */
 
-/* (a) The logo, now that wwwroot/images/logo.png is wired in. */
-aside#appSidebar > a { padding: 20px 18px; }
-aside#appSidebar > a img { display: block; width: 100%; max-width: 190px; margin: 0 auto; }
+/* (a) The logo, now that wwwroot/images/logo.png is wired in. The brand link
+   sits inside [data-brand] with the rail toggle, so it is reached through that
+   rather than as a direct child of the sidebar. Named for the wordmark alone:
+   "any img in the brand link" also matched the Y and, coming later in the file
+   than the rule that hides it, showed both. */
+[data-logo-full] { display: block; width: 100%; max-width: 190px; margin: 0 auto; }
 body:not(:has(aside)) > div > div:first-child img { max-width: 340px; margin: 0 auto .25rem; }
 
 /* (b) Some pages nest the heading one level deeper —

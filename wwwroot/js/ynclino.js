@@ -10,6 +10,28 @@
    ========================================================================== */
 (function () {
     'use strict';
+    /* The sidebar rail. One place sets it, so the button's own wording can never
+       drift out of step with the sidebar it describes — widening it by clicking
+       a group has to relabel the button too. */
+    function setRail(collapsed) {
+        document.documentElement.toggleAttribute('data-rail', collapsed);
+        try { localStorage.setItem('ynclino-rail', collapsed ? '1' : '0'); } catch (err) { }
+
+        var toggle = document.querySelector('[data-rail-toggle]');
+        if (!toggle) return;
+        var word = collapsed ? 'Expand the menu' : 'Collapse the menu';
+        toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        toggle.setAttribute('title', word);
+        toggle.setAttribute('aria-label', word);
+    }
+
+    /* the rail toggle itself */
+    document.addEventListener('click', function (e) {
+        var toggle = e.target.closest('[data-rail-toggle]');
+        if (!toggle) return;
+        e.preventDefault();
+        setRail(!document.documentElement.hasAttribute('data-rail'));
+    });
 
     /* disclosure groups in the sidebar: <a data-collapse="#unitsGroup"> */
     document.addEventListener('click', function (e) {
@@ -19,6 +41,14 @@
 
         var panel = document.querySelector(trigger.getAttribute('data-collapse'));
         if (!panel) return;
+
+
+        /* there is nowhere to show a sub-list on a collapsed rail, so the first
+           click widens the sidebar and leaves the group for the next one */
+        if (document.documentElement.hasAttribute('data-rail')) {
+            setRail(false);
+            return;
+        }
 
         var nowOpen = panel.hasAttribute('hidden');
         panel.toggleAttribute('hidden');
@@ -65,6 +95,8 @@
     });
 
     window.addEventListener('DOMContentLoaded', function () {
+        /* the head script set the attribute before paint; the button has to agree */
+        if (document.documentElement.hasAttribute('data-rail')) setRail(true);
         document.querySelectorAll('[data-flash]').forEach(function (msg) {
             setTimeout(function () { msg.remove(); }, 5000);
         });
