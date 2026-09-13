@@ -57,7 +57,10 @@ hr { border: 0; border-top: 1px solid var(--line); margin: .35rem 0; }
 /* 3. APP SHELL ──────────────────────────────────────────────────────────── */
 /* only the wrapper that holds the sidebar becomes the two-column shell —
    the sign-in page has no sidebar and must stay a normal block */
-body > div:has(> aside#appSidebar) { display: flex; min-height: 100vh; }
+/* The shell is exactly the height of the window and does not scroll itself:
+   the sidebar stays put while you read, and the only thing that moves is the
+   module's own content. */
+body > div:has(> aside#appSidebar) { display: flex; height: 100vh; overflow: hidden; }
 
 aside#appSidebar {
     width: var(--sidebar-w);
@@ -77,10 +80,54 @@ aside#appSidebar > a {
 }
 aside#appSidebar > a:hover { text-decoration: none; }
 
-aside#appSidebar + div { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+aside#appSidebar + div { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ── The account, at the foot of the sidebar ─────────────────────────────────
+   margin-top:auto is what pins it to the bottom: the sidebar is a column, so
+   the gap above this block absorbs whatever space the nav does not use. */
+[data-account] {
+    position: relative;
+    margin-top: auto;
+    border-top: 1px solid rgba(255,255,255,.12);
+}
+[data-account] > a[role="button"] {
+    display: flex; flex-direction: column; gap: .1rem;
+    padding: .9rem 1.35rem;
+    color: var(--cream);
+}
+[data-account] > a[role="button"]:hover { background: rgba(255,255,255,.06); color: #fff; text-decoration: none; }
+[data-account-name] { font-weight: 700; font-size: 1.02rem; }
+[data-account-role] { font-size: .82rem; color: rgba(239,236,225,.65); }
+/* the caret points up, because the menu opens upward from down here */
+[data-account] > a[role="button"]::after {
+    content: ""; position: absolute; right: 1.35rem; top: 50%;
+    margin-top: -.15em;
+    border: .3em solid transparent; border-bottom-color: currentColor;
+}
+[data-account] > a[role="button"][aria-expanded="true"]::after {
+    border-bottom-color: transparent; border-top-color: currentColor; margin-top: -.45em;
+}
+
+/* opens upward: there is no room below it */
+[data-account] ul#accountMenu {
+    position: absolute; left: .6rem; right: .6rem; bottom: 100%; z-index: 20;
+    margin: 0 0 .4rem; padding: .35rem 0;
+    list-style: none; background: #fff;
+    border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: 0 -8px 24px rgba(0,0,0,.28);
+}
+[data-account] ul#accountMenu a,
+[data-account] ul#accountMenu button {
+    display: block; width: 100%; padding: .45rem 1rem;
+    text-align: left; color: var(--ink);
+    background: none; border: 0; font: inherit; cursor: pointer;
+}
+[data-account] ul#accountMenu a:hover,
+[data-account] ul#accountMenu button:hover { background: var(--field-bg); text-decoration: none; }
+[data-account] ul#accountMenu form { margin: 0; }
 
 /* 4. SIDEBAR NAVIGATION ─────────────────────────────────────────────────── */
-aside nav { display: flex; flex-direction: column; }
+aside nav { display: flex; flex-direction: column; flex: 0 1 auto; min-height: 0; overflow-y: auto; }
 aside nav a {
     display: flex;
     align-items: center;
@@ -155,6 +202,9 @@ body:not(:has(aside)) div:has(> input + button) > button:hover,
 body:not(:has(aside)) div:has(> form + form) button:hover { background: var(--field-bg); }
 
 /* 6. HEADER STRIP ───────────────────────────────────────────────────────── */
+/* The account moved to the foot of the sidebar, so on a wide screen this strip
+   has nothing left to hold and the first thing on the page is the module's own
+   heading. On a narrow one it still carries the control that opens the nav. */
 header {
     display: flex;
     align-items: center;
@@ -162,6 +212,7 @@ header {
     padding: .9rem 2rem;
     border-bottom: 1px solid var(--line);
 }
+@media (min-width: 768px) { header { display: none; } }
 header > div { position: relative; margin-left: auto; }
 header > div > a { color: var(--ink); font-weight: 600; }
 header > div > a::after {
@@ -189,7 +240,7 @@ header ul#accountMenu a:hover,
 header ul#accountMenu button:hover { background: var(--field-bg); text-decoration: none; }
 
 /* 7. MAIN & PAGE HEADINGS ───────────────────────────────────────────────── */
-main { flex: 1 1 auto; padding: 1.5rem 2rem; }
+main { flex: 1 1 auto; padding: 1.5rem 2rem; overflow-y: auto; }
 main h3, main h4 { font-size: 1.6rem; text-transform: uppercase; letter-spacing: .01em; }
 main h6 { font-size: 1.05rem; font-weight: 400; text-transform: uppercase; margin: 1.5rem 0 .6rem; }
 main p { margin: .35rem 0 1rem; color: var(--ink-soft); }
@@ -561,7 +612,7 @@ tbody td form > button { margin: 0; }
 tbody td a:not([data-record-link]),
 tbody td button,
 tbody td span[data-ghost] {
-    display: inline-flex; align-items: center;
+    display: inline-flex; align-items: center; justify-content: center;
     padding: .3rem .75rem; margin: 0 .1rem;
     font-family: var(--serif); font-size: .9rem; font-weight: 600;
     color: var(--ink); background: #fff;

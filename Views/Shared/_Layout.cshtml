@@ -84,34 +84,41 @@
                     <a aria-current="@Active("Reports")" asp-controller="Reports" asp-action="Index">Reports &amp; Records</a>
                 }
             </nav>
+
+            @* The account sits at the foot of the sidebar rather than across the
+               top of the page, so the first thing at the top of every module is
+               that module's own heading. *@
+            <div data-account>
+                <a href="#" role="button" data-dropdown aria-expanded="false" aria-controls="accountMenu">
+                    <span data-account-name>@User.Identity.Name</span>
+                    <span data-account-role>@(isAdmin ? "Admin" : isStaff ? "Maintenance Staff" : "Tenant")</span>
+                </a>
+                <ul id="accountMenu" hidden>
+                    @if (!isStaff)
+                    {
+                        <li>
+                            <a asp-controller="Profile" asp-action="Index">
+                                My Profile @if (isTenant) { @await Component.InvokeAsync("NavAlert", new { module = "Transfer" }) }
+                            </a>
+                        </li>
+                    }
+                    <li><a asp-controller="Account" asp-action="ChangePassword">Change Password</a></li>
+                    <li><hr></li>
+                    <li>
+                        <form asp-controller="Account" asp-action="Logout" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit">Sign Out</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
         </aside>
 
         <div>
+            @* Only the control that opens the sidebar on a narrow screen is left
+               here; the stylesheet hides this strip entirely on a wide one. *@
             <header>
                 <button type="button" onclick="document.getElementById('appSidebar').toggleAttribute('data-open')">☰</button>
-                <div>
-                    <a href="#" role="button" data-dropdown aria-expanded="false" aria-controls="accountMenu">
-                        @User.Identity.Name <span>(@(isAdmin ? "Admin" : isStaff ? "Maintenance Staff" : "Tenant"))</span>
-                    </a>
-                    <ul id="accountMenu" hidden>
-                        @if (!isStaff)
-                        {
-                            <li>
-                                <a asp-controller="Profile" asp-action="Index">
-                                    My Profile @if (isTenant) { @await Component.InvokeAsync("NavAlert", new { module = "Transfer" }) }
-                                </a>
-                            </li>
-                        }
-                        <li><a asp-controller="Account" asp-action="ChangePassword">Change Password</a></li>
-                        <li><hr></li>
-                        <li>
-                            <form asp-controller="Account" asp-action="Logout" method="post">
-                                @Html.AntiForgeryToken()
-                                <button type="submit">Sign Out</button>
-                            </form>
-                        </li>
-                    </ul>
-                </div>
             </header>
 
             <main>
