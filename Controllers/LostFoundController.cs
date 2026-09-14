@@ -24,7 +24,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // every active tenant, so an admin can name who collected an item
         private async Task<IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>> GetTenantListAsync()
         {
-            return await _context.tblTenants
+            return await _context.TenantProfiles
                 .Where(t => t.Status == "Active" && t.UserID != null)
                 .OrderBy(t => t.LastName).ThenBy(t => t.FirstName)
                 .Select(t => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
@@ -41,7 +41,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // GET: LostFound
         public async Task<IActionResult> Index(string? typeFilter, string? statusFilter, string? searchTerm)
         {
-            IQueryable<tblLostFoundItem> query = _context.tblLostFoundItems
+            IQueryable<LostFoundItem> query = _context.LostFoundItems
                 .Include(l => l.ReportedBy).ThenInclude(u => u!.Tenants)
                 .Include(l => l.ClaimedBy).ThenInclude(u => u!.Tenants);
 
@@ -77,7 +77,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             if (id == null) return NotFound();
 
-            var item = await _context.tblLostFoundItems
+            var item = await _context.LostFoundItems
                 .Include(l => l.ReportedBy).ThenInclude(u => u!.Tenants)
                 .Include(l => l.ClaimedBy).ThenInclude(u => u!.Tenants)
                 .FirstOrDefaultAsync(l => l.ItemID == id);
@@ -91,7 +91,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             if (User.IsInRole("Admin"))
             {
-                ViewBag.Claims = await _context.tblClaimRequests
+                ViewBag.Claims = await _context.ClaimRequests
                     .Include(c => c.Claimant).ThenInclude(u => u!.Tenants)
                     .Where(c => c.ItemID == id)
                     .OrderByDescending(c => c.SubmittedAt)
@@ -101,7 +101,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             {
                 // a tenant sees only the claims they filed on this item
                 var uid = CurrentUserID();
-                ViewBag.MyClaims = await _context.tblClaimRequests
+                ViewBag.MyClaims = await _context.ClaimRequests
                     .Where(c => c.ItemID == id && c.ClaimantUserID == uid)
                     .OrderByDescending(c => c.SubmittedAt)
                     .ToListAsync();
@@ -130,7 +130,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (vm.ImageUpload != null)
                 imagePath = await ImageUploadHelper.SaveAsync(vm.ImageUpload, "lostfound", _env);
 
-            var item = new tblLostFoundItem
+            var item = new LostFoundItem
             {
                 ReportedByUserID = uid.Value,
                 ItemName = vm.ItemName,
@@ -143,7 +143,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 ImagePath = imagePath
             };
 
-            _context.tblLostFoundItems.Add(item);
+            _context.LostFoundItems.Add(item);
             await _context.SaveChangesAsync();
             TempData["Success"] = $"{vm.ItemType} item \"{vm.ItemName}\" has been reported.";
             return RedirectToAction(nameof(Index));
@@ -155,7 +155,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             if (id == null) return NotFound();
 
-            var item = await _context.tblLostFoundItems
+            var item = await _context.LostFoundItems
                 .Include(l => l.ReportedBy).ThenInclude(u => u!.Tenants)
                 .FirstOrDefaultAsync(l => l.ItemID == id);
 
@@ -200,7 +200,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             // status may only move forward — an item already claimed by its owner
             // cannot be reported again
-            var currentItem = await _context.tblLostFoundItems.AsNoTracking()
+            var currentItem = await _context.LostFoundItems.AsNoTracking()
                 .FirstOrDefaultAsync(l => l.ItemID == id);
 
             // closed items are view-only — reject the post outright
@@ -222,13 +222,13 @@ namespace YnclinoApartmentManagementSystem.Controllers
             {
                 if (vm.ClaimedByUserID == 0)
                     ModelState.AddModelError(nameof(vm.ClaimedByUserID), "Select the tenant who claimed this item.");
-                else if (!await _context.tblTenants.AnyAsync(t => t.UserID == vm.ClaimedByUserID && t.Status == "Active"))
+                else if (!await _context.TenantProfiles.AnyAsync(t => t.UserID == vm.ClaimedByUserID && t.Status == "Active"))
                     ModelState.AddModelError(nameof(vm.ClaimedByUserID), "Select a valid active tenant.");
             }
 
             if (!ModelState.IsValid)
             {
-                vm.ReportedByName = (await _context.tblUsers
+                vm.ReportedByName = (await _context.Users
                     .Include(u => u.Tenants)
                     .FirstOrDefaultAsync(u => u.UserID == vm.ReportedByUserID))?.DisplayName;
                 vm.AvailableTenants = await GetTenantListAsync();
@@ -236,7 +236,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 return View(vm);
             }
 
-            var item = await _context.tblLostFoundItems.FindAsync(id);
+            var item = await _context.LostFoundItems.FindAsync(id);
             if (item == null) return NotFound();
 
             item.ItemName = vm.ItemName;
@@ -266,7 +266,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             if (id == null) return NotFound();
 
-            var item = await _context.tblLostFoundItems
+            var item = await _context.LostFoundItems
                 .Include(l => l.ReportedBy).ThenInclude(u => u!.Tenants)
                 .FirstOrDefaultAsync(l => l.ItemID == id);
 
@@ -280,10 +280,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var item = await _context.tblLostFoundItems.FindAsync(id);
+            var item = await _context.LostFoundItems.FindAsync(id);
             if (item == null) return NotFound();
 
-            _context.tblLostFoundItems.Remove(item);
+            _context.LostFoundItems.Remove(item);
             await _context.SaveChangesAsync();
             TempData["Success"] = "Item record deleted.";
             return RedirectToAction(nameof(Index));
@@ -294,7 +294,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         public async Task<IActionResult> Claim(int? id)
         {
             if (id == null) return NotFound();
-            var item = await _context.tblLostFoundItems.FindAsync(id);
+            var item = await _context.LostFoundItems.FindAsync(id);
             if (item == null || item.ItemType != "Found" || item.Status != "Reported")
                 return NotFound();
 
@@ -308,7 +308,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             }
 
             // don't let the same person stack pending claims on one item
-            bool alreadyClaimed = await _context.tblClaimRequests
+            bool alreadyClaimed = await _context.ClaimRequests
                 .AnyAsync(c => c.ItemID == id && c.ClaimantUserID == uid && c.Status == "Pending");
             if (alreadyClaimed)
             {
@@ -326,7 +326,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         [Authorize(Roles = "Tenant")]
         public async Task<IActionResult> Claim(int id, string verificationDetails, IFormFile? proofImage)
         {
-            var item = await _context.tblLostFoundItems.FindAsync(id);
+            var item = await _context.LostFoundItems.FindAsync(id);
             if (item == null || item.ItemType != "Found" || item.Status != "Reported")
                 return NotFound();
 
@@ -352,7 +352,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             }
 
             // re-check for a pending duplicate in case of a double submit
-            bool alreadyClaimed = await _context.tblClaimRequests
+            bool alreadyClaimed = await _context.ClaimRequests
                 .AnyAsync(c => c.ItemID == id && c.ClaimantUserID == uid && c.Status == "Pending");
             if (alreadyClaimed)
             {
@@ -364,7 +364,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (proofImage != null)
                 proofPath = await ImageUploadHelper.SaveAsync(proofImage, "claims", _env);
 
-            var claim = new tblClaimRequest
+            var claim = new ClaimRequest
             {
                 ItemID = id,
                 ClaimantUserID = uid.Value,
@@ -373,7 +373,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 Status = "Pending",
                 ImagePath = proofPath
             };
-            _context.tblClaimRequests.Add(claim);
+            _context.ClaimRequests.Add(claim);
             await _context.SaveChangesAsync();
 
             TempData["Success"] = "Your claim has been submitted. An admin will review it.";
@@ -389,7 +389,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (decision != "Approved" && decision != "Rejected")
                 return BadRequest();
 
-            var claim = await _context.tblClaimRequests
+            var claim = await _context.ClaimRequests
                 .Include(c => c.Item)
                 .FirstOrDefaultAsync(c => c.ClaimID == claimId);
             if (claim == null) return NotFound();
@@ -412,7 +412,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 claim.Item.DateClaimed = DateTime.Now;
 
                 // any other pending claims on the same item lose automatically
-                var others = await _context.tblClaimRequests
+                var others = await _context.ClaimRequests
                     .Where(c => c.ItemID == claim.ItemID && c.ClaimID != claim.ClaimID && c.Status == "Pending")
                     .ToListAsync();
                 foreach (var other in others)

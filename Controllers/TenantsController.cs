@@ -24,7 +24,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             var idStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!int.TryParse(idStr, out int id)) return false;
-            return _context.tblUsers.Any(u => u.UserID == id && u.IsMainAdmin);
+            return _context.Users.Any(u => u.UserID == id && u.IsMainAdmin);
         }
 
         private int? CurrentUserID() =>
@@ -57,7 +57,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Index(string? statusFilter, string? searchTerm)
         {
-            var query = _context.tblTenants.Include(t => t.Unit).Include(t => t.User).AsQueryable();
+            var query = _context.TenantProfiles.Include(t => t.Unit).Include(t => t.User).AsQueryable();
 
             // default view is Active; "All" is an explicit choice that skips filtering
             statusFilter ??= "Active";
@@ -80,7 +80,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             if (id == null) return NotFound();
 
-            var tenant = await _context.tblTenants
+            var tenant = await _context.TenantProfiles
                 .Include(t => t.Unit)
                 .Include(t => t.User)
                 .FirstOrDefaultAsync(t => t.TenantID == id);
@@ -132,7 +132,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             // account fields are required on create
             if (string.IsNullOrWhiteSpace(vm.Username))
                 ModelState.AddModelError("Username", "Username could not be generated. Ensure First Name and Last Name are filled.");
-            else if (await _context.tblUsers.AnyAsync(u => u.Username.ToLower() == vm.Username.ToLower()))
+            else if (await _context.Users.AnyAsync(u => u.Username.ToLower() == vm.Username.ToLower()))
                 ModelState.AddModelError(string.Empty, $"Username '{vm.Username}' is already taken (same month and initials). Adjust the name.");
 
             // a unit is not assigned at registration — the tenant applies for one later
@@ -147,7 +147,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             }
 
             // create the login account and tenant together so a failure leaves neither behind
-            var user = new tblUser
+            var user = new User
             {
                 Username = vm.Username!,
                 Password = PasswordHelper.Hash(vm.Password!),
@@ -159,7 +159,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 DateCreated = DateTime.Now
             };
 
-            var tenant = new tblTenant
+            var tenant = new TenantProfile
             {
                 User = user,
                 // allow the admin to assign a unit during registration; vm.UnitID may be null
@@ -173,7 +173,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 Status = "Active",
                 DateRecorded = DateTime.Now
             };
-            _context.tblTenants.Add(tenant);
+            _context.TenantProfiles.Add(tenant);
             await _context.SaveChangesAsync();
             // if a unit was assigned at creation, refresh its computed status
             if (tenant.UnitID.HasValue)
@@ -181,11 +181,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 await SyncUnitStatusAsync(tenant.UnitID.Value);
                 await _context.SaveChangesAsync();
 
-                var unit = await _context.tblUnits.FindAsync(tenant.UnitID.Value);
+                var unit = await _context.Units.FindAsync(tenant.UnitID.Value);
                 if (unit != null) 
                 {
                     decimal moveInTotal = unit.Deposit + unit.AdvancePayment;
-                    _context.tblBillings.Add(new tblBilling
+                    _context.Billings.Add(new Billing
                     {
                         TenantID = tenant.TenantID,
                         BillingPeriod = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1),
@@ -218,13 +218,13 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             if (id == null) return NotFound();
 
-            var tenant = await _context.tblTenants.FindAsync(id);
+            var tenant = await _context.TenantProfiles.FindAsync(id);
             if (tenant == null) return NotFound();
 
             // pull the linked account username if there is one
-            tblUser? linkedUser = null;
+            User? linkedUser = null;
             if (tenant.UserID.HasValue)
-                linkedUser = await _context.tblUsers.FindAsync(tenant.UserID.Value);
+                linkedUser = await _context.Users.FindAsync(tenant.UserID.Value);
 
             ViewBag.IsMainAdmin = CurrentUserIsMainAdmin();
 
@@ -265,14 +265,14 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 ModelState.Remove("ConfirmPassword");
             }
 
-            var tenant = await _context.tblTenants.FindAsync(id);
+            var tenant = await _context.TenantProfiles.FindAsync(id);
             if (tenant == null) return NotFound();
 
             // The username is bound to the account from the moment it is created and is
             // never editable. Whatever the form posted is discarded here and replaced
             // with the stored one, so a tampered request cannot rename an account.
             var existingUser = tenant.UserID.HasValue
-                ? await _context.tblUsers.FindAsync(tenant.UserID.Value)
+                ? await _context.Users.FindAsync(tenant.UserID.Value)
                 : null;
 
             if (existingUser != null)
@@ -300,7 +300,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             // generated name can collide with an account registered the same month.
             if (existingUser == null)
             {
-                bool duplicateUsername = await _context.tblUsers
+                bool duplicateUsername = await _context.Users
                     .AnyAsync(u => u.Username.ToLower() == vm.Username!.ToLower());
                 if (duplicateUsername)
                 {
@@ -315,7 +315,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (tenant.UserID.HasValue)
             {
                 // update the existing linked account
-                var linkedUser = await _context.tblUsers.FindAsync(tenant.UserID.Value);
+                var linkedUser = await _context.Users.FindAsync(tenant.UserID.Value);
                 if (linkedUser != null)
                 {
                     // username deliberately NOT touched — it is fixed at creation
@@ -337,7 +337,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                     ? vm.Password!
                     : PasswordHelper.GenerateTemporary();   // never derived from the tenant's own details
 
-                var newUser = new tblUser
+                var newUser = new User
                 {
                     Username = vm.Username!,
                     Password = PasswordHelper.Hash(password),
@@ -384,22 +384,22 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // A tenant's security deposit is really their last month's rent, held in advance.
         // So when they move out, apply it to the final month's bill (creating that bill
         // if it was never issued) so they owe nothing for the month they leave.
-        private async Task ApplyDepositToFinalMonthAsync(tblTenant tenant)
+        private async Task ApplyDepositToFinalMonthAsync(TenantProfile tenant)
         {
             if (tenant.UnitID == null) return;
-            var unit = await _context.tblUnits.FindAsync(tenant.UnitID.Value);
+            var unit = await _context.Units.FindAsync(tenant.UnitID.Value);
             if (unit == null || unit.Deposit <= 0) return;
 
             var moveOut = tenant.MoveOutDate ?? DateTime.Today;
             var finalMonth = new DateTime(moveOut.Year, moveOut.Month, 1);
 
             // the bill for the final month — issue one (a month's rent) if it doesn't exist
-            var bill = await _context.tblBillings
+            var bill = await _context.Billings
                 .FirstOrDefaultAsync(b => b.TenantID == tenant.TenantID && b.BillingPeriod == finalMonth);
             if (bill == null)
             {
                 int lastDay = DateTime.DaysInMonth(finalMonth.Year, finalMonth.Month);
-                bill = new tblBilling
+                bill = new Billing
                 {
                     TenantID = tenant.TenantID,
                     BillingPeriod = finalMonth,
@@ -408,22 +408,22 @@ namespace YnclinoApartmentManagementSystem.Controllers
                     Status = "Unpaid",
                     DateIssued = DateTime.Now
                 };
-                _context.tblBillings.Add(bill);
+                _context.Billings.Add(bill);
                 await _context.SaveChangesAsync();
             }
 
             // never apply the deposit twice
-            bool alreadyApplied = await _context.tblPayments
+            bool alreadyApplied = await _context.Payments
                 .AnyAsync(p => p.BillingID == bill.BillingID && p.Method == "Deposit");
             if (alreadyApplied) return;
 
-            decimal paidSoFar = await _context.tblPayments
+            decimal paidSoFar = await _context.Payments
                 .Where(p => p.BillingID == bill.BillingID).SumAsync(p => (decimal?)p.Amount) ?? 0m;
             decimal balance = bill.AmountDue - paidSoFar;
             if (balance <= 0) return;   // final month already settled some other way
 
             decimal applied = Math.Min(unit.Deposit, balance);
-            _context.tblPayments.Add(new tblPayment
+            _context.Payments.Add(new Payment
             {
                 BillingID = bill.BillingID,
                 Amount = applied,
@@ -435,7 +435,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             await _context.SaveChangesAsync();
 
             // refresh the bill's cached total and status from its payments
-            decimal total = await _context.tblPayments
+            decimal total = await _context.Payments
                 .Where(p => p.BillingID == bill.BillingID).SumAsync(p => (decimal?)p.Amount) ?? 0m;
             bill.AmountPaid = total > 0 ? total : (decimal?)null;
             bill.Status = BillingController.DeriveStatus(bill.AmountDue, bill.AmountPaid, bill.DueDate);
@@ -450,7 +450,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             if (id == null) return NotFound();
 
-            var tenant = await _context.tblTenants
+            var tenant = await _context.TenantProfiles
                 .Include(t => t.Unit)
                 .Include(t => t.User)
                 .FirstOrDefaultAsync(t => t.TenantID == id);
@@ -474,7 +474,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeletePermanentConfirmed(int id)
         {
-            var tenant = await _context.tblTenants
+            var tenant = await _context.TenantProfiles
                 .Include(t => t.Unit)
                 .FirstOrDefaultAsync(t => t.TenantID == id);
             if (tenant == null) return NotFound();
@@ -496,9 +496,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (userId != null)
             {
                 bool hasLostFound =
-                    await _context.tblLostFoundItems.AnyAsync(l => l.ReportedByUserID == userId) ||
-                    await _context.tblLostFoundItems.AnyAsync(l => l.ClaimedByUserID == userId) ||
-                    await _context.tblClaimRequests.AnyAsync(c => c.ClaimantUserID == userId);
+                    await _context.LostFoundItems.AnyAsync(l => l.ReportedByUserID == userId) ||
+                    await _context.LostFoundItems.AnyAsync(l => l.ClaimedByUserID == userId) ||
+                    await _context.ClaimRequests.AnyAsync(c => c.ClaimantUserID == userId);
 
                 if (hasLostFound)
                 {
@@ -510,21 +510,21 @@ namespace YnclinoApartmentManagementSystem.Controllers
             // Deleted in dependency order. Payments hang off bills, so they go first
             // even though the database would cascade them anyway — being explicit
             // means the order is obvious to whoever reads this next.
-            await _context.tblPayments
+            await _context.Payments
                 .Where(p => p.Billing!.TenantID == id).ExecuteDeleteAsync();
-            await _context.tblBillings
+            await _context.Billings
                 .Where(b => b.TenantID == id).ExecuteDeleteAsync();
-            await _context.tblMaintenanceRequests
+            await _context.MaintenanceRequests
                 .Where(m => m.TenantID == id).ExecuteDeleteAsync();
-            await _context.tblUnitTransferRequests
+            await _context.UnitTransferRequests
                 .Where(r => r.TenantID == id).ExecuteDeleteAsync();
 
-            _context.tblTenants.Remove(tenant);
+            _context.TenantProfiles.Remove(tenant);
             await _context.SaveChangesAsync();
 
             // the login exists only to serve the tenant record, so it goes too
             if (userId != null)
-                await _context.tblUsers.Where(u => u.UserID == userId).ExecuteDeleteAsync();
+                await _context.Users.Where(u => u.UserID == userId).ExecuteDeleteAsync();
 
             // their unit is now one tenant lighter — recompute Available/Occupied
             if (unitId != null)
@@ -538,16 +538,16 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // what the confirmation screen shows: exactly what is about to be destroyed
-        private async Task LoadDeleteCountsAsync(tblTenant tenant)
+        private async Task LoadDeleteCountsAsync(TenantProfile tenant)
         {
             int id = tenant.TenantID;
-            ViewBag.BillCount = await _context.tblBillings.CountAsync(b => b.TenantID == id);
-            ViewBag.PaymentCount = await _context.tblPayments.CountAsync(p => p.Billing!.TenantID == id);
-            ViewBag.MaintenanceCount = await _context.tblMaintenanceRequests.CountAsync(m => m.TenantID == id);
-            ViewBag.TransferCount = await _context.tblUnitTransferRequests.CountAsync(r => r.TenantID == id);
+            ViewBag.BillCount = await _context.Billings.CountAsync(b => b.TenantID == id);
+            ViewBag.PaymentCount = await _context.Payments.CountAsync(p => p.Billing!.TenantID == id);
+            ViewBag.MaintenanceCount = await _context.MaintenanceRequests.CountAsync(m => m.TenantID == id);
+            ViewBag.TransferCount = await _context.UnitTransferRequests.CountAsync(r => r.TenantID == id);
             ViewBag.LostFoundCount = tenant.UserID == null ? 0
-                : await _context.tblLostFoundItems.CountAsync(l => l.ReportedByUserID == tenant.UserID || l.ClaimedByUserID == tenant.UserID)
-                + await _context.tblClaimRequests.CountAsync(c => c.ClaimantUserID == tenant.UserID);
+                : await _context.LostFoundItems.CountAsync(l => l.ReportedByUserID == tenant.UserID || l.ClaimedByUserID == tenant.UserID)
+                + await _context.ClaimRequests.CountAsync(c => c.ClaimantUserID == tenant.UserID);
         }
 
         // GET: Tenants/Delete/5 (soft delete confirmation)
@@ -556,7 +556,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             if (id == null) return NotFound();
 
-            var tenant = await _context.tblTenants
+            var tenant = await _context.TenantProfiles
                 .Include(t => t.Unit)
                 .FirstOrDefaultAsync(t => t.TenantID == id);
 
@@ -570,7 +570,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var tenant = await _context.tblTenants.FindAsync(id);
+            var tenant = await _context.TenantProfiles.FindAsync(id);
             if (tenant == null) return NotFound();
 
             tenant.Status = "Inactive";
@@ -579,7 +579,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             // deactivate the linked login account as well
             if (tenant.UserID.HasValue)
             {
-                var linkedUser = await _context.tblUsers.FindAsync(tenant.UserID.Value);
+                var linkedUser = await _context.Users.FindAsync(tenant.UserID.Value);
                 if (linkedUser != null) linkedUser.IsActive = false;
             }
 
@@ -594,13 +594,13 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         private Task<int> ActiveTenantCountAsync(int unitId, int? excludeTenantId = null) =>
-            _context.tblTenants.CountAsync(t =>
+            _context.TenantProfiles.CountAsync(t =>
                 t.UnitID == unitId &&
                 t.Status == "Active" &&
                 (excludeTenantId == null || t.TenantID != excludeTenantId));
 
         private Task<bool> IsDuplicateTenantAsync(string firstName, string lastName, string? contact, int? excludeTenantId) =>
-            _context.tblTenants.AnyAsync(t =>
+            _context.TenantProfiles.AnyAsync(t =>
                 t.Status == "Active" &&
                 t.FirstName == firstName &&
                 t.LastName == lastName &&
@@ -610,7 +610,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // units that aren't under maintenance and still have a free slot
         private async Task<IEnumerable<SelectListItem>> GetAvailableUnitsAsync()
         {
-            return await _context.tblUnits
+            return await _context.Units
                 .Where(u => u.Status != "Under Maintenance"
                             && u.Tenants.Count(t => t.Status == "Active") < u.Capacity)
                 .OrderBy(u => u.UnitNumber)
@@ -624,7 +624,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
         private async Task<IEnumerable<SelectListItem>> GetAllUnitsAsync()
         {
-            return await _context.tblUnits
+            return await _context.Units
                 .OrderBy(u => u.UnitNumber)
                 .Select(u => new SelectListItem
                 {

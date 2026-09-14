@@ -21,7 +21,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // GET: Units
         public async Task<IActionResult> Index(string? statusFilter, string? searchTerm)
         {
-            var query = _context.tblUnits.Include(u => u.Tenants).AsQueryable();
+            var query = _context.Units.Include(u => u.Tenants).AsQueryable();
 
             if (!string.IsNullOrEmpty(statusFilter))
                 query = query.Where(u => u.Status == statusFilter);
@@ -31,7 +31,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             ViewBag.StatusFilter = statusFilter;
             ViewBag.SearchTerm = searchTerm;
-            ViewBag.HasUnits = await _context.tblUnits.AnyAsync();
+            ViewBag.HasUnits = await _context.Units.AnyAsync();
 
             var units = await query.OrderBy(u => u.UnitNumber).ToListAsync();
             return View(units);
@@ -42,7 +42,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             if (id == null) return NotFound();
 
-            var unit = await _context.tblUnits
+            var unit = await _context.Units
                 .Include(u => u.Tenants)
                 .FirstOrDefaultAsync(u => u.UnitID == id);
 
@@ -65,7 +65,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GenerateSampleData()
         {
-            if (await _context.tblUnits.AnyAsync())
+            if (await _context.Units.AnyAsync())
             {
                 TempData["Error"] = "Sample data was not loaded because units already exist.";
                 return RedirectToAction(nameof(Index));
@@ -94,14 +94,14 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // order; admin accounts are left untouched
         private async Task ClearSampleDataAsync()
         {
-            await _context.tblClaimRequests.ExecuteDeleteAsync();
-            await _context.tblUnitTransferRequests.ExecuteDeleteAsync();
-            await _context.tblBillings.ExecuteDeleteAsync();
-            await _context.tblMaintenanceRequests.ExecuteDeleteAsync();
-            await _context.tblLostFoundItems.ExecuteDeleteAsync();
-            await _context.tblTenants.ExecuteDeleteAsync();
-            await _context.tblUnits.ExecuteDeleteAsync();
-            await _context.tblUsers.Where(u => u.Role == "Tenant").ExecuteDeleteAsync();
+            await _context.ClaimRequests.ExecuteDeleteAsync();
+            await _context.UnitTransferRequests.ExecuteDeleteAsync();
+            await _context.Billings.ExecuteDeleteAsync();
+            await _context.MaintenanceRequests.ExecuteDeleteAsync();
+            await _context.LostFoundItems.ExecuteDeleteAsync();
+            await _context.TenantProfiles.ExecuteDeleteAsync();
+            await _context.Units.ExecuteDeleteAsync();
+            await _context.Users.Where(u => u.Role == "Tenant").ExecuteDeleteAsync();
         }
 
         // builds the full connected sample dataset (units, tenants, and their records)
@@ -120,16 +120,16 @@ namespace YnclinoApartmentManagementSystem.Controllers
             // each equal to one month's rent). 3 will be filled by the 5 tenants below,
             // leaving 2 available so transfers and new registrations have somewhere to go.
             // "Date Added" climbs from early 2023 to a few weeks ago, with light jitter.
-            var units = new List<tblUnit>();
+            var units = new List<Unit>();
             int number = 101;
             for (int i = 0; i < 5; i++)
             {
                 var added = seedStart.AddDays(unitSpan * i / 4 + rng.Next(-4, 5));
                 if (added > unitEnd) added = unitEnd;
                 if (added < seedStart.AddDays(-6)) added = seedStart;
-                units.Add(new tblUnit { UnitNumber = (number++).ToString(), UnitType = "Studio", RentPrice = 6000m, Deposit = 6000m, AdvancePayment = 6000m, Capacity = 2, Status = "Available", DateAdded = added });
+                units.Add(new Unit { UnitNumber = (number++).ToString(), UnitType = "Studio", RentPrice = 6000m, Deposit = 6000m, AdvancePayment = 6000m, Capacity = 2, Status = "Available", DateAdded = added });
             }
-            _context.tblUnits.AddRange(units);
+            _context.Units.AddRange(units);
             await _context.SaveChangesAsync();
 
             // names chosen so every tenant's initials (and therefore username) are unique
@@ -143,12 +143,12 @@ namespace YnclinoApartmentManagementSystem.Controllers
             // fill units two-per-room until the 5 tenants are placed (3 units used),
             // leaving the remaining units available for transfers and new applications
             const int tenantCount = 5;
-            var slots = new List<tblUnit>();
+            var slots = new List<Unit>();
             for (int i = 0; i < units.Count && slots.Count < tenantCount; i++)
                 for (int s = 0; s < units[i].Capacity && slots.Count < tenantCount; s++)
                     slots.Add(units[i]);
 
-            var createdTenants = new List<tblTenant>();
+            var createdTenants = new List<TenantProfile>();
             for (int t = 0; t < tenantCount; t++)
             {
                 string first = firsts[pairs[t].f];
@@ -164,7 +164,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 while (leaseEnd < now) leaseEnd = leaseEnd.AddYears(1);
                 string username = $"{regDate:yy}-{regDate:MM}{char.ToUpper(first[0])}{char.ToUpper(last[0])}";
 
-                var user = new tblUser
+                var user = new User
                 {
                     Username = username,
                     Password = PasswordHelper.Hash("Tenant@123"),
@@ -173,10 +173,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
                     IsMainAdmin = false,
                     DateCreated = regDate
                 };
-                _context.tblUsers.Add(user);
+                _context.Users.Add(user);
                 await _context.SaveChangesAsync();
 
-                var tenant = new tblTenant
+                var tenant = new TenantProfile
                 {
                     UserID = user.UserID,
                     UnitID = slots[t].UnitID,
@@ -192,7 +192,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                     Status = "Active",
                     DateRecorded = regDate
                 };
-                _context.tblTenants.Add(tenant);
+                _context.TenantProfiles.Add(tenant);
                 createdTenants.Add(tenant);
             }
             await _context.SaveChangesAsync();
@@ -200,7 +200,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             // mark the fully-filled units Occupied; the rest stay Available
             foreach (var unit in units)
             {
-                int active = await _context.tblTenants.CountAsync(t => t.UnitID == unit.UnitID && t.Status == "Active");
+                int active = await _context.TenantProfiles.CountAsync(t => t.UnitID == unit.UnitID && t.Status == "Active");
                 unit.Status = active >= unit.Capacity ? "Occupied" : "Available";
             }
             await _context.SaveChangesAsync();
@@ -209,7 +209,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             // so the demo has real history to browse: past bills, maintenance
             // requests, and lost & found items tied to the sample tenants.
             var firstOfThisMonth = new DateTime(now.Year, now.Month, 1);
-            var seededBills = new List<tblBilling>();
+            var seededBills = new List<Billing>();
             foreach (var (tenant, idx) in createdTenants.Select((t, i) => (t, i)))
             {
                 // one bill per completed month the tenant has lived here, capped at the
@@ -238,7 +238,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                         _ => 6000m             // paid in full
                     };
 
-                    var bill = new tblBilling
+                    var bill = new Billing
                     {
                         TenantID = tenant.TenantID,
                         BillingPeriod = period,
@@ -254,7 +254,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                         var datePaid = due.AddDays(rng.Next(-4, 4));
                         bill.DatePaid = datePaid > now ? now : datePaid;
                     }
-                    _context.tblBillings.Add(bill);
+                    _context.Billings.Add(bill);
                     seededBills.Add(bill);
                 }
 
@@ -264,7 +264,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 {
                     var curDue = now.Date.AddDays(7);
                     decimal? curPaid = (idx % 3) switch { 0 => (decimal?)null, 1 => 3000m, _ => 6000m };
-                    var curBill = new tblBilling
+                    var curBill = new Billing
                     {
                         TenantID = tenant.TenantID,
                         BillingPeriod = firstOfThisMonth,
@@ -275,7 +275,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                         Status = BillingController.DeriveStatus(6000m, curPaid, curDue),
                         DatePaid = (curPaid.HasValue && curPaid.Value > 0) ? now.Date : (DateTime?)null
                     };
-                    _context.tblBillings.Add(curBill);
+                    _context.Billings.Add(curBill);
                     seededBills.Add(curBill);
                 }
             }
@@ -287,7 +287,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             {
                 if (b.AmountPaid is decimal paidAmt && paidAmt > 0)
                 {
-                    _context.tblPayments.Add(new tblPayment
+                    _context.Payments.Add(new Payment
                     {
                         BillingID = b.BillingID,
                         Amount = paidAmt,
@@ -323,7 +323,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 if (submitted > now.AddDays(-1)) submitted = now.AddDays(-1);
                 var resolved = submitted.AddDays(rng.Next(1, 10));
                 if (resolved > now) resolved = now;
-                _context.tblMaintenanceRequests.Add(new tblMaintenanceRequest
+                _context.MaintenanceRequests.Add(new MaintenanceRequest
                 {
                     TenantID = tenant.TenantID,
                     Category = cat,
@@ -337,28 +337,28 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             // lost & found: "Found" items are logged by the admin (front desk) so any
             // tenant can file a claim on them; "Lost" items are reported by tenants
-            var adminId = (await _context.tblUsers.FirstOrDefaultAsync(u => u.Role == "Admin"))?.UserID
+            var adminId = (await _context.Users.FirstOrDefaultAsync(u => u.Role == "Admin"))?.UserID
                           ?? createdTenants[0].UserID!.Value;
 
-            var foundItems = new List<tblLostFoundItem>
+            var foundItems = new List<LostFoundItem>
             {
                 new() { ReportedByUserID = adminId, ItemName = "Black Leather Wallet", ItemType = "Found", Location = "Lobby",        Status = "Reported", Description = "Found near the front desk.", DateReported = now.AddDays(-6) },
                 new() { ReportedByUserID = adminId, ItemName = "iPhone 13 (blue case)", ItemType = "Found", Location = "2nd floor hall", Status = "Reported", Description = "Turned in by a resident.",    DateReported = now.AddDays(-4) },
                 new() { ReportedByUserID = adminId, ItemName = "Silver House Keys",     ItemType = "Found", Location = "Parking area", Status = "Reported", Description = "Set of three keys on a ring.",  DateReported = now.AddDays(-2) },
                 new() { ReportedByUserID = adminId, ItemName = "Umbrella (red)",         ItemType = "Found", Location = "Stairwell",    Status = "Claimed", Description = "Claimed and returned.",       DateReported = now.AddDays(-20) },
             };
-            var lostItems = new List<tblLostFoundItem>
+            var lostItems = new List<LostFoundItem>
             {
                 new() { ReportedByUserID = createdTenants[3].UserID!.Value,  ItemName = "Student ID Card",   ItemType = "Lost", Location = "Around the building", Status = "Reported", Description = "Lost my school ID.",       DateReported = now.AddDays(-5) },
                 new() { ReportedByUserID = createdTenants[4].UserID!.Value,  ItemName = "Laptop Charger",    ItemType = "Lost", Location = "Study area",         Status = "Reported", Description = "65W USB-C charger.",       DateReported = now.AddDays(-3) },
                 new() { ReportedByUserID = createdTenants[1].UserID!.Value,  ItemName = "Silver Ring",       ItemType = "Lost", Location = "Laundry room",       Status = "Claimed", Description = "Already recovered.",       DateReported = now.AddDays(-25) },
             };
-            _context.tblLostFoundItems.AddRange(foundItems);
-            _context.tblLostFoundItems.AddRange(lostItems);
+            _context.LostFoundItems.AddRange(foundItems);
+            _context.LostFoundItems.AddRange(lostItems);
             await _context.SaveChangesAsync();
 
             // a couple of ownership claims on the found items (one pending, one approved)
-            _context.tblClaimRequests.Add(new tblClaimRequest
+            _context.ClaimRequests.Add(new ClaimRequest
             {
                 ItemID = foundItems[0].ItemID,
                 ClaimantUserID = createdTenants[0].UserID!.Value,
@@ -366,7 +366,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 Status = "Pending",
                 SubmittedAt = now.AddDays(-3)
             });
-            _context.tblClaimRequests.Add(new tblClaimRequest
+            _context.ClaimRequests.Add(new ClaimRequest
             {
                 ItemID = foundItems[1].ItemID,
                 ClaimantUserID = createdTenants[2].UserID!.Value,
@@ -381,7 +381,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // suggests the next clean numeric unit number (highest existing + 1)
         private async Task<string> NextUnitNumberAsync()
         {
-            var numbers = await _context.tblUnits
+            var numbers = await _context.Units
                 .Select(u => u.UnitNumber)
                 .ToListAsync();
 
@@ -421,14 +421,14 @@ namespace YnclinoApartmentManagementSystem.Controllers
             ValidateMoveInAmounts(vm);
             if (!ModelState.IsValid) return View(vm);
 
-            bool duplicate = await _context.tblUnits.AnyAsync(u => u.UnitNumber == vm.UnitNumber);
+            bool duplicate = await _context.Units.AnyAsync(u => u.UnitNumber == vm.UnitNumber);
             if (duplicate)
             {
                 ModelState.AddModelError("UnitNumber", "Unit Number already exists.");
                 return View(vm);
             }
 
-            var unit = new tblUnit
+            var unit = new Unit
             {
                 UnitNumber = vm.UnitNumber,
                 UnitType = vm.UnitType,
@@ -440,7 +440,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 DateAdded = DateTime.Now
             };
 
-            _context.tblUnits.Add(unit);
+            _context.Units.Add(unit);
             await _context.SaveChangesAsync();
             TempData["Success"] = $"Unit {unit.UnitNumber} has been added.";
             return RedirectToAction(nameof(Index));
@@ -452,7 +452,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             if (id == null) return NotFound();
 
-            var unit = await _context.tblUnits.FindAsync(id);
+            var unit = await _context.Units.FindAsync(id);
             if (unit == null) return NotFound();
 
             var vm = new UnitViewModel
@@ -479,7 +479,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             ValidateMoveInAmounts(vm);
             if (!ModelState.IsValid) return View(vm);
 
-            bool duplicate = await _context.tblUnits.AnyAsync(u => u.UnitNumber == vm.UnitNumber && u.UnitID != id);
+            bool duplicate = await _context.Units.AnyAsync(u => u.UnitNumber == vm.UnitNumber && u.UnitID != id);
             if (duplicate)
             {
                 ModelState.AddModelError("UnitNumber", "Unit Number already exists.");
@@ -488,7 +488,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             // keep the status honest against actual tenancy — "Occupied" means full,
             // so a partially filled unit legitimately stays Available
-            int activeTenants = await _context.tblTenants.CountAsync(t => t.UnitID == id && t.Status == "Active");
+            int activeTenants = await _context.TenantProfiles.CountAsync(t => t.UnitID == id && t.Status == "Active");
             if (vm.Status == "Available" && activeTenants >= vm.Capacity)
             {
                 ModelState.AddModelError("Status", "This unit is at full capacity. Move a tenant out before marking it Available.");
@@ -500,7 +500,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 return View(vm);
             }
 
-            var unit = await _context.tblUnits.FindAsync(id);
+            var unit = await _context.Units.FindAsync(id);
             if (unit == null) return NotFound();
 
             unit.UnitNumber = vm.UnitNumber;
@@ -523,7 +523,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.tblUnits.Any(u => u.UnitID == id)) return NotFound();
+                if (!_context.Units.Any(u => u.UnitID == id)) return NotFound();
                 throw;
             }
             return RedirectToAction(nameof(Index));
@@ -535,7 +535,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             if (id == null) return NotFound();
 
-            var unit = await _context.tblUnits
+            var unit = await _context.Units
                 .Include(u => u.Tenants)
                 .FirstOrDefaultAsync(u => u.UnitID == id);
 
@@ -549,7 +549,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var unit = await _context.tblUnits.Include(u => u.Tenants).FirstOrDefaultAsync(u => u.UnitID == id);
+            var unit = await _context.Units.Include(u => u.Tenants).FirstOrDefaultAsync(u => u.UnitID == id);
             if (unit == null) return NotFound();
 
             if (unit.Tenants.Any(t => t.Status == "Active"))
@@ -565,7 +565,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            _context.tblUnits.Remove(unit);
+            _context.Units.Remove(unit);
             await _context.SaveChangesAsync();
             TempData["Success"] = $"Unit {unit.UnitNumber} has been removed.";
             return RedirectToAction(nameof(Index));

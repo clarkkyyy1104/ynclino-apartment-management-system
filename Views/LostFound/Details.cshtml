@@ -1,4 +1,4 @@
-@model YnclinoApartmentManagementSystem.Models.tblLostFoundItem
+@model YnclinoApartmentManagementSystem.Models.LostFoundItem
 @{
     ViewData["Title"] = "Item Details";
 }
@@ -61,7 +61,7 @@
 
                 @if (User.IsInRole("Admin"))
                 {
-                    var claims = ViewBag.Claims as IEnumerable<YnclinoApartmentManagementSystem.Models.tblClaimRequest> ?? new List<YnclinoApartmentManagementSystem.Models.tblClaimRequest>();
+                    var claims = ViewBag.Claims as IEnumerable<YnclinoApartmentManagementSystem.Models.ClaimRequest> ?? new List<YnclinoApartmentManagementSystem.Models.ClaimRequest>();
                     if (claims.Any())
                     {
                         <hr />
@@ -99,7 +99,7 @@
 
                 @if (User.IsInRole("Tenant"))
                 {
-                    var myClaims = ViewBag.MyClaims as IEnumerable<YnclinoApartmentManagementSystem.Models.tblClaimRequest> ?? new List<YnclinoApartmentManagementSystem.Models.tblClaimRequest>();
+                    var myClaims = ViewBag.MyClaims as IEnumerable<YnclinoApartmentManagementSystem.Models.ClaimRequest> ?? new List<YnclinoApartmentManagementSystem.Models.ClaimRequest>();
                     if (myClaims.Any())
                     {
                         <hr />

@@ -2,7 +2,7 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
 {
     public class TenantDashboardViewModel
     {
-        public tblTenant? Tenant { get; set; }
+        public TenantProfile? Tenant { get; set; }
         // what the records say still needs this tenant
         public List<SystemNotification> Notifications { get; set; } = new();
         public int TotalNotifications => Notifications.Count;

@@ -1,10 +1,10 @@
-@model YnclinoApartmentManagementSystem.Models.tblTenant?
+@model YnclinoApartmentManagementSystem.Models.TenantProfile?
 @using YnclinoApartmentManagementSystem.Models
 @{
     ViewData["Title"] = "My Profile";
-    var bills = ViewBag.Bills as IEnumerable<tblBilling> ?? Enumerable.Empty<tblBilling>();
-    var maintenance = ViewBag.Maintenance as IEnumerable<tblMaintenanceRequest> ?? Enumerable.Empty<tblMaintenanceRequest>();
-    var transfers = ViewBag.Transfers as IEnumerable<tblUnitTransferRequest> ?? Enumerable.Empty<tblUnitTransferRequest>();
+    var bills = ViewBag.Bills as IEnumerable<Billing> ?? Enumerable.Empty<Billing>();
+    var maintenance = ViewBag.Maintenance as IEnumerable<MaintenanceRequest> ?? Enumerable.Empty<MaintenanceRequest>();
+    var transfers = ViewBag.Transfers as IEnumerable<UnitTransferRequest> ?? Enumerable.Empty<UnitTransferRequest>();
 }
 
 @if (Model == null)

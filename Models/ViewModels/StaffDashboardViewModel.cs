@@ -7,7 +7,7 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         public string StaffName { get; set; } = string.Empty;
 
         // requests assigned to this staff member that are not finished yet
-        public List<tblMaintenanceRequest> MyOpenRequests { get; set; } = new();
+        public List<MaintenanceRequest> MyOpenRequests { get; set; } = new();
 
         public int PendingCount { get; set; }
         public int InProgressCount { get; set; }

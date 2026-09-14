@@ -87,7 +87,7 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         public decimal TotalReceived => TotalPaid + AdvanceFromOverpayment;
 
         // this bill's payments, newest first
-        public List<tblPayment> Payments { get; set; } = new List<tblPayment>();
+        public List<Payment> Payments { get; set; } = new List<Payment>();
 
         public IEnumerable<SelectListItem> AvailableTenants { get; set; } = new List<SelectListItem>();
     }
@@ -109,7 +109,7 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         public string Status { get; set; } = string.Empty;
         public bool IssuedFromAdvance { get; set; }
 
-        public List<tblPayment> Payments { get; set; } = new List<tblPayment>();
+        public List<Payment> Payments { get; set; } = new List<Payment>();
 
         public DateTime? FirstPaymentDate => Payments.Count == 0
             ? null : Payments.Min(p => p.DatePaid);

@@ -25,11 +25,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
         private int? CurrentUserID() =>
             int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int id) ? id : null;
 
-        private async Task<tblTenant?> GetCurrentTenantAsync()
+        private async Task<TenantProfile?> GetCurrentTenantAsync()
         {
             var uid = CurrentUserID();
             if (uid == null) return null;
-            return await _context.tblTenants
+            return await _context.TenantProfiles
                 .Include(t => t.Unit)
                 .FirstOrDefaultAsync(t => t.UserID == uid && t.Status == "Active");
         }
@@ -47,7 +47,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var firstOfMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
 
             // ── Units / occupancy ──
-            var units = await _context.tblUnits.AsNoTracking().ToListAsync();
+            var units = await _context.Units.AsNoTracking().ToListAsync();
             vm.TotalUnits = units.Count;
             vm.OccupiedUnits = units.Count(u => u.Status == "Occupied");
             vm.AvailableUnits = units.Count(u => u.Status == "Available");
@@ -81,23 +81,23 @@ namespace YnclinoApartmentManagementSystem.Controllers
             vm.RentNotBeingEarned = units.Where(u => u.Status != "Occupied").Sum(u => u.RentPrice);
 
             // ── Tenants ──
-            vm.ActiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Active");
-            vm.InactiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Inactive");
+            vm.ActiveTenants = await _context.TenantProfiles.CountAsync(t => t.Status == "Active");
+            vm.InactiveTenants = await _context.TenantProfiles.CountAsync(t => t.Status == "Inactive");
 
             // ── Money ──
-            var payments = await _context.tblPayments.AsNoTracking().ToListAsync();
+            var payments = await _context.Payments.AsNoTracking().ToListAsync();
             vm.IncomeAllTime = payments.Sum(p => p.Amount);
             vm.IncomeThisMonth = payments.Where(p => p.DatePaid >= firstOfMonth).Sum(p => p.Amount);
 
-            var bills = await _context.tblBillings.AsNoTracking()
+            var bills = await _context.Billings.AsNoTracking()
                 .Include(b => b.Tenant).ThenInclude(t => t!.Unit)
                 .ToListAsync();
 
             // ── Open requests ──
-            vm.PendingMaintenance = await _context.tblMaintenanceRequests
+            vm.PendingMaintenance = await _context.MaintenanceRequests
                 .CountAsync(m => m.Status == "Pending" || m.Status == "In Progress");
-            vm.PendingTransfers = await _context.tblUnitTransferRequests.CountAsync(r => r.Status == "Pending");
-            vm.OpenLostFound = await _context.tblLostFoundItems.CountAsync(l => l.Status == "Reported");
+            vm.PendingTransfers = await _context.UnitTransferRequests.CountAsync(r => r.Status == "Pending");
+            vm.OpenLostFound = await _context.LostFoundItems.CountAsync(l => l.Status == "Reported");
 
             // ── Monthly income, last 6 months ──
             for (int i = 5; i >= 0; i--)
@@ -119,7 +119,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             }
 
             // ── Tenants ──
-            var allTenants = await _context.tblTenants.AsNoTracking()
+            var allTenants = await _context.TenantProfiles.AsNoTracking()
                 .Include(t => t.Unit)
                 .OrderBy(t => t.LastName).ThenBy(t => t.FirstName)
                 .ToListAsync();
@@ -161,7 +161,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             vm.OverdueTenants = vm.TenantAccounts.Count(x => x.OverdueBills > 0);
 
                         // ── Maintenance records by status ──
-            var requests = await _context.tblMaintenanceRequests.AsNoTracking()
+            var requests = await _context.MaintenanceRequests.AsNoTracking()
                 .Include(m => m.Tenant).ThenInclude(t => t!.Unit)
                 .ToListAsync();
 
@@ -183,7 +183,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 .ToList();
 
             // ── Tenant histories ──
-            var transfers = await _context.tblUnitTransferRequests.AsNoTracking().ToListAsync();
+            var transfers = await _context.UnitTransferRequests.AsNoTracking().ToListAsync();
 
             vm.TenantHistory = allTenants.Select(t =>
             {
@@ -223,11 +223,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             var vm = new ReportsViewModel();
 
-            var bills = await _context.tblBillings.AsNoTracking()
+            var bills = await _context.Billings.AsNoTracking()
                 .Where(b => b.TenantID == tenant.TenantID)
                 .ToListAsync();
 
-            var payments = await _context.tblPayments.AsNoTracking()
+            var payments = await _context.Payments.AsNoTracking()
                 .Where(p => p.Billing!.TenantID == tenant.TenantID)
                 .ToListAsync();
 
@@ -235,9 +235,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
             vm.OutstandingTotal = bills.Sum(b => b.AmountDue - (b.AmountPaid ?? 0m));
             if (vm.OutstandingTotal < 0) vm.OutstandingTotal = 0;
 
-            vm.PendingMaintenance = await _context.tblMaintenanceRequests
+            vm.PendingMaintenance = await _context.MaintenanceRequests
                 .CountAsync(m => m.TenantID == tenant.TenantID && (m.Status == "Pending" || m.Status == "In Progress"));
-            vm.PendingTransfers = await _context.tblUnitTransferRequests
+            vm.PendingTransfers = await _context.UnitTransferRequests
                 .CountAsync(r => r.TenantID == tenant.TenantID && r.Status == "Pending");
 
             var firstOfMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);

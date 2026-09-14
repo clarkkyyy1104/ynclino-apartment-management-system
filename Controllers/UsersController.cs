@@ -23,7 +23,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             var idStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!int.TryParse(idStr, out int id)) return false;
-            return _context.tblUsers.Any(u => u.UserID == id && u.IsMainAdmin);
+            return _context.Users.Any(u => u.UserID == id && u.IsMainAdmin);
         }
 
         private int? CurrentUserID() =>
@@ -37,7 +37,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // their login, and so we can link straight to their tenant record.
         public async Task<IActionResult> Index()
         {
-            var users = await _context.tblUsers
+            var users = await _context.Users
                 .Include(u => u.Tenants)
                 .ToListAsync();
 
@@ -55,7 +55,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             ViewBag.IsMainAdmin = CurrentUserIsMainAdmin();
             ViewBag.IsAdmin = User.IsInRole("Admin");
-            return View((ViewBag.Accounts as List<tblUser>)!);
+            return View((ViewBag.Accounts as List<User>)!);
         }
 
         // GET: Users/Create — staff accounts only
@@ -102,7 +102,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 return View(vm);
             }
 
-            bool duplicate = await _context.tblUsers.AnyAsync(u => u.Username.ToLower() == vm.Username.ToLower());
+            bool duplicate = await _context.Users.AnyAsync(u => u.Username.ToLower() == vm.Username.ToLower());
             if (duplicate)
             {
                 ModelState.AddModelError("Username", "Username already exists.");
@@ -111,7 +111,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 return View(vm);
             }
 
-            var user = new tblUser
+            var user = new User
             {
                 Username     = vm.Username,
                 Password     = PasswordHelper.Hash(vm.Password!),
@@ -124,7 +124,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 DateCreated  = DateTime.Now
             };
 
-            _context.tblUsers.Add(user);
+            _context.Users.Add(user);
             await _context.SaveChangesAsync();
             TempData["Success"] = $"Account '{user.Username}' has been created.";
             return RedirectToAction(nameof(Index));
@@ -141,7 +141,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ResetPassword(int id)
         {
-            var user = await _context.tblUsers.FindAsync(id);
+            var user = await _context.Users.FindAsync(id);
             if (user == null) return NotFound();
 
             // an administrator's password is not resettable from this screen: the
@@ -180,7 +180,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleActive(int id)
         {
-            var user = await _context.tblUsers.Include(u => u.Tenants).FirstOrDefaultAsync(u => u.UserID == id);
+            var user = await _context.Users.Include(u => u.Tenants).FirstOrDefaultAsync(u => u.UserID == id);
             if (user == null) return NotFound();
 
             // the Main Admin must always be able to get back in
@@ -233,7 +233,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             if (id == null) return NotFound();
 
-            var user = await _context.tblUsers.FindAsync(id);
+            var user = await _context.Users.FindAsync(id);
             if (user == null) return NotFound();
 
             if (user.IsMainAdmin)
@@ -265,7 +265,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var user = await _context.tblUsers.FindAsync(id);
+            var user = await _context.Users.FindAsync(id);
             if (user == null) return NotFound();
 
             if (user.IsMainAdmin)
@@ -292,16 +292,16 @@ namespace YnclinoApartmentManagementSystem.Controllers
             // lost & found rows keep a hard reference to their reporter/claimant,
             // so deleting this account would fail at the database level
             bool hasLostFoundRecords =
-                await _context.tblLostFoundItems.AnyAsync(l => l.ReportedByUserID == id) ||
-                await _context.tblLostFoundItems.AnyAsync(l => l.ClaimedByUserID == id) ||
-                await _context.tblClaimRequests.AnyAsync(c => c.ClaimantUserID == id);
+                await _context.LostFoundItems.AnyAsync(l => l.ReportedByUserID == id) ||
+                await _context.LostFoundItems.AnyAsync(l => l.ClaimedByUserID == id) ||
+                await _context.ClaimRequests.AnyAsync(c => c.ClaimantUserID == id);
             if (hasLostFoundRecords)
             {
                 TempData["Error"] = $"Account '{user.Username}' has Lost & Found records and cannot be deleted. Deactivate it instead.";
                 return RedirectToAction(nameof(Index));
             }
 
-            _context.tblUsers.Remove(user);
+            _context.Users.Remove(user);
             await _context.SaveChangesAsync();
             TempData["Success"] = $"Account '{user.Username}' has been deleted.";
             return RedirectToAction(nameof(Index));

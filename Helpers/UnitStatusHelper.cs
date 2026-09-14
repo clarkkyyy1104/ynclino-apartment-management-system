@@ -14,17 +14,17 @@ namespace YnclinoApartmentManagementSystem.Helpers
         public static async Task RefreshAsync(ApplicationDbContext db, int? unitId)
         {
             if (unitId == null) return;
-            var unit = await db.tblUnits.FindAsync(unitId.Value);
+            var unit = await db.Units.FindAsync(unitId.Value);
             if (unit == null || unit.Status == "Under Maintenance") return;
 
-            int active = await db.tblTenants.CountAsync(t => t.UnitID == unitId && t.Status == "Active");
+            int active = await db.TenantProfiles.CountAsync(t => t.UnitID == unitId && t.Status == "Active");
             if (active >= unit.Capacity)
             {
                 unit.Status = "Occupied";
                 return;
             }
 
-            bool reserved = await db.tblUnitTransferRequests
+            bool reserved = await db.UnitTransferRequests
                 .AnyAsync(r => r.RequestedUnitID == unitId && r.Status == "Pending");
             unit.Status = reserved ? "Reserved" : "Available";
         }

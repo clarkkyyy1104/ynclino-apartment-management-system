@@ -25,36 +25,36 @@ namespace YnclinoApartmentManagementSystem.Controllers
         public async Task<IActionResult> Index()
         {
             if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int uid))
-                return View((YnclinoApartmentManagementSystem.Models.tblTenant?)null);
+                return View((YnclinoApartmentManagementSystem.Models.TenantProfile?)null);
 
             if (User.IsInRole("Admin"))
             {
-                var admin = await _context.tblUsers.FirstOrDefaultAsync(u => u.UserID == uid);
-                ViewBag.TotalUnits = await _context.tblUnits.CountAsync();
-                ViewBag.ActiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Active");
-                ViewBag.PendingTransfers = await _context.tblUnitTransferRequests.CountAsync(r => r.Status == "Pending");
-                ViewBag.AdminCount = await _context.tblUsers.CountAsync(u => u.Role == "Admin" && u.IsActive);
+                var admin = await _context.Users.FirstOrDefaultAsync(u => u.UserID == uid);
+                ViewBag.TotalUnits = await _context.Units.CountAsync();
+                ViewBag.ActiveTenants = await _context.TenantProfiles.CountAsync(t => t.Status == "Active");
+                ViewBag.PendingTransfers = await _context.UnitTransferRequests.CountAsync(r => r.Status == "Pending");
+                ViewBag.AdminCount = await _context.Users.CountAsync(u => u.Role == "Admin" && u.IsActive);
                 return View("AdminProfile", admin);
             }
 
-            var tenant = await _context.tblTenants
+            var tenant = await _context.TenantProfiles
                 .Include(t => t.Unit)
                 .Include(t => t.User)
                 .FirstOrDefaultAsync(t => t.UserID == uid);
 
             if (tenant == null)
-                return View((YnclinoApartmentManagementSystem.Models.tblTenant?)null);
+                return View((YnclinoApartmentManagementSystem.Models.TenantProfile?)null);
 
             // a small activity feed drawn from the tenant's own records
-            ViewBag.Bills = await _context.tblBillings
+            ViewBag.Bills = await _context.Billings
                 .Where(b => b.TenantID == tenant.TenantID)
                 .OrderByDescending(b => b.BillingPeriod).Take(5).ToListAsync();
 
-            ViewBag.Maintenance = await _context.tblMaintenanceRequests
+            ViewBag.Maintenance = await _context.MaintenanceRequests
                 .Where(m => m.TenantID == tenant.TenantID)
                 .OrderByDescending(m => m.DateSubmitted).Take(5).ToListAsync();
 
-            ViewBag.Transfers = await _context.tblUnitTransferRequests
+            ViewBag.Transfers = await _context.UnitTransferRequests
                 .Include(r => r.RequestedUnit)
                 .Where(r => r.TenantID == tenant.TenantID)
                 .OrderByDescending(r => r.DateRequested).Take(5).ToListAsync();
@@ -71,7 +71,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int uid))
                 return RedirectToAction(nameof(Index));
 
-            var tenant = await _context.tblTenants.FirstOrDefaultAsync(t => t.UserID == uid);
+            var tenant = await _context.TenantProfiles.FirstOrDefaultAsync(t => t.UserID == uid);
             if (tenant == null)
             {
                 TempData["Error"] = "No tenant profile is linked to your account.";
@@ -104,7 +104,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             if (int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int uid))
             {
-                var tenant = await _context.tblTenants.FirstOrDefaultAsync(t => t.UserID == uid);
+                var tenant = await _context.TenantProfiles.FirstOrDefaultAsync(t => t.UserID == uid);
                 if (tenant != null && tenant.PhotoPath != null)
                 {
                     tenant.PhotoPath = null;

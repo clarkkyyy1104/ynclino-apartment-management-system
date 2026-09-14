@@ -25,11 +25,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
         private int? CurrentUserID() =>
             int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int id) ? id : null;
 
-        private async Task<tblTenant?> GetCurrentTenantAsync()
+        private async Task<TenantProfile?> GetCurrentTenantAsync()
         {
             var uid = CurrentUserID();
             if (uid == null) return null;
-            return await _context.tblTenants
+            return await _context.TenantProfiles
                 .Include(t => t.Unit)
                 .FirstOrDefaultAsync(t => t.UserID == uid && t.Status == "Active");
         }
@@ -45,7 +45,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // every active maintenance staff account, for the "Assign To" dropdown
         private async Task<IEnumerable<SelectListItem>> GetStaffListAsync()
         {
-            return await _context.tblUsers
+            return await _context.Users
                 .Where(u => u.Role == "Maintenance" && u.IsActive)
                 .OrderBy(u => u.Username)
                 .Select(u => new SelectListItem { Value = u.UserID.ToString(), Text = u.Username })
@@ -60,7 +60,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // GET: Maintenance
         public async Task<IActionResult> Index(string? statusFilter, string? searchTerm, bool archived = false)
         {
-            IQueryable<tblMaintenanceRequest> query = _context.tblMaintenanceRequests
+            IQueryable<MaintenanceRequest> query = _context.MaintenanceRequests
                 .Include(m => m.Tenant).ThenInclude(t => t!.Unit)
                 .Include(m => m.Unit)
                 .Include(m => m.AssignedStaff);
@@ -68,7 +68,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (User.IsInRole("Tenant"))
             {
                 var tenant = await GetCurrentTenantAsync();
-                if (tenant == null) return View(new List<tblMaintenanceRequest>());
+                if (tenant == null) return View(new List<MaintenanceRequest>());
                 query = query.Where(m => m.TenantID == tenant.TenantID);
             }
             else if (IsStaff())
@@ -109,7 +109,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             if (id == null) return NotFound();
 
-            var request = await _context.tblMaintenanceRequests
+            var request = await _context.MaintenanceRequests
                 .Include(m => m.Tenant).ThenInclude(t => t!.Unit)
                 .Include(m => m.Unit)
                 .Include(m => m.AssignedStaff)
@@ -189,7 +189,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 vm.TenantName = tenant.FullName;
                 vm.UnitNumber = tenant.Unit?.UnitNumber;
             }
-            else if (!await _context.tblTenants.AnyAsync(t => t.TenantID == vm.TenantID && t.Status == "Active"))
+            else if (!await _context.TenantProfiles.AnyAsync(t => t.TenantID == vm.TenantID && t.Status == "Active"))
             {
                 ModelState.AddModelError("TenantID", "Select a valid tenant.");
             }
@@ -212,9 +212,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             // stamp the unit at the moment the request is made, so the repair stays
             // attached to the apartment even if this tenant later moves out
-            var owner = await _context.tblTenants.FirstOrDefaultAsync(t => t.TenantID == vm.TenantID);
+            var owner = await _context.TenantProfiles.FirstOrDefaultAsync(t => t.TenantID == vm.TenantID);
 
-            var request = new tblMaintenanceRequest
+            var request = new MaintenanceRequest
             {
                 TenantID = vm.TenantID,
                 UnitID = owner?.UnitID,
@@ -226,7 +226,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 ImagePath = imagePath
             };
 
-            _context.tblMaintenanceRequests.Add(request);
+            _context.MaintenanceRequests.Add(request);
             await _context.SaveChangesAsync();
 
             TempData["Success"] = "Maintenance request submitted.";
@@ -239,7 +239,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             if (id == null) return NotFound();
 
-            var request = await _context.tblMaintenanceRequests
+            var request = await _context.MaintenanceRequests
                 .Include(m => m.Tenant).ThenInclude(t => t!.Unit)
                 .FirstOrDefaultAsync(m => m.RequestID == id);
 
@@ -294,7 +294,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (vm.ImageUpload != null && !ImageUploadHelper.IsValid(vm.ImageUpload, out var imgErr))
                 ModelState.AddModelError(nameof(vm.ImageUpload), imgErr);
 
-            var request = await _context.tblMaintenanceRequests
+            var request = await _context.MaintenanceRequests
                 .Include(m => m.Tenant).ThenInclude(t => t!.Unit)
                 .FirstOrDefaultAsync(m => m.RequestID == id);
             if (request == null) return NotFound();
@@ -313,7 +313,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             // 0 means "leave it unassigned"; any other value must be a real staff account
             if (vm.AssignedStaffID != 0 &&
-                !await _context.tblUsers.AnyAsync(u => u.UserID == vm.AssignedStaffID && u.Role == "Maintenance" && u.IsActive))
+                !await _context.Users.AnyAsync(u => u.UserID == vm.AssignedStaffID && u.Role == "Maintenance" && u.IsActive))
                 ModelState.AddModelError("AssignedStaffID", "Select a valid maintenance staff account.");
 
             if (!ModelState.IsValid)
@@ -354,7 +354,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             if (id == null) return NotFound();
 
-            var request = await _context.tblMaintenanceRequests
+            var request = await _context.MaintenanceRequests
                 .Include(m => m.Tenant).ThenInclude(t => t!.Unit)
                 .Include(m => m.Unit)
                 .FirstOrDefaultAsync(m => m.RequestID == id);
@@ -393,7 +393,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             if (id != vm.RequestID) return NotFound();
 
-            var request = await _context.tblMaintenanceRequests
+            var request = await _context.MaintenanceRequests
                 .Include(m => m.Tenant).ThenInclude(t => t!.Unit)
                 .Include(m => m.Unit)
                 .FirstOrDefaultAsync(m => m.RequestID == id);
@@ -450,7 +450,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Archive(int id)
         {
-            var request = await _context.tblMaintenanceRequests
+            var request = await _context.MaintenanceRequests
                 .Include(m => m.Tenant)
                 .FirstOrDefaultAsync(m => m.RequestID == id);
             if (request == null) return NotFound();
@@ -477,7 +477,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Unarchive(int id)
         {
-            var request = await _context.tblMaintenanceRequests
+            var request = await _context.MaintenanceRequests
                 .Include(m => m.Tenant)
                 .FirstOrDefaultAsync(m => m.RequestID == id);
             if (request == null) return NotFound();
@@ -493,7 +493,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // a tenant may only archive their own request; staff only what they are assigned
-        private async Task<bool> CanTouchAsync(tblMaintenanceRequest request)
+        private async Task<bool> CanTouchAsync(MaintenanceRequest request)
         {
             if (User.IsInRole("Admin")) return true;
 
@@ -513,7 +513,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         [Authorize(Roles = "Admin,Tenant")]
         public async Task<IActionResult> Cancel(int id)
         {
-            var request = await _context.tblMaintenanceRequests.FindAsync(id);
+            var request = await _context.MaintenanceRequests.FindAsync(id);
             if (request == null) return NotFound();
 
             if (User.IsInRole("Tenant"))
@@ -540,7 +540,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             if (id == null) return NotFound();
 
-            var request = await _context.tblMaintenanceRequests
+            var request = await _context.MaintenanceRequests
                 .Include(m => m.Tenant).ThenInclude(t => t!.Unit)
                 .FirstOrDefaultAsync(m => m.RequestID == id);
 
@@ -554,10 +554,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var request = await _context.tblMaintenanceRequests.FindAsync(id);
+            var request = await _context.MaintenanceRequests.FindAsync(id);
             if (request == null) return NotFound();
 
-            _context.tblMaintenanceRequests.Remove(request);
+            _context.MaintenanceRequests.Remove(request);
             await _context.SaveChangesAsync();
             TempData["Success"] = "Maintenance request deleted.";
             return RedirectToAction(nameof(Index));
@@ -579,7 +579,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
         private async Task<IEnumerable<SelectListItem>> GetActiveTenantListAsync()
         {
-            return await _context.tblTenants
+            return await _context.TenantProfiles
                 .Include(t => t.Unit)
                 .Where(t => t.Status == "Active")
                 .OrderBy(t => t.LastName)

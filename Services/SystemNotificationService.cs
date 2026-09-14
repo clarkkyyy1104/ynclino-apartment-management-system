@@ -49,7 +49,7 @@ namespace YnclinoApartmentManagementSystem.Services
             {
                 // Pending maintenance requests
                 var pendingMaintenance =
-                    await _context.tblMaintenanceRequests
+                    await _context.MaintenanceRequests
                         .CountAsync(m => m.Status == "Pending");
 
                 if (pendingMaintenance > 0)
@@ -67,7 +67,7 @@ namespace YnclinoApartmentManagementSystem.Services
 
                 // Pending unit transfer requests
                 var pendingTransfers =
-                    await _context.tblUnitTransferRequests
+                    await _context.UnitTransferRequests
                         .CountAsync(r => r.Status == "Pending");
 
                 if (pendingTransfers > 0)
@@ -85,7 +85,7 @@ namespace YnclinoApartmentManagementSystem.Services
 
                 // Overdue bills
                 var overdueBills =
-                    await _context.tblBillings
+                    await _context.Billings
                         .CountAsync(b => b.Status == "Overdue");
 
                 if (overdueBills > 0)
@@ -103,7 +103,7 @@ namespace YnclinoApartmentManagementSystem.Services
 
                 // Reported lost/found items
                 var reportedItems =
-                    await _context.tblLostFoundItems
+                    await _context.LostFoundItems
                         .CountAsync(i => i.Status == "Reported");
 
                 if (reportedItems > 0)
@@ -126,7 +126,7 @@ namespace YnclinoApartmentManagementSystem.Services
             if (role == "Maintenance")
             {
                 var assignedRequests =
-                    await _context.tblMaintenanceRequests
+                    await _context.MaintenanceRequests
                         .CountAsync(m =>
                             m.AssignedStaffID == userId &&
                             (m.Status == "Pending" ||
@@ -151,7 +151,7 @@ namespace YnclinoApartmentManagementSystem.Services
             // ============================================================
             if (role == "Tenant")
             {
-                var tenant = await _context.tblTenants
+                var tenant = await _context.TenantProfiles
                     .FirstOrDefaultAsync(t =>
                         t.UserID == userId &&
                         t.Status == "Active");
@@ -162,7 +162,7 @@ namespace YnclinoApartmentManagementSystem.Services
                     // BILLING
                     // ----------------------------------------------------
                     var overdueBills =
-                        await _context.tblBillings
+                        await _context.Billings
                             .CountAsync(b =>
                                 b.TenantID == tenant.TenantID &&
                                 b.Status == "Overdue");
@@ -181,7 +181,7 @@ namespace YnclinoApartmentManagementSystem.Services
                     }
 
                     var unpaidBills =
-                        await _context.tblBillings
+                        await _context.Billings
                             .CountAsync(b =>
                                 b.TenantID == tenant.TenantID &&
                                 (b.Status == "Unpaid" ||
@@ -204,7 +204,7 @@ namespace YnclinoApartmentManagementSystem.Services
                     // MAINTENANCE
                     // ----------------------------------------------------
                     var maintenanceRequests =
-                        await _context.tblMaintenanceRequests
+                        await _context.MaintenanceRequests
                             .Where(m =>
                                 m.TenantID == tenant.TenantID &&
                                 (m.Status == "Pending" ||
@@ -228,7 +228,7 @@ namespace YnclinoApartmentManagementSystem.Services
                     // UNIT TRANSFER
                     // ----------------------------------------------------
                     var transferRequests =
-                        await _context.tblUnitTransferRequests
+                        await _context.UnitTransferRequests
                             .Where(r =>
                                 r.TenantID == tenant.TenantID &&
                                 r.Status == "Pending")

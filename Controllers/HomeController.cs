@@ -31,14 +31,14 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             if (User.IsInRole("Admin"))
             {
-                ViewBag.TotalUnits = await _context.tblUnits.CountAsync();
-                ViewBag.AvailableUnits = await _context.tblUnits.CountAsync(u => u.Status == "Available");
-                ViewBag.ReservedUnits = await _context.tblUnits.CountAsync(u => u.Status == "Reserved");
-                ViewBag.OccupiedUnits = await _context.tblUnits.CountAsync(u => u.Status == "Occupied");
-                ViewBag.MaintenanceUnits = await _context.tblUnits.CountAsync(u => u.Status == "Under Maintenance");
-                ViewBag.ActiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Active");
-                ViewBag.InactiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Inactive");
-                ViewBag.TotalUsers = await _context.tblUsers.CountAsync(u => u.IsActive);
+                ViewBag.TotalUnits = await _context.Units.CountAsync();
+                ViewBag.AvailableUnits = await _context.Units.CountAsync(u => u.Status == "Available");
+                ViewBag.ReservedUnits = await _context.Units.CountAsync(u => u.Status == "Reserved");
+                ViewBag.OccupiedUnits = await _context.Units.CountAsync(u => u.Status == "Occupied");
+                ViewBag.MaintenanceUnits = await _context.Units.CountAsync(u => u.Status == "Under Maintenance");
+                ViewBag.ActiveTenants = await _context.TenantProfiles.CountAsync(t => t.Status == "Active");
+                ViewBag.InactiveTenants = await _context.TenantProfiles.CountAsync(t => t.Status == "Inactive");
+                ViewBag.TotalUsers = await _context.Users.CountAsync(u => u.IsActive);
                 ViewBag.Notifications = await MyNotificationsAsync();
                 return View("AdminDashboard");
             }
@@ -47,7 +47,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 // maintenance staff get their own dashboard: only their assigned work
                 int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int staffId);
 
-                var mine = await _context.tblMaintenanceRequests
+                var mine = await _context.MaintenanceRequests
                     .Include(m => m.Tenant)
                     .Include(m => m.Unit)
                     .Where(m => m.AssignedStaffID == staffId)
@@ -77,7 +77,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
                 if (int.TryParse(userIdStr, out int userId))
                 {
-                    vm.Tenant = await _context.tblTenants
+                    vm.Tenant = await _context.TenantProfiles
                         .Include(t => t.Unit)
                         .FirstOrDefaultAsync(t => t.UserID == userId && t.Status == "Active");
 
@@ -86,7 +86,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                     if (vm.Tenant != null)
                     {
                         vm.AdvanceCredit = vm.Tenant.AdvanceCredit;
-                        vm.Outstanding = await _context.tblBillings
+                        vm.Outstanding = await _context.Billings
                             .Where(b => b.TenantID == vm.Tenant.TenantID && b.Status != "Paid")
                             .SumAsync(b => b.AmountDue - (b.AmountPaid ?? 0m));
                     }

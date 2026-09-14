@@ -1,4 +1,4 @@
-@model YnclinoApartmentManagementSystem.Models.tblBilling
+@model YnclinoApartmentManagementSystem.Models.Billing
 @{
     ViewData["Title"] = "Bill Details";
 }
@@ -140,8 +140,8 @@
                 </dl>
 
                 @{
-                    var payments = ViewBag.Payments as List<YnclinoApartmentManagementSystem.Models.tblPayment>
-                                   ?? new List<YnclinoApartmentManagementSystem.Models.tblPayment>();
+                    var payments = ViewBag.Payments as List<YnclinoApartmentManagementSystem.Models.Payment>
+                                   ?? new List<YnclinoApartmentManagementSystem.Models.Payment>();
                 }
                 @if (payments.Any())
                 {

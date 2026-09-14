@@ -1,6 +1,6 @@
 @model List<YnclinoApartmentManagementSystem.Models.ViewModels.TenantLedgerRow>
 @{
-    var tenant = ViewBag.Tenant as YnclinoApartmentManagementSystem.Models.tblTenant;
+    var tenant = ViewBag.Tenant as YnclinoApartmentManagementSystem.Models.TenantProfile;
     ViewData["Title"] = "Billing Record";
     bool isAdmin = User.IsInRole("Admin");
 

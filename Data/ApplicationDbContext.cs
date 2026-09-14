@@ -3,168 +3,212 @@ using YnclinoApartmentManagementSystem.Models;
 
 namespace YnclinoApartmentManagementSystem.Data
 {
+    // Maps onto the database built by Database/backupDB.sql. The application
+    // never creates the schema — the script does — so everything here describes
+    // tables that already exist, and the names must match it exactly.
     public class ApplicationDbContext : DbContext
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options) { }
 
-        public DbSet<tblUser> tblUsers { get; set; }
-        public DbSet<tblUnit> tblUnits { get; set; }
-        public DbSet<tblTenant> tblTenants { get; set; }
-        public DbSet<tblBilling> tblBillings { get; set; }
-        public DbSet<tblMaintenanceRequest> tblMaintenanceRequests { get; set; }
-        public DbSet<tblLostFoundItem> tblLostFoundItems { get; set; }
-        public DbSet<tblClaimRequest> tblClaimRequests { get; set; }
-        public DbSet<tblUnitTransferRequest> tblUnitTransferRequests { get; set; }
-        public DbSet<tblPayment> tblPayments { get; set; }
+        public DbSet<Role> Roles { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<Unit> Units { get; set; }
+        public DbSet<TenantProfile> TenantProfiles { get; set; }
+        public DbSet<TenantUnitAssignment> TenantUnitAssignments { get; set; }
+        public DbSet<LostFoundItem> LostFoundItems { get; set; }
+        public DbSet<ClaimRequest> ClaimRequests { get; set; }
+        public DbSet<UnitTransferRequest> UnitTransferRequests { get; set; }
+        public DbSet<Billing> Billings { get; set; }
+        public DbSet<Payment> Payments { get; set; }
+        public DbSet<MaintenanceRequest> MaintenanceRequests { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<tblUser>(entity =>
+            modelBuilder.Entity<Role>(e =>
             {
-                entity.HasKey(e => e.UserID);
-                entity.Property(e => e.Username).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.Password).IsRequired().HasMaxLength(255);
-                entity.Property(e => e.Role).IsRequired().HasMaxLength(20);
-                entity.HasIndex(e => e.Username).IsUnique();
+                e.ToTable("Roles");
+                e.HasKey(x => x.RoleID);
+                e.HasIndex(x => x.RoleName).IsUnique();
             });
 
-            modelBuilder.Entity<tblUnit>(entity =>
+            modelBuilder.Entity<User>(e =>
             {
-                entity.HasKey(e => e.UnitID);
-                entity.Property(e => e.UnitNumber).IsRequired().HasMaxLength(20);
-                entity.Property(e => e.UnitType).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.Status).IsRequired().HasMaxLength(20).HasDefaultValue("Available");
-                entity.HasIndex(e => e.UnitNumber).IsUnique();
+                e.ToTable("Users");
+                e.HasKey(x => x.UserID);
+                e.HasIndex(x => x.Username).IsUnique();
+
+                e.HasOne(x => x.Role)
+                 .WithMany(r => r.Users)
+                 .HasForeignKey(x => x.RoleID)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+                // the database stamps these itself
+                e.Property(x => x.DateCreated).ValueGeneratedOnAdd();
+                e.Property(x => x.DateUpdated).ValueGeneratedOnAddOrUpdate();
             });
 
-            modelBuilder.Entity<tblTenant>(entity =>
+            modelBuilder.Entity<Unit>(e =>
             {
-                entity.HasKey(e => e.TenantID);
-                entity.Property(e => e.FirstName).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.LastName).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.ContactNumber).HasMaxLength(20);
-                entity.Property(e => e.EmergencyContactName).HasMaxLength(100);
-                entity.Property(e => e.EmergencyContactRelationship).HasMaxLength(50);
-                entity.Property(e => e.EmergencyContactNumber).HasMaxLength(20);
-                entity.Property(e => e.Status).IsRequired().HasMaxLength(20).HasDefaultValue("Active");
-
-                entity.HasOne(t => t.User)
-                      .WithMany(u => u.Tenants)
-                      .HasForeignKey(t => t.UserID)
-                      .OnDelete(DeleteBehavior.SetNull);
-
-                entity.HasOne(t => t.Unit)
-                      .WithMany(u => u.Tenants)
-                      .HasForeignKey(t => t.UnitID)
-                      .OnDelete(DeleteBehavior.Restrict);
+                e.ToTable("Units");
+                e.HasKey(x => x.UnitID);
+                e.HasIndex(x => x.UnitNumber).IsUnique();
+                e.Property(x => x.DateAdded).ValueGeneratedOnAdd();
+                e.Property(x => x.DateUpdated).ValueGeneratedOnAddOrUpdate();
             });
 
-            modelBuilder.Entity<tblBilling>(entity =>
+            modelBuilder.Entity<TenantProfile>(e =>
             {
-                entity.HasKey(e => e.BillingID);
-                entity.Property(e => e.Status).IsRequired().HasMaxLength(20).HasDefaultValue("Unpaid");
-                entity.Property(e => e.Notes).HasMaxLength(500);
+                e.ToTable("TenantProfiles");
+                e.HasKey(x => x.TenantID);
+                e.HasIndex(x => x.UserID).IsUnique();
 
-                entity.HasOne(b => b.Tenant)
-                      .WithMany()
-                      .HasForeignKey(b => b.TenantID)
-                      .OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(x => x.User)
+                 .WithOne(u => u.TenantProfile)
+                 .HasForeignKey<TenantProfile>(x => x.UserID)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+                e.Property(x => x.DateRecorded).ValueGeneratedOnAdd();
+                e.Property(x => x.DateUpdated).ValueGeneratedOnAddOrUpdate();
             });
 
-            modelBuilder.Entity<tblPayment>(entity =>
+            modelBuilder.Entity<TenantUnitAssignment>(e =>
             {
-                entity.HasKey(e => e.PaymentID);
-                entity.Property(e => e.Method).HasMaxLength(50);
-                entity.Property(e => e.Remarks).HasMaxLength(300);
+                e.ToTable("TenantUnitAssignments");
+                e.HasKey(x => x.AssignmentID);
 
-                // deleting a bill removes its payment rows too
-                entity.HasOne(p => p.Billing)
-                      .WithMany()
-                      .HasForeignKey(p => p.BillingID)
-                      .OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(x => x.Tenant)
+                 .WithMany(t => t.Assignments)
+                 .HasForeignKey(x => x.TenantID)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasOne(x => x.Unit)
+                 .WithMany(u => u.Assignments)
+                 .HasForeignKey(x => x.UnitID)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+                // ActiveTenantID is a STORED GENERATED column: the database
+                // computes it and a UNIQUE key on it is what stops a tenant
+                // holding two Active assignments. EF must never write it, and
+                // does not need to read it, so it is not mapped at all.
+                e.Ignore("ActiveTenantID");
+
+                e.Property(x => x.DateRecorded).ValueGeneratedOnAdd();
+                e.Property(x => x.DateUpdated).ValueGeneratedOnAddOrUpdate();
             });
 
-            modelBuilder.Entity<tblMaintenanceRequest>(entity =>
+            modelBuilder.Entity<LostFoundItem>(e =>
             {
-                entity.HasKey(e => e.RequestID);
-                entity.Property(e => e.Category).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
-                entity.Property(e => e.Priority).IsRequired().HasMaxLength(20);
-                entity.Property(e => e.Status).IsRequired().HasMaxLength(30).HasDefaultValue("Pending");
-                entity.Property(e => e.StaffNotes).HasMaxLength(500);
+                e.ToTable("LostFoundItems");
+                e.HasKey(x => x.ItemID);
 
-                entity.HasOne(m => m.Tenant)
-                      .WithMany()
-                      .HasForeignKey(m => m.TenantID)
-                      .OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(x => x.ReportedBy)
+                 .WithMany()
+                 .HasForeignKey(x => x.ReportedByUserID)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasOne(x => x.ClaimedBy)
+                 .WithMany()
+                 .HasForeignKey(x => x.ClaimedByUserID)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+                e.Property(x => x.DateReported).ValueGeneratedOnAdd();
             });
 
-            modelBuilder.Entity<tblLostFoundItem>(entity =>
+            modelBuilder.Entity<ClaimRequest>(e =>
             {
-                entity.HasKey(e => e.ItemID);
-                entity.Property(e => e.ItemName).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Description).HasMaxLength(500);
-                entity.Property(e => e.ItemType).IsRequired().HasMaxLength(10);
-                entity.Property(e => e.Location).HasMaxLength(200);
-                entity.Property(e => e.Status).IsRequired().HasMaxLength(20).HasDefaultValue("Reported");
-                entity.Property(e => e.Notes).HasMaxLength(500);
+                e.ToTable("ClaimRequests");
+                e.HasKey(x => x.ClaimID);
 
-                entity.HasOne(l => l.ReportedBy)
-                      .WithMany()
-                      .HasForeignKey(l => l.ReportedByUserID)
-                      .OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(x => x.Item)
+                 .WithMany(i => i.Claims)
+                 .HasForeignKey(x => x.ItemID)
+                 .OnDelete(DeleteBehavior.Restrict);
 
-                entity.HasOne(l => l.ClaimedBy)
-                      .WithMany()
-                      .HasForeignKey(l => l.ClaimedByUserID)
-                      .OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(x => x.Claimant)
+                 .WithMany()
+                 .HasForeignKey(x => x.ClaimantUserID)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+                e.Property(x => x.SubmittedAt).ValueGeneratedOnAdd();
             });
 
-            modelBuilder.Entity<tblClaimRequest>(entity =>
+            modelBuilder.Entity<UnitTransferRequest>(e =>
             {
-                entity.HasKey(e => e.ClaimID);
-                entity.Property(e => e.VerificationDetails).IsRequired().HasMaxLength(1000);
-                entity.Property(e => e.Status).IsRequired().HasMaxLength(20).HasDefaultValue("Pending");
-                entity.Property(e => e.AdminNotes).HasMaxLength(500);
+                e.ToTable("UnitTransferRequests");
+                e.HasKey(x => x.TransferID);
 
-                entity.HasOne(c => c.Item)
-                      .WithMany()
-                      .HasForeignKey(c => c.ItemID)
-                      .OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(x => x.Tenant)
+                 .WithMany()
+                 .HasForeignKey(x => x.TenantID)
+                 .OnDelete(DeleteBehavior.Restrict);
 
-                entity.HasOne(c => c.Claimant)
-                      .WithMany()
-                      .HasForeignKey(c => c.ClaimantUserID)
-                      .OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(x => x.RequestedUnit)
+                 .WithMany()
+                 .HasForeignKey(x => x.RequestedUnitID)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasOne(x => x.CurrentUnit)
+                 .WithMany()
+                 .HasForeignKey(x => x.CurrentUnitID)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+                e.Property(x => x.DateRequested).ValueGeneratedOnAdd();
             });
 
-            modelBuilder.Entity<tblUnitTransferRequest>(entity =>
+            modelBuilder.Entity<Billing>(e =>
             {
-                entity.HasKey(e => e.TransferID);
-                entity.Property(e => e.Reason).IsRequired().HasMaxLength(500);
-                entity.Property(e => e.Status).IsRequired().HasMaxLength(20).HasDefaultValue("Pending");
-                entity.Property(e => e.AdminNotes).HasMaxLength(500);
+                e.ToTable("Billings");
+                e.HasKey(x => x.BillingID);
 
-                entity.HasOne(r => r.Tenant)
-                      .WithMany()
-                      .HasForeignKey(r => r.TenantID)
-                      .OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(x => x.Tenant)
+                 .WithMany()
+                 .HasForeignKey(x => x.TenantID)
+                 .OnDelete(DeleteBehavior.Restrict);
 
-                // two FKs into tblUnits — keep them non-cascading to avoid multiple cascade paths
-                entity.HasOne(r => r.CurrentUnit)
-                      .WithMany()
-                      .HasForeignKey(r => r.CurrentUnitID)
-                      .OnDelete(DeleteBehavior.Restrict);
-
-                entity.HasOne(r => r.RequestedUnit)
-                      .WithMany()
-                      .HasForeignKey(r => r.RequestedUnitID)
-                      .OnDelete(DeleteBehavior.Restrict);
+                e.Property(x => x.BillingPeriod).HasColumnType("date");
+                e.Property(x => x.DueDate).HasColumnType("date");
+                e.Property(x => x.DateIssued).ValueGeneratedOnAdd();
             });
 
+            modelBuilder.Entity<Payment>(e =>
+            {
+                e.ToTable("Payments");
+                e.HasKey(x => x.PaymentID);
+
+                e.HasOne(x => x.Billing)
+                 .WithMany(b => b.Payments)
+                 .HasForeignKey(x => x.BillingID)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+                e.Property(x => x.DatePaid).ValueGeneratedOnAdd();
+                e.Property(x => x.RecordedAt).ValueGeneratedOnAdd();
+            });
+
+            modelBuilder.Entity<MaintenanceRequest>(e =>
+            {
+                e.ToTable("MaintenanceRequests");
+                e.HasKey(x => x.RequestID);
+
+                e.HasOne(x => x.Tenant)
+                 .WithMany()
+                 .HasForeignKey(x => x.TenantID)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasOne(x => x.Unit)
+                 .WithMany()
+                 .HasForeignKey(x => x.UnitID)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasOne(x => x.AssignedStaff)
+                 .WithMany()
+                 .HasForeignKey(x => x.AssignedStaffUserID)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+                e.Property(x => x.DateSubmitted).ValueGeneratedOnAdd();
+            });
         }
     }
 }

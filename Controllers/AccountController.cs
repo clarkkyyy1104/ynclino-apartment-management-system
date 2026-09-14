@@ -53,7 +53,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 return View(vm);
             }
 
-            var user = await _context.tblUsers
+            var user = await _context.Users
                 .FirstOrDefaultAsync(u => u.Username.ToLower() == username.ToLower());
 
             if (user == null || !PasswordHelper.Verify(vm.Password, user.Password))
@@ -90,7 +90,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
         // Demo/presentation convenience: sign in as a sample admin or tenant with one
         // click (no password), so the system can be shown/tested without typing logins.
-        private async Task SignInUserAsync(tblUser user)
+        private async Task SignInUserAsync(User user)
         {
             var claims = new List<Claim>
             {
@@ -139,7 +139,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (!int.TryParse(idStr, out int userId))
                 return Forbid();
 
-            var user = await _context.tblUsers.FindAsync(userId);
+            var user = await _context.Users.FindAsync(userId);
             if (user == null)
                 return Forbid();
 
@@ -183,7 +183,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (!int.TryParse(idStr, out int userId))
                 return Forbid();
 
-            var user = await _context.tblUsers.FindAsync(userId);
+            var user = await _context.Users.FindAsync(userId);
             if (user == null)
                 return Forbid();
 
