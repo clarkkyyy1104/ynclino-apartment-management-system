@@ -16,7 +16,6 @@ namespace YnclinoApartmentManagementSystem.Data
         public DbSet<tblLostFoundItem> tblLostFoundItems { get; set; }
         public DbSet<tblClaimRequest> tblClaimRequests { get; set; }
         public DbSet<tblUnitTransferRequest> tblUnitTransferRequests { get; set; }
-        public DbSet<tblNotification> tblNotifications { get; set; }
         public DbSet<tblPayment> tblPayments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

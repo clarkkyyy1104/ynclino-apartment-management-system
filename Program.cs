@@ -6,6 +6,7 @@ using YnclinoApartmentManagementSystem.Data;
 using YnclinoApartmentManagementSystem.Filters;
 using YnclinoApartmentManagementSystem.Helpers;
 using YnclinoApartmentManagementSystem.Models;
+using YnclinoApartmentManagementSystem.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +32,8 @@ if (!string.IsNullOrWhiteSpace(localPassword) && connectionString != null && con
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+
+builder.Services.AddScoped<SystemNotificationService>();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
