@@ -64,14 +64,14 @@ else
                                 {
                                     <form asp-action="Archive" asp-route-id="@r.TransferID" method="post">
                                         @Html.AntiForgeryToken()
-                                        <button type="submit" title="Move to archive" aria-label="Move to archive"><img src="images/icons/archive.svg" /></button>
+                                        <button type="submit" title="Move to archive" aria-label="Move to archive"><img src="/images/icons/archive.svg" /></button>
                                     </form>
                                 }
                                 else if (isArchiveColumn)
                                 {
                                     <form asp-action="Unarchive" asp-route-id="@r.TransferID" method="post">
                                         @Html.AntiForgeryToken()
-                                        <button type="submit" title="Put back on the active list" aria-label="Put back on the active list"><img src="images/icons/restore.svg"/></button>
+                                        <button type="submit" title="Put back on the active list" aria-label="Put back on the active list"><img src="/images/icons/restore.svg"/></button>
                                     </form>
                                 }
                                 @if (!string.IsNullOrEmpty(r.AdminNotes))
