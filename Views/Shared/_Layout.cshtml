@@ -163,16 +163,11 @@
         </aside>
 
         <div>
-            @* The strip above the module. The one control it carries sits at the
-               far left, beside the module's own heading: on a wide screen it
-               narrows the sidebar to a rail, and on a narrow one — where there
-               is no rail, only a drawer — it slides the drawer in and out. *@
             <header>
                 <button type="button" data-rail-toggle
                         title="Collapse the menu" aria-label="Collapse the menu"
                         aria-expanded="true" aria-controls="appSidebar">&#9776;</button>
             </header>
-
             <main>
                 @RenderBody()
             </main>

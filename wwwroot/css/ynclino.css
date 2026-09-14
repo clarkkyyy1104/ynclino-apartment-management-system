@@ -15,7 +15,7 @@
 
 /* 1. TOKENS ─────────────────────────────────────────────────────────────── */
 :root {
-    --navy:       #1F2937;   /* sidebar, sign-in page, table headers, card cap */
+    --navy:       #2B3648;   /* sidebar, sign-in page, table headers, card cap */
     --navy-soft:  #2B3648;   /* the current nav item */
     --orange:     #FA5203;   /* accent bar, active icon, eye icon */
     --orange-btn: #F94C01;   /* buttons */

@@ -71,29 +71,6 @@
                     var rate = Model.OccupancyRate.ToString("F0");
                 }
 
-                <p data-lede>
-                    @if (Model.TotalUnits == 0)
-                    {
-                        <text>There are no units on record yet.</text>
-                    }
-                    else if (empty == 0)
-                    {
-                        <text>
-                            All <strong>@Model.TotalUnits</strong> units have someone living in them.
-                            The building is full.
-                        </text>
-                    }
-                    else
-                    {
-                        <text>
-                            <strong>@Model.OccupiedUnits</strong> of the
-                            <strong>@Model.TotalUnits</strong> units have someone living in them.
-                            <strong>@empty</strong> @(empty == 1 ? "does" : "do") not.
-                        </text>
-                    }
-                </p>
-                <div data-meter-note>@rate% of the building is earning rent</div>
-
                 <table>
                     <thead>
                         <tr><th>Right now</th><th>Units</th><th>Which ones</th><th>Rent a month</th></tr>

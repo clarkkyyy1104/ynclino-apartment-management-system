@@ -60,10 +60,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
             // Each state is named in plain words and lists its own units.
             var states = new[]
             {
-                ("Occupied",          "Lived in",        "Someone is renting it and paying for it."),
-                ("Available",         "Empty and ready", "Could be rented out tomorrow — nothing is stopping it."),
-                ("Reserved",          "Being held",      "Promised to someone who has not moved in yet."),
-                ("Under Maintenance", "Being repaired",  "Cannot be rented until the work is finished.")
+                ("Occupied",          "Occupied", ""),
+                ("Available",         "Available", ""),
+                ("Reserved",          "Reserved", ""),
+                ("Under Maintenance", "Under Maintenance", "")
             };
 
             vm.UnitStates = states.Select(s => new UnitStateRow
