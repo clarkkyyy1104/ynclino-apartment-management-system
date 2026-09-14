@@ -101,19 +101,26 @@ namespace YnclinoApartmentManagementSystem.Services
                     });
                 }
 
-                // Reported lost/found items
-                var reportedItems =
-                    await _context.tblLostFoundItems
-                        .CountAsync(i => i.Status == "Reported");
+                // Claims waiting on a decision.
+                //
+                // This used to count items with Status 'Reported' — every
+                // unclaimed item on the board. Nothing needs doing about an item
+                // sitting in the box, so that badge could never reach zero, while
+                // the claims that genuinely need a yes or no were not counted at
+                // all. A claim is the thing that waits on the admin, so a claim
+                // is what the badge counts.
+                var pendingClaims =
+                    await _context.tblClaimRequests
+                        .CountAsync(c => c.Status == "Pending");
 
-                if (reportedItems > 0)
+                if (pendingClaims > 0)
                 {
                     notifications.Add(new SystemNotification
                     {
                         Module = "LostFound",
-                        Message = $"{reportedItems} lost/found item" +
-                                  (reportedItems > 1 ? "s" : "") +
-                                  " require attention.",
+                        Message = $"{pendingClaims} claim" +
+                                  (pendingClaims > 1 ? "s are" : " is") +
+                                  " waiting to be reviewed.",
                         Link = "/LostFound",
                         CreatedAt = DateTime.Now
                     });
