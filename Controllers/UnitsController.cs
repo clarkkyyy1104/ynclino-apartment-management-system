@@ -76,34 +76,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // POST: Units/ReloadSampleData
-        // wipes the current data (keeping admin accounts) and regenerates a fresh set,
-        // so the sample data can be refreshed without hand-clearing the database
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> ReloadSampleData()
-        {
-            await ClearSampleDataAsync();
-            await SeedSampleDataAsync();
-            TempData["Success"] = "Reloaded a fresh sample set: 5 units, 5 tenants, and connected bills, maintenance, and lost & found records. Sample tenants log in with password 'Tenant@123'.";
-            return RedirectToAction(nameof(Index));
-        }
-
-        // deletes every unit, tenant, transaction, and sample tenant login, in FK-safe
-        // order; admin accounts are left untouched
-        private async Task ClearSampleDataAsync()
-        {
-            await _context.tblClaimRequests.ExecuteDeleteAsync();
-            await _context.tblUnitTransferRequests.ExecuteDeleteAsync();
-            await _context.tblBillings.ExecuteDeleteAsync();
-            await _context.tblMaintenanceRequests.ExecuteDeleteAsync();
-            await _context.tblLostFoundItems.ExecuteDeleteAsync();
-            await _context.tblTenants.ExecuteDeleteAsync();
-            await _context.tblUnits.ExecuteDeleteAsync();
-            await _context.tblUsers.Where(u => u.Role == "Tenant").ExecuteDeleteAsync();
-        }
-
         // builds the full connected sample dataset (units, tenants, and their records)
         private async Task SeedSampleDataAsync()
         {

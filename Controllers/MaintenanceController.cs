@@ -534,35 +534,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: Maintenance/Delete/5
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null) return NotFound();
-
-            var request = await _context.tblMaintenanceRequests
-                .Include(m => m.Tenant).ThenInclude(t => t!.Unit)
-                .FirstOrDefaultAsync(m => m.RequestID == id);
-
-            if (request == null) return NotFound();
-            return View(request);
-        }
-
-        // POST: Maintenance/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var request = await _context.tblMaintenanceRequests.FindAsync(id);
-            if (request == null) return NotFound();
-
-            _context.tblMaintenanceRequests.Remove(request);
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Maintenance request deleted.";
-            return RedirectToAction(nameof(Index));
-        }
-
         // A description is only mandatory when the issue type is "Other". For the
         // preset types, an empty description falls back to the type name so the
         // record is never blank.

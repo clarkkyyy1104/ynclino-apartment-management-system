@@ -620,35 +620,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: Billing/Delete/5
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null) return NotFound();
-
-            var billing = await _context.tblBillings
-                .Include(b => b.Tenant).ThenInclude(t => t!.Unit)
-                .FirstOrDefaultAsync(b => b.BillingID == id);
-
-            if (billing == null) return NotFound();
-            return View(billing);
-        }
-
-        // POST: Billing/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var billing = await _context.tblBillings.FindAsync(id);
-            if (billing == null) return NotFound();
-
-            _context.tblBillings.Remove(billing);
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Billing record deleted.";
-            return RedirectToAction(nameof(Index));
-        }
-
         // ajax helper - suggests the unit's monthly rent and reports any arrears
         [HttpGet]
         [Authorize(Roles = "Admin")]

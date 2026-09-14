@@ -10,7 +10,9 @@
     @if (isStaff)
     {
         <div data-actions>
-            @* @if (ViewBag.HasUnits != true)
+            @* Demo data for the defence. Only offered while the list is empty,
+               so it can never overwrite real records. *@
+            @if (ViewBag.HasUnits != true)
             {
                 <form asp-action="GenerateSampleData" method="post"
                       onsubmit="return confirm('Load the sample data (5 units, 5 tenants, and connected records)?')">
@@ -18,14 +20,6 @@
                     <button type="submit">Load Sample Data</button>
                 </form>
             }
-            else
-            {
-                <form asp-action="ReloadSampleData" method="post"
-                      onsubmit="return confirm('Reload the sample data? This DELETES the current units, tenants, bills, maintenance, and lost &amp; found records (admin accounts are kept) and regenerates a fresh set of 5 units and 5 tenants.')">
-                    @Html.AntiForgeryToken()
-                    <button type="submit">Reload Sample Data</button>
-                </form>
-            } *@
             <a data-primary asp-action="Create">+ Add Unit</a>
         </div>
     }

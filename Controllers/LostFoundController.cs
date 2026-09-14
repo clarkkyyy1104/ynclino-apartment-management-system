@@ -260,35 +260,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: LostFound/Delete/5
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null) return NotFound();
-
-            var item = await _context.tblLostFoundItems
-                .Include(l => l.ReportedBy).ThenInclude(u => u!.Tenants)
-                .FirstOrDefaultAsync(l => l.ItemID == id);
-
-            if (item == null) return NotFound();
-            return View(item);
-        }
-
-        // POST: LostFound/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var item = await _context.tblLostFoundItems.FindAsync(id);
-            if (item == null) return NotFound();
-
-            _context.tblLostFoundItems.Remove(item);
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Item record deleted.";
-            return RedirectToAction(nameof(Index));
-        }
-
         // GET: LostFound/Claim/5
         [Authorize(Roles = "Tenant")]
         public async Task<IActionResult> Claim(int? id)
