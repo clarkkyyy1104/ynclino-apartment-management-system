@@ -134,32 +134,15 @@
                top of the page, so the first thing at the top of every module is
                that module's own heading. *@
             <div data-account>
-                <a href="#" role="button" data-dropdown aria-expanded="false" aria-controls="accountMenu"
-                   title="@User.Identity.Name">
-                    @* the initial is all that fits on the rail *@
-                    <span data-account-initial>@(User.Identity.Name?.Substring(0, 1).ToUpper())</span>
-                    <span data-account-name>@User.Identity.Name</span>
-                    <span data-account-role>@(isAdmin ? "Admin" : isStaff ? "Maintenance Staff" : "Tenant")</span>
-                </a>
-                <ul id="accountMenu" hidden>
-                    @if (!isStaff)
-                    {
-                        <li>
-                            <a asp-controller="Profile" asp-action="Index">
-                                My Profile @if (isTenant) { @await Component.InvokeAsync("NavAlert", new { module = "Transfer" }) }
-                            </a>
-                        </li>
-                    }
-                    <li><a asp-controller="Account" asp-action="ChangePassword">Change Password</a></li>
-                    <li><hr></li>
-                    <li>
-                        <form asp-controller="Account" asp-action="Logout" method="post">
-                            @Html.AntiForgeryToken()
-                            <button type="submit">Sign Out</button>
-                        </form>
-                    </li>
-                </ul>
+                <img src="images/icons/logout.svg">
             </div>
+            <a data-panel-body>
+                @* the initial is all that fits on the rail *@
+                <span><img src="images/icons/profile.svg" alt=""></span>
+                <span data-account-name>@User.Identity.Name</span>
+                @if (!isStaff){}
+                else {<span data-account-role>@(isAdmin ? "Admin" : isStaff ? "Maintenance Staff" : "Tenant")</span>}
+            </a>
         </aside>
 
         <div>
