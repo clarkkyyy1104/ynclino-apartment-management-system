@@ -85,25 +85,6 @@ CREATE TABLE `tblLostFoundItems` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- -----------------------------------------------------------------------------
--- tblNotifications
---   One row per person per event. Module says which part of the
---   system raised it; TargetId points at the record it is about.
--- -----------------------------------------------------------------------------
-CREATE TABLE `tblNotifications` (
-  `NotificationID` int NOT NULL AUTO_INCREMENT,
-  `UserID` int NOT NULL,
-  `Module` varchar(30) NOT NULL,
-  `Message` varchar(300) NOT NULL,
-  `Link` varchar(300) DEFAULT NULL,
-  `TargetId` int DEFAULT NULL,
-  `IsRead` tinyint(1) NOT NULL,
-  `CreatedAt` datetime(6) NOT NULL,
-  PRIMARY KEY (`NotificationID`),
-  KEY `IX_tblNotifications_UserID_IsRead` (`UserID`,`IsRead`),
-  CONSTRAINT `FK_tblNotifications_tblUsers_UserID` FOREIGN KEY (`UserID`) REFERENCES `tblUsers` (`UserID`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- -----------------------------------------------------------------------------
 -- tblTenants
 --   A tenant's record: who they are, which unit, and the advance payment
 --   they are holding. UserID is their login; UnitID is null before they move in.
