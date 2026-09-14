@@ -8,7 +8,7 @@
 --  MySQL 8 / MariaDB 10.4+.  Run it as a whole:
 --      mysql -u root -p < ynclino_schema.sql
 --
---  It creates the database, the ten tables, their keys and their relationships,
+--  It creates the database, the nine tables, their keys and their relationships,
 --  and (at the end, clearly marked) the one administrator account you need in
 --  order to sign in the first time.
 -- =============================================================================

@@ -60,7 +60,7 @@
                         <div>
                             <a aria-current="@Active("Units")" asp-controller="Units" asp-action="Index">Units</a>
                             <a aria-current="@Active("Transfers")" asp-controller="Transfers" asp-action="Index">
-                                Unit Requests @await Component.InvokeAsync("NavAlert", new { module = "Transfer" })
+                                Units Request @await Component.InvokeAsync("NavAlert", new { module = "Transfer" })
                             </a>
                         </div>
                     </div>
@@ -76,9 +76,9 @@
 
                 @if (isAdmin)
                 {
-                    <a aria-current="@Active("Users")" asp-controller="Users" asp-action="Index" title="User Management">
+                    <a aria-current="@Active("Users")" asp-controller="Users" asp-action="Index" title="Manage Users">
                         <span data-nav-icon="users"></span>
-                        <span data-nav-label>User Management</span>
+                        <span data-nav-label>Manage Users</span>
                     </a>
                     <a aria-current="@Active("Tenants")" asp-controller="Tenants" asp-action="Index" title="Tenants">
                         <span data-nav-icon="tenants"></span>
@@ -90,10 +90,10 @@
                    no tenants, no units, no lost &amp; found *@
                 @if (!isStaff)
                 {
-                    <a data-collapse="#billingGroup" href="#billingGroup" role="button" title="Billing &amp; Payment"
+                    <a data-collapse="#billingGroup" href="#billingGroup" role="button" title="Billing and Payment"
                        aria-expanded="@(billingOpen ? "true" : "false")">
                         <span data-nav-icon="billing"></span>
-                        <span data-nav-label>Billing &amp; Payment</span>
+                        <span data-nav-label>Billing and Payment</span>
                         @await Component.InvokeAsync("NavAlert", new { module = "Billing" })
                         <span data-caret>&#9662;</span>
                     </a>
@@ -113,9 +113,9 @@
 
                 @if (!isStaff)
                 {
-                    <a aria-current="@Active("LostFound")" asp-controller="LostFound" asp-action="Index" title="Lost &amp; Found">
+                    <a aria-current="@Active("LostFound")" asp-controller="LostFound" asp-action="Index" title="Lost and Found">
                         <span data-nav-icon="lostfound"></span>
-                        <span data-nav-label>Lost &amp; Found</span>
+                        <span data-nav-label>Lost and Found</span>
                         @await Component.InvokeAsync("NavAlert", new { module = "LostFound" })
                     </a>
                 }

@@ -86,9 +86,20 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-    // Create the database and schema if it doesn't exist yet. On a brand-new
-    // MySQL server this builds every table from the current models.
-    db.Database.EnsureCreated();
+    // The database is no longer conjured from the models at startup. It is a real
+    // MySQL database, built once by running Database/ynclino_schema.sql, and the
+    // program now only connects to what is already there.
+    //
+    // EnsureCreated() used to sit here. It was removed on purpose: it silently
+    // created whatever the models happened to say, so the running schema and the
+    // script could drift apart without anyone noticing, and it does nothing at all
+    // once the database exists. If the database is missing, we want to say so
+    // plainly rather than invent one.
+    if (!db.Database.CanConnect())
+    {
+        Console.WriteLine("[schema] Cannot reach the database named in the connection string.");
+        Console.WriteLine("[schema] Create it first:  mysql -u root -p < Database/ynclino_schema.sql");
+    }
 
     //MySQL does NOT support "ALTER TABLE ... ADD COLUMN IF NOT EXISTS" (MariaDB-only),
     //so ask information_schema first, then run a plain ALTER when it is really missing.

@@ -15,7 +15,7 @@
                     double circ = 2 * Math.PI * 54;                 // circumference of the ring
                     double filled = Model.OccupancyRate / 100.0 * circ;
                 }
-                <svg viewBox="0 0 140 140">
+                <svg data-chart viewBox="0 0 140 140">
                     <circle cx="70" cy="70" r="54" fill="none" stroke="#e9ecef" stroke-width="16" />
                     <circle cx="70" cy="70" r="54" fill="none" stroke="#198754" stroke-width="16"
                             stroke-dasharray="@filled.ToString("F2") @circ.ToString("F2")"
@@ -61,7 +61,7 @@
                         svg.Append($"<text x='{x + 30}' y='{chartH + 38}' text-anchor='middle' font-size='9' fill='#adb5bd'>{m.Month:yy}</text>");
                     }
                 }
-                <svg viewBox="0 0 @(Math.Max(months.Count,1) * slot) 170">
+                <svg data-chart viewBox="0 0 @(Math.Max(months.Count,1) * slot) 170">
                     @Html.Raw(svg.ToString())
                 </svg>
                 <div>

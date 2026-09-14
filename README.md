@@ -10,8 +10,9 @@ maintenance, and lost & found.
 - **Framework:** ASP.NET Core MVC 8.0
 - **Database:** MySQL 8.0 (or MariaDB 10.4+)
 - **ORM:** Entity Framework Core 8.0 with the Pomelo MySQL provider
-  (schema is created automatically on first run — no migrations to apply)
-- **UI:** Bootstrap 5.3 with a custom Ynclino theme
+  (the database is a real one, built by running `Database/ynclino_schema.sql`;
+  the program connects to it and never creates it)
+- **UI:** hand-written CSS in `wwwroot/css/ynclino.css` — no framework
 
 ---
 
@@ -40,16 +41,35 @@ maintenance, and lost & found.
 
 ## Database Setup
 
-The app **creates the database and all tables automatically** on first run, so
-you do not need to create anything by hand. You only need a running MySQL server
-and your password in a local config file.
+The database is a **real MySQL database that you build once from a script**. The
+program does not create it. This changed on purpose: the app used to call EF
+Core's `EnsureCreated()` at startup, which quietly built whatever the models
+happened to say at that moment — so the schema in the database and the schema in
+the repository could drift apart with nobody noticing. Now there is one written
+source of truth, `Database/ynclino_schema.sql`, and it is the thing that gets
+run. If the database is missing, the app says so on the console instead of
+inventing one.
 
 ### 1. Make sure MySQL Server is running
 `Win + R` → `services.msc` → find **MySQL80** → its status should be **Running**
 (set *Startup type* to **Automatic** so it always starts). Note the **root
 password** you set when installing MySQL.
 
-### 2. Create `appsettings.Local.json` (your private config)
+### 2. Build the database from the script
+From the project root, run the script once:
+
+```
+mysql -u root -p < Database/ynclino_schema.sql
+```
+
+It creates the database, the nine tables with their keys and relationships, and
+the one administrator account you need to sign in the first time
+(**`admin`** / **`Admin@123`**).
+
+> In MySQL Workbench you can do the same with **File → Open SQL Script…**, pick
+> `Database/ynclino_schema.sql`, then hit the lightning bolt to execute it.
+
+### 3. Create `appsettings.Local.json` (your private config)
 In the project root, copy `appsettings.Local.json.example` to
 **`appsettings.Local.json`** and put your own MySQL password in it:
 
@@ -68,24 +88,29 @@ In the project root, copy `appsettings.Local.json.example` to
   `YOUR_MYSQL_PASSWORD` placeholder untouched.
 - Each teammate creates their own `appsettings.Local.json` with their own password.
 
-> Different databases per branch: the `crud` branch uses `YnclinoAMS_crud` and
-> `crud(copy)` uses `YnclinoApartmentManagementSystemDb`, so the two branches never
-> share data. (Set in each branch's `appsettings.json`.)
+> Different databases per branch: the `crud` branch uses its own database and
+> `crud(copy)` uses `YnclinoApartmentManagementSystemDb`, so the two branches
+> never share data. (Set in each branch's `appsettings.json`.) Whichever database
+> a branch names, build it from the same script first.
 
-### 3. Run the app
-Press **F5** in Visual Studio (or `dotnet run`). On first launch it:
-- creates the `YnclinoApartmentManagementSystemDb` database and tables,
-- seeds the default admin account,
-- opens at **https://localhost:7251**.
+### 4. Run the app
+Press **F5** in Visual Studio (or `dotnet run`). It connects to the database you
+built in step 2 and opens at **https://localhost:7251**.
 
-### 4. Log in and load demo data
+If the console prints `[schema] Cannot reach the database named in the connection
+string`, step 2 has not been done (or the name in `appsettings.json` does not
+match the one the script created).
+
+### 5. Log in and load demo data
 - Default admin login: **`admin`** / **`Admin@123`**
 - On the **Units** page, click **Load Sample Data** to populate demo units and tenants.
 
-> **Resetting the database:** because the schema is created (not migrated), the
-> quickest way to start fresh is to drop it and re-run the app:
+> **Resetting the database:** drop it and run the script again.
 > ```sql
 > DROP DATABASE YnclinoApartmentManagementSystemDb;
+> ```
+> ```
+> mysql -u root -p < Database/ynclino_schema.sql
 > ```
 
 ### Forgot your MySQL root password?
@@ -114,9 +139,11 @@ The Ynclino visual identity is derived from the logo.
 | **Cream / off-white** | `#ecebe4` | Text on dark (login, sidebar wordmark) |
 | Page background | `#f6f8fb` | App content area |
 
-There is **no blue** in the palette. Brand tokens live as CSS variables in
-`wwwroot/css/theme.css` (`--ynk-orange`, `--ynk-dark`, etc.); Bootstrap's
-`primary` is mapped to charcoal so all default "primary" fills stay on-brand.
+There is **no blue** in the palette. Brand tokens live as CSS custom properties
+at the top of `wwwroot/css/ynclino.css`. There is no CSS framework — the
+stylesheet is hand-written, and components are named with `data-*` attributes
+(`[data-panel]`, `[data-stat]`, `[data-table-wrap]`) rather than inferred from
+document structure.
 
 ### Logos
 
@@ -140,14 +167,17 @@ Source SVGs are in `Logos/`; web-ready copies used by the app are in
 ynclino-apartment-management-system/
 ├── Controllers/         MVC controllers (Units, Tenants, Billing, Maintenance, LostFound, ...)
 ├── Data/                ApplicationDbContext (EF Core)
+├── Database/            ynclino_schema.sql — the script that builds the database
 ├── Helpers/             Password hashing, image upload helper
+├── Services/            SystemNotificationService — derives alerts from the records
 ├── Logos/               Source logo SVGs
 ├── Models/              Entity classes (tblUnit, tblTenant, ...)
 │   └── ViewModels/      Form-binding view models
 ├── Views/               Razor views (one folder per controller)
 │   └── Shared/          Layout, partials
 ├── wwwroot/
-│   ├── css/             site.css, theme.css (brand theme)
+│   ├── css/             ynclino.css (the stylesheet), site.css, theme.css
+│   ├── js/              ynclino.js (nav rail, collapsible groups)
 │   ├── images/          Logos
 │   └── uploads/         Runtime-uploaded photos (git-ignored)
 ├── appsettings.json              Config with a password placeholder (committed)

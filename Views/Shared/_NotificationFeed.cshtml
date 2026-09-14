@@ -16,7 +16,7 @@
     // the records say "LostFound" and "Transfer"; people read something friendlier
     string NoteLabel(string module) => module switch
     {
-        "LostFound" => "Lost & Found",
+        "LostFound" => "Lost and Found",
         "Transfer"  => "Unit Request",
         _           => module
     };
@@ -24,14 +24,14 @@
 
 <div data-panel>
     <div data-panel-head>
-        <span>Needs attention</span>
+        <span>Notifications</span>
     </div>
 
     @if (notes.Count == 0)
     {
         <div data-panel-body data-empty>
-            <p>Nothing is waiting on you right now.</p>
-            <p>Unpaid bills, open requests and pending approvals will show up here on their own.</p>
+            <p>You&#8217;re all caught up.</p>
+            <p>New requests will show up here.</p>
         </div>
     }
     else

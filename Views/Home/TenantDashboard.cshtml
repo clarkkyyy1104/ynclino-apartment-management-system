@@ -1,51 +1,77 @@
 @model YnclinoApartmentManagementSystem.Models.ViewModels.TenantDashboardViewModel
 @{
     ViewData["Title"] = "Dashboard";
+    var t = Model.Tenant;
 }
 
-<div>
-    <h4>Welcome, @(Model.Tenant?.FullName ?? User.Identity?.Name)</h4>
-    <p>
-        @if (Model.TotalNotifications > 0)
-        {
-            <text>There @(Model.TotalNotifications == 1 ? "is 1 thing" : $"are {Model.TotalNotifications} things") below that still needs you.</text>
-        }
-        else
-        {
-            <text>Nothing needs your attention right now.</text>
-        }
-    </p>
+@* Laid out to match TENANT-DASHBOARD in the Figma file (node 426:12491):
+   a welcome line, then Personal Information beside Unit Information. The same
+   two panels appear on My Profile, so the fields and their order are kept
+   identical between the two screens. *@
+<div data-page-head>
+    <div>
+        <h4>Dashboard</h4>
+        <p>Welcome, @(t?.FullName ?? User.Identity?.Name).</p>
+    </div>
 </div>
 
-@* The three facts a tenant actually opens this page for: which unit is theirs,
-   what they owe, and what they have paid ahead. *@
-<div data-stats>
+<div data-profile-cols>
     <div>
-        <div data-stat>
-            <div>
-                <div>My Unit</div>
-                <div>@(Model.Tenant?.Unit?.UnitNumber ?? "—")</div>
-            </div>
-            <div></div>
+    <div data-panel>
+        <div data-panel-head>Personal Information</div>
+        <div data-panel-body>
+            @if (t == null)
+            {
+                <p>Your tenant record has not been set up yet. Please contact the office.</p>
+            }
+            else
+            {
+                <dl>
+                    <dt>Full Name</dt><dd>@t.FullName</dd>
+                    <dt>Contact No.</dt><dd>@(string.IsNullOrEmpty(t.ContactNumber) ? "—" : t.ContactNumber)</dd>
+                    <dt>Emergency Contact</dt>
+                    <dd>
+                        @if (string.IsNullOrEmpty(t.EmergencyContactName)) { <text>—</text> }
+                        else
+                        {
+                            @t.EmergencyContactName
+                            @if (!string.IsNullOrEmpty(t.EmergencyContactRelationship)) { <text> (@t.EmergencyContactRelationship)</text> }
+                            @if (!string.IsNullOrEmpty(t.EmergencyContactNumber)) { <text> — @t.EmergencyContactNumber</text> }
+                        }
+                    </dd>
+                    <dt>Status</dt><dd>@t.Status</dd>
+                    <dt>Date Occupancy</dt><dd>@(t.MoveInDate?.ToString("MM/dd/yy") ?? "—")</dd>
+                    <dt>Date Recorded</dt><dd>@t.DateRecorded.ToString("MM/dd/yy")</dd>
+                </dl>
+            }
         </div>
     </div>
+    </div>
+
     <div>
-        <div data-stat>
-            <div>
-                <div>Balance Due</div>
-                <div>₱@Model.Outstanding.ToString("N2")</div>
-            </div>
-            <div></div>
+    <div data-panel>
+        <div data-panel-head>Unit Information</div>
+        <div data-panel-body>
+            @if (t?.Unit == null)
+            {
+                <p>You don't have a unit yet.</p>
+                <div data-actions-row>
+                    <a asp-controller="Transfers" asp-action="Create">Apply for a Unit</a>
+                </div>
+            }
+            else
+            {
+                <dl>
+                    <dt>Unit Number</dt><dd>@t.Unit.UnitNumber</dd>
+                    <dt>Unit Type</dt><dd>@t.Unit.UnitType</dd>
+                    <dt>Monthly Rent</dt><dd>₱@t.Unit.RentPrice.ToString("N2")</dd>
+                    <dt>Deposit</dt><dd>₱@t.Unit.Deposit.ToString("N2")</dd>
+                    <dt>One Month Advance</dt><dd>₱@t.Unit.AdvancePayment.ToString("N2")</dd>
+                    <dt>Capacity</dt><dd>@t.Unit.Capacity person(s)</dd>
+                </dl>
+            }
         </div>
     </div>
-    <div>
-        <div data-stat>
-            <div>
-                <div>Paid in Advance</div>
-                <div>₱@Model.AdvanceCredit.ToString("N2")</div>
-            </div>
-            <div></div>
-        </div>
     </div>
 </div>
 
