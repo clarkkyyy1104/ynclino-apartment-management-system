@@ -71,21 +71,22 @@ aside#appSidebar {
     flex-direction: column;
 }
 /* the brand row: the wordmark, and the control that narrows the sidebar */
-[data-brand] { display: flex; align-items: center; gap: .5rem; padding: 20px 14px; }
+[data-brand] { display: flex; align-items: center; padding: 20px 14px; }
 [data-brand-link] { flex: 1 1 auto; min-width: 0; }
 [data-brand-link]:hover { text-decoration: none; }
 [data-logo-mark] { display: none; }          /* shown only on the rail */
 
+/* It sits on the white strip now, not on the navy sidebar, so it is inked the
+   other way round. margin-left pulls it to the far left of the content. */
 [data-rail-toggle] {
     flex: 0 0 auto;
     display: inline-flex; align-items: center; justify-content: center;
     width: 34px; height: 34px; padding: 0;
-    color: var(--cream); background: transparent;
-    border: 1px solid rgba(255,255,255,.22); border-radius: 6px;
+    color: var(--ink); background: #fff;
+    border: 1px solid var(--field-line); border-radius: 6px;
     font-size: 1rem; line-height: 1; cursor: pointer;
 }
-[data-rail-toggle]:hover { background: rgba(255,255,255,.1); color: #fff; border-color: rgba(255,255,255,.35); }
-aside#appSidebar > a:hover { text-decoration: none; }
+[data-rail-toggle]:hover { background: var(--field-bg); color: var(--ink); }
 
 aside#appSidebar + div { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
 
@@ -146,18 +147,33 @@ aside nav a {
 }
 aside nav a:hover { background: rgba(255,255,255,.06); color: #fff; text-decoration: none; }
 
-/* the slot an icon goes into. Until one is pasted in, data-initial draws the
-   module's first letter so the rail is readable in the meantime. */
+/* The icon each nav line carries. The artwork stays in its own file under
+   wwwroot/images/icons and is pulled in as a MASK rather than as a picture:
+   the shape comes from the file, the colour from currentColor, so an icon dims
+   and brightens with the text beside it and turns white on the active row. An
+   <img> could not do that — it would be a fixed-colour stamp. */
 [data-nav-icon] {
     flex: 0 0 auto;
     display: inline-flex; align-items: center; justify-content: center;
     width: 22px; height: 22px;
 }
-[data-nav-icon]:empty::before {
-    content: attr(data-initial);
-    font-size: .95rem; font-weight: 700; opacity: .85;
+[data-nav-icon]::before {
+    content: "";
+    display: block;
+    width: 100%; height: 100%;
+    background: currentColor;
+    -webkit-mask: var(--nav-icon) center / contain no-repeat;
+            mask: var(--nav-icon) center / contain no-repeat;
 }
-[data-nav-icon] svg { width: 100%; height: 100%; }
+/* one line per module: the only place a file name appears */
+[data-nav-icon="dashboard"]   { --nav-icon: url("/images/icons/dashboard.svg"); }
+[data-nav-icon="units"]       { --nav-icon: url("/images/icons/unit.svg"); }
+[data-nav-icon="users"]       { --nav-icon: url("/images/icons/users.svg"); }
+[data-nav-icon="tenants"]     { --nav-icon: url("/images/icons/tenants.svg"); }
+[data-nav-icon="billing"]     { --nav-icon: url("/images/icons/billing.svg"); }
+[data-nav-icon="maintenance"] { --nav-icon: url("/images/icons/maintenance.svg"); }
+[data-nav-icon="lostfound"]   { --nav-icon: url("/images/icons/lost-found.svg"); }
+[data-nav-icon="reports"]     { --nav-icon: url("/images/icons/reports.svg"); }
 [data-nav-label] { flex: 1 1 auto; min-width: 0; }
 [data-caret] { margin-left: auto; transition: transform .15s; }
 aside nav a[aria-expanded="true"] [data-caret] { transform: rotate(180deg); }
@@ -283,10 +299,13 @@ header {
     display: flex;
     align-items: center;
     gap: .75rem;
-    padding: .9rem 2rem;
-    border-bottom: 1px solid var(--line);
+    padding: .55rem 2rem;
+    border-bottom: 1px solid var(--line-soft);
 }
-@media (min-width: 768px) { header { display: none; } }
+/* The strip is back on every screen: it carries the control that narrows the
+   sidebar, and that control has to be reachable whatever the width. It is kept
+   slim and bottom-ruled so it reads as a ledge above the module rather than a
+   second heading competing with the module's own. */
 header > div { position: relative; margin-left: auto; }
 header > div > a { color: var(--ink); font-weight: 600; }
 header > div > a::after {

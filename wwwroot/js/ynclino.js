@@ -18,19 +18,28 @@
         try { localStorage.setItem('ynclino-rail', collapsed ? '1' : '0'); } catch (err) { }
 
         var toggle = document.querySelector('[data-rail-toggle]');
-        if (!toggle) return;
+        if (!toggle || !window.matchMedia('(min-width: 768px)').matches) return;
         var word = collapsed ? 'Expand the menu' : 'Collapse the menu';
         toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
         toggle.setAttribute('title', word);
         toggle.setAttribute('aria-label', word);
     }
 
-    /* the rail toggle itself */
+    /* The one button above the module. What it means depends on the width,
+       because the sidebar itself does: wide, it is a column that narrows to a
+       rail; narrow, it is a drawer that is either in or out. There is no rail
+       below 768px, so pressing it there must slide the drawer instead. */
     document.addEventListener('click', function (e) {
         var toggle = e.target.closest('[data-rail-toggle]');
         if (!toggle) return;
         e.preventDefault();
-        setRail(!document.documentElement.hasAttribute('data-rail'));
+
+        if (window.matchMedia('(min-width: 768px)').matches) {
+            setRail(!document.documentElement.hasAttribute('data-rail'));
+        } else {
+            var side = document.getElementById('appSidebar');
+            if (side) side.toggleAttribute('data-open');
+        }
     });
 
     /* disclosure groups in the sidebar: <a data-collapse="#unitsGroup"> */
