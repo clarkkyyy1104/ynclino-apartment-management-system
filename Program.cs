@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using YnclinoApartmentManagementSystem.Data;
+using YnclinoApartmentManagementSystem.Filters;
 using YnclinoApartmentManagementSystem.Helpers;
 using YnclinoApartmentManagementSystem.Models;
+using YnclinoApartmentManagementSystem.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,7 +14,11 @@ var builder = WebApplication.CreateBuilder(args);
 // which is git-ignored so secrets never get committed.
 builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    // force users flagged for a password reset onto the change page until they comply
+    options.Filters.Add<MustChangePasswordFilter>();
+});
 
 // The connection string (including the DATABASE NAME) comes from the committed
 // appsettings.json, so each branch can target its own database. Your local password
@@ -26,6 +32,8 @@ if (!string.IsNullOrWhiteSpace(localPassword) && connectionString != null && con
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+
+builder.Services.AddScoped<SystemNotificationService>();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -78,9 +86,127 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-    // Create the database and schema if it doesn't exist yet. On a brand-new
-    // MySQL server this builds every table from the current models.
-    db.Database.EnsureCreated();
+    // The database is no longer conjured from the models at startup. It is a real
+    // MySQL database, built once by running Database/ynclino_schema.sql, and the
+    // program now only connects to what is already there.
+    //
+    // EnsureCreated() used to sit here. It was removed on purpose: it silently
+    // created whatever the models happened to say, so the running schema and the
+    // script could drift apart without anyone noticing, and it does nothing at all
+    // once the database exists. If the database is missing, we want to say so
+    // plainly rather than invent one.
+    if (!db.Database.CanConnect())
+    {
+        Console.WriteLine("[schema] Cannot reach the database named in the connection string.");
+        Console.WriteLine("[schema] Create it first:  mysql -u root -p < Database/ynclino_schema.sql");
+    }
+
+    //MySQL does NOT support "ALTER TABLE ... ADD COLUMN IF NOT EXISTS" (MariaDB-only),
+    //so ask information_schema first, then run a plain ALTER when it is really missing.
+    void AddColumnIfMissing(string table, string column, string definition)
+    {
+        try
+        {
+            int found = db.Database.SqlQueryRaw<int>("SELECT COUNT(*) AS Value FROM INFORMATION_SCHEMA.columns " + "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = {0} AND COLUMN_NAME = {1}", table, column).AsEnumerable().First();
+            if (found == 0)
+            {
+                string alter = "ALTER TABLE `" + table + "` ADD COLUMN `" + column + "` " + definition;
+                db.Database.ExecuteSqlRaw(alter);
+                Console.WriteLine($"[schema] Added missing column {table}.{column}");
+            }
+        }
+        catch (Exception ex) 
+        {
+            Console.WriteLine($"[schema] Could not add {table}.{column}: {ex.Message}");
+        }
+    }
+
+    AddColumnIfMissing("tblUsers", "MustChangePassword", "tinyint(1) NOT NULL DEFAULT 0");
+    AddColumnIfMissing("tblBillings", "Deposit", "decimal(10,2) NOT NULL DEFAULT 0");
+    AddColumnIfMissing("tblBillings", "Advance", "decimal(10,2) NOT NULL DEFAULT 0");
+    AddColumnIfMissing("tblTenants", "AdvanceCredit", "decimal(10,2) NOT NULL DEFAULT 0");
+    AddColumnIfMissing("tblBillings", "AdvanceFromOverpayment", "decimal(10,2) NOT NULL DEFAULT 0");
+    AddColumnIfMissing("tblBillings", "IssuedFromAdvance", "tinyint(1) NOT NULL DEFAULT 0");
+    AddColumnIfMissing("tblBillings", "ArchivedAt", "datetime NULL");
+    AddColumnIfMissing("tblMaintenanceRequests", "UnitID", "int NULL");
+    AddColumnIfMissing("tblMaintenanceRequests", "AssignedStaffID", "int NULL");
+    AddColumnIfMissing("tblMaintenanceRequests", "StaffNotes", "varchar(500) NULL");
+    AddColumnIfMissing("tblMaintenanceRequests", "TenantArchivedAt", "datetime(6) NULL");
+    AddColumnIfMissing("tblMaintenanceRequests", "StaffArchivedAt", "datetime(6) NULL");
+    AddColumnIfMissing("tblUnitTransferRequests", "TenantArchivedAt", "datetime(6) NULL");
+    AddColumnIfMissing("tblUnitTransferRequests", "StaffArchivedAt", "datetime(6) NULL");
+
+    // Bills overpaid BEFORE AdvanceFromOverpayment existed never recorded the extra
+    // money — the payment row was capped at the amount due and the remainder went
+    // straight onto the tenant. Recover it once from the credit the tenant is still
+    // holding and pin it to their most recent settled bill, which is where it came
+    // from. Skipped for any tenant whose bills already carry the figure, so this
+    // runs once and never touches data the app itself has written.
+    try
+    {
+        db.Database.ExecuteSqlRaw(
+            "UPDATE tblBillings b " +
+            "JOIN tblTenants t ON t.TenantID = b.TenantID " +
+            "JOIN (SELECT TenantID, MAX(BillingID) AS LastPaidID FROM tblBillings " +
+            "      WHERE Status = 'Paid' GROUP BY TenantID) lp " +
+            "  ON lp.TenantID = b.TenantID AND lp.LastPaidID = b.BillingID " +
+            "LEFT JOIN (SELECT DISTINCT TenantID FROM tblBillings " +
+            "           WHERE AdvanceFromOverpayment > 0) done " +
+            "  ON done.TenantID = b.TenantID " +
+            "SET b.AdvanceFromOverpayment = t.AdvanceCredit " +
+            "WHERE t.AdvanceCredit > 0 AND done.TenantID IS NULL");
+    }
+    catch (Exception ex) { Console.WriteLine($"[schema] Could not backfill AdvanceFromOverpayment: {ex.Message}"); }
+
+    // NOTE: nothing archives records automatically any more. A backfill used to run
+    // here stamping every closed request as archived, but it could not tell an old
+    // record from one closed a minute ago — so a finished request vanished from the
+    // list on the next restart, and anything a user restored was filed away again.
+    // Archiving is now entirely manual: only the Archive button sets these dates.
+
+    AddColumnIfMissing("tblLostFoundItems", "ClaimedByUserID", "int NULL");
+    AddColumnIfMissing("tblLostFoundItems", "DateClaimed", "datetime(6) NULL");
+
+    // Items claimed before the claimant was stored on the item: recover the name
+    // from the approved claim request, so old records are not left blank.
+    try
+    {
+        db.Database.ExecuteSqlRaw(
+            "UPDATE tblLostFoundItems i " +
+            "JOIN tblClaimRequests c ON c.ItemID = i.ItemID AND c.Status = 'Approved' " +
+            "SET i.ClaimedByUserID = c.ClaimantUserID, i.DateClaimed = c.SubmittedAt " +
+            "WHERE i.Status = 'Claimed' AND i.ClaimedByUserID IS NULL");
+    }
+    catch (Exception ex) { Console.WriteLine($"[schema] Could not backfill ClaimedByUserID: {ex.Message}"); }
+
+    // Requests created before UnitID existed have no unit on them. Fill it in once
+    // from the tenant's current unit, so the per-unit repair history is complete.
+    try
+    {
+        db.Database.ExecuteSqlRaw(
+            "UPDATE tblMaintenanceRequests m " +
+            "JOIN tblTenants t ON t.TenantID = m.TenantID " +
+            "SET m.UnitID = t.UnitID " +
+            "WHERE m.UnitID IS NULL AND t.UnitID IS NOT NULL");
+    }
+    catch (Exception ex) { Console.WriteLine($"[schema] Could not backfill UnitID: {ex.Message}"); }
+
+    // Payments live in their own table so one bill can be settled in instalments.
+    // CREATE TABLE IF NOT EXISTS *is* valid MySQL, so this safely adds the table to an
+    // existing database without touching a single existing row.
+    try { db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS tblPayments (
+            PaymentID int NOT NULL AUTO_INCREMENT,
+            BillingID int NOT NULL,
+            Amount decimal(10,2) NOT NULL,
+            DatePaid datetime(6) NOT NULL,
+            Method varchar(50) NULL,
+            Remarks varchar(300) NULL,
+            RecordedAt datetime(6) NOT NULL,
+            CONSTRAINT PK_tblPayments PRIMARY KEY (PaymentID),
+            CONSTRAINT FK_tblPayments_tblBillings_BillingID
+                FOREIGN KEY (BillingID) REFERENCES tblBillings (BillingID) ON DELETE CASCADE
+        ) CHARACTER SET=utf8mb4;"); } catch { }
 
     // Guard against a leftover database whose schema predates the current
     // models: probe every table, and if the shape no longer matches, rebuild
@@ -98,19 +224,23 @@ using (var scope = app.Services.CreateScope())
         db.tblLostFoundItems.AsNoTracking().FirstOrDefault();
         db.tblClaimRequests.AsNoTracking().FirstOrDefault();
         db.tblUnitTransferRequests.AsNoTracking().FirstOrDefault();
-        db.tblNotifications.AsNoTracking().FirstOrDefault();
     }
 
     try
     {
         ProbeSchema();
     }
-    catch (Exception)
+    catch (Exception ex)
     {
-        db.Database.EnsureDeleted();
-        db.Database.EnsureCreated();
-        // drop anything the failed probe may have tracked before it threw
+        //NEVER delete a database automatically -  report the mismatch instead.
         db.ChangeTracker.Clear();
+
+        Console.WriteLine("==================================================================");
+        Console.WriteLine(" SCHEMA MISMATCH - the database does not match the current models.");
+        Console.WriteLine(" " + ex.Message);
+        Console.WriteLine(" NOTHING WAS DELETED. Add the missing column with");
+        Console.WriteLine(" AddColumnIfMissing(...) above, or drop the databse by hand.");
+        Console.WriteLine("==================================================================");
     }
 
     // create a default admin the first time the app runs
@@ -128,6 +258,33 @@ using (var scope = app.Services.CreateScope())
         db.SaveChanges();
     }
 
+    // The apartment employs two repair staff, so seed BOTH — the manuscript's
+    // Maintenance Staff role can then be shown with real assignment between them.
+    // An older single "maintenance" account is renamed rather than left orphaned.
+    var legacyStaff = db.tblUsers.FirstOrDefault(u => u.Username == "maintenance");
+    if (legacyStaff != null && !db.tblUsers.Any(u => u.Username == "maintenance1"))
+    {
+        legacyStaff.Username = "maintenance1";
+        db.SaveChanges();
+        Console.WriteLine("[seed] Renamed 'maintenance' to 'maintenance1'.");
+    }
+
+    foreach (var staffName in new[] { "maintenance1"})
+    {
+        if (db.tblUsers.Any(u => u.Username == staffName)) continue;
+
+        db.tblUsers.Add(new tblUser
+        {
+            Username = staffName,
+            Password = PasswordHelper.Hash("Staff@123"),
+            Role = "Maintenance",
+            IsActive = true,
+            IsMainAdmin = false,
+            MustChangePassword = true,
+            DateCreated = DateTime.Now
+        });
+        db.SaveChanges();
+    }
     // migrate any maintenance rows still using the old priority labels to the
     // current vocabulary (Low->Minor, Medium->Moderate, High->Major; Urgent kept)
     if (db.tblMaintenanceRequests.Any(m => m.Priority == "Low" || m.Priority == "Medium" || m.Priority == "High"))
@@ -137,9 +294,61 @@ using (var scope = app.Services.CreateScope())
         db.tblMaintenanceRequests.Where(m => m.Priority == "High").ExecuteUpdate(s => s.SetProperty(m => m.Priority, "Major"));
     }
 
-    // migrate the old billing status "Overdue" to the current "Late" label
-    if (db.tblBillings.Any(b => b.Status == "Overdue"))
-        db.tblBillings.Where(b => b.Status == "Overdue").ExecuteUpdate(s => s.SetProperty(b => b.Status, "Late"));
+    // billing status label follows the manuscript: the past-due state is "Overdue"
+    // (older databases stored it as "Late") — migrate any leftover rows
+    if (db.tblBillings.Any(b => b.Status == "Late"))
+        db.tblBillings.Where(b => b.Status == "Late").ExecuteUpdate(s => s.SetProperty(b => b.Status, "Overdue"));
+
+    // unit occupancy label follows the manuscript: an empty unit is "Available"
+    // (older databases stored it as "Vacant") — migrate any leftover rows
+    if (db.tblUnits.Any(u => u.Status == "Vacant"))
+        db.tblUnits.Where(u => u.Status == "Vacant").ExecuteUpdate(s => s.SetProperty(u => u.Status, "Available"));
+
+    // One-time backfill: bills that were already (partly) paid before payments got
+    // their own table each get a single payment row, so the Payment History page
+    // isn't empty for data that already existed. Runs only while tblPayments is empty.
+    try
+    {
+        if (!db.tblPayments.Any())
+        {
+            var alreadyPaid = db.tblBillings
+                .Where(b => b.AmountPaid != null && b.AmountPaid > 0)
+                .ToList();
+
+            foreach (var bill in alreadyPaid)
+            {
+                db.tblPayments.Add(new tblPayment
+                {
+                    BillingID = bill.BillingID,
+                    Amount = bill.AmountPaid!.Value,
+                    DatePaid = bill.DatePaid ?? bill.DueDate,
+                    Method = "Cash",
+                    Remarks = "Recorded before payment history was added.",
+                    RecordedAt = DateTime.Now
+                });
+            }
+
+            if (alreadyPaid.Count > 0) db.SaveChanges();
+        }
+    }
+    catch { }
+
+    // Lost & Found no longer has a separate "Resolved" state — being Claimed by its
+    // owner IS the end of the report. Fold any old Resolved rows into Claimed.
+    if (db.tblLostFoundItems.Any(l => l.Status == "Resolved"))
+        db.tblLostFoundItems.Where(l => l.Status == "Resolved")
+                            .ExecuteUpdate(x => x.SetProperty(l => l.Status, "Claimed"));
+
+    // the forced password change is for tenants only — clear the flag on any admin
+    // account that may have picked it up before this rule was enforced
+    if (db.tblUsers.Any(u => u.Role == "Admin" && u.MustChangePassword))
+        db.tblUsers.Where(u => u.Role == "Admin" && u.MustChangePassword)
+                   .ExecuteUpdate(s => s.SetProperty(u => u.MustChangePassword, false));
+
+    // a tenant may now exist without a unit (they apply for one), so make these
+    // columns nullable on databases created before the change. No-op when already null.
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE tblTenants MODIFY UnitID INT NULL"); } catch { }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE tblUnitTransferRequests MODIFY CurrentUnitID INT NULL"); } catch { }
 }
 
 if (!app.Environment.IsDevelopment())

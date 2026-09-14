@@ -1,101 +1,102 @@
 @model YnclinoApartmentManagementSystem.Models.ViewModels.TenantViewModel
 @{
-    ViewData["Title"] = "Edit Tenant";
+    ViewData["Title"] = "Update Tenant";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-secondary text-white fw-semibold">Edit Tenant — @Model.FullName</div>
-            <div class="card-body">
+<div>
+    <div>
+        <div data-form-panel>
+            <div data-form-head>Update Tenant — @Model.FullName</div>
+            <div data-form-body>
                 <form asp-action="Edit" method="post" id="editForm">
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="TenantID" />
                     <input type="hidden" asp-for="UserID" />
-                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+                    <div asp-validation-summary="ModelOnly"></div>
 
-                    <h6 class="section-label mb-3">Login Account</h6>
+                    <h6>Login Account</h6>
 
-                    <div class="mb-4">
-                        <label asp-for="Username" class="form-label fw-semibold small"></label>
-                        <input asp-for="Username" class="form-control" autocomplete="username" />
-                        <span asp-validation-for="Username" class="text-danger small"></span>
+                    <div>
+                        <label asp-for="Username"></label>
+                        @* The username is issued by the system when the tenant is
+                           registered and never changes: it is the tenant's permanent ID,
+                           and it is what their whole login history is tied to. Shown
+                           here for reference only — the server ignores it on save. *@
+                        <input asp-for="Username"
+                               readonly disabled autocomplete="username" />
+                        <div>
+                            Issued by the system when this tenant was registered and cannot be changed.
+                        </div>
                     </div>
 
                     @if (ViewBag.IsMainAdmin == true)
                     {
-                        <div class="mb-2">
-                            <label asp-for="Password" class="form-label fw-semibold small"></label>
-                            <div class="pw-wrapper">
-                                <input asp-for="Password" id="pw" class="form-control pe-5" placeholder="Leave blank to keep current password" autocomplete="new-password" oninput="checkStrength(this.value)" />
-                                <button type="button" class="pw-toggle" onclick="togglePw('pw')" tabindex="-1">
+                        <div>
+                            <label asp-for="Password"></label>
+                            <div>
+                                <input asp-for="Password" id="pw" placeholder="Leave blank to keep current password" autocomplete="new-password" oninput="checkStrength(this.value)" />
+                                <button type="button" onclick="togglePw('pw')" tabindex="-1">
                                     @Html.Raw(EyeIcon("pw"))
                                 </button>
                             </div>
-                            <span asp-validation-for="Password" class="text-danger small"></span>
+                            <span asp-validation-for="Password"></span>
                         </div>
 
-                        <ul class="pw-rules list-unstyled small mb-3 ps-1" id="pwRules" style="display:none">
-                            <li id="r-len"><span class="rule-icon"></span> At least 8 characters</li>
-                            <li id="r-upper"><span class="rule-icon"></span> At least one uppercase letter</li>
-                            <li id="r-lower"><span class="rule-icon"></span> At least one lowercase letter</li>
-                            <li id="r-digit"><span class="rule-icon"></span> At least one number</li>
-                            <li id="r-special"><span class="rule-icon"></span> At least one special character (!&#64;#$%^&amp;*)</li>
+                        <ul id="pwRules">
+                            <li id="r-len"><span></span> At least 8 characters</li>
+                            <li id="r-upper"><span></span> At least one uppercase letter</li>
+                            <li id="r-lower"><span></span> At least one lowercase letter</li>
+                            <li id="r-digit"><span></span> At least one number</li>
+                            <li id="r-special"><span></span> At least one special character (!&#64;#$%^&amp;*)</li>
                         </ul>
 
-                        <div class="mb-4">
-                            <label asp-for="ConfirmPassword" class="form-label fw-semibold small"></label>
-                            <div class="pw-wrapper">
-                                <input asp-for="ConfirmPassword" id="cpw" class="form-control pe-5" placeholder="Confirm new password" autocomplete="new-password" />
-                                <button type="button" class="pw-toggle" onclick="togglePw('cpw')" tabindex="-1">
+                        <div>
+                            <label asp-for="ConfirmPassword"></label>
+                            <div>
+                                <input asp-for="ConfirmPassword" id="cpw" placeholder="Confirm new password" autocomplete="new-password" />
+                                <button type="button" onclick="togglePw('cpw')" tabindex="-1">
                                     @Html.Raw(EyeIcon("cpw"))
                                 </button>
                             </div>
-                            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                            <span asp-validation-for="ConfirmPassword"></span>
                         </div>
                     }
                     else
                     {
-                        <p class="text-muted small mb-4">Only the Main Admin can reset a tenant's password.</p>
+                        <p>Only the Main Admin can reset a tenant's password.</p>
                     }
 
-                    <h6 class="section-label mb-3">Tenant Profile</h6>
+                    <h6>Tenant Profile</h6>
 
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label asp-for="FirstName" class="form-label fw-semibold small"></label>
-                            <input asp-for="FirstName" class="form-control" />
-                            <span asp-validation-for="FirstName" class="text-danger small"></span>
+                    <div>
+                        <div>
+                            <label asp-for="FirstName"></label>
+                            <input asp-for="FirstName" />
+                            <span asp-validation-for="FirstName"></span>
                         </div>
-                        <div class="col-md-6">
-                            <label asp-for="LastName" class="form-label fw-semibold small"></label>
-                            <input asp-for="LastName" class="form-control" />
-                            <span asp-validation-for="LastName" class="text-danger small"></span>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label asp-for="UnitID" class="form-label fw-semibold small"></label>
-                        <select asp-for="UnitID" asp-items="Model.AvailableUnits" class="form-select"></select>
-                        <span asp-validation-for="UnitID" class="text-danger small"></span>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label asp-for="ContactNumber" class="form-label fw-semibold small"></label>
-                            <input asp-for="ContactNumber" class="form-control" inputmode="numeric" placeholder="e.g. 09171234567" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
-                            <span asp-validation-for="ContactNumber" class="text-danger small"></span>
+                        <div>
+                            <label asp-for="LastName"></label>
+                            <input asp-for="LastName" />
+                            <span asp-validation-for="LastName"></span>
                         </div>
                     </div>
 
-                    <label class="form-label fw-semibold small">Emergency Contact</label>
-                    <div class="row mb-3">
-                        <div class="col-md-5">
-                            <input asp-for="EmergencyContactName" class="form-control" placeholder="Full name" />
-                            <span asp-validation-for="EmergencyContactName" class="text-danger small"></span>
+                    <div>
+                        <div>
+                            <label asp-for="ContactNumber"></label>
+                            <input asp-for="ContactNumber" inputmode="numeric" placeholder="e.g. 09171234567" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+                            <span asp-validation-for="ContactNumber"></span>
                         </div>
-                        <div class="col-md-3">
-                            <select asp-for="EmergencyContactRelationship" class="form-select">
+                    </div>
+
+                    <label>Emergency Contact</label>
+                    <div>
+                        <div>
+                            <input asp-for="EmergencyContactName" placeholder="Full name" />
+                            <span asp-validation-for="EmergencyContactName"></span>
+                        </div>
+                        <div>
+                            <select asp-for="EmergencyContactRelationship">
                                 <option value="">Relationship…</option>
                                 <option>Parent</option>
                                 <option>Spouse</option>
@@ -106,26 +107,39 @@
                                 <option>Guardian</option>
                                 <option>Other</option>
                             </select>
-                            <span asp-validation-for="EmergencyContactRelationship" class="text-danger small"></span>
+                            <span asp-validation-for="EmergencyContactRelationship"></span>
                         </div>
-                        <div class="col-md-4">
-                            <input asp-for="EmergencyContactNumber" class="form-control" inputmode="numeric" placeholder="e.g. 09181234567" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
-                            <span asp-validation-for="EmergencyContactNumber" class="text-danger small"></span>
+                        <div>
+                            <input asp-for="EmergencyContactNumber" inputmode="numeric" placeholder="e.g. 09181234567" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+                            <span asp-validation-for="EmergencyContactNumber"></span>
                         </div>
                     </div>
 
-                    <div class="mb-4">
-                        <label asp-for="Status" class="form-label fw-semibold small"></label>
-                        <select asp-for="Status" class="form-select">
-                            <option>Active</option>
-                            <option>Inactive</option>
-                        </select>
-                        <span asp-validation-for="Status" class="text-danger small"></span>
+                    <div>
+                        <div>
+                            <label asp-for="Status"></label>
+                            <select asp-for="Status" id="statusSelect">
+                                <option>Active</option>
+                                <option>Inactive</option>
+                            </select>
+                            <span asp-validation-for="Status"></span>
+                        </div>
+                        <div>
+                            <label asp-for="MoveInDate">Move-In Date</label>
+                            <input asp-for="MoveInDate" type="date" />
+                            <span asp-validation-for="MoveInDate"></span>
+                        </div>
+                        <div>
+                            <label asp-for="MoveOutDate">Move-Out Date</label>
+                            <input asp-for="MoveOutDate" type="date" id="moveOutInput" />
+                            <div>Set when the tenant leaves. Clears automatically if set back to Active.</div>
+                            <span asp-validation-for="MoveOutDate"></span>
+                        </div>
                     </div>
 
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
-                        <a asp-action="Index" class="btn btn-secondary btn-sm">Cancel</a>
+                    <div data-actions-row>
+                        <button type="submit">Save Changes</button>
+                        <a asp-action="Index">Cancel</a>
                     </div>
                 </form>
             </div>
@@ -136,6 +150,20 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/password.js" asp-append-version="true"></script>
+    <script>
+        // an Active tenant has no move-out date — disable/clear the field to match
+        (function () {
+            var status = document.getElementById('statusSelect');
+            var moveOut = document.getElementById('moveOutInput');
+            function sync() {
+                var active = status.value === 'Active';
+                moveOut.disabled = active;
+                if (active) moveOut.value = '';
+            }
+            status.addEventListener('change', sync);
+            sync();
+        })();
+    </script>
     @if (ViewBag.IsMainAdmin == true)
     {
         <script>

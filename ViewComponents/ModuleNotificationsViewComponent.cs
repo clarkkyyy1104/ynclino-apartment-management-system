@@ -1,37 +1,51 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using YnclinoApartmentManagementSystem.Data;
-using YnclinoApartmentManagementSystem.Models;
+using YnclinoApartmentManagementSystem.Services;
 
 namespace YnclinoApartmentManagementSystem.ViewComponents
 {
-    // Shows the current user's UNREAD notifications for one module as a small
-    // panel at the top of that module's page. Each message links to
-    // Notifications/Open which marks only that one read — so the module's badge
-    // count persists until the user actually clicks the notification.
     public class ModuleNotificationsViewComponent : ViewComponent
     {
-        private readonly ApplicationDbContext _context;
+        private readonly SystemNotificationService _notificationService;
 
-        public ModuleNotificationsViewComponent(ApplicationDbContext context)
+        public ModuleNotificationsViewComponent(
+            SystemNotificationService notificationService)
         {
-            _context = context;
+            _notificationService = notificationService;
         }
 
         public async Task<IViewComponentResult> InvokeAsync(string module)
         {
-            var list = new List<tblNotification>();
-            if (int.TryParse(((ClaimsPrincipal)User).FindFirstValue(ClaimTypes.NameIdentifier), out int uid))
+            if (!int.TryParse(
+                HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier),
+                out int userId))
             {
-                // only UNREAD notifications — the panel disappears once they're read
-                list = await _context.tblNotifications
-                    .Where(n => n.UserID == uid && n.Module == module && !n.IsRead)
-                    .OrderByDescending(n => n.CreatedAt)
-                    .Take(6)
-                    .ToListAsync();
+                return View(new List<Models.SystemNotification>());
             }
-            return View(list);
+
+            var role = HttpContext.User.IsInRole("Admin")
+                ? "Admin"
+                : HttpContext.User.IsInRole("Maintenance")
+                    ? "Maintenance"
+                    : HttpContext.User.IsInRole("Tenant")
+                        ? "Tenant"
+                        : string.Empty;
+
+            if (string.IsNullOrEmpty(role))
+            {
+                return View(new List<Models.SystemNotification>());
+            }
+
+            var notifications =
+                await _notificationService.GetNotificationsAsync(userId, role);
+
+            var moduleNotifications = notifications
+                .Where(n => n.Module.Equals(
+                    module,
+                    StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            return View(moduleNotifications);
         }
     }
 }

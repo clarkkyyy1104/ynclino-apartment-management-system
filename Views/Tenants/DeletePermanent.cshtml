@@ -1,0 +1,75 @@
+@model YnclinoApartmentManagementSystem.Models.tblTenant
+@{
+    ViewData["Title"] = "Delete Tenant Permanently";
+    int lostFound = (int)(ViewBag.LostFoundCount ?? 0);
+}
+
+<div>
+    <div>
+        <div>
+            <div>
+                Delete @Model.FullName permanently
+            </div>
+            <div>
+
+                <p>
+                    This removes the tenant, their login, and every record listed below
+                    from the database. <strong>It cannot be undone.</strong> If you only
+                    want them out of the active list, go back and archive them instead —
+                    an archived tenant keeps their history.
+                </p>
+
+                <dl>
+                    <dt>Tenant</dt>
+                    <dd>@Model.FullName</dd>
+
+                    <dt>Login Account</dt>
+                    <dd>@(Model.User?.Username ?? "No account")</dd>
+
+                    <dt>Unit</dt>
+                    <dd>@(Model.Unit?.UnitNumber ?? "—")</dd>
+
+                    <dt>Status</dt>
+                    <dd>
+                        <span>@Model.Status</span>
+                    </dd>
+                </dl>
+
+                <div>
+                    <div>What will be deleted with them</div>
+                    <ul>
+                        <li>@ViewBag.BillCount bill(s)</li>
+                        <li>@ViewBag.PaymentCount payment record(s)</li>
+                        <li>@ViewBag.MaintenanceCount maintenance request(s)</li>
+                        <li>@ViewBag.TransferCount unit request(s)</li>
+                    </ul>
+                </div>
+
+                @if (lostFound > 0)
+                {
+                    @* Lost & Found belongs to the shared board, not to this tenant, so
+                       it is never silently destroyed — the admin clears it deliberately. *@
+                    <div>
+                        <strong>Blocked.</strong> This tenant has @lostFound Lost &amp; Found
+                        record(s). Those belong to the shared board and are not deleted here.
+                        Remove the items in the
+                        <a asp-controller="LostFound" asp-action="Index">Lost &amp; Found</a>
+                        module first, or leave this tenant archived.
+                    </div>
+                }
+
+                <div data-actions-row>
+                    @if (lostFound == 0)
+                    {
+                        <form asp-action="DeletePermanent" asp-route-id="@Model.TenantID" method="post"
+                              onsubmit="return confirm('Permanently delete @Model.FullName and every record listed? This cannot be undone.');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" data-danger>Delete permanently</button>
+                        </form>
+                    }
+                    <a asp-action="Details" asp-route-id="@Model.TenantID">Cancel</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

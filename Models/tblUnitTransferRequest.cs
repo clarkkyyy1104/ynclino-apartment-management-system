@@ -11,15 +11,15 @@ namespace YnclinoApartmentManagementSystem.Models
         [Required]
         public int TenantID { get; set; }
 
-        // the unit the tenant is in when the request is filed
-        [Required]
-        public int CurrentUnitID { get; set; }
+        // the unit the tenant is in when the request is filed; null when the tenant
+        // has no unit yet and is applying for their first one
+        public int? CurrentUnitID { get; set; }
 
-        // the vacant unit the tenant wants to move to
+        // the available unit the tenant wants to move to
         [Required]
         public int RequestedUnitID { get; set; }
 
-        [Required]
+        // optional — a tenant may submit a request without stating a reason
         [MaxLength(500)]
         public string Reason { get; set; } = string.Empty;
 
@@ -30,6 +30,16 @@ namespace YnclinoApartmentManagementSystem.Models
         public DateTime DateRequested { get; set; } = DateTime.Now;
 
         public DateTime? DateReviewed { get; set; }
+
+        // A finished record stays in the ACTIVE list until somebody chooses to file
+        // it away. Each side archives independently: the tenant clearing their own
+        // list does not touch what the admin and maintenance staff see, and the
+        // other way round. Null means "still in my active list".
+        [Display(Name = "Archived by Tenant")]
+        public DateTime? TenantArchivedAt { get; set; }
+
+        [Display(Name = "Archived by Staff")]
+        public DateTime? StaffArchivedAt { get; set; } 
 
         [MaxLength(500)]
         public string? AdminNotes { get; set; }

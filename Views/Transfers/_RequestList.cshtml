@@ -1,0 +1,88 @@
+@model IEnumerable<YnclinoApartmentManagementSystem.Models.tblUnitTransferRequest>
+@{
+    bool isAdmin = User.IsInRole("Admin");
+    string emptyText = ViewData["EmptyText"] as string ?? "Nothing here.";
+    // the same partial draws both columns, so it has to know which one it is
+    bool isArchiveColumn = ViewData["IsArchive"] as bool? ?? false;
+    var closedStatuses = ViewBag.ClosedStatuses as string[] ?? new[] { "Approved", "Rejected", "Cancelled" };    
+}
+@if (!Model.Any())
+{
+    <div data-empty><p>@emptyText</p></div>
+}
+else
+{
+    <div data-table-wrap>
+        <table>
+            <thead>
+                <tr>
+                    @if (isAdmin) { <th>Tenant</th> }
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Status</th>
+                    @* every row has a cell of buttons under this; without a heading
+                    for it the navy bar stopped short of the buttons and the
+                    column looked broken off *@
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in Model)
+                {
+                    <tr>
+                        @if (isAdmin) { <td>@r.Tenant?.FullName</td> }
+                        <td>@(r.CurrentUnit?.UnitNumber ?? "—")</td>
+                        <td>@r.RequestedUnit?.UnitNumber</td>
+                        <td><span>@r.Status</span></td>
+                        <td>
+                            @if (isAdmin && r.Status == "Pending")
+                            {
+                                <div>
+                                    <form asp-action="Approve" asp-route-id="@r.TransferID" method="post" onsubmit="return confirm('Move @r.Tenant?.FullName to unit @r.RequestedUnit?.UnitNumber?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit">Approve</button>
+                                    </form>
+                                    <form asp-action="Reject" asp-route-id="@r.TransferID" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit">Reject</button>
+                                    </form>
+                                </div>
+                            }
+                            else if (!isAdmin && r.Status == "Pending")
+                            {
+                                <form asp-action="Cancel" asp-route-id="@r.TransferID" method="post"
+                                      onsubmit="return confirm('Cancel this request?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit">Cancel</button>
+                                </form>
+                            }
+                            else
+                            {
+                                @* A reviewed request stays here until you file it away,
+                                   and only for YOU — the other side keeps their copy. *@
+                                @if (!isArchiveColumn && closedStatuses.Contains(r.Status))
+                                {
+                                    <form asp-action="Archive" asp-route-id="@r.TransferID" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" title="Move to archive" aria-label="Move to archive"><img src="/images/icons/archive.svg" /></button>
+                                    </form>
+                                }
+                                else if (isArchiveColumn)
+                                {
+                                    <form asp-action="Unarchive" asp-route-id="@r.TransferID" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" title="Put back on the active list" aria-label="Put back on the active list"><img src="/images/icons/restore.svg"/></button>
+                                    </form>
+                                }
+                                @if (!string.IsNullOrEmpty(r.AdminNotes))
+                                {
+                                    <div>Note: @r.AdminNotes</div>
+                                }
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

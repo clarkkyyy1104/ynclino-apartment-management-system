@@ -10,7 +10,9 @@ using YnclinoApartmentManagementSystem.Models.ViewModels;
 
 namespace YnclinoApartmentManagementSystem.Controllers
 {
-    [Authorize]
+    // maintenance staff have no business in billing — lock the whole module to the
+    // two roles that do, so a typed URL cannot get in either
+    [Authorize(Roles = "Admin,Tenant")]
     public class BillingController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -34,17 +36,17 @@ namespace YnclinoApartmentManagementSystem.Controllers
         //   Paid    – paid in full
         //   Partial – part paid, balance remains, not yet past due
         //   Unpaid  – nothing paid, not yet past due
-        //   Late    – past the due date and not paid in full
+        //   Overdue    – past the due date and not paid in full
         public static string DeriveStatus(decimal amountDue, decimal? amountPaid, DateTime dueDate)
         {
             decimal paid = amountPaid ?? 0m;
             if (paid >= amountDue) return "Paid";
-            if (dueDate.Date < DateTime.Today) return "Late";
+            if (dueDate.Date < DateTime.Today) return "Overdue";
             if (paid > 0m) return "Partial";
             return "Unpaid";
         }
 
-        // recompute the status of every not-fully-paid bill so "Late" stays current
+        // recompute the status of every not-fully-paid bill so "Overdue" stays current
         private async Task RefreshStatusesAsync(int? tenantId = null)
         {
             var open = await _context.tblBillings
@@ -62,7 +64,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // GET: Billing
-        public async Task<IActionResult> Index(string? statusFilter, string? searchTerm)
+        public async Task<IActionResult> Index(string? statusFilter, string? searchTerm, bool archived = false)
         {
             await RefreshStatusesAsync();
 
@@ -74,8 +76,21 @@ namespace YnclinoApartmentManagementSystem.Controllers
             {
                 var tenant = await GetCurrentTenantAsync();
                 if (tenant == null) return View(new List<tblBilling>());
+                ViewBag.AdvanceCredit = tenant.AdvanceCredit;
                 query = query.Where(b => b.TenantID == tenant.TenantID);
+
+                // A tenant's own list is their record, so nothing is ever filed
+                // out of it — archiving tidies the ADMIN's working list only.
+                archived = false;
             }
+            else
+            {
+                query = archived
+                    ? query.Where(b => b.ArchivedAt != null)
+                    : query.Where(b => b.ArchivedAt == null);
+            }
+
+            ViewBag.Archived = archived;
 
             if (!string.IsNullOrEmpty(statusFilter))
                 query = query.Where(b => b.Status == statusFilter);
@@ -87,13 +102,133 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             ViewBag.StatusFilter = statusFilter;
             ViewBag.SearchTerm = searchTerm;
-            var uid = CurrentUserID();
-            ViewBag.UnreadIds = uid == null ? new HashSet<int>()
-                : await NotificationHelper.UnreadTargetIdsAsync(_context, uid.Value, "Billing");
-            ViewBag.ReadIds = uid == null ? new HashSet<int>()
-                : await NotificationHelper.ReadTargetIdsAsync(_context, uid.Value, "Billing");
-
             return View(await query.OrderByDescending(b => b.BillingPeriod).ToListAsync());
+        }
+
+        // POST: Billing/Archive/5 — file a settled bill out of the working list
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Archive(int id)
+        {
+            var bill = await _context.tblBillings.FirstOrDefaultAsync(b => b.BillingID == id);
+            if (bill == null) return NotFound();
+
+            // A bill still owing money is the whole reason the list exists. Only
+            // a settled one can be put away.
+            if (bill.AmountDue - (bill.AmountPaid ?? 0m) > 0)
+            {
+                TempData["Error"] = "That bill still has a balance, so it cannot be archived yet.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            bill.ArchivedAt = DateTime.Now;
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Bill moved to the archive. It is still on the tenant's record.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // POST: Billing/Unarchive/5 — bring it back into the working list
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Unarchive(int id)
+        {
+            var bill = await _context.tblBillings.FirstOrDefaultAsync(b => b.BillingID == id);
+            if (bill == null) return NotFound();
+
+            bill.ArchivedAt = null;
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Bill restored to the active list.";
+            return RedirectToAction(nameof(Index), new { archived = true });
+        }
+
+        //GET: Billing/History - read-only log of payments that have been recorded.
+        //Admins see every payment; a tenant sees only their own.
+        public async Task<IActionResult> History(string? searchTerm)
+        {
+            // A tenant only ever has their own payments, so send them straight to the detail page
+            if (User.IsInRole("Tenant"))
+            {
+                var me = await GetCurrentTenantAsync();
+                if (me == null) return View(new List<TenantPaymentSummary>());
+                return RedirectToAction(nameof(TenantHistory), new { id = me.TenantID });
+            }
+
+            // Admin sees ONE ROW PER TENANT — cleaner than a long list of every payment.
+            IQueryable<tblTenant> tenants = _context.tblTenants.Include(t => t.Unit);
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+                tenants = tenants.Where(t => t.FirstName.Contains(searchTerm) || t.LastName.Contains(searchTerm));
+
+            var list = await tenants.OrderBy(t => t.LastName).ThenBy(t => t.FirstName).ToListAsync();
+
+            var summaries = new List<TenantPaymentSummary>();
+            foreach (var t in list)
+            {
+                var pays = await _context.tblPayments
+                    .Where(p => p.Billing!.TenantID == t.TenantID)
+                    .ToListAsync();
+
+                summaries.Add(new TenantPaymentSummary
+                {
+                    TenantID = t.TenantID,
+                    TenantName = t.FullName,
+                    UnitNumber = t.Unit?.UnitNumber,
+                    PaymentCount = pays.Count,
+                    TotalPaid = pays.Sum(p => p.Amount),
+                    LastPaymentDate = pays.Count > 0 ? pays.Max(p => p.DatePaid) : (DateTime?)null
+                });
+            }
+
+            ViewBag.SearchTerm = searchTerm;
+            ViewBag.TotalCollected = summaries.Sum(x => x.TotalPaid);
+            return View(summaries);
+        }
+
+        // GET: Billing/TenantHistory/5 — every payment made by one tenant
+        public async Task<IActionResult> TenantHistory(int id)
+        {
+            // a tenant may only open their own history
+            if (User.IsInRole("Tenant"))
+            {
+                var me = await GetCurrentTenantAsync();
+                if (me == null || me.TenantID != id) return Forbid();
+            }
+
+            var tenant = await _context.tblTenants
+                .Include(t => t.Unit)
+                .FirstOrDefaultAsync(t => t.TenantID == id);
+            if (tenant == null) return NotFound();
+
+            // Every BILL, not every payment. Reading this page off the payments
+            // table meant a bill nobody had paid produced no row, so the one
+            // month a tenant had skipped was the one month missing from their
+            // record — and the totals here could never match the report.
+            var bills = await _context.tblBillings.AsNoTracking()
+                .Where(b => b.TenantID == id)
+                .OrderByDescending(b => b.BillingPeriod)
+                .ToListAsync();
+
+            var billIds = bills.Select(b => b.BillingID).ToHashSet();
+            var payments = await _context.tblPayments.AsNoTracking()
+                .Where(p => billIds.Contains(p.BillingID))
+                .OrderBy(p => p.DatePaid).ThenBy(p => p.PaymentID)
+                .ToListAsync();
+
+            var ledger = bills.Select(b => new TenantLedgerRow
+            {
+                BillingID = b.BillingID,
+                BillingPeriod = b.BillingPeriod,
+                DueDate = b.DueDate,
+                AmountDue = b.AmountDue,
+                AmountPaid = b.AmountPaid ?? 0m,
+                Status = b.Status,
+                IssuedFromAdvance = b.IssuedFromAdvance,
+                Payments = payments.Where(p => p.BillingID == b.BillingID).ToList()
+            }).ToList();
+
+            ViewBag.Tenant = tenant;
+            return View(ledger);
         }
 
         // GET: Billing/Details/5
@@ -114,8 +249,13 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 if (tenant == null || billing.TenantID != tenant.TenantID) return Forbid();
             }
 
-            var uid = CurrentUserID();
-            if (uid != null) await NotificationHelper.MarkRecordReadAsync(_context, uid.Value, "Billing", billing.BillingID);
+            // A fully paid bill sends the admin here instead of Edit, so this page has to
+            // show the whole money story on its own: every payment that settled the bill,
+            // and any change from an overpayment that is now held as advance payment.
+            ViewBag.Payments = await _context.tblPayments
+                .Where(p => p.BillingID == billing.BillingID)
+                .OrderByDescending(p => p.DatePaid).ThenByDescending(p => p.PaymentID)
+                .ToListAsync();
 
             return View(billing);
         }
@@ -165,14 +305,12 @@ namespace YnclinoApartmentManagementSystem.Controllers
             _context.tblBillings.Add(billing);
             await _context.SaveChangesAsync();
 
-            // let the tenant know a new bill was issued
-            var billedTenant = await _context.tblTenants.FirstOrDefaultAsync(t => t.TenantID == vm.TenantID);
-            if (billedTenant?.UserID != null)
-                await NotificationHelper.CreateAsync(_context, billedTenant.UserID.Value, "Billing",
-                    $"A bill of ₱{billing.AmountDue:N2} for {period:MMMM yyyy} was issued (due {billing.DueDate:MMM dd}).",
-                    $"/Billing/Details/{billing.BillingID}", billing.BillingID);
+            // if the tenant is holding advance payment, use it on this new bill
+            decimal usedAdvance = await UseAdvanceCreditAsync(billing);
 
-            TempData["Success"] = "Billing record created.";
+            TempData["Success"] = usedAdvance > 0
+                ? $"Billing record created. ₱{usedAdvance:N0} of advance payment was applied automatically."
+                : "Billing record created.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -188,11 +326,23 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             if (billing == null) return NotFound();
 
+            // a fully settled bill is closed history — view only.
+            // use whichever total is higher so legacy bills (paid before the payment
+            // history existed) are also recognised as settled
+            decimal settled = Math.Max(billing.AmountPaid ?? 0m, await TotalPaidAsync(billing.BillingID));
+            if (billing.AmountDue - settled <= 0)
+            {
+                TempData["Error"] = "This bill is fully paid and can no longer be updated.";
+                return RedirectToAction(nameof(Details), new { id = billing.BillingID });
+            }
+
             var vm = new BillingViewModel
             {
                 BillingID = billing.BillingID,
                 TenantID = billing.TenantID,
                 TenantName = billing.Tenant?.FullName,
+                Deposit = billing.Deposit,
+                Advance = billing.Advance,
                 BillingPeriod = billing.BillingPeriod,
                 AmountDue = billing.AmountDue,
                 DueDate = billing.DueDate,
@@ -200,9 +350,181 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 DatePaid = billing.DatePaid,
                 Status = billing.Status,
                 Notes = billing.Notes,
+                AdvanceCredit = billing.Tenant?.AdvanceCredit ?? 0m,
+                AdvanceFromOverpayment = billing.AdvanceFromOverpayment,
+                TotalPaid = await TotalPaidAsync(billing.BillingID),
+                Payments = await _context.tblPayments
+                    .Where(p => p.BillingID == billing.BillingID)
+                    .OrderByDescending(p => p.DatePaid).ThenByDescending(p => p.PaymentID)
+                    .ToListAsync(),
                 AvailableTenants = await GetTenantListForBillAsync(billing.TenantID)
             };
             return View(vm);
+        }
+
+        // the running total actually received for a bill = the sum of its payment rows
+        private async Task<decimal> TotalPaidAsync(int billingId) =>
+            await _context.tblPayments
+                .Where(p => p.BillingID == billingId)
+                .SumAsync(p => (decimal?)p.Amount) ?? 0m;
+
+        // re-derive the bill's cached totals from its payment rows, so AmountPaid,
+        // DatePaid and Status always agree with the payment history
+        private async Task RefreshBillTotalsAsync(tblBilling bill)
+        {
+            var payments = await _context.tblPayments
+                .Where(p => p.BillingID == bill.BillingID)
+                .ToListAsync();
+
+            decimal total = payments.Sum(p => p.Amount);
+            bill.AmountPaid = total > 0 ? total : (decimal?)null;
+            bill.DatePaid = payments.Count > 0 ? payments.Max(p => p.DatePaid) : (DateTime?)null;
+            bill.Status = DeriveStatus(bill.AmountDue, bill.AmountPaid, bill.DueDate);
+        }
+
+        // Applies a payment: it settles THIS bill up to what it owes, and anything paid
+        // beyond that is kept on the tenant as advance payment, which is deducted
+        // automatically from their next bill.
+        private async Task<(decimal here, decimal advance, List<DateTime> monthsPaid)> ApplyPaymentAsync(
+            tblBilling bill, decimal amount, string? remarks)
+        {
+            decimal left = amount;
+            var monthsPaid = new List<DateTime>();
+
+            // 1) this bill, up to what it still owes
+            decimal balanceHere = bill.AmountDue - await TotalPaidAsync(bill.BillingID);
+            decimal here = Math.Min(left, Math.Max(balanceHere, 0m));
+            if (here > 0)
+            {
+                _context.tblPayments.Add(new tblPayment
+                {
+                    BillingID = bill.BillingID,
+                    Amount = here,
+                    Method = "Cash",
+                    Remarks = remarks,
+                    DatePaid = DateTime.Today,
+                    RecordedAt = DateTime.Now
+                });
+                await _context.SaveChangesAsync();
+                await RefreshBillTotalsAsync(bill);
+                await _context.SaveChangesAsync();
+                left -= here;
+            }
+
+            // 2) anything paid beyond this month's bill becomes advance payment held for
+            //    the tenant — it is deducted automatically from their next bill
+            if (left > 0)
+            {
+                var tenant = await _context.tblTenants.FindAsync(bill.TenantID);
+                if (tenant != null)
+                {
+                    tenant.AdvanceCredit += left;
+
+                    // remember it on THIS bill as well, so the bill can account for
+                    // every peso that was handed over against it — not just the part
+                    // that happened to fit inside the amount due
+                    bill.AdvanceFromOverpayment += left;
+                    await _context.SaveChangesAsync();
+
+                    // the overpayment has already bought the following month(s), so the
+                    // bills for them are issued now and settled from that credit
+                    monthsPaid = await IssueBillsFromAdvanceAsync(bill, tenant);
+                }
+            }
+
+            return (here, left, monthsPaid);
+        }
+
+        // Turns held advance payment into actual bills. Overpaying is the tenant paying
+        // next month early, so the next month's bill is issued straight away and settled
+        // from the credit — the month is then on record and cannot be billed twice.
+        // Enough credit for several months issues several bills, oldest month first.
+        private async Task<List<DateTime>> IssueBillsFromAdvanceAsync(tblBilling sourceBill, tblTenant tenant)
+        {
+            var monthsPaid = new List<DateTime>();
+            await _context.Entry(tenant).Reference(t => t.Unit).LoadAsync();
+
+            // Work out a month's rent. The unit is the right answer, but a tenant with
+            // no unit on file must NOT make the overpayment disappear, so fall back to
+            // what this bill itself charged for rent, and then to the bill total.
+            decimal rent = tenant.Unit?.RentPrice ?? 0m;
+            if (rent <= 0) rent = sourceBill.AmountDue - sourceBill.Deposit - sourceBill.Advance;
+            if (rent <= 0) rent = sourceBill.AmountDue;
+            if (rent <= 0) return monthsPaid;   // a bill for ₱0: there is genuinely nothing to bill
+
+            var period = new DateTime(sourceBill.BillingPeriod.Year, sourceBill.BillingPeriod.Month, 1);
+
+            // Every peso of the overpayment turns into a bill. A remainder smaller than
+            // a month still issues the next month's bill and part-pays it, rather than
+            // sitting as a credit nobody can see. The guard stops a runaway loop.
+            for (int issued = 0; issued < 12 && tenant.AdvanceCredit > 0; issued++)
+            {
+                period = period.AddMonths(1);
+
+                // Never issue a second bill for a month that already has one. If that
+                // existing bill still owes something, the credit pays it here rather
+                // than skipping the month and leaving both the bill and the credit open.
+                var existing = await _context.tblBillings.FirstOrDefaultAsync(b =>
+                    b.TenantID == tenant.TenantID &&
+                    b.BillingPeriod.Year == period.Year &&
+                    b.BillingPeriod.Month == period.Month);
+                if (existing != null)
+                {
+                    if (await UseAdvanceCreditAsync(existing) > 0) monthsPaid.Add(period);
+                    continue;
+                }
+
+                var next = new tblBilling
+                {
+                    TenantID = tenant.TenantID,
+                    BillingPeriod = period,
+                    AmountDue = rent,
+                    // rent for a month is due at the end of that month
+                    DueDate = new DateTime(period.Year, period.Month,
+                                           DateTime.DaysInMonth(period.Year, period.Month)),
+                    Status = "Unpaid",
+                    DateIssued = DateTime.Now,
+                    IssuedFromAdvance = true,
+                    Notes = $"Issued automatically from the advance payment made on the " +
+                            $"{sourceBill.BillingPeriod:MMMM yyyy} bill."
+                };
+
+                _context.tblBillings.Add(next);
+                await _context.SaveChangesAsync();
+
+                // settles it from the credit and drops AdvanceCredit, which is what
+                // ends this loop once the money runs out
+                await UseAdvanceCreditAsync(next);
+                monthsPaid.Add(period);
+            }
+
+            return monthsPaid;
+        }
+
+        // Uses any advance payment the tenant is holding to settle a newly issued bill.
+        private async Task<decimal> UseAdvanceCreditAsync(tblBilling bill)
+        {
+            var tenant = await _context.tblTenants.FindAsync(bill.TenantID);
+            if (tenant == null || tenant.AdvanceCredit <= 0) return 0m;
+
+            decimal balance = bill.AmountDue - await TotalPaidAsync(bill.BillingID);
+            if (balance <= 0) return 0m;
+
+            decimal use = Math.Min(tenant.AdvanceCredit, balance);
+            _context.tblPayments.Add(new tblPayment
+            {
+                BillingID = bill.BillingID,
+                Amount = use,
+                Method = "Advance",
+                Remarks = "Settled from advance payment",
+                DatePaid = DateTime.Today,
+                RecordedAt = DateTime.Now
+            });
+            tenant.AdvanceCredit -= use;
+            await _context.SaveChangesAsync();
+            await RefreshBillTotalsAsync(bill);
+            await _context.SaveChangesAsync();
+            return use;
         }
 
         // POST: Billing/Edit/5
@@ -213,33 +535,88 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             if (id != vm.BillingID) return NotFound();
 
-            if (vm.AmountPaid != null && vm.AmountPaid < 0)
-                ModelState.AddModelError("AmountPaid", "Amount paid cannot be negative.");
+            var billing = await _context.tblBillings.FindAsync(id);
+            if (billing == null) return NotFound();
+
+            decimal alreadyPaid = Math.Max(billing.AmountPaid ?? 0m, await TotalPaidAsync(id));
+            decimal balanceBefore = billing.AmountDue - alreadyPaid;   // stored original, never the posted value
+
+            // fully settled bills are view-only — reject the post outright
+            if (balanceBefore <= 0)
+            {
+                TempData["Error"] = "This bill is fully paid and can no longer be updated.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            // Overpayment is allowed: anything beyond this bill spills onto the tenant's
+            // other unpaid bills and then becomes advance payment. Only a negative
+            // amount is rejected.
+            if (vm.PaymentAmount.HasValue && vm.PaymentAmount.Value < 0)
+                ModelState.AddModelError("PaymentAmount", "Payment cannot be negative.");
 
             if (!ModelState.IsValid)
             {
+                vm.TotalPaid = alreadyPaid;
+                vm.Payments = await _context.tblPayments
+                    .Where(p => p.BillingID == id)
+                    .OrderByDescending(p => p.DatePaid).ThenByDescending(p => p.PaymentID)
+                    .ToListAsync();
                 vm.AvailableTenants = await GetTenantListForBillAsync(vm.TenantID);
                 return View(vm);
             }
 
-            var billing = await _context.tblBillings.FindAsync(id);
-            if (billing == null) return NotFound();
-
+            // 1) the bill's own details
             billing.TenantID = vm.TenantID;
-            billing.BillingPeriod = new DateTime(vm.BillingPeriod.Year, vm.BillingPeriod.Month, 1);
-            billing.AmountDue = vm.AmountDue;
-            billing.DueDate = vm.DueDate;
-            billing.AmountPaid = vm.AmountPaid;
-            billing.Status = DeriveStatus(vm.AmountDue, vm.AmountPaid, vm.DueDate);
+            // BillingPeriod, AmountDue and DueDate are fixed at issue time - never overwritten here
             billing.Notes = vm.Notes;
 
-            // record a payment date when something has been paid, clear it otherwise
-            billing.DatePaid = (vm.AmountPaid.HasValue && vm.AmountPaid.Value > 0)
-                ? (vm.DatePaid ?? DateTime.Today)
-                : null;
+            // 2) the payment is ADDED to the history, spilling onto older unpaid bills
+            //    and finally into advance payment when it exceeds what is owed
+            decimal paidNow = vm.PaymentAmount ?? 0m;
+            bool paymentRecorded = paidNow > 0;
+            decimal toAdvance = 0m;
+            var monthsCovered = new List<DateTime>();
+            if (paymentRecorded)
+                (_, toAdvance, monthsCovered) = await ApplyPaymentAsync(billing, paidNow, vm.PaymentRemarks);
 
+            // 3) recompute the running total, last payment date and status
+            await RefreshBillTotalsAsync(billing);
             await _context.SaveChangesAsync();
-            TempData["Success"] = "Billing record updated.";
+
+            if (paymentRecorded)
+            {
+                decimal balanceAfter = billing.AmountDue - (billing.AmountPaid ?? 0m);
+
+                // name the months the overpayment actually bought, so the admin can see
+                // that bills were issued rather than money vanishing into a balance
+                // name the months the overpayment actually bought, so the admin can see
+                // that bills were issued rather than money vanishing into a balance
+                string extra = "";
+                if (toAdvance > 0)
+                {
+                    if (monthsCovered.Count > 0)
+                    {
+                        var names = monthsCovered.OrderBy(m => m).Select(m => m.ToString("MMMM yyyy")).ToList();
+                        string list = names.Count == 1
+                            ? names[0]
+                            : string.Join(", ", names.Take(names.Count - 1)) + " and " + names[^1];
+                        extra = $" ₱{toAdvance:N0} was advance payment, and it has paid {list}.";
+                    }
+                    else
+                    {
+                        extra = $" ₱{toAdvance:N0} became advance payment and will be deducted from the next bill.";
+                    }
+                }
+
+                TempData["Success"] = (balanceAfter <= 0
+                    ? $"Payment of ₱{paidNow:N0} recorded. This bill is now fully paid."
+                    : $"Payment of ₱{paidNow:N0} recorded. Remaining balance: ₱{balanceAfter:N0}.") + extra;
+            }
+            else
+            {
+                TempData["Success"] = "Billing record updated.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -286,10 +663,28 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var unpaidCount = await _context.tblBillings
                 .CountAsync(b => b.TenantID == tenantId && (b.AmountPaid == null || b.AmountPaid < b.AmountDue));
 
+            // suggest the next month this tenant has not been billed for yet
+            var latest = await _context.tblBillings
+                .Where(b => b.TenantID == tenantId)
+                .OrderByDescending(b => b.BillingPeriod)
+                .Select(b => (DateTime?)b.BillingPeriod)
+                .FirstOrDefaultAsync();
+
+            var thisMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+            var period = latest.HasValue ? latest.Value.AddMonths(1) : thisMonth;
+            if (period < thisMonth) period = thisMonth;
+
             // each month is its own bill, so suggest one month's rent
             return Json(new {
                 suggestedAmount = tenant.Unit.RentPrice,
-                unpaidMonths = unpaidCount
+                unpaidMonths = unpaidCount,
+                suggestedPeriod = period.ToString("yyyy-MM"),
+                // the deadline belongs to the month being billed: rent for October is
+                // due by the end of October, whenever the bill happens to be issued
+                suggestedDueDate = new DateTime(period.Year, period.Month,
+                                                DateTime.DaysInMonth(period.Year, period.Month))
+                                   .ToString("yyyy-MM-dd"),
+                advanceCredit = tenant.AdvanceCredit
             });
         }
 
@@ -297,7 +692,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             return await _context.tblTenants
                 .Include(t => t.Unit)
-                .Where(t => t.Status == "Active")
+                .Where(t => t.Status == "Active" && t.UnitID != null)
                 .OrderBy(t => t.LastName)
                 .Select(t => new SelectListItem
                 {
@@ -312,7 +707,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             return await _context.tblTenants
                 .Include(t => t.Unit)
-                .Where(t => t.Status == "Active" || t.TenantID == currentTenantId)
+                .Where(t => (t.Status == "Active" && t.UnitID != null) || t.TenantID == currentTenantId)
                 .OrderBy(t => t.LastName)
                 .Select(t => new SelectListItem
                 {

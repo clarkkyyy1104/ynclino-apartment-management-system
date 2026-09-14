@@ -1,0 +1,30 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      // Ctrl+Shift+B. Names the solution explicitly: a bare "dotnet build" fails
+      // here because the .csproj sits beside the .sln, and MSBuild counts both.
+      "label": "build",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/ynclino-apartment-management-system.sln"
+      ],
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "watch",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "watch",
+        "run",
+        "--project",
+        "${workspaceFolder}/YnclinoApartmentManagementSystem.csproj"
+      ],
+      "problemMatcher": "$msCompile"
+    }
+  ]
+}

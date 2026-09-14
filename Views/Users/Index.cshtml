@@ -1,43 +1,71 @@
 @model IEnumerable<YnclinoApartmentManagementSystem.Models.tblUser>
 @{
     ViewData["Title"] = "User Management";
-    bool isMainAdmin = ViewBag.IsMainAdmin == true;
     bool isAdmin = ViewBag.IsAdmin == true;
+
+    // the three kinds of account the manuscript names, described in one place
+    string RoleLabel(string role) => role switch
+    {
+        "Admin"       => "Administrator",
+        "Maintenance" => "Maintenance Staff",
+        _             => "Tenant"
+    };
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div data-page-head>
     <div>
-        <h4 class="mb-0">User Management</h4>
-        <p class="text-muted small mb-0">Staff accounts only. Tenant accounts are managed in the Tenants module.</p>
+        <h3>User Management</h3>
+        <p>
+            Every account that can sign in to the system. Administrators and Maintenance
+            Staff are created here; a Tenant account is created together with the tenant's
+            record in the <a asp-controller="Tenants" asp-action="Index">Tenants</a> module.
+        </p>
     </div>
-    @if (ViewBag.IsAdmin == true)
-    {
-        <a asp-action="Create" class="btn btn-primary btn-sm">Add Staff Account</a>
-    }
+    <div data-actions>
+        @if (isAdmin)
+        {
+            <a data-primary asp-action="Create">Add User Account</a>
+        }
+    </div>
 </div>
 
-<div class="table-responsive">
-    <table class="table table-bordered table-hover table-sm align-middle">
-        <thead class="table-light">
+@if (TempData["TempPassword"] != null)
+{
+    @* shown once, on this page load only — it is not stored anywhere in plain text *@
+    <div data-temp-password>
+        <strong>Temporary password for @TempData["TempPasswordFor"]:</strong>
+        <code>@TempData["TempPassword"]</code>
+        <p>
+            Write this down or read it out now — it is not shown again. They must set
+            their own password the next time they sign in.
+        </p>
+    </div>
+}
+
+<div data-table-wrap>
+    <table>
+        <thead>
             <tr>
                 <th>#</th>
+                <th>Name</th>
                 <th>Username</th>
-                <th>Role</th>
+                <th>Account Type</th>
                 <th>Status</th>
                 <th>Date Created</th>
-                <th style="width:140px">Actions</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var user in Model)
             {
+                var tenant = user.Tenants?.FirstOrDefault();
                 <tr>
                     <td>@user.UserID</td>
                     <td>
-                        @user.Username
+                        @user.DisplayName
                         @if (user.IsMainAdmin)
                         {
-                            <span class="badge bg-danger ms-1" title="Main Admin — undeletable">
+                            <span title="Main Admin — undeletable">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" viewBox="0 0 16 16">
                                     <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
                                 </svg>
@@ -45,34 +73,78 @@
                             </span>
                         }
                     </td>
+                    <td>@user.Username</td>
+                    <td><span>@RoleLabel(user.Role)</span></td>
                     <td>
-                        @{
-                            var badgeClass = user.Role == "Admin" ? "bg-danger" : "bg-secondary";
-                        }
-                        <span class="badge @badgeClass">@user.Role</span>
-                    </td>
-                    <td>
-                        <span class="badge @(user.IsActive ? "bg-success" : "bg-warning text-dark")">
+                        <span>
                             @(user.IsActive ? "Active" : "Inactive")
                         </span>
                     </td>
                     <td>@user.DateCreated.ToString("MM/dd/yyyy")</td>
                     <td>
-                        @{
-                            bool canEdit = isAdmin;
-                            bool canDelete = isAdmin && !user.IsMainAdmin;
-                        }
-                        @if (canEdit)
+                        @if (user.Role == "Tenant" && tenant != null)
                         {
-                            <a asp-action="Edit" asp-route-id="@user.UserID" class="btn btn-outline-secondary btn-sm">Edit</a>
+                            @* a tenant login belongs to a tenant record — manage it there,
+                               where the unit, lease and billing live with it *@
+                            <a asp-controller="Tenants" asp-action="Details" asp-route-id="@tenant.TenantID" title="View in Tenants" aria-label="View in Tenants">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
+                                    <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
+                                </svg>
+                            </a>
+
+                            @* Switches the LOGIN off, not the tenancy — the unit, bills
+                               and history stay exactly as they are. *@
+                            <form asp-action="ToggleActive" asp-route-id="@user.UserID" method="post"
+                                  onsubmit="return confirm('@(user.IsActive
+                                      ? user.DisplayName + " will no longer be able to sign in. Their tenant record, unit and bills are not affected. Continue?"
+                                      : "Allow " + user.DisplayName + " to sign in again?")');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit">
+                                    @(user.IsActive ? "Deactivate" : "Reactivate")
+                                </button>
+                            </form>
+
+                            @* the administrator's half of Forgot Password *@
+                            <form asp-action="ResetPassword" asp-route-id="@user.UserID" method="post"
+                                  onsubmit="return confirm('Issue a new temporary password for @user.Username? Their current password stops working immediately.');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit">Reset Password</button>
+                            </form>
                         }
-                        @if (canDelete)
+                        else if (isAdmin && !user.IsMainAdmin && user.Role != "Tenant")
                         {
-                            <a asp-action="Delete" asp-route-id="@user.UserID" class="btn btn-outline-danger btn-sm">Delete</a>
+                            @* a staff account has no tenant record to open, so the
+                               slot the eye occupies on every other row is held
+                               empty rather than closed up *@
+                            <span data-ghost data-icon>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5"/></svg>
+                            </span>
+
+                            @* A staff account is switched off, never deleted. The repairs
+                               they logged, the notes they wrote and the requests they were
+                               assigned stay attached to their name; deleting the account
+                               would leave that work with nobody's name on it. *@
+                            <form asp-action="ToggleActive" asp-route-id="@user.UserID" method="post"
+                                  onsubmit="return confirm('@(user.IsActive
+                                      ? user.DisplayName + " will no longer be able to sign in. The work already recorded under their name is kept. Continue?"
+                                      : "Allow " + user.DisplayName + " to sign in again?")');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit">
+                                    @(user.IsActive ? "Deactivate" : "Reactivate")
+                                </button>
+                            </form>
+
+                            @* the administrator's half of Forgot Password *@
+                            <form asp-action="ResetPassword" asp-route-id="@user.UserID" method="post"
+                                  onsubmit="return confirm('Issue a new temporary password for @user.Username? Their current password stops working immediately.');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit">Reset Password</button>
+                            </form>
                         }
-                        @if (!canEdit && !canDelete)
+                        else
                         {
-                            <span class="text-muted small">—</span>
+                            <span>—</span>
                         }
                     </td>
                 </tr>
@@ -83,5 +155,5 @@
 
 @if (!Model.Any())
 {
-    <p class="text-muted text-center py-4">No accounts found.</p>
+    <p>No accounts found.</p>
 }

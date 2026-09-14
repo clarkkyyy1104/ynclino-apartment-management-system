@@ -9,10 +9,8 @@
 
 @if (Model == null)
 {
-    <div class="card">
-        <div class="card-body text-center text-muted py-5">
-            No tenant profile is linked to your account. Please contact the administrator.
-        </div>
+    <div data-panel>
+        <div data-empty><p>No tenant profile is linked to your account. Please contact the administrator.</p></div>
     </div>
     return;
 }
@@ -21,59 +19,59 @@
     var initials = $"{(Model.FirstName.Length > 0 ? Model.FirstName[0] : ' ')}{(Model.LastName.Length > 0 ? Model.LastName[0] : ' ')}".Trim();
 }
 
-<!-- Cover + identity header (Facebook-style) -->
-<div class="card mb-3 overflow-hidden">
-    <div class="bg-dark" style="height:120px;"></div>
-    <div class="card-body">
-        <div class="d-flex align-items-end flex-wrap" style="margin-top:-64px;">
-            @if (!string.IsNullOrEmpty(Model.PhotoPath))
-            {
-                <img src="@Model.PhotoPath" alt="Profile photo"
-                     class="rounded-circle border border-3 border-white object-fit-cover"
-                     style="width:96px;height:96px;object-fit:cover;" />
-            }
-            else
-            {
-                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center border border-3 border-white"
-                     style="width:96px;height:96px;font-size:2rem;font-weight:600;">
-                    @initials.ToUpper()
-                </div>
-            }
-            <div class="ms-3 pb-1">
-                <h4 class="fw-bold mb-0">@Model.FullName</h4>
-                <div class="text-muted small">
-                    Unit @(Model.Unit?.UnitNumber ?? "—")
-                </div>
-            </div>
-            <div class="ms-auto pb-1 d-flex gap-2">
-                <form asp-action="UploadPhoto" method="post" enctype="multipart/form-data" class="d-flex gap-2 align-items-center">
-                    @Html.AntiForgeryToken()
-                    <input type="file" name="photo" accept="image/*" class="form-control form-control-sm" style="max-width:220px;" required />
-                    <button type="submit" class="btn btn-sm btn-primary">@(string.IsNullOrEmpty(Model.PhotoPath) ? "Add Photo" : "Change")</button>
-                </form>
+@* Unread unit-request alerts (e.g. "approved") — clicking one marks it read and clears the red badge *@
+@await Component.InvokeAsync("ModuleNotifications", new { module = "Transfer" })
+
+@* The identity band. The file input itself is never shown — the photo (or the
+   initials standing in for one) is the label, so clicking the picture is what
+   opens the file picker, and the little camera says so. *@
+<div data-identity>
+    <div data-identity-cover></div>
+    <div data-identity-body>
+        <form asp-action="UploadPhoto" method="post" enctype="multipart/form-data" id="photoForm" data-photo-form>
+            @Html.AntiForgeryToken()
+            <input type="file" name="photo" accept="image/*" id="photoInput"
+                   onchange="document.getElementById('photoForm').submit();" />
+            <label for="photoInput" role="button" data-avatar
+                   title="@(string.IsNullOrEmpty(Model.PhotoPath) ? "Add a profile photo" : "Change your profile photo")">
                 @if (!string.IsNullOrEmpty(Model.PhotoPath))
                 {
-                    <form asp-action="RemovePhoto" method="post" onsubmit="return confirm('Remove your profile photo?');">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
-                    </form>
+                    <img src="@Model.PhotoPath" alt="Profile photo" />
                 }
-            </div>
+                else
+                {
+                    <div>@initials.ToUpper()</div>
+                }
+                <span data-avatar-camera>📷</span>
+            </label>
+        </form>
+        <div data-identity-name>
+            <h4>@Model.FullName</h4>
+            <span>Unit @(Model.Unit?.UnitNumber ?? "—")</span>
         </div>
+        @if (!string.IsNullOrEmpty(Model.PhotoPath))
+        {
+            <div data-actions>
+                <form asp-action="RemovePhoto" method="post" onsubmit="return confirm('Remove your profile photo?');">
+                    @Html.AntiForgeryToken()
+                    <button type="submit">Remove Photo</button>
+                </form>
+            </div>
+        }
     </div>
 </div>
 
-<div class="row g-3">
+<div data-profile-cols>
     <!-- Left column: About -->
-    <div class="col-lg-5">
-        <div class="card mb-3">
-            <div class="card-header fw-semibold">Personal Information</div>
-            <div class="card-body">
-                <dl class="row mb-0 small">
-                    <dt class="col-5">Full Name</dt><dd class="col-7">@Model.FullName</dd>
-                    <dt class="col-5">Contact No.</dt><dd class="col-7">@(string.IsNullOrEmpty(Model.ContactNumber) ? "—" : Model.ContactNumber)</dd>
-                    <dt class="col-5">Emergency Contact</dt>
-                    <dd class="col-7">
+    <div>
+        <div data-panel>
+            <div data-panel-head>Personal Information</div>
+            <div data-panel-body>
+                <dl>
+                    <dt>Full Name</dt><dd>@Model.FullName</dd>
+                    <dt>Contact No.</dt><dd>@(string.IsNullOrEmpty(Model.ContactNumber) ? "—" : Model.ContactNumber)</dd>
+                    <dt>Emergency Contact</dt>
+                    <dd>
                         @if (string.IsNullOrEmpty(Model.EmergencyContactName)) { <text>—</text> }
                         else
                         {
@@ -82,75 +80,76 @@
                             @if (!string.IsNullOrEmpty(Model.EmergencyContactNumber)) { <text> — @Model.EmergencyContactNumber</text> }
                         }
                     </dd>
-                    <dt class="col-5">Login</dt><dd class="col-7">@(Model.User?.Username ?? "—")</dd>
+                    <dt>Login</dt><dd>@(Model.User?.Username ?? "—")</dd>
                 </dl>
             </div>
         </div>
 
-        <div class="card mb-3">
-            <div class="card-header fw-semibold">Unit Information</div>
-            <div class="card-body">
+        <div data-panel>
+            <div data-panel-head>Unit Information</div>
+            <div data-panel-body>
                 @if (Model.Unit != null)
                 {
-                    <dl class="row mb-0 small">
-                        <dt class="col-5">Unit Number</dt><dd class="col-7 fw-semibold">@Model.Unit.UnitNumber</dd>
-                        <dt class="col-5">Unit Type</dt><dd class="col-7">@Model.Unit.UnitType</dd>
-                        <dt class="col-5">Monthly Rent</dt><dd class="col-7">₱@Model.Unit.RentPrice.ToString("N2")</dd>
-                        <dt class="col-5">Capacity</dt><dd class="col-7">@Model.Unit.Capacity person(s)</dd>
+                    <dl>
+                        <dt>Unit Number</dt><dd>@Model.Unit.UnitNumber</dd>
+                        <dt>Unit Type</dt><dd>@Model.Unit.UnitType</dd>
+                        <dt>Monthly Rent</dt><dd>₱@Model.Unit.RentPrice.ToString("N0")</dd>
+                        <dt>Capacity</dt><dd>@Model.Unit.Capacity person(s)</dd>
                     </dl>
+                    <div data-actions-row>
+                        <a asp-controller="Transfers" asp-action="Create">Request Transfer</a>
+                        <a asp-controller="Transfers" asp-action="Index">My Transfer Requests @await Component.InvokeAsync("NavAlert", new { module = "Transfer" })</a>
+                    </div>
                 }
-                else { <p class="text-muted small mb-0">Unit information unavailable.</p> }
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header fw-semibold">Tenancy</div>
-            <div class="card-body">
-                <dl class="row mb-0 small">
-                    <dt class="col-5">Move-In Date</dt><dd class="col-7">@(Model.MoveInDate?.ToString("MMM dd, yyyy") ?? "—")</dd>
-                    <dt class="col-5">Date Recorded</dt><dd class="col-7">@Model.DateRecorded.ToString("MMM dd, yyyy")</dd>
-                </dl>
+                else
+                {
+                    <p>You don't have a unit yet.</p>
+                    <div data-actions-row>
+                        <a asp-controller="Transfers" asp-action="Create">Apply for a Unit</a>
+                        <a asp-controller="Transfers" asp-action="Index">My Requests @await Component.InvokeAsync("NavAlert", new { module = "Transfer" })</a>
+                    </div>
+                }
             </div>
         </div>
     </div>
 
     <!-- Right column: Activity feed -->
-    <div class="col-lg-7">
-        <div class="card">
-            <div class="card-header fw-semibold">Recent Activity</div>
-            <div class="list-group list-group-flush">
+    <div>
+        <div data-panel>
+            <div data-panel-head>Recent Activity</div>
+            <div data-panel-body data-list>
                 @if (!bills.Any() && !maintenance.Any() && !transfers.Any())
                 {
-                    <div class="list-group-item text-center text-muted py-4">No recent activity.</div>
+                    <div data-empty><p>No recent activity.</p></div>
                 }
                 @foreach (var b in bills)
                 {
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div data-feed-row>
                         <div>
-                            <span class="badge bg-secondary me-2">Billing</span>
-                            Bill for @b.BillingPeriod.ToString("MMMM yyyy") — ₱@b.AmountDue.ToString("N2")
+                            <span data-module>Billing</span>
+                            Bill for @b.BillingPeriod.ToString("MMMM yyyy") — ₱@b.AmountDue.ToString("N0")
                         </div>
-                        <span class="badge @(b.Status == "Paid" ? "bg-success" : b.Status == "Partial" ? "bg-info text-dark" : b.Status == "Late" ? "bg-danger" : "bg-warning text-dark")">@b.Status</span>
+                        <span>@b.Status</span>
                     </div>
                 }
                 @foreach (var m in maintenance)
                 {
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div data-feed-row>
                         <div>
-                            <span class="badge bg-secondary me-2">Maintenance</span>
+                            <span data-module>Maintenance</span>
                             @m.Category — @m.DateSubmitted.ToString("MMM dd, yyyy")
                         </div>
-                        <span class="badge bg-light text-dark border">@m.Status</span>
+                        <span>@m.Status</span>
                     </div>
                 }
                 @foreach (var r in transfers)
                 {
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div data-feed-row>
                         <div>
-                            <span class="badge bg-secondary me-2">Transfer</span>
+                            <span data-module>Transfer</span>
                             Requested Unit @(r.RequestedUnit?.UnitNumber ?? "—") — @r.DateRequested.ToString("MMM dd, yyyy")
                         </div>
-                        <span class="badge @(r.Status == "Approved" ? "bg-success" : r.Status == "Rejected" ? "bg-danger" : r.Status == "Cancelled" ? "bg-secondary" : "bg-warning text-dark")">@r.Status</span>
+                        <span>@r.Status</span>
                     </div>
                 }
             </div>

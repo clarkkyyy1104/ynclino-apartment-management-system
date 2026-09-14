@@ -34,6 +34,23 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 .FirstOrDefaultAsync(t => t.UserID == uid && t.Status == "Active");
         }
 
+        // maintenance staff see ONLY the requests assigned to them
+        private bool IsStaff() => User.IsInRole("Maintenance");
+
+        // Archiving is per side. A tenant files away their own copy; the admin and
+        // the maintenance staff share the staff copy. Neither side's click changes
+        // what the other one sees.
+        private bool ViewingAsTenant() => User.IsInRole("Tenant");
+
+        // every active maintenance staff account, for the "Assign To" dropdown
+        private async Task<IEnumerable<SelectListItem>> GetStaffListAsync()
+        {
+            return await _context.tblUsers
+                .Where(u => u.Role == "Maintenance" && u.IsActive)
+                .OrderBy(u => u.Username)
+                .Select(u => new SelectListItem { Value = u.UserID.ToString(), Text = u.Username })
+                .ToListAsync();
+        }
         private static readonly string[] Categories = { "Plumbing", "Electrical", "Structural", "Appliance", "Other" };
         private static readonly string[] Priorities = { "Minor", "Moderate", "Major", "Urgent" };
         private static readonly string[] Statuses = { "Pending", "In Progress", "Resolved", "Cancelled" };
@@ -44,7 +61,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
         public async Task<IActionResult> Index(string? statusFilter, string? searchTerm, bool archived = false)
         {
             IQueryable<tblMaintenanceRequest> query = _context.tblMaintenanceRequests
-                .Include(m => m.Tenant).ThenInclude(t => t!.Unit);
+                .Include(m => m.Tenant).ThenInclude(t => t!.Unit)
+                .Include(m => m.Unit)
+                .Include(m => m.AssignedStaff);
 
             if (User.IsInRole("Tenant"))
             {
@@ -52,12 +71,23 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 if (tenant == null) return View(new List<tblMaintenanceRequest>());
                 query = query.Where(m => m.TenantID == tenant.TenantID);
             }
+            else if (IsStaff())
+            {
+                // staff only ever see their own assigned work — enforced here in the
+                // query, not just hidden in the view
+                var me = CurrentUserID() ?? 0;
+                query = query.Where(m => m.AssignedStaffID == me);
+            }
 
-            // the archive holds resolved/cancelled requests; the main list holds active ones
+            // A request leaves the active list only when THIS side archives it, so a
+            // resolved request stays visible until the person is done with it.
+            bool asTenant = ViewingAsTenant();
             if (archived)
-                query = query.Where(m => ArchivedStatuses.Contains(m.Status));
+                query = asTenant ? query.Where(m => m.TenantArchivedAt != null)
+                                 : query.Where(m => m.StaffArchivedAt != null);
             else
-                query = query.Where(m => !ArchivedStatuses.Contains(m.Status));
+                query = asTenant ? query.Where(m => m.TenantArchivedAt == null)
+                                 : query.Where(m => m.StaffArchivedAt == null);
 
             if (!string.IsNullOrEmpty(statusFilter))
                 query = query.Where(m => m.Status == statusFilter);
@@ -71,10 +101,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             ViewBag.StatusFilter = statusFilter;
             ViewBag.SearchTerm = searchTerm;
             ViewBag.Archived = archived;
-            var uid = CurrentUserID();
-            ViewBag.UnreadIds = uid == null ? new HashSet<int>() : await NotificationHelper.UnreadTargetIdsAsync(_context, uid.Value, "Maintenance");
-            ViewBag.ReadIds = uid == null ? new HashSet<int>() : await NotificationHelper.ReadTargetIdsAsync(_context, uid.Value, "Maintenance");
-
             return View(await query.OrderByDescending(m => m.DateSubmitted).ToListAsync());
         }
 
@@ -85,6 +111,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             var request = await _context.tblMaintenanceRequests
                 .Include(m => m.Tenant).ThenInclude(t => t!.Unit)
+                .Include(m => m.Unit)
+                .Include(m => m.AssignedStaff)
                 .FirstOrDefaultAsync(m => m.RequestID == id);
 
             if (request == null) return NotFound();
@@ -94,14 +122,16 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 var tenant = await GetCurrentTenantAsync();
                 if (tenant == null || request.TenantID != tenant.TenantID) return Forbid();
             }
-
-            var uid = CurrentUserID();
-            if (uid != null) await NotificationHelper.MarkRecordReadAsync(_context, uid.Value, "Maintenance", request.RequestID);
-
+            else if (IsStaff() && request.AssignedStaffID != CurrentUserID())
+            {
+                // a staff member cannot open somebody else's job by typing its URL
+                return Forbid();
+            }
             return View(request);
         }
 
-        // GET: Maintenance/Create
+        // GET: Maintenance/Create — staff carry out work, they do not raise requests
+        [Authorize(Roles = "Admin,Tenant")]
         public async Task<IActionResult> Create()
         {
             var vm = new MaintenanceViewModel();
@@ -129,12 +159,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // POST: Maintenance/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,Tenant")]
         public async Task<IActionResult> Create(MaintenanceViewModel vm)
         {
             if (!Categories.Contains(vm.Category))
                 ModelState.AddModelError("Category", "Select a valid issue type.");
-            if (!Priorities.Contains(vm.Priority))
-                ModelState.AddModelError("Priority", "Select a valid priority.");
 
             // a description is only required when the issue type is "Other";
             // for the preset types we fall back to the type itself
@@ -149,11 +178,26 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 var tenant = await GetCurrentTenantAsync();
                 if (tenant == null) return Forbid();
                 vm.TenantID = tenant.TenantID;
+
+                // The tenant's form has no Priority field — the admin decides how urgent
+                // a repair is. Defaulting it HERE (not with a hidden input) means a tenant
+                // cannot post "Urgent" to jump the queue.
+                vm.Priority = "Moderate";
+                ModelState.Remove(nameof(vm.Priority));
+
+                // keep the header filled in if the form has to be redisplayed
+                vm.TenantName = tenant.FullName;
+                vm.UnitNumber = tenant.Unit?.UnitNumber;
             }
             else if (!await _context.tblTenants.AnyAsync(t => t.TenantID == vm.TenantID && t.Status == "Active"))
             {
                 ModelState.AddModelError("TenantID", "Select a valid tenant.");
             }
+
+            // checked AFTER the tenant default above, so it only ever judges a value
+            // that was actually chosen on the admin's form
+            if (!Priorities.Contains(vm.Priority))
+                ModelState.AddModelError("Priority", "Select a valid priority.");
 
             if (!ModelState.IsValid)
             {
@@ -166,9 +210,14 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (vm.ImageUpload != null)
                 imagePath = await ImageUploadHelper.SaveAsync(vm.ImageUpload, "maintenance", _env);
 
+            // stamp the unit at the moment the request is made, so the repair stays
+            // attached to the apartment even if this tenant later moves out
+            var owner = await _context.tblTenants.FirstOrDefaultAsync(t => t.TenantID == vm.TenantID);
+
             var request = new tblMaintenanceRequest
             {
                 TenantID = vm.TenantID,
+                UnitID = owner?.UnitID,
                 Category = vm.Category,
                 Description = vm.Description ?? string.Empty,
                 Priority = vm.Priority,
@@ -179,15 +228,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             _context.tblMaintenanceRequests.Add(request);
             await _context.SaveChangesAsync();
-
-            // a tenant-submitted request alerts the administrators
-            if (User.IsInRole("Tenant"))
-            {
-                var submitter = await _context.tblTenants.FirstOrDefaultAsync(t => t.TenantID == vm.TenantID);
-                await NotificationHelper.NotifyAdminsAsync(_context, "Maintenance",
-                    $"New {vm.Category} maintenance request from {submitter?.FullName}.",
-                    $"/Maintenance/Details/{request.RequestID}", request.RequestID);
-            }
 
             TempData["Success"] = "Maintenance request submitted.";
             return RedirectToAction(nameof(Index));
@@ -205,6 +245,13 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             if (request == null) return NotFound();
 
+            // resolved/cancelled requests are archived history — view only
+            if (StatusFlowHelper.IsClosedMaintenance(request.Status))
+            {
+                TempData["Error"] = $"This request is already \"{request.Status}\" and can no longer be edited.";
+                return RedirectToAction(nameof(Details), new { id = request.RequestID });
+            }
+
             var vm = new MaintenanceViewModel
             {
                 RequestID = request.RequestID,
@@ -217,9 +264,13 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 Status = request.Status,
                 DateSubmitted = request.DateSubmitted,
                 DateResolved = request.DateResolved,
-                AdminNotes = request.AdminNotes,
+                StaffNotes = request.StaffNotes,
+                AssignedStaffID = request.AssignedStaffID ?? 0,
                 ImagePath = request.ImagePath
             };
+            vm.AvailableStaff = await GetStaffListAsync();
+            // a resolved/cancelled request cannot be reopened
+            ViewBag.AllowedStatuses = StatusFlowHelper.AllowedMaintenance(request.Status);
             return View(vm);
         }
 
@@ -248,21 +299,39 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 .FirstOrDefaultAsync(m => m.RequestID == id);
             if (request == null) return NotFound();
 
+            // closed requests are view-only — reject the post outright
+            if (StatusFlowHelper.IsClosedMaintenance(request.Status))
+            {
+                TempData["Error"] = $"This request is already \"{request.Status}\" and can no longer be edited.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            // status may only move forward — a resolved request cannot be reopened
+            if (!StatusFlowHelper.IsAllowedMaintenance(request.Status, vm.Status))
+                ModelState.AddModelError("Status",
+                    $"This request is already \"{request.Status}\" — it cannot be moved back to \"{vm.Status}\".");
+
+            // 0 means "leave it unassigned"; any other value must be a real staff account
+            if (vm.AssignedStaffID != 0 &&
+                !await _context.tblUsers.AnyAsync(u => u.UserID == vm.AssignedStaffID && u.Role == "Maintenance" && u.IsActive))
+                ModelState.AddModelError("AssignedStaffID", "Select a valid maintenance staff account.");
+
             if (!ModelState.IsValid)
             {
                 vm.TenantName = request.Tenant?.FullName;
                 vm.UnitNumber = request.Tenant?.Unit?.UnitNumber;
                 vm.ImagePath = request.ImagePath;
+                vm.AvailableStaff = await GetStaffListAsync();
+                ViewBag.AllowedStatuses = StatusFlowHelper.AllowedMaintenance(request.Status);
                 return View(vm);
             }
 
-            var previousStatus = request.Status;
 
             request.Category = vm.Category;
             request.Description = vm.Description ?? string.Empty;
             request.Priority = vm.Priority;
             request.Status = vm.Status;
-            request.AdminNotes = vm.AdminNotes;
+            request.AssignedStaffID = vm.AssignedStaffID == 0 ? null : vm.AssignedStaffID;
 
             if (vm.ImageUpload != null)
                 request.ImagePath = await ImageUploadHelper.SaveAsync(vm.ImageUpload, "maintenance", _env);
@@ -274,19 +343,174 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             await _context.SaveChangesAsync();
 
-            // tell the tenant when staff change the status of their request
-            if (request.Tenant?.UserID != null && previousStatus != request.Status)
-                await NotificationHelper.CreateAsync(_context, request.Tenant.UserID.Value, "Maintenance",
-                    $"Your {request.Category} request was updated to \"{request.Status}\".",
-                    $"/Maintenance/Details/{request.RequestID}", request.RequestID);
-
             TempData["Success"] = "Maintenance request updated.";
             return RedirectToAction(nameof(Index));
         }
 
+        // GET: Maintenance/Work/5 — the maintenance staff's own, narrow form.
+        // They may only move the status forward, write work notes, and record the cost.
+        [Authorize(Roles = "Maintenance")]
+        public async Task<IActionResult> Work(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var request = await _context.tblMaintenanceRequests
+                .Include(m => m.Tenant).ThenInclude(t => t!.Unit)
+                .Include(m => m.Unit)
+                .FirstOrDefaultAsync(m => m.RequestID == id);
+
+            if (request == null) return NotFound();
+            if (request.AssignedStaffID != CurrentUserID()) return Forbid();
+
+            if (StatusFlowHelper.IsClosedMaintenance(request.Status))
+            {
+                TempData["Error"] = $"This request is already \"{request.Status}\" and can no longer be updated.";
+                return RedirectToAction(nameof(Details), new { id = request.RequestID });
+            }
+
+            ViewBag.AllowedStatuses = StatusFlowHelper.AllowedMaintenance(request.Status);
+            return View(new MaintenanceViewModel
+            {
+                RequestID = request.RequestID,
+                TenantID = request.TenantID,
+                TenantName = request.Tenant?.FullName,
+                UnitNumber = request.Unit?.UnitNumber ?? request.Tenant?.Unit?.UnitNumber,
+                Category = request.Category,
+                Description = request.Description,
+                Priority = request.Priority,
+                Status = request.Status,
+                DateSubmitted = request.DateSubmitted,
+                StaffNotes = request.StaffNotes,
+                ImagePath = request.ImagePath
+            });
+        }
+
+        // POST: Maintenance/Work/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Maintenance")]
+        public async Task<IActionResult> Work(int id, MaintenanceViewModel vm)
+        {
+            if (id != vm.RequestID) return NotFound();
+
+            var request = await _context.tblMaintenanceRequests
+                .Include(m => m.Tenant).ThenInclude(t => t!.Unit)
+                .Include(m => m.Unit)
+                .FirstOrDefaultAsync(m => m.RequestID == id);
+
+            if (request == null) return NotFound();
+
+            // re-check ownership on the POST: hiding the button is not security
+            if (request.AssignedStaffID != CurrentUserID()) return Forbid();
+
+            if (StatusFlowHelper.IsClosedMaintenance(request.Status))
+            {
+                TempData["Error"] = $"This request is already \"{request.Status}\" and can no longer be updated.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            if (!StatusFlowHelper.IsAllowedMaintenance(request.Status, vm.Status))
+                ModelState.AddModelError("Status",
+                    $"This request is already \"{request.Status}\" — it cannot be moved back to \"{vm.Status}\".");
+
+            // the staff form posts none of these, so their validation must not block it
+            ModelState.Remove(nameof(vm.Category));
+            ModelState.Remove(nameof(vm.Priority));
+            ModelState.Remove(nameof(vm.Description));
+
+            if (!ModelState.IsValid)
+            {
+                vm.TenantName = request.Tenant?.FullName;
+                vm.UnitNumber = request.Unit?.UnitNumber ?? request.Tenant?.Unit?.UnitNumber;
+                vm.Category = request.Category;
+                vm.Priority = request.Priority;
+                vm.Description = request.Description;
+                vm.ImagePath = request.ImagePath;
+                ViewBag.AllowedStatuses = StatusFlowHelper.AllowedMaintenance(request.Status);
+                return View(vm);
+            }
+
+
+            // ONLY these three fields — a staff member cannot change the category,
+            // the priority, the tenant, or who the job is assigned to
+            request.Status = vm.Status;
+            request.StaffNotes = vm.StaffNotes;
+
+            if (vm.Status == "Resolved" && request.DateResolved == null)
+                request.DateResolved = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Request updated.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // POST: Maintenance/Archive/5 — file a finished request away, for MY side only
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Archive(int id)
+        {
+            var request = await _context.tblMaintenanceRequests
+                .Include(m => m.Tenant)
+                .FirstOrDefaultAsync(m => m.RequestID == id);
+            if (request == null) return NotFound();
+
+            if (!await CanTouchAsync(request)) return Forbid();
+
+            // an open request still needs attention — it cannot be filed away
+            if (!ArchivedStatuses.Contains(request.Status))
+            {
+                TempData["Error"] = "Only a resolved or cancelled request can be archived.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (ViewingAsTenant()) request.TenantArchivedAt = DateTime.Now;
+            else                   request.StaffArchivedAt = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Request moved to your archive.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // POST: Maintenance/Unarchive/5 — pull it back into MY active list
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Unarchive(int id)
+        {
+            var request = await _context.tblMaintenanceRequests
+                .Include(m => m.Tenant)
+                .FirstOrDefaultAsync(m => m.RequestID == id);
+            if (request == null) return NotFound();
+
+            if (!await CanTouchAsync(request)) return Forbid();
+
+            if (ViewingAsTenant()) request.TenantArchivedAt = null;
+            else                   request.StaffArchivedAt = null;
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Request restored to your active list.";
+            return RedirectToAction(nameof(Index), new { archived = true });
+        }
+
+        // a tenant may only archive their own request; staff only what they are assigned
+        private async Task<bool> CanTouchAsync(tblMaintenanceRequest request)
+        {
+            if (User.IsInRole("Admin")) return true;
+
+            if (ViewingAsTenant())
+            {
+                var tenant = await GetCurrentTenantAsync();
+                return tenant != null && request.TenantID == tenant.TenantID;
+            }
+
+            return IsStaff() && request.AssignedStaffID == CurrentUserID();
+        }
+
+
         // POST: Maintenance/Cancel/5 — a tenant withdraws their own pending request
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,Tenant")]
         public async Task<IActionResult> Cancel(int id)
         {
             var request = await _context.tblMaintenanceRequests.FindAsync(id);

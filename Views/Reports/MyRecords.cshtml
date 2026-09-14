@@ -1,0 +1,90 @@
+@model YnclinoApartmentManagementSystem.Models.ViewModels.ReportsViewModel
+@{
+    ViewData["Title"] = "My Records";
+    var tenant = ViewBag.Tenant as YnclinoApartmentManagementSystem.Models.tblTenant;
+}
+
+<div data-page-head>
+    <div>
+        <h3>My Records</h3>
+        <div>
+            @(tenant?.FullName ?? "—") · Unit @(tenant?.Unit?.UnitNumber ?? "—") · view only
+        </div>
+    </div>
+    <span>As of @DateTime.Today.ToString("MMMM dd, yyyy")</span>
+</div>
+
+@if (tenant == null)
+{
+    <div>
+        <div>
+            No tenant record is linked to your account. Please contact the administrator.
+        </div>
+    </div>
+    return;
+}
+
+<div data-stats>
+    <div>
+        <div data-stat>
+            <div>
+                <div>Total Paid</div>
+                <div>₱@Model.IncomeAllTime.ToString("N0")</div>
+            </div>
+        </div>
+    </div>
+    <div>
+        <div data-stat>
+            <div>
+                <div>Outstanding Balance</div>
+                <div>₱@Model.OutstandingTotal.ToString("N0")</div>
+            </div>
+        </div>
+    </div>
+    <div>
+        <div data-stat>
+            <div>
+                <div>Advance Payment</div>
+                <div>₱@tenant.AdvanceCredit.ToString("N0")</div>
+            </div>
+        </div>
+    </div>
+    <div>
+        <div data-stat>
+            <div>
+                <div>Open Requests</div>
+                <div>@(Model.PendingMaintenance + Model.PendingTransfers)</div>
+                <div>@Model.PendingMaintenance maintenance · @Model.PendingTransfers transfer</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* The tenancy summary used to sit beside this table, repeating what the tenant
+   dashboard already shows. It now lives on the dashboard only, so this page keeps
+   to what it is for: the billing record. *@
+<div>
+    <div>
+        <div>
+            <div><span>My Billing Summary</span></div>
+            <div data-table-wrap>
+                <table>
+                    <thead>
+                        <tr><th>Month</th><th>Billed</th><th>Paid</th><th>Balance</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var m in Model.MonthlyIncome)
+                        {
+                            <tr>
+                                <td>@m.Month.ToString("MMMM yyyy")</td>
+                                <td>₱@m.Billed.ToString("N0")</td>
+                                <td>₱@m.Collected.ToString("N0")</td>
+                                <td>₱@m.Uncollected.ToString("N0")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

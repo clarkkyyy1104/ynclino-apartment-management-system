@@ -1,35 +1,36 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using YnclinoApartmentManagementSystem.Data;
+using YnclinoApartmentManagementSystem.Services;
 
 namespace YnclinoApartmentManagementSystem.ViewComponents
 {
-    // Shows a red numbered badge on a navigation link with the current user's
-    // count of UNREAD notifications for that module. Rendered from _Layout.
+    // Shows a numbered badge on a navigation link. The number comes from
+    // SystemNotificationService, which works out what is outstanding by reading
+    // the records themselves — so the badge clears when the work is done, not
+    // when somebody clicks it.
     public class NavAlertViewComponent : ViewComponent
     {
-        private readonly ApplicationDbContext _context;
+        private readonly SystemNotificationService _notificationService;
 
-        public NavAlertViewComponent(ApplicationDbContext context)
+        public NavAlertViewComponent(SystemNotificationService notificationService)
         {
-            _context = context;
+            _notificationService = notificationService;
         }
 
+        // "module" may name ONE module ("Billing"), SEVERAL separated by commas
+        // ("Billing,Transfer" — used by a dropdown parent so it shows the total of
+        // everything inside it), or "All" for everything waiting on this user.
         public async Task<IViewComponentResult> InvokeAsync(string module)
         {
-            int uid = CurrentUserId() ?? 0;
-            int count = 0;
-            if (uid != 0)
-            {
-                var q = _context.tblNotifications.Where(n => n.UserID == uid && !n.IsRead);
-                if (module != "All") q = q.Where(n => n.Module == module);   // "All" = total unread
-                count = await q.CountAsync();
-            }
+            var notifications = await _notificationService.ForCurrentUserAsync(HttpContext.User);
+
+            int count = module == "All"
+                ? notifications.Count
+                : notifications.Count(n => module
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Contains(n.Module, StringComparer.OrdinalIgnoreCase));
+
             return View(count);
         }
-
-        private int? CurrentUserId() =>
-            int.TryParse(((ClaimsPrincipal)User).FindFirstValue(ClaimTypes.NameIdentifier), out int id) ? id : null;
     }
 }

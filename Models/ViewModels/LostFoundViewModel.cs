@@ -38,6 +38,14 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
 
         // for display only
         public string? ReportedByName { get; set; }
+
+        // 0 = nobody chosen yet. Required once the status is set to "Claimed".
+        [Display(Name = "Claimed By")]
+        public int ClaimedByUserID { get; set; }
+        public string? ClaimedByName { get; set; }
+        public DateTime? DateClaimed { get; set; }
+        public IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> AvailableTenants { get; set; }
+            = new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>();
         public DateTime DateReported { get; set; } = DateTime.Now;
         public string? ImagePath { get; set; }
     }

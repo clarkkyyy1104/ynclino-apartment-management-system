@@ -2,45 +2,43 @@
 @{
     ViewData["Title"] = "Lost & Found";
     bool isAdmin = User.IsInRole("Admin");
-    var unreadIds = ViewBag.UnreadIds as HashSet<int> ?? new HashSet<int>();
-    var readIds = ViewBag.ReadIds as HashSet<int> ?? new HashSet<int>();
 }
 
 @await Component.InvokeAsync("ModuleNotifications", new { module = "LostFound" })
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="fw-bold mb-0">Lost &amp; Found</h3>
-    <a asp-action="Create" class="btn btn-primary">+ Report Item</a>
+<div data-page-head>
+    <div><h3>Lost &amp; Found</h3></div>
+    <div data-actions>
+        <a data-primary asp-action="Create">+ Report Item</a>
+    </div>
 </div>
 
-<form method="get" class="row g-2 mb-4">
-    <div class="col-auto">
-        <input type="text" name="searchTerm" value="@ViewBag.SearchTerm"
-               class="form-control" style="width:229px" placeholder="Search item or location…" />
+<form method="get">
+    <div>
+        <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" placeholder="Search item or location…" />
     </div>
-    <div class="col-auto">
-        <select name="typeFilter" class="form-select" style="width:229px" onchange="this.form.submit()">
+    <div>
+        <select name="typeFilter" onchange="this.form.submit()">
             <option value="">Lost &amp; Found</option>
             <option value="Lost"  selected="@(ViewBag.TypeFilter == "Lost")">Lost</option>
             <option value="Found" selected="@(ViewBag.TypeFilter == "Found")">Found</option>
         </select>
     </div>
-    <div class="col-auto">
-        <select name="statusFilter" class="form-select" style="width:229px" onchange="this.form.submit()">
+    <div>
+        <select name="statusFilter" onchange="this.form.submit()">
             <option value="">All Statuses</option>
             <option value="Reported"  selected="@(ViewBag.StatusFilter == "Reported")">Reported</option>
             <option value="Claimed"   selected="@(ViewBag.StatusFilter == "Claimed")">Claimed</option>
-            <option value="Resolved"  selected="@(ViewBag.StatusFilter == "Resolved")">Resolved</option>
         </select>
     </div>
-    <div class="col-auto">
-        <a asp-action="Index" class="btn btn-link">Clear</a>
+    <div>
+        <a asp-action="Index">Clear</a>
     </div>
 </form>
 
-<div class="table-responsive">
-    <table class="table table-hover align-middle">
-        <thead class="table-primary">
+<div data-table-wrap>
+    <table>
+        <thead>
             <tr>
                 <th>Category</th>
                 <th>Item Name</th>
@@ -48,52 +46,61 @@
                 <th>Reported By</th>
                 <th>Date Reported</th>
                 <th>Status</th>
+                <th>Claimed By</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var item in Model)
             {
-                var rowCls = unreadIds.Contains(item.ItemID) ? "fw-bold text-dark"
-                             : readIds.Contains(item.ItemID) ? "text-secondary" : "";
-                <tr class="@rowCls">
+                <tr>
                     <td>
-                        <span class="badge @(item.ItemType == "Lost" ? "bg-danger" : "bg-info text-dark")">
+                        <span>
                             @item.ItemType
                         </span>
                     </td>
-                    <td class="fw-semibold">@item.ItemName</td>
+                    <td>@item.ItemName</td>
                     <td>@(item.Location ?? "—")</td>
-                    <td>@(item.ReportedBy?.Username ?? "—")</td>
+                    <td>@(item.ReportedBy?.DisplayName ?? "—")</td>
                     <td>@item.DateReported.ToString("MMM dd, yyyy")</td>
                     <td>
-                        @{
-                            var sbadge = item.Status switch {
-                                "Resolved" => "bg-success",
-                                "Claimed"  => "bg-primary",
-                                _          => "bg-warning text-dark"
-                            };
+                        <span>@item.Status</span>
+                    </td>
+                    @* who ended up with the item — blank until it is claimed *@
+                    <td>
+                        @if (item.Status == "Claimed")
+                        {
+                            <span>@(item.ClaimedBy?.DisplayName ?? "—")</span>
+                            @if (item.DateClaimed != null)
+                            {
+                                <div>@item.DateClaimed.Value.ToString("MMM dd, yyyy")</div>
+                            }
                         }
-                        <span class="badge @sbadge">@item.Status</span>
+                        else
+                        {
+                            <span>—</span>
+                        }
                     </td>
                     <td>
-                        <a asp-action="Details" asp-route-id="@item.ItemID" class="btn btn-sm btn-outline-info">Details</a>
-                        @if (!isAdmin && item.ItemType == "Found" && item.Status == "Reported"
-                            && item.ReportedByUserID != (int?)ViewBag.CurrentUserID)
-                        {
-                            <a asp-action="Claim" asp-route-id="@item.ItemID" class="btn btn-sm btn-outline-success">Claim</a>
-                        }
+                        <a asp-action="Details" asp-route-id="@item.ItemID" title="View" aria-label="View"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/></svg></a>
                         @if (isAdmin)
                         {
-                            <a asp-action="Edit" asp-route-id="@item.ItemID" class="btn btn-sm btn-outline-primary">Edit</a>
-                            <a asp-action="Delete" asp-route-id="@item.ItemID" class="btn btn-sm btn-outline-danger">Delete</a>
+                            @* claimed / resolved items are closed history — view only *@
+                            @if (!YnclinoApartmentManagementSystem.Helpers.StatusFlowHelper.IsClosedLostFound(item.Status))
+                            {
+                                <a asp-action="Edit" asp-route-id="@item.ItemID">Update</a>
+                            }
+                            else
+                            {
+                                <span data-ghost>Update</span>
+                            }
                         }
                     </td>
                 </tr>
             }
             @if (!Model.Any())
             {
-                <tr><td colspan="7" class="text-center text-muted py-4">No items reported.</td></tr>
+                <tr><td colspan="8">No items reported.</td></tr>
             }
         </tbody>
     </table>

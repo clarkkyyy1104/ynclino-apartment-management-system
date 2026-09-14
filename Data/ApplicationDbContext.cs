@@ -16,7 +16,7 @@ namespace YnclinoApartmentManagementSystem.Data
         public DbSet<tblLostFoundItem> tblLostFoundItems { get; set; }
         public DbSet<tblClaimRequest> tblClaimRequests { get; set; }
         public DbSet<tblUnitTransferRequest> tblUnitTransferRequests { get; set; }
-        public DbSet<tblNotification> tblNotifications { get; set; }
+        public DbSet<tblPayment> tblPayments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -36,7 +36,7 @@ namespace YnclinoApartmentManagementSystem.Data
                 entity.HasKey(e => e.UnitID);
                 entity.Property(e => e.UnitNumber).IsRequired().HasMaxLength(20);
                 entity.Property(e => e.UnitType).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.Status).IsRequired().HasMaxLength(20).HasDefaultValue("Vacant");
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(20).HasDefaultValue("Available");
                 entity.HasIndex(e => e.UnitNumber).IsUnique();
             });
 
@@ -74,6 +74,19 @@ namespace YnclinoApartmentManagementSystem.Data
                       .OnDelete(DeleteBehavior.Cascade);
             });
 
+            modelBuilder.Entity<tblPayment>(entity =>
+            {
+                entity.HasKey(e => e.PaymentID);
+                entity.Property(e => e.Method).HasMaxLength(50);
+                entity.Property(e => e.Remarks).HasMaxLength(300);
+
+                // deleting a bill removes its payment rows too
+                entity.HasOne(p => p.Billing)
+                      .WithMany()
+                      .HasForeignKey(p => p.BillingID)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
             modelBuilder.Entity<tblMaintenanceRequest>(entity =>
             {
                 entity.HasKey(e => e.RequestID);
@@ -81,7 +94,7 @@ namespace YnclinoApartmentManagementSystem.Data
                 entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
                 entity.Property(e => e.Priority).IsRequired().HasMaxLength(20);
                 entity.Property(e => e.Status).IsRequired().HasMaxLength(30).HasDefaultValue("Pending");
-                entity.Property(e => e.AdminNotes).HasMaxLength(500);
+                entity.Property(e => e.StaffNotes).HasMaxLength(500);
 
                 entity.HasOne(m => m.Tenant)
                       .WithMany()
@@ -102,6 +115,11 @@ namespace YnclinoApartmentManagementSystem.Data
                 entity.HasOne(l => l.ReportedBy)
                       .WithMany()
                       .HasForeignKey(l => l.ReportedByUserID)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(l => l.ClaimedBy)
+                      .WithMany()
+                      .HasForeignKey(l => l.ClaimedByUserID)
                       .OnDelete(DeleteBehavior.Restrict);
             });
 
@@ -147,19 +165,6 @@ namespace YnclinoApartmentManagementSystem.Data
                       .OnDelete(DeleteBehavior.Restrict);
             });
 
-            modelBuilder.Entity<tblNotification>(entity =>
-            {
-                entity.HasKey(e => e.NotificationID);
-                entity.Property(e => e.Module).IsRequired().HasMaxLength(30);
-                entity.Property(e => e.Message).IsRequired().HasMaxLength(300);
-                entity.Property(e => e.Link).HasMaxLength(300);
-                entity.HasIndex(e => new { e.UserID, e.IsRead });
-
-                entity.HasOne(n => n.User)
-                      .WithMany()
-                      .HasForeignKey(n => n.UserID)
-                      .OnDelete(DeleteBehavior.Cascade);
-            });
         }
     }
 }

@@ -3,56 +3,52 @@
     ViewData["Title"] = "Issue Bill";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-7">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-primary text-white fw-semibold">Issue New Bill</div>
-            <div class="card-body">
+<div>
+    <div>
+        <div data-form-panel>
+            <div data-form-head>Issue New Bill</div>
+            <div data-form-body>
                 <form asp-action="Create" method="post">
                     @Html.AntiForgeryToken()
-                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+                    <div asp-validation-summary="ModelOnly"></div>
 
-                    <div class="mb-3">
-                        <label asp-for="TenantID" class="form-label fw-semibold small"></label>
-                        <select asp-for="TenantID" id="tenantSelect" asp-items="Model.AvailableTenants" class="form-select">
+                    <div>
+                        <label asp-for="TenantID"></label>
+                        <select asp-for="TenantID" id="tenantSelect" asp-items="Model.AvailableTenants">
                             <option value="">— Select Tenant —</option>
                         </select>
-                        <span asp-validation-for="TenantID" class="text-danger small"></span>
+                        <span asp-validation-for="TenantID"></span>
                     </div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label asp-for="BillingPeriod" class="form-label fw-semibold small">Billing Period (Month)</label>
-                            <input asp-for="BillingPeriod" type="month" class="form-control"
+                    <div>
+                        <div>
+                            <label asp-for="BillingPeriod">Billing Period (Month)</label>
+                            <input asp-for="BillingPeriod" id="periodInput" type="month"
                                    value="@Model.BillingPeriod.ToString("yyyy-MM")" />
-                            <span asp-validation-for="BillingPeriod" class="text-danger small"></span>
+                            <div>Filled in automatically from the tenant's last bill.</div>
+                            <span asp-validation-for="BillingPeriod"></span>
                         </div>
-                        <div class="col-md-6">
-                            <label asp-for="DueDate" class="form-label fw-semibold small"></label>
-                            <input asp-for="DueDate" type="date" class="form-control" />
-                            <span asp-validation-for="DueDate" class="text-danger small"></span>
+                        <div>
+                            <label asp-for="DueDate"></label>
+                            <input asp-for="DueDate" id="dueDateInput" type="date" />
+                            <div>Set to the last day of the billing month — you can change it.</div>
+                            <span asp-validation-for="DueDate"></span>
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="AmountDue" class="form-label fw-semibold small"></label>
-                        <div class="input-group">
-                            <span class="input-group-text">₱</span>
-                            <input asp-for="AmountDue" id="amountDueInput" type="number" min="0.01" step="0.01" class="form-control" placeholder="0.00" />
+                    <div>
+                        <label asp-for="AmountDue"></label>
+                        <div>
+                            <span>₱</span>
+                            <input asp-for="AmountDue" id="amountDueInput" type="number" min="0" step="1" placeholder="0" />
                         </div>
-                        <div id="amountHint" class="form-text text-muted small"></div>
-                        <span asp-validation-for="AmountDue" class="text-danger small"></span>
+                        <div id="amountHint"></div>
+                        <span asp-validation-for="AmountDue"></span>
                     </div>
 
-                    <div class="mb-4">
-                        <label asp-for="Notes" class="form-label fw-semibold small"></label>
-                        <textarea asp-for="Notes" class="form-control" rows="2" placeholder="Optional notes…"></textarea>
-                        <span asp-validation-for="Notes" class="text-danger small"></span>
-                    </div>
-
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary btn-sm">Issue Bill</button>
-                        <a asp-action="Index" class="btn btn-secondary btn-sm">Cancel</a>
+                    <div data-actions-row>
+                        <button type="submit">Issue Bill</button>
+                        <a asp-action="Index">Cancel</a>
                     </div>
                 </form>
             </div>
@@ -63,14 +59,52 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        document.getElementById('tenantSelect').addEventListener('change', function() {
+        // Rent for a month is due at the end of that month, so the deadline is
+        // derived from whichever month is picked rather than from today. Worked out
+        // in the browser so the date moves the instant the month changes.
+        function setDeadlineFromMonth(yyyymm) {
+            var parts = (yyyymm || '').split('-');
+            if (parts.length < 2) return;
+
+            var year = parseInt(parts[0], 10);
+            var month = parseInt(parts[1], 10);        // 1-12
+            if (isNaN(year) || isNaN(month)) return;
+
+            // day 0 of the NEXT month is the last day of this one
+            var lastDay = new Date(year, month, 0);
+            var iso = lastDay.getFullYear() + '-' +
+                      String(lastDay.getMonth() + 1).padStart(2, '0') + '-' +
+                      String(lastDay.getDate()).padStart(2, '0');
+            document.getElementById('dueDateInput').value = iso;
+        }
+
+        // the admin picking a different month re-adjusts the deadline with it
+        document.getElementById('periodInput').addEventListener('change', function () {
+            setDeadlineFromMonth(this.value);
+        });
+
+        document.getElementById('tenantSelect').addEventListener('change', function () {
             var tid = this.value;
             if (!tid) { document.getElementById('amountHint').textContent = ''; return; }
+
             fetch('/Billing/GetSuggestedAmount?tenantId=' + tid)
                 .then(r => r.json())
-                .then(function(data) {
-                    document.getElementById('amountDueInput').value = data.suggestedAmount.toFixed(2);
+                .then(function (data) {
+                    // amount = one month's rent (whole pesos)
+                    document.getElementById('amountDueInput').value = Math.round(data.suggestedAmount);
+
+                    // billing month = the next month this tenant has not been billed for
+                    if (data.suggestedPeriod)
+                        document.getElementById('periodInput').value = data.suggestedPeriod;
+
+                    // deadline follows the billing month (still editable afterwards)
+                    if (data.suggestedPeriod)
+                        setDeadlineFromMonth(data.suggestedPeriod);
+
                     var hint = 'Suggested: one month of rent';
+                    if (data.advanceCredit > 0)
+                        hint += ' · tenant holds ₱' + Math.round(data.advanceCredit).toLocaleString() +
+                                ' advance payment, which will be deducted automatically';
                     if (data.unpaidMonths > 0)
                         hint += ' · note: tenant has ' + data.unpaidMonths + ' unpaid month(s) still outstanding';
                     document.getElementById('amountHint').textContent = hint;

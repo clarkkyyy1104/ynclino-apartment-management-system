@@ -2,47 +2,66 @@
 @{
     ViewData["Title"] = "Units";
     bool isStaff = User.IsInRole("Admin");
+    bool isTenant = User.IsInRole("Tenant");
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="fw-bold mb-0">Units</h3>
+<div data-page-head>
+    <div><h3>Units</h3></div>
     @if (isStaff)
     {
-        <div class="d-flex gap-2">
-            @if (ViewBag.HasUnits != true)
+        <div data-actions>
+            @* @if (ViewBag.HasUnits != true)
             {
                 <form asp-action="GenerateSampleData" method="post"
-                      onsubmit="return confirm('Load the sample data (32 units, 44 tenants, and connected records)?')">
+                      onsubmit="return confirm('Load the sample data (5 units, 5 tenants, and connected records)?')">
                     @Html.AntiForgeryToken()
-                    <button type="submit" class="btn btn-outline-secondary">Load Sample Data</button>
+                    <button type="submit">Load Sample Data</button>
                 </form>
             }
-            <a asp-action="Create" class="btn btn-primary">+ Add Unit</a>
+            else
+            {
+                <form asp-action="ReloadSampleData" method="post"
+                      onsubmit="return confirm('Reload the sample data? This DELETES the current units, tenants, bills, maintenance, and lost &amp; found records (admin accounts are kept) and regenerates a fresh set of 5 units and 5 tenants.')">
+                    @Html.AntiForgeryToken()
+                    <button type="submit">Reload Sample Data</button>
+                </form>
+            } *@
+            <a data-primary asp-action="Create">+ Add Unit</a>
         </div>
+    }
+    @if (isTenant)
+    {
+        <a asp-controller="Transfers" asp-action="Create">+ Request Transfer</a>
     }
 </div>
 
-<form method="get" class="row g-2 mb-4">
-    <div class="col-auto">
-        <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" class="form-control" style="width:229px"
+@if (isTenant)
+{
+    @await Component.InvokeAsync("ModuleNotifications", new { module = "Transfer" })
+}
+
+<form method="get">
+    <div>
+        <input type="text" name="searchTerm" value="@ViewBag.SearchTerm"
                placeholder="Search unit number or type…" />
     </div>
-    <div class="col-auto">
-        <select name="statusFilter" class="form-select" style="width:229px" onchange="this.form.submit()">
+    <div>
+        <select name="statusFilter" onchange="this.form.submit()">
             <option value="">All Statuses</option>
-            <option value="Vacant" selected="@(ViewBag.StatusFilter == "Vacant")">Vacant</option>
+            <option value="Available" selected="@(ViewBag.StatusFilter == "Available")">Available</option>
+            <option value="Reserved" selected="@(ViewBag.StatusFilter == "Reserved")">Reserved</option>
             <option value="Occupied" selected="@(ViewBag.StatusFilter == "Occupied")">Occupied</option>
             <option value="Under Maintenance" selected="@(ViewBag.StatusFilter == "Under Maintenance")">Under Maintenance</option>
         </select>
     </div>
-    <div class="col-auto">
-        <a asp-action="Index" class="btn btn-link">Clear</a>
+    <div>
+        <a asp-action="Index">Clear</a>
     </div>
 </form>
 
-<div class="table-responsive">
-    <table class="table table-hover align-middle">
-        <thead class="table-primary">
+<div data-table-wrap>
+    <table>
+        <thead>
             <tr>
                 <th>Unit Number</th>
                 <th>Unit Type</th>
@@ -58,28 +77,21 @@
             @foreach (var unit in Model)
             {
                 <tr>
-                    <td class="fw-semibold">@unit.UnitNumber</td>
+                    <td>@unit.UnitNumber</td>
                     <td>@unit.UnitType</td>
-                    <td>₱@unit.RentPrice.ToString("N2")</td>
-                    <td>₱@unit.Deposit.ToString("N2")</td>
-                    <td>₱@unit.AdvancePayment.ToString("N2")</td>
+                    <td>₱@unit.RentPrice.ToString("N0")</td>
+                    <td>₱@unit.Deposit.ToString("N0")</td>
+                    <td>₱@unit.AdvancePayment.ToString("N0")</td>
                     <td>@unit.Capacity</td>
                     <td>
-                        @{
-                            var badge = unit.Status switch {
-                                "Occupied" => "bg-warning text-dark",
-                                "Vacant" => "bg-success",
-                                _ => "bg-secondary"
-                            };
-                        }
-                        <span class="badge @badge">@unit.Status</span>
+                        <span>@unit.Status</span>
                     </td>
                     <td>
-                        <a asp-action="Details" asp-route-id="@unit.UnitID" class="btn btn-sm btn-outline-info">Details</a>
+                        <a asp-action="Details" asp-route-id="@unit.UnitID" title="View" aria-label="View"><img src="/images/icons/view.svg"/></a>
                         @if (isStaff)
                         {
-                            <a asp-action="Edit" asp-route-id="@unit.UnitID" class="btn btn-sm btn-outline-primary">Edit</a>
-                            <a asp-action="Delete" asp-route-id="@unit.UnitID" class="btn btn-sm btn-outline-danger">Delete</a>
+                            <a asp-action="Edit" asp-route-id="@unit.UnitID">Update</a>
+                            <a asp-action="Delete" asp-route-id="@unit.UnitID">Delete</a>
                         }
                     </td>
                 </tr>
@@ -87,7 +99,7 @@
             @if (!Model.Any())
             {
                 <tr>
-                    <td colspan="8" class="text-center text-muted py-4">No units found.</td>
+                    <td colspan="8">No units found.</td>
                 </tr>
             }
         </tbody>

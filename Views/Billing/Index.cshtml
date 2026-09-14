@@ -2,50 +2,79 @@
 @{
     ViewData["Title"] = "Billing & Payment";
     bool isAdmin = User.IsInRole("Admin");
-    var unreadIds = ViewBag.UnreadIds as HashSet<int> ?? new HashSet<int>();
-    var readIds = ViewBag.ReadIds as HashSet<int> ?? new HashSet<int>();
+    bool archived = ViewBag.Archived as bool? ?? false;
 }
 
 @await Component.InvokeAsync("ModuleNotifications", new { module = "Billing" })
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="fw-bold mb-0">Billing &amp; Payment</h3>
-    @if (isAdmin)
-    {
-        <a asp-action="Create" class="btn btn-primary">+ Issue Bill</a>
-    }
+<div data-page-head>
+    <div><h3>Billing &amp; Payment</h3></div>
+    <div data-actions>
+        @if (isAdmin)
+        {
+            @if (!archived)
+            {
+                <a data-primary asp-action="Create">+ Issue Bill</a>
+            }
+            @* One button, not a pair of tabs: it names the list you are NOT
+               looking at, so it always reads as somewhere to go. *@
+            @if (archived)
+            {
+                <a asp-action="Index">← Back</a>
+            }
+            else
+            {
+                <a asp-action="Index" asp-route-archived="true">Archive</a>
+            }
+        }
+    </div>
 </div>
 
-<form method="get" class="row g-2 mb-4">
+@{
+    decimal advanceCredit = (decimal)(ViewBag.AdvanceCredit ?? 0m);
+}
+@if (!isAdmin && advanceCredit > 0)
+{
+    <div>
+        You have <strong>₱@advanceCredit.ToString("N0")</strong> in advance payment.
+        It will be applied automatically to your next bill.
+    </div>
+}
+
+<form method="get">
     @if (isAdmin)
     {
-        <div class="col-auto">
-            <input type="text" name="searchTerm" value="@ViewBag.SearchTerm"
-                   class="form-control" style="width:229px" placeholder="Search tenant name…" />
+        <div>
+            <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" placeholder="Search tenant name…" />
         </div>
     }
-    <div class="col-auto">
-        <select name="statusFilter" class="form-select" style="width:229px" onchange="this.form.submit()">
+    <div>
+        <select name="statusFilter" onchange="this.form.submit()">
             <option value="">All Statuses</option>
             <option value="Paid"    selected="@(ViewBag.StatusFilter == "Paid")">Paid</option>
             <option value="Unpaid"  selected="@(ViewBag.StatusFilter == "Unpaid")">Unpaid</option>
             <option value="Partial" selected="@(ViewBag.StatusFilter == "Partial")">Partial</option>
-            <option value="Late"    selected="@(ViewBag.StatusFilter == "Late")">Late</option>
+            <option value="Overdue"    selected="@(ViewBag.StatusFilter == "Overdue")">Overdue</option>
         </select>
     </div>
-    <div class="col-auto">
-        <a asp-action="Index" class="btn btn-link">Clear</a>
+    <div>
+        <a asp-action="Index">Clear</a>
     </div>
 </form>
 
-<div class="table-responsive">
-    <table class="table table-hover align-middle">
-        <thead class="table-primary">
+<div data-table-wrap>
+    <table>
+        <thead>
             <tr>
                 @if (isAdmin) { <th>Tenant</th><th>Unit</th> }
                 <th>Billing Period</th>
-                <th>Amount Due</th>
                 <th>Due Date</th>
+                <th>Deposit</th>
+                @* the one-month advance CHARGED at move-in — not the credit a tenant is
+                   holding from an overpayment, which is shown on the bill's own page *@
+                <th>Advance Payment</th>
+                <th>Monthly Rent</th>
+                <th>Balance</th>
                 <th>Amount Paid</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -54,42 +83,104 @@
         <tbody>
             @foreach (var b in Model)
             {
-                var rowCls = unreadIds.Contains(b.BillingID) ? "fw-bold text-dark"
-                             : readIds.Contains(b.BillingID) ? "text-secondary" : "";
-                <tr class="@rowCls">
+                <tr>
                     @if (isAdmin)
                     {
-                        <td class="fw-semibold">@b.Tenant?.FullName</td>
+                        <td>@b.Tenant?.FullName</td>
                         <td>@(b.Tenant?.Unit?.UnitNumber ?? "—")</td>
                     }
-                    <td>@b.BillingPeriod.ToString("MMMM yyyy")</td>
-                    <td>₱@b.AmountDue.ToString("N2")</td>
-                    <td>@b.DueDate.ToString("MMM dd, yyyy")</td>
-                    <td>@(b.AmountPaid.HasValue ? "₱" + b.AmountPaid.Value.ToString("N2") : "—")</td>
                     <td>
-                        @{
-                            var badge = b.Status switch {
-                                "Paid"    => "bg-success",
-                                "Partial" => "bg-info text-dark",
-                                "Late"    => "bg-danger",
-                                _         => "bg-warning text-dark"
-                            };
+                        @* bills the system issued out of an overpayment carry the same
+                           blue as the advance payment that paid for them *@
+                        @if (b.IssuedFromAdvance)
+                        {
+                            <span>@b.BillingPeriod.ToString("MMMM yyyy")</span>
+                            <div><span>from advance payment</span></div>
                         }
-                        <span class="badge @badge">@b.Status</span>
+                        else
+                        {
+                            @b.BillingPeriod.ToString("MMMM yyyy")
+                        }
+                        @if (!isAdmin && !string.IsNullOrEmpty(b.Notes))
+                        {
+                            <div>@b.Notes</div>
+                        }
+                    </td>
+                    <td>@b.DueDate.ToString("MMM dd, yyyy")</td>
+                    <td>₱@((b.Tenant?.Unit?.Deposit ?? 0m).ToString("N0"))</td>
+                    @* Two things are advance payment and both belong in this column:
+                       the one month charged at move-in, and anything the tenant
+                       overpaid. Only the second is ever non-zero on a normal rent
+                       bill, which is why this column used to read ₱0 forever. *@
+                    <td>
+                        @{ var advanceOnBill = b.Advance + b.AdvanceFromOverpayment; }
+                        @if (b.AdvanceFromOverpayment > 0)
+                        {
+                            <span>₱@advanceOnBill.ToString("N0")</span>
+                            <div>from overpayment</div>
+                        }
+                        else
+                        {
+                            <text>₱@advanceOnBill.ToString("N0")</text>
+                        }
+                    </td>
+                    <td>₱@((b.AmountDue - b.Deposit - b.Advance).ToString("N0"))</td>
+                    <td>₱@((b.AmountDue - (b.AmountPaid ?? 0m)).ToString("N0"))</td>
+                    @* the whole amount handed over, with the overpaid part named
+                       underneath so the row still adds up to what was received *@
+                    <td>
+                        @if (b.TotalReceived > 0)
+                        {
+                            <span>₱@b.TotalReceived.ToString("N0")</span>
+                            @if (b.AdvanceFromOverpayment > 0)
+                            {
+                                <div>
+                                    <span>₱@((b.AmountPaid ?? 0m).ToString("N0")) rent</span>
+                                    <span>·</span>
+                                    <span>₱@b.AdvanceFromOverpayment.ToString("N0") advance</span>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <span>—</span>
+                        }
                     </td>
                     <td>
-                        <a asp-action="Details" asp-route-id="@b.BillingID" class="btn btn-sm btn-outline-info">Details</a>
+                        <span>@b.Status</span>
+                    </td>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@b.BillingID" title="View" aria-label="View"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/></svg></a>
                         @if (isAdmin)
                         {
-                            <a asp-action="Edit" asp-route-id="@b.BillingID" class="btn btn-sm btn-outline-primary">Edit</a>
-                            <a asp-action="Delete" asp-route-id="@b.BillingID" class="btn btn-sm btn-outline-danger">Delete</a>
+                            @* A settled bill has nothing left to update, so the slot
+                               holds the thing you WOULD do with it — put it away —
+                               instead of a greyed-out word that only looks broken. *@
+                            @if (archived)
+                            {
+                                <form asp-action="Unarchive" asp-route-id="@b.BillingID" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" title="Put back on the active list" aria-label="Put back on the active list"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/></svg></button>
+                                </form>
+                            }
+                            else if (b.AmountDue - (b.AmountPaid ?? 0m) <= 0)
+                            {
+                                <form asp-action="Archive" asp-route-id="@b.BillingID" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" title="Move to archive" aria-label="Move to archive"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M0 2a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1v7.5a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 1 12.5V5a1 1 0 0 1-1-1zm2 3v7.5A1.5 1.5 0 0 0 3.5 14h9a1.5 1.5 0 0 0 1.5-1.5V5zm13-3H1v2h14zM5 7.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5"/></svg></button>
+                                </form>
+                            }
+                            else
+                            {
+                                <a asp-action="Edit" asp-route-id="@b.BillingID">Update</a>
+                            }
                         }
                     </td>
                 </tr>
             }
             @if (!Model.Any())
             {
-                <tr><td colspan="@(isAdmin ? 8 : 6)" class="text-center text-muted py-4">No billing records found.</td></tr>
+                <tr><td colspan="@(isAdmin ? 11 : 9)">No billing records found.</td></tr>
             }
         </tbody>
     </table>

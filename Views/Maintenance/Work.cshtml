@@ -1,0 +1,88 @@
+@model YnclinoApartmentManagementSystem.Models.ViewModels.MaintenanceViewModel
+@{
+    ViewData["Title"] = "Update Request";
+}
+
+<div>
+    <div>
+        <div data-form-panel>
+            <div data-form-head>
+                Update Request #@Model.RequestID — Unit @Model.UnitNumber
+            </div>
+            <div data-form-body>
+
+                @* read-only context: the staff member reports on the job, they don't redefine it *@
+                <dl>
+                    <dt>Unit</dt>
+                    <dd>@(Model.UnitNumber ?? "—")</dd>
+
+                    <dt>Tenant</dt>
+                    <dd>@Model.TenantName</dd>
+
+                    <dt>Issue Type</dt>
+                    <dd>@Model.Category</dd>
+
+                    <dt>Priority</dt>
+                    <dd>
+                        <span>@Model.Priority</span>
+                    </dd>
+
+                    <dt>Description</dt>
+                    <dd>@Model.Description</dd>
+
+                    <dt>Date Submitted</dt>
+                    <dd>@Model.DateSubmitted.ToString("MMM dd, yyyy")</dd>
+                </dl>
+
+                @if (!string.IsNullOrEmpty(Model.ImagePath))
+                {
+                    <a href="@Model.ImagePath" target="_blank">
+                        <img src="@Model.ImagePath" alt="Reported photo" />
+                    </a>
+                }
+
+                <hr />
+
+                <form asp-action="Work" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="RequestID" />
+                    <div asp-validation-summary="All"></div>
+
+                    <div>
+                        <label asp-for="Status"></label>
+                        @{
+                            var allowedStatuses = ViewBag.AllowedStatuses as List<string> ?? new List<string>();
+                        }
+                        <select asp-for="Status">
+                            @foreach (var st in allowedStatuses)
+                            {
+                                <option value="@st">@st</option>
+                            }
+                        </select>
+                        <div>
+                            A status can only move forward. Once you mark this
+                            <strong>Resolved</strong> it is closed and can no longer be changed.
+                        </div>
+                        <span asp-validation-for="Status"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="StaffNotes"></label>
+                        <textarea asp-for="StaffNotes" rows="3"
+                                  placeholder="What did you find, and what did you do?"></textarea>
+                        <span asp-validation-for="StaffNotes"></span>
+                    </div>
+
+                    <div data-actions-row>
+                        <button type="submit">Save Update</button>
+                        <a asp-action="Index">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

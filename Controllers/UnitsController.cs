@@ -8,7 +8,7 @@ using YnclinoApartmentManagementSystem.Models.ViewModels;
 
 namespace YnclinoApartmentManagementSystem.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin,Tenant")]
     public class UnitsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -58,8 +58,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // POST: Units/GenerateSampleData
-        // one-time loader for the survey data: 22 units (13 bedspacers, 9 studios)
-        // and 44 tenants, created through the same logic the forms use.
+        // one-time loader for the demo data: 5 units and 5 tenants,
+        // created through the same logic the forms use.
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
@@ -72,7 +72,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             }
 
             await SeedSampleDataAsync();
-            TempData["Success"] = "Loaded 32 units and 44 tenants with sample bills, maintenance requests, and lost & found items. Sample tenants log in with password 'Tenant@123'.";
+            TempData["Success"] = "Loaded 5 units and 5 tenants with sample bills, maintenance requests, and lost & found items. Sample tenants log in with password 'Tenant@123'.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -86,7 +86,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             await ClearSampleDataAsync();
             await SeedSampleDataAsync();
-            TempData["Success"] = "Reloaded a fresh sample set: 32 units, 44 tenants, and connected bills, maintenance, and lost & found records. Sample tenants log in with password 'Tenant@123'.";
+            TempData["Success"] = "Reloaded a fresh sample set: 5 units, 5 tenants, and connected bills, maintenance, and lost & found records. Sample tenants log in with password 'Tenant@123'.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -116,18 +116,18 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var unitEnd = now.AddDays(-20);
             double unitSpan = (unitEnd - seedStart).TotalDays;
 
-            // 32 units, all 2-person rooms at ₱6,000/month (deposit + one-month advance
-            // each equal to one month's rent). 22 will be filled by the 44 tenants below,
-            // leaving 10 vacant so transfers and new registrations have somewhere to go.
+            // 5 units, all 2-person rooms at ₱6,000/month (deposit + one-month advance
+            // each equal to one month's rent). 3 will be filled by the 5 tenants below,
+            // leaving 2 available so transfers and new registrations have somewhere to go.
             // "Date Added" climbs from early 2023 to a few weeks ago, with light jitter.
             var units = new List<tblUnit>();
             int number = 101;
-            for (int i = 0; i < 32; i++)
+            for (int i = 0; i < 5; i++)
             {
-                var added = seedStart.AddDays(unitSpan * i / 31 + rng.Next(-4, 5));
+                var added = seedStart.AddDays(unitSpan * i / 4 + rng.Next(-4, 5));
                 if (added > unitEnd) added = unitEnd;
                 if (added < seedStart.AddDays(-6)) added = seedStart;
-                units.Add(new tblUnit { UnitNumber = (number++).ToString(), UnitType = "Studio", RentPrice = 6000m, Deposit = 6000m, AdvancePayment = 6000m, Capacity = 2, Status = "Vacant", DateAdded = added });
+                units.Add(new tblUnit { UnitNumber = (number++).ToString(), UnitType = "Studio", RentPrice = 6000m, Deposit = 6000m, AdvancePayment = 6000m, Capacity = 2, Status = "Available", DateAdded = added });
             }
             _context.tblUnits.AddRange(units);
             await _context.SaveChangesAsync();
@@ -136,17 +136,20 @@ namespace YnclinoApartmentManagementSystem.Controllers
             string[] firsts = { "Ana", "Ben", "Carlo", "Dina", "Elena", "Fidel", "Grace", "Hector", "Ivy", "Jose", "Karl", "Lara", "Marco", "Nina", "Oscar", "Paula", "Quennie", "Rico", "Sara", "Tomas", "Ulan", "Vera", "Wendell", "Xander", "Yana", "Zeny" };
             string[] lasts = { "Abad", "Bautista", "Cruz", "Diaz", "Espino", "Flores", "Garcia", "Hidalgo", "Ilagan", "Jimenez", "Katindig", "Lopez", "Mendoza", "Navarro", "Ocampo", "Perez", "Quizon", "Reyes", "Santos", "Torres", "Uy", "Valdez", "Wong", "Ximeno", "Yumul", "Zafra" };
 
-            // 44 distinct (first-initial, last-initial) pairs
+            // 5 distinct (first-initial, last-initial) pairs → unique usernames
             var pairs = new List<(int f, int l)>();
-            for (int k = 0; k < 26; k++) pairs.Add((k, k));               // AA, BB, ... ZZ
-            for (int k = 0; pairs.Count < 44; k++) pairs.Add((k, k + 1)); // AB, BC, ...
+            for (int k = 0; k < 5; k++) pairs.Add((k, k));                // AA, BB, ... EE
 
-            // fill the first 22 units (2 tenants each = 44), leaving the last 10 vacant
+            // fill units two-per-room until the 5 tenants are placed (3 units used),
+            // leaving the remaining units available for transfers and new applications
+            const int tenantCount = 5;
             var slots = new List<tblUnit>();
-            for (int i = 0; i < 22; i++) for (int s = 0; s < 2; s++) slots.Add(units[i]);
+            for (int i = 0; i < units.Count && slots.Count < tenantCount; i++)
+                for (int s = 0; s < units[i].Capacity && slots.Count < tenantCount; s++)
+                    slots.Add(units[i]);
 
             var createdTenants = new List<tblTenant>();
-            for (int t = 0; t < 44; t++)
+            for (int t = 0; t < tenantCount; t++)
             {
                 string first = firsts[pairs[t].f];
                 string last = lasts[pairs[t].l];
@@ -194,11 +197,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
             }
             await _context.SaveChangesAsync();
 
-            // mark the fully-filled units Occupied; the rest stay Vacant
+            // mark the fully-filled units Occupied; the rest stay Available
             foreach (var unit in units)
             {
                 int active = await _context.tblTenants.CountAsync(t => t.UnitID == unit.UnitID && t.Status == "Active");
-                unit.Status = active >= unit.Capacity ? "Occupied" : "Vacant";
+                unit.Status = active >= unit.Capacity ? "Occupied" : "Available";
             }
             await _context.SaveChangesAsync();
 
@@ -206,6 +209,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             // so the demo has real history to browse: past bills, maintenance
             // requests, and lost & found items tied to the sample tenants.
             var firstOfThisMonth = new DateTime(now.Year, now.Month, 1);
+            var seededBills = new List<tblBilling>();
             foreach (var (tenant, idx) in createdTenants.Select((t, i) => (t, i)))
             {
                 // one bill per completed month the tenant has lived here, capped at the
@@ -251,10 +255,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
                         bill.DatePaid = datePaid > now ? now : datePaid;
                     }
                     _context.tblBillings.Add(bill);
+                    seededBills.Add(bill);
                 }
 
                 // a current bill that is not yet past due, so Unpaid and Partial show up
-                // alongside Paid and Late in the demo
+                // alongside Paid and Overdue in the demo
                 if (monthsHere >= 0)
                 {
                     var curDue = now.Date.AddDays(7);
@@ -271,8 +276,29 @@ namespace YnclinoApartmentManagementSystem.Controllers
                         DatePaid = (curPaid.HasValue && curPaid.Value > 0) ? now.Date : (DateTime?)null
                     };
                     _context.tblBillings.Add(curBill);
+                    seededBills.Add(curBill);
                 }
             }
+
+            // every peso recorded on a seeded bill also gets a real payment row, so the
+            // Payment History, the balance maths and the "settled = view only" rule agree
+            await _context.SaveChangesAsync();
+            foreach (var b in seededBills)
+            {
+                if (b.AmountPaid is decimal paidAmt && paidAmt > 0)
+                {
+                    _context.tblPayments.Add(new tblPayment
+                    {
+                        BillingID = b.BillingID,
+                        Amount = paidAmt,
+                        Method = "Cash",
+                        Remarks = "Recorded on move-in of the sample data",
+                        DatePaid = b.DatePaid ?? b.DueDate,
+                        RecordedAt = now
+                    });
+                }
+            }
+            await _context.SaveChangesAsync();
 
             // maintenance requests across a mix of statuses/priorities
             string[] mCats = { "Plumbing", "Electrical", "Structural", "Appliance", "Other" };
@@ -285,7 +311,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 "Appliance"  => "Air-conditioner is not cooling properly.",
                 _            => "General upkeep request."
             };
-            for (int i = 0; i < 14; i++)
+            for (int i = 0; i < 5; i++)
             {
                 var tenant = createdTenants[rng.Next(createdTenants.Count)];
                 var cat = mCats[i % mCats.Length];
@@ -306,7 +332,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
                     Status = status,
                     DateSubmitted = submitted,
                     DateResolved = status == "Resolved" ? resolved : (DateTime?)null,
-                    AdminNotes = status == "Resolved" ? "Handled by maintenance staff." : null
                 });
             }
 
@@ -320,13 +345,13 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 new() { ReportedByUserID = adminId, ItemName = "Black Leather Wallet", ItemType = "Found", Location = "Lobby",        Status = "Reported", Description = "Found near the front desk.", DateReported = now.AddDays(-6) },
                 new() { ReportedByUserID = adminId, ItemName = "iPhone 13 (blue case)", ItemType = "Found", Location = "2nd floor hall", Status = "Reported", Description = "Turned in by a resident.",    DateReported = now.AddDays(-4) },
                 new() { ReportedByUserID = adminId, ItemName = "Silver House Keys",     ItemType = "Found", Location = "Parking area", Status = "Reported", Description = "Set of three keys on a ring.",  DateReported = now.AddDays(-2) },
-                new() { ReportedByUserID = adminId, ItemName = "Umbrella (red)",         ItemType = "Found", Location = "Stairwell",    Status = "Resolved", Description = "Claimed and returned.",       DateReported = now.AddDays(-20) },
+                new() { ReportedByUserID = adminId, ItemName = "Umbrella (red)",         ItemType = "Found", Location = "Stairwell",    Status = "Claimed", Description = "Claimed and returned.",       DateReported = now.AddDays(-20) },
             };
             var lostItems = new List<tblLostFoundItem>
             {
                 new() { ReportedByUserID = createdTenants[3].UserID!.Value,  ItemName = "Student ID Card",   ItemType = "Lost", Location = "Around the building", Status = "Reported", Description = "Lost my school ID.",       DateReported = now.AddDays(-5) },
-                new() { ReportedByUserID = createdTenants[8].UserID!.Value,  ItemName = "Laptop Charger",    ItemType = "Lost", Location = "Study area",         Status = "Reported", Description = "65W USB-C charger.",       DateReported = now.AddDays(-3) },
-                new() { ReportedByUserID = createdTenants[15].UserID!.Value, ItemName = "Silver Ring",       ItemType = "Lost", Location = "Laundry room",       Status = "Resolved", Description = "Already recovered.",       DateReported = now.AddDays(-25) },
+                new() { ReportedByUserID = createdTenants[4].UserID!.Value,  ItemName = "Laptop Charger",    ItemType = "Lost", Location = "Study area",         Status = "Reported", Description = "65W USB-C charger.",       DateReported = now.AddDays(-3) },
+                new() { ReportedByUserID = createdTenants[1].UserID!.Value,  ItemName = "Silver Ring",       ItemType = "Lost", Location = "Laundry room",       Status = "Claimed", Description = "Already recovered.",       DateReported = now.AddDays(-25) },
             };
             _context.tblLostFoundItems.AddRange(foundItems);
             _context.tblLostFoundItems.AddRange(lostItems);
@@ -336,7 +361,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             _context.tblClaimRequests.Add(new tblClaimRequest
             {
                 ItemID = foundItems[0].ItemID,
-                ClaimantUserID = createdTenants[5].UserID!.Value,
+                ClaimantUserID = createdTenants[0].UserID!.Value,
                 VerificationDetails = "It's my wallet — brown card holder inside with my ID.",
                 Status = "Pending",
                 SubmittedAt = now.AddDays(-3)
@@ -344,7 +369,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             _context.tblClaimRequests.Add(new tblClaimRequest
             {
                 ItemID = foundItems[1].ItemID,
-                ClaimantUserID = createdTenants[9].UserID!.Value,
+                ClaimantUserID = createdTenants[2].UserID!.Value,
                 VerificationDetails = "That's my phone, lock screen is a photo of a dog.",
                 Status = "Pending",
                 SubmittedAt = now.AddDays(-1)
@@ -368,12 +393,32 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return (max + 1).ToString();
         }
 
+        // The whole system treats the deposit and the advance as ONE MONTH each:
+        // the move-in bill charges Deposit + AdvancePayment, and "Deposit on File"
+        // is shown on every bill. A deposit larger than a month's rent is therefore
+        // almost always a typo (a 13,000 deposit typed on a 3,000 unit), and it
+        // quietly corrupts every bill that unit ever produces. Less than a month is
+        // allowed — an admin may discount it — but more is refused.
+        private void ValidateMoveInAmounts(UnitViewModel vm)
+        {
+            if (vm.RentPrice <= 0) return;   // the Required/Range rules already caught this
+
+            if (vm.Deposit > vm.RentPrice)
+                ModelState.AddModelError(nameof(vm.Deposit),
+                    $"The deposit cannot be more than one month's rent (₱{vm.RentPrice:N0}).");
+
+            if (vm.AdvancePayment > vm.RentPrice)
+                ModelState.AddModelError(nameof(vm.AdvancePayment),
+                    $"The advance cannot be more than one month's rent (₱{vm.RentPrice:N0}).");
+        }
+
         // POST: Units/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(UnitViewModel vm)
         {
+            ValidateMoveInAmounts(vm);
             if (!ModelState.IsValid) return View(vm);
 
             bool duplicate = await _context.tblUnits.AnyAsync(u => u.UnitNumber == vm.UnitNumber);
@@ -431,6 +476,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         public async Task<IActionResult> Edit(int id, UnitViewModel vm)
         {
             if (id != vm.UnitID) return NotFound();
+            ValidateMoveInAmounts(vm);
             if (!ModelState.IsValid) return View(vm);
 
             bool duplicate = await _context.tblUnits.AnyAsync(u => u.UnitNumber == vm.UnitNumber && u.UnitID != id);
@@ -441,11 +487,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
             }
 
             // keep the status honest against actual tenancy — "Occupied" means full,
-            // so a partially filled unit legitimately stays Vacant
+            // so a partially filled unit legitimately stays Available
             int activeTenants = await _context.tblTenants.CountAsync(t => t.UnitID == id && t.Status == "Active");
-            if (vm.Status == "Vacant" && activeTenants >= vm.Capacity)
+            if (vm.Status == "Available" && activeTenants >= vm.Capacity)
             {
-                ModelState.AddModelError("Status", "This unit is at full capacity. Move a tenant out before marking it Vacant.");
+                ModelState.AddModelError("Status", "This unit is at full capacity. Move a tenant out before marking it Available.");
                 return View(vm);
             }
             if (vm.Status == "Occupied" && activeTenants == 0)
@@ -466,9 +512,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
             unit.Status = vm.Status;
 
             // a capacity change can flip whether the unit counts as full,
-            // so re-derive Vacant/Occupied unless it's under maintenance
+            // so re-derive Available/Occupied unless it's under maintenance
             if (unit.Status != "Under Maintenance")
-                unit.Status = activeTenants >= unit.Capacity ? "Occupied" : "Vacant";
+                unit.Status = activeTenants >= unit.Capacity ? "Occupied" : "Available";
 
             try
             {

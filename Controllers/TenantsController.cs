@@ -34,13 +34,14 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // reads "Occupied" once it is at full capacity, so partially filled
         // bedspacers stay available. A unit under maintenance keeps that
         // status until an admin clears it by hand.
-        private async Task SyncUnitStatusAsync(int unitId)
-        {
-            var unit = await _context.tblUnits.FindAsync(unitId);
-            if (unit == null || unit.Status == "Under Maintenance") return;
+        private Task SyncUnitStatusAsync(int unitId) => UnitStatusHelper.RefreshAsync(_context, unitId);
 
-            int active = await _context.tblTenants.CountAsync(t => t.UnitID == unitId && t.Status == "Active");
-            unit.Status = active >= unit.Capacity ? "Occupied" : "Vacant";
+        // The first password is shown to the admin once, on the next page only. It is
+        // never stored in plain text — only its PBKDF2 hash reaches the database.
+        private void StashFirstPassword(string username, string password)
+        {
+            TempData["TempPassword"] = password;
+            TempData["TempPasswordFor"] = username;
         }
 
         // school-style login username: [2-digit year]-[2-digit month] + the uppercase
@@ -114,16 +115,16 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (!string.IsNullOrWhiteSpace(vm.FirstName) && !string.IsNullOrWhiteSpace(vm.LastName))
                 vm.Username = GenerateUsername(vm.FirstName, vm.LastName);
 
-            // fall back to a generated password from contact number + initials
-            if (string.IsNullOrWhiteSpace(vm.Password)
-                && !string.IsNullOrWhiteSpace(vm.ContactNumber)
-                && !string.IsNullOrWhiteSpace(vm.FirstName)
-                && !string.IsNullOrWhiteSpace(vm.LastName))
+            // If the admin does not type one, the SYSTEM generates the first password.
+            // It used to be built from the contact number and the tenant's initials,
+            // which meant anyone who knew a neighbour's phone number could work out
+            // their password — and the username is derivable from their name and the
+            // month they moved in. It is now random, and shown to the admin once.
+            bool passwordWasGenerated = false;
+            if (string.IsNullOrWhiteSpace(vm.Password))
             {
-                vm.Password = vm.ContactNumber.Trim()
-                    + "@"
-                    + char.ToUpper(vm.FirstName.Trim()[0])
-                    + char.ToLower(vm.LastName.Trim()[0]);
+                vm.Password = PasswordHelper.GenerateTemporary();
+                passwordWasGenerated = true;
                 ModelState.Remove("Password");
                 ModelState.Remove("ConfirmPassword");
             }
@@ -133,18 +134,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 ModelState.AddModelError("Username", "Username could not be generated. Ensure First Name and Last Name are filled.");
             else if (await _context.tblUsers.AnyAsync(u => u.Username.ToLower() == vm.Username.ToLower()))
                 ModelState.AddModelError(string.Empty, $"Username '{vm.Username}' is already taken (same month and initials). Adjust the name.");
-            if (string.IsNullOrWhiteSpace(vm.Password))
-                ModelState.AddModelError("Password", "Password is required. Enter a password or fill in Contact Number and Name.");
 
-            // the posted unit must exist and still have room
-            var unit = await _context.tblUnits.FindAsync(vm.UnitID);
-            if (unit == null)
-                ModelState.AddModelError("UnitID", "Select a valid unit.");
-            else if (unit.Status == "Under Maintenance")
-                ModelState.AddModelError("UnitID", "That unit is under maintenance and cannot take tenants.");
-            else if (await ActiveTenantCountAsync(unit.UnitID) >= unit.Capacity)
-                ModelState.AddModelError("UnitID", "That unit is already at full capacity.");
-
+            // a unit is not assigned at registration — the tenant applies for one later
             // flag an obvious duplicate registration
             if (await IsDuplicateTenantAsync(vm.FirstName, vm.LastName, vm.ContactNumber, null))
                 ModelState.AddModelError(string.Empty, "An active tenant with the same name and contact number already exists.");
@@ -163,12 +154,15 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 Role = "Tenant",
                 IsActive = true,
                 IsMainAdmin = false,
+                // the admin sets a temporary password; the tenant must change it on first login
+                MustChangePassword = true,
                 DateCreated = DateTime.Now
             };
 
             var tenant = new tblTenant
             {
                 User = user,
+                // allow the admin to assign a unit during registration; vm.UnitID may be null
                 UnitID = vm.UnitID,
                 FirstName = vm.FirstName,
                 LastName = vm.LastName,
@@ -181,12 +175,40 @@ namespace YnclinoApartmentManagementSystem.Controllers
             };
             _context.tblTenants.Add(tenant);
             await _context.SaveChangesAsync();
+            // if a unit was assigned at creation, refresh its computed status
+            if (tenant.UnitID.HasValue)
+            {
+                await SyncUnitStatusAsync(tenant.UnitID.Value);
+                await _context.SaveChangesAsync();
 
-            // a unit only reads "Occupied" once it's full
-            await SyncUnitStatusAsync(vm.UnitID);
-            await _context.SaveChangesAsync();
-
-            TempData["Success"] = $"Tenant {tenant.FullName} has been registered with account '{user.Username}'.";
+                var unit = await _context.tblUnits.FindAsync(tenant.UnitID.Value);
+                if (unit != null) 
+                {
+                    decimal moveInTotal = unit.Deposit + unit.AdvancePayment;
+                    _context.tblBillings.Add(new tblBilling
+                    {
+                        TenantID = tenant.TenantID,
+                        BillingPeriod = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1),
+                        AmountDue = moveInTotal,
+                        AmountPaid = moveInTotal,
+                        Deposit = unit.Deposit,
+                        Advance = unit.AdvancePayment,
+                        DueDate = DateTime.Today,
+                        DatePaid = DateTime.Today,
+                        Status = "Paid",
+                        Notes = $"Move-in payment - Deposit ₱{unit.Deposit:N0} + Advance Payment ₱{unit.AdvancePayment:N0}",
+                        DateIssued = DateTime.Now
+                    });
+                    await _context.SaveChangesAsync();
+                }
+                TempData["Success"] = $"Tenant {tenant.FullName} has been registered and assigned to unit {unit?.UnitNumber}.";
+                if (passwordWasGenerated) StashFirstPassword(user.Username, vm.Password!);
+            }
+            else
+            {
+                TempData["Success"] = $"Tenant {tenant.FullName} has been registered with account '{user.Username}'.";
+                if (passwordWasGenerated) StashFirstPassword(user.Username, vm.Password!);
+            }
             return RedirectToAction(nameof(Index));
         }
 
@@ -218,6 +240,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 EmergencyContactName = tenant.EmergencyContactName,
                 EmergencyContactRelationship = tenant.EmergencyContactRelationship,
                 EmergencyContactNumber = tenant.EmergencyContactNumber,
+                MoveInDate = tenant.MoveInDate,
                 MoveOutDate = tenant.MoveOutDate,
                 Status = tenant.Status,
                 AvailableUnits = await GetAllUnitsAsync()
@@ -242,38 +265,22 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 ModelState.Remove("ConfirmPassword");
             }
 
-            if (string.IsNullOrWhiteSpace(vm.Username))
-                ModelState.AddModelError("Username", "Username is required.");
-
-            if (!ModelState.IsValid)
-            {
-                ViewBag.IsMainAdmin = isMainAdmin;
-                vm.AvailableUnits = await GetAllUnitsAsync();
-                return View(vm);
-            }
-
             var tenant = await _context.tblTenants.FindAsync(id);
             if (tenant == null) return NotFound();
 
-            int previousUnitID = tenant.UnitID;
-            string previousStatus = tenant.Status;
-            bool becomingActive = vm.Status == "Active";
+            // The username is bound to the account from the moment it is created and is
+            // never editable. Whatever the form posted is discarded here and replaced
+            // with the stored one, so a tampered request cannot rename an account.
+            var existingUser = tenant.UserID.HasValue
+                ? await _context.tblUsers.FindAsync(tenant.UserID.Value)
+                : null;
 
-            // when the tenant is (or is becoming) active, the target unit must be valid and have room
-            if (becomingActive)
-            {
-                var targetUnit = await _context.tblUnits.FindAsync(vm.UnitID);
-                if (targetUnit == null)
-                    ModelState.AddModelError("UnitID", "Select a valid unit.");
-                else
-                {
-                    int activeInTarget = await ActiveTenantCountAsync(vm.UnitID, excludeTenantId: id);
-                    if (targetUnit.Status == "Under Maintenance")
-                        ModelState.AddModelError("UnitID", "That unit is under maintenance and cannot take tenants.");
-                    else if (activeInTarget >= targetUnit.Capacity)
-                        ModelState.AddModelError("UnitID", "That unit is already at full capacity.");
-                }
-            }
+            if (existingUser != null)
+                vm.Username = existingUser.Username;
+            else if (!string.IsNullOrWhiteSpace(vm.FirstName) && !string.IsNullOrWhiteSpace(vm.LastName))
+                vm.Username = GenerateUsername(vm.FirstName, vm.LastName);   // no login yet: issue one
+
+            ModelState.Remove(nameof(vm.Username));
 
             if (!ModelState.IsValid)
             {
@@ -282,15 +289,27 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 return View(vm);
             }
 
-            // the username must be free (ignoring this tenant's own account)
-            bool duplicateUsername = await _context.tblUsers
-                .AnyAsync(u => u.Username.ToLower() == vm.Username!.ToLower() && u.UserID != tenant.UserID);
-            if (duplicateUsername)
+            // the tenant's unit is managed through the unit-application/approval flow,
+            // not edited here, so it is left untouched below
+            int? previousUnitID = tenant.UnitID;
+            string previousStatus = tenant.Status;
+            bool becomingActive = vm.Status == "Active";
+
+            // An existing account keeps the username it was issued, so there is nothing
+            // to check. Only a tenant getting their FIRST login needs one, and a
+            // generated name can collide with an account registered the same month.
+            if (existingUser == null)
             {
-                ModelState.AddModelError("Username", "Username already exists.");
-                ViewBag.IsMainAdmin = isMainAdmin;
-                vm.AvailableUnits = await GetAllUnitsAsync();
-                return View(vm);
+                bool duplicateUsername = await _context.tblUsers
+                    .AnyAsync(u => u.Username.ToLower() == vm.Username!.ToLower());
+                if (duplicateUsername)
+                {
+                    ModelState.AddModelError("Username",
+                        $"The generated username '{vm.Username}' is already taken. Please contact the administrator.");
+                    ViewBag.IsMainAdmin = isMainAdmin;
+                    vm.AvailableUnits = await GetAllUnitsAsync();
+                    return View(vm);
+                }
             }
 
             if (tenant.UserID.HasValue)
@@ -299,9 +318,13 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 var linkedUser = await _context.tblUsers.FindAsync(tenant.UserID.Value);
                 if (linkedUser != null)
                 {
-                    linkedUser.Username = vm.Username!;
+                    // username deliberately NOT touched — it is fixed at creation
                     if (isMainAdmin && !string.IsNullOrWhiteSpace(vm.Password))
+                    {
                         linkedUser.Password = PasswordHelper.Hash(vm.Password);
+                        // otherwise the admin would know that password for good
+                        linkedUser.MustChangePassword = true;
+                    }
 
                     // login follows the tenant's active state
                     linkedUser.IsActive = becomingActive;
@@ -312,7 +335,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 // tenant has no account yet — create one, generating a password if none was given
                 string password = !string.IsNullOrWhiteSpace(vm.Password)
                     ? vm.Password!
-                    : $"{vm.ContactNumber}@{char.ToUpper(vm.FirstName[0])}{char.ToLower(vm.LastName[0])}";
+                    : PasswordHelper.GenerateTemporary();   // never derived from the tenant's own details
 
                 var newUser = new tblUser
                 {
@@ -321,12 +344,14 @@ namespace YnclinoApartmentManagementSystem.Controllers
                     Role = "Tenant",
                     IsActive = becomingActive,
                     IsMainAdmin = false,
+                    // a password the admin knows must be replaced by the owner
+                    MustChangePassword = true,
                     DateCreated = DateTime.Now
                 };
                 tenant.User = newUser;
+                if (string.IsNullOrWhiteSpace(vm.Password)) StashFirstPassword(newUser.Username, password);
             }
 
-            tenant.UnitID = vm.UnitID;
             tenant.FirstName = vm.FirstName;
             tenant.LastName = vm.LastName;
             tenant.ContactNumber = vm.ContactNumber;
@@ -334,24 +359,195 @@ namespace YnclinoApartmentManagementSystem.Controllers
             tenant.EmergencyContactRelationship = vm.EmergencyContactRelationship;
             tenant.EmergencyContactNumber = vm.EmergencyContactNumber;
             tenant.Status = vm.Status;
+            tenant.MoveInDate = vm.MoveInDate;
 
-            // stamp a move-out when deactivating, clear it when bringing the tenant back,
-            // and otherwise leave any existing move-out date untouched
-            if (previousStatus == "Active" && !becomingActive)
-                tenant.MoveOutDate = DateTime.Now;
-            else if (becomingActive)
+            // move-out date is admin-controlled: an active tenant never has one; an
+            // inactive tenant uses the date the admin entered, falling back to "now"
+            // the moment they are deactivated (so it's never left blank on move-out)
+            if (becomingActive)
                 tenant.MoveOutDate = null;
+            else
+                tenant.MoveOutDate = vm.MoveOutDate
+                    ?? (previousStatus == "Active" ? DateTime.Now : tenant.MoveOutDate);
 
             await _context.SaveChangesAsync();
 
-            // re-derive occupancy for both the old and the new unit
-            await SyncUnitStatusAsync(previousUnitID);
-            if (previousUnitID != vm.UnitID)
-                await SyncUnitStatusAsync(vm.UnitID);
-            await _context.SaveChangesAsync();
+
+            // when a tenant leaves, their security deposit settles the final month's rent
+            if (previousStatus == "Active" && !becomingActive)
+                await ApplyDepositToFinalMonthAsync(tenant);
 
             TempData["Success"] = $"Tenant {tenant.FullName} has been updated.";
             return RedirectToAction(nameof(Index));
+        }
+
+        // A tenant's security deposit is really their last month's rent, held in advance.
+        // So when they move out, apply it to the final month's bill (creating that bill
+        // if it was never issued) so they owe nothing for the month they leave.
+        private async Task ApplyDepositToFinalMonthAsync(tblTenant tenant)
+        {
+            if (tenant.UnitID == null) return;
+            var unit = await _context.tblUnits.FindAsync(tenant.UnitID.Value);
+            if (unit == null || unit.Deposit <= 0) return;
+
+            var moveOut = tenant.MoveOutDate ?? DateTime.Today;
+            var finalMonth = new DateTime(moveOut.Year, moveOut.Month, 1);
+
+            // the bill for the final month — issue one (a month's rent) if it doesn't exist
+            var bill = await _context.tblBillings
+                .FirstOrDefaultAsync(b => b.TenantID == tenant.TenantID && b.BillingPeriod == finalMonth);
+            if (bill == null)
+            {
+                int lastDay = DateTime.DaysInMonth(finalMonth.Year, finalMonth.Month);
+                bill = new tblBilling
+                {
+                    TenantID = tenant.TenantID,
+                    BillingPeriod = finalMonth,
+                    AmountDue = unit.RentPrice,
+                    DueDate = new DateTime(finalMonth.Year, finalMonth.Month, lastDay),
+                    Status = "Unpaid",
+                    DateIssued = DateTime.Now
+                };
+                _context.tblBillings.Add(bill);
+                await _context.SaveChangesAsync();
+            }
+
+            // never apply the deposit twice
+            bool alreadyApplied = await _context.tblPayments
+                .AnyAsync(p => p.BillingID == bill.BillingID && p.Method == "Deposit");
+            if (alreadyApplied) return;
+
+            decimal paidSoFar = await _context.tblPayments
+                .Where(p => p.BillingID == bill.BillingID).SumAsync(p => (decimal?)p.Amount) ?? 0m;
+            decimal balance = bill.AmountDue - paidSoFar;
+            if (balance <= 0) return;   // final month already settled some other way
+
+            decimal applied = Math.Min(unit.Deposit, balance);
+            _context.tblPayments.Add(new tblPayment
+            {
+                BillingID = bill.BillingID,
+                Amount = applied,
+                Method = "Deposit",
+                Remarks = "Security deposit applied on move-out",
+                DatePaid = moveOut,
+                RecordedAt = DateTime.Now
+            });
+            await _context.SaveChangesAsync();
+
+            // refresh the bill's cached total and status from its payments
+            decimal total = await _context.tblPayments
+                .Where(p => p.BillingID == bill.BillingID).SumAsync(p => (decimal?)p.Amount) ?? 0m;
+            bill.AmountPaid = total > 0 ? total : (decimal?)null;
+            bill.Status = BillingController.DeriveStatus(bill.AmountDue, bill.AmountPaid, bill.DueDate);
+            await _context.SaveChangesAsync();
+        }
+
+        // GET: Tenants/DeletePermanent/5 — the confirmation screen. It counts up
+        // everything that would be destroyed so the admin sees the damage BEFORE
+        // agreeing to it, not after.
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeletePermanent(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var tenant = await _context.tblTenants
+                .Include(t => t.Unit)
+                .Include(t => t.User)
+                .FirstOrDefaultAsync(t => t.TenantID == id);
+            if (tenant == null) return NotFound();
+
+            // Archive first, delete second. An active tenant is somebody currently
+            // renting a unit — removing them outright is almost never what was meant.
+            if (tenant.Status == "Active")
+            {
+                TempData["Error"] = $"Archive {tenant.FullName} first. An active tenant cannot be permanently deleted.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            await LoadDeleteCountsAsync(tenant);
+            return View(tenant);
+        }
+
+        // POST: Tenants/DeletePermanent/5 — remove the tenant and everything of theirs
+        [HttpPost, ActionName("DeletePermanent")]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeletePermanentConfirmed(int id)
+        {
+            var tenant = await _context.tblTenants
+                .Include(t => t.Unit)
+                .FirstOrDefaultAsync(t => t.TenantID == id);
+            if (tenant == null) return NotFound();
+
+            // re-check on the POST: hiding the button is not the safeguard
+            if (tenant.Status == "Active")
+            {
+                TempData["Error"] = $"Archive {tenant.FullName} first. An active tenant cannot be permanently deleted.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            int? userId = tenant.UserID;
+            int? unitId = tenant.UnitID;
+            string name = tenant.FullName;
+
+            // Lost & Found rows keep a hard reference to whoever reported or claimed
+            // them, and they belong to the shared board rather than to this tenant.
+            // Rather than quietly destroying or orphaning them, refuse and say so.
+            if (userId != null)
+            {
+                bool hasLostFound =
+                    await _context.tblLostFoundItems.AnyAsync(l => l.ReportedByUserID == userId) ||
+                    await _context.tblLostFoundItems.AnyAsync(l => l.ClaimedByUserID == userId) ||
+                    await _context.tblClaimRequests.AnyAsync(c => c.ClaimantUserID == userId);
+
+                if (hasLostFound)
+                {
+                    TempData["Error"] = $"{name} has Lost & Found records. Delete those items first, or leave this tenant archived.";
+                    return RedirectToAction(nameof(Details), new { id });
+                }
+            }
+
+            // Deleted in dependency order. Payments hang off bills, so they go first
+            // even though the database would cascade them anyway — being explicit
+            // means the order is obvious to whoever reads this next.
+            await _context.tblPayments
+                .Where(p => p.Billing!.TenantID == id).ExecuteDeleteAsync();
+            await _context.tblBillings
+                .Where(b => b.TenantID == id).ExecuteDeleteAsync();
+            await _context.tblMaintenanceRequests
+                .Where(m => m.TenantID == id).ExecuteDeleteAsync();
+            await _context.tblUnitTransferRequests
+                .Where(r => r.TenantID == id).ExecuteDeleteAsync();
+
+            _context.tblTenants.Remove(tenant);
+            await _context.SaveChangesAsync();
+
+            // the login exists only to serve the tenant record, so it goes too
+            if (userId != null)
+                await _context.tblUsers.Where(u => u.UserID == userId).ExecuteDeleteAsync();
+
+            // their unit is now one tenant lighter — recompute Available/Occupied
+            if (unitId != null)
+            {
+                await SyncUnitStatusAsync(unitId.Value);
+                await _context.SaveChangesAsync();
+            }
+
+            TempData["Success"] = $"{name} and all of their records have been permanently deleted.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // what the confirmation screen shows: exactly what is about to be destroyed
+        private async Task LoadDeleteCountsAsync(tblTenant tenant)
+        {
+            int id = tenant.TenantID;
+            ViewBag.BillCount = await _context.tblBillings.CountAsync(b => b.TenantID == id);
+            ViewBag.PaymentCount = await _context.tblPayments.CountAsync(p => p.Billing!.TenantID == id);
+            ViewBag.MaintenanceCount = await _context.tblMaintenanceRequests.CountAsync(m => m.TenantID == id);
+            ViewBag.TransferCount = await _context.tblUnitTransferRequests.CountAsync(r => r.TenantID == id);
+            ViewBag.LostFoundCount = tenant.UserID == null ? 0
+                : await _context.tblLostFoundItems.CountAsync(l => l.ReportedByUserID == tenant.UserID || l.ClaimedByUserID == tenant.UserID)
+                + await _context.tblClaimRequests.CountAsync(c => c.ClaimantUserID == tenant.UserID);
         }
 
         // GET: Tenants/Delete/5 (soft delete confirmation)
@@ -389,7 +585,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             await _context.SaveChangesAsync();
 
-            await SyncUnitStatusAsync(tenant.UnitID);
+            if (tenant.UnitID.HasValue)
+                await SyncUnitStatusAsync(tenant.UnitID.Value);
             await _context.SaveChangesAsync();
 
             TempData["Success"] = $"Tenant {tenant.FullName} has been set to Inactive.";
@@ -420,7 +617,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 .Select(u => new SelectListItem
                 {
                     Value = u.UnitID.ToString(),
-                    Text = $"{u.UnitNumber} — {u.UnitType} (₱{u.RentPrice:N2})"
+                    Text = $"{u.UnitNumber} — {u.UnitType} (₱{u.RentPrice:N0})"
                 })
                 .ToListAsync();
         }
@@ -432,7 +629,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 .Select(u => new SelectListItem
                 {
                     Value = u.UnitID.ToString(),
-                    Text = $"{u.UnitNumber} — {u.UnitType} (₱{u.RentPrice:N2}) [{u.Status}]"
+                    Text = $"{u.UnitNumber} — {u.UnitType} (₱{u.RentPrice:N0}) [{u.Status}]"
                 })
                 .ToListAsync();
         }

@@ -1,0 +1,51 @@
+@model IEnumerable<YnclinoApartmentManagementSystem.Models.SystemNotification>
+@*
+    The dashboard feed, shared by all three dashboards so the admin, the tenant
+    and the maintenance staff see exactly the same thing.
+
+    There is no notifications table any more, so nothing here is "read" or
+    "unread" and there is nothing to mark off. SystemNotificationService works
+    each line out from the records, so a line disappears when the work behind it
+    is done — the bill is settled, the request is closed.
+
+    Usage:  <partial name="_NotificationFeed" model="Model.Notifications" />
+*@
+@{
+    var notes = (Model ?? Enumerable.Empty<YnclinoApartmentManagementSystem.Models.SystemNotification>()).ToList();
+
+    // the records say "LostFound" and "Transfer"; people read something friendlier
+    string NoteLabel(string module) => module switch
+    {
+        "LostFound" => "Lost and Found",
+        "Transfer"  => "Unit Request",
+        _           => module
+    };
+}
+
+<div data-panel>
+    <div data-panel-head>
+        <span>Notifications</span>
+    </div>
+
+    @if (notes.Count == 0)
+    {
+        <div data-panel-body data-empty>
+            <p>You&#8217;re all caught up.</p>
+            <p>New requests will show up here.</p>
+        </div>
+    }
+    else
+    {
+        <div data-panel-body>
+            @foreach (var n in notes)
+            {
+                <a data-note data-unread="true" href="@(n.Link ?? "#")">
+                    <div>
+                        <span data-module>@NoteLabel(n.Module)</span>
+                        <span data-message>@n.Message</span>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+</div>

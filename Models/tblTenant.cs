@@ -10,8 +10,8 @@ namespace YnclinoApartmentManagementSystem.Models
 
         public int? UserID { get; set; }
 
-        [Required]
-        public int UnitID { get; set; }
+        // a tenant may exist without a unit until they apply for one and it's approved
+        public int? UnitID { get; set; }
 
         [Required, MaxLength(50)]
         [Display(Name = "First Name")]
@@ -51,6 +51,12 @@ namespace YnclinoApartmentManagementSystem.Models
 
         [Required, MaxLength(20)]
         public string Status { get; set; } = "Active"; // Active | Inactive
+
+        // Money paid beyond what a bill required. Carried forward and used
+        // automatically on the tenant's next bill.
+        [Column(TypeName = "decimal(10,2)")]
+        [Display(Name = "Advance Payment")]
+        public decimal AdvanceCredit { get; set; }
 
         [Display(Name = "Date Recorded")]
         public DateTime DateRecorded { get; set; } = DateTime.Now;

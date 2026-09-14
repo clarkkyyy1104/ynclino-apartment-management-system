@@ -1,0 +1,1218 @@
+/* ==========================================================================
+   YNCLINO APARTMENT MANAGEMENT SYSTEM — stylesheet
+   Colours and shapes taken from the Figma design. The views are plain
+   semantic HTML, so everything here is reached through elements, attributes
+   and structure rather than class names.
+
+    1. Tokens              8. Buttons
+    2. Reset & type        9. Filter bar & fields
+    3. App shell          10. Tables
+    4. Sidebar nav        11. Form panels
+    5. Sign-in screen     12. Dashboard cards
+    6. Header strip       13. Flash messages
+    7. Main & headings    14. Responsive
+   ========================================================================== */
+
+/* 1. TOKENS ─────────────────────────────────────────────────────────────── */
+:root {
+    --navy:       #2B3648;   /* sidebar, sign-in page, table headers, card cap */
+    --navy-soft:  #2B3648;   /* the current nav item */
+    --orange:     #FA5203;   /* accent bar, active icon, eye icon */
+    --orange-btn: #F94C01;   /* buttons */
+    --orange-dark:#C93D01;
+
+    --ink:      #111111;
+    --ink-soft: #4b5563;
+    --muted:    #6b7280;
+    --line:     #d7dbe0;
+    --line-soft:#eceef1;
+
+    --field-bg:   #EDE9E9;   /* every input is filled, not white */
+    --field-line: #B9B4B4;
+    --cream:      #EFECE1;
+
+    --green: #157347;  --green-bg: #d9f2e4;
+    --red:   #b02a37;  --red-bg:   #fadbde;
+
+    --serif: Georgia, "Times New Roman", Cambria, serif;
+    --radius: 10px;
+    --sidebar-w: 264px;
+}
+
+/* 2. RESET & TYPOGRAPHY ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+body {
+    margin: 0;
+    font-family: var(--serif);
+    line-height: 1.5;
+    color: var(--ink);
+    background: #fff;
+}
+h1, h2, h3, h4, h5, h6 { margin: 0; font-weight: 600; line-height: 1.25; }
+a { color: var(--orange-btn); text-decoration: none; }
+a:hover { text-decoration: underline; }
+svg { vertical-align: middle; }
+hr { border: 0; border-top: 1px solid var(--line); margin: .35rem 0; }
+
+/* 3. APP SHELL ──────────────────────────────────────────────────────────── */
+/* only the wrapper that holds the sidebar becomes the two-column shell —
+   the sign-in page has no sidebar and must stay a normal block */
+/* The shell is exactly the height of the window and does not scroll itself:
+   the sidebar stays put while you read, and the only thing that moves is the
+   module's own content. */
+body > div:has(> aside#appSidebar) { display: flex; height: 100vh; overflow: hidden; }
+
+aside#appSidebar {
+    width: var(--sidebar-w);
+    flex: 0 0 var(--sidebar-w);
+    background: var(--navy);
+    color: var(--cream);
+    display: flex;
+    flex-direction: column;
+}
+/* the brand row: the wordmark, and the control that narrows the sidebar */
+[data-brand] { display: flex; align-items: center; padding: 20px 14px; }
+[data-brand-link] { flex: 1 1 auto; min-width: 0; }
+[data-brand-link]:hover { text-decoration: none; }
+[data-logo-mark] { display: none; }          /* shown only on the rail */
+
+/* It sits on the white strip now, not on the navy sidebar, so it is inked the
+   other way round. margin-left pulls it to the far left of the content. */
+[data-rail-toggle] {
+    flex: 0 0 auto;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; padding: 0;
+    color: var(--ink); background: #fff;
+    border: 1px solid var(--field-line); border-radius: 6px;
+    font-size: 1rem; line-height: 1; cursor: pointer;
+}
+[data-rail-toggle]:hover { background: var(--field-bg); color: var(--ink); }
+
+aside#appSidebar + div { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ── The account, at the foot of the sidebar ─────────────────────────────────
+   margin-top:auto is what pins it to the bottom: the sidebar is a column, so
+   the gap above this block absorbs whatever space the nav does not use. */
+[data-account] {
+    position: relative;
+    margin-top: auto;
+    border-top: 1px solid rgba(255,255,255,.12);
+}
+[data-account] > a[role="button"] {
+    display: flex; flex-direction: column; gap: .1rem;
+    padding: .9rem 1.35rem;
+    color: var(--cream);
+}
+[data-account] > a[role="button"]:hover { background: rgba(255,255,255,.06); color: #fff; text-decoration: none; }
+[data-account-name] { font-weight: 700; font-size: 1.02rem; }
+[data-account-role] { font-size: .82rem; color: rgba(239,236,225,.65); }
+/* the caret points up, because the menu opens upward from down here */
+[data-account] > a[role="button"]::after {
+    content: ""; position: absolute; right: 1.35rem; top: 50%;
+    margin-top: -.15em;
+    border: .3em solid transparent; border-bottom-color: currentColor;
+}
+[data-account] > a[role="button"][aria-expanded="true"]::after {
+    border-bottom-color: transparent; border-top-color: currentColor; margin-top: -.45em;
+}
+
+/* opens upward: there is no room below it */
+[data-account] ul#accountMenu {
+    position: absolute; left: .6rem; right: .6rem; bottom: 100%; z-index: 20;
+    margin: 0 0 .4rem; padding: .35rem 0;
+    list-style: none; background: #fff;
+    border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: 0 -8px 24px rgba(0,0,0,.28);
+}
+[data-account] ul#accountMenu a,
+[data-account] ul#accountMenu button {
+    display: block; width: 100%; padding: .45rem 1rem;
+    text-align: left; color: var(--ink);
+    background: none; border: 0; font: inherit; cursor: pointer;
+}
+[data-account] ul#accountMenu a:hover,
+[data-account] ul#accountMenu button:hover { background: var(--field-bg); text-decoration: none; }
+[data-account] ul#accountMenu form { margin: 0; }
+
+/* 4. SIDEBAR NAVIGATION ─────────────────────────────────────────────────── */
+aside nav { display: flex; flex-direction: column; flex: 0 1 auto; min-height: 0; overflow-y: auto; }
+aside nav a {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .72rem 1.35rem;
+    color: var(--cream);
+    font-size: 1.02rem;
+    border-left: 5px solid transparent;   /* the orange bar drops in here */
+}
+aside nav a:hover { background: rgba(255,255,255,.06); color: #fff; text-decoration: none; }
+
+/* The icon each nav line carries. The artwork stays in its own file under
+   wwwroot/images/icons and is pulled in as a MASK rather than as a picture:
+   the shape comes from the file, the colour from currentColor, so an icon dims
+   and brightens with the text beside it and turns white on the active row. An
+   <img> could not do that — it would be a fixed-colour stamp. */
+[data-nav-icon] {
+    flex: 0 0 auto;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px;
+}
+[data-nav-icon]::before {
+    content: "";
+    display: block;
+    width: 100%; height: 100%;
+    background: currentColor;
+    -webkit-mask: var(--nav-icon) center / contain no-repeat;
+            mask: var(--nav-icon) center / contain no-repeat;
+}
+/* one line per module: the only place a file name appears */
+[data-nav-icon="dashboard"]   { --nav-icon: url("/images/icons/dashboard.svg"); }
+[data-nav-icon="units"]       { --nav-icon: url("/images/icons/unit.svg"); }
+[data-nav-icon="users"]       { --nav-icon: url("/images/icons/users.svg"); }
+[data-nav-icon="tenants"]     { --nav-icon: url("/images/icons/tenants.svg"); }
+[data-nav-icon="billing"]     { --nav-icon: url("/images/icons/billing.svg"); }
+[data-nav-icon="maintenance"] { --nav-icon: url("/images/icons/maintenance.svg"); }
+[data-nav-icon="lostfound"]   { --nav-icon: url("/images/icons/lost-found.svg"); }
+[data-nav-icon="reports"]     { --nav-icon: url("/images/icons/reports.svg"); }
+[data-nav-label] { flex: 1 1 auto; min-width: 0; }
+[data-caret] { margin-left: auto; transition: transform .15s; }
+aside nav a[aria-expanded="true"] [data-caret] { transform: rotate(180deg); }
+
+/* the page you are on — this is why the markup carries aria-current */
+aside nav a[aria-current="page"] {
+    background: var(--navy-soft);
+    border-left-color: var(--orange);
+    color: #fff;
+}
+
+/* the panel a group opens; [hidden] already keeps it closed with no css */
+aside nav div > div { background: rgba(0,0,0,.18); }
+aside nav div > div a { padding-left: 3.2rem; font-size: .95rem; }
+
+/* ── THE COLLAPSED RAIL ──────────────────────────────────────────────────────
+   One attribute on <html> drives all of it, and the whole thing is a media
+   query deep: below 768px the sidebar is already a drawer that slides in and
+   out, so a rail there would be two ideas fighting.
+
+   Redefining --sidebar-w is what actually moves the edge — the width and the
+   flex-basis both read it, so nothing else has to be told the new number. */
+@media (min-width: 768px) {
+    html[data-rail] { --sidebar-w: 76px; }
+
+    /* the wordmark gives way to the Y */
+    html[data-rail] [data-brand] { flex-direction: column; gap: .55rem; padding: 16px 8px; }
+    html[data-rail] [data-logo-full] { display: none; }
+    html[data-rail] [data-logo-mark] { display: block; width: 100%; max-width: 38px; margin: 0 auto; }
+
+    /* the icon is all that is left of a nav line, centred in the rail */
+    html[data-rail] aside nav a {
+        justify-content: center;
+        gap: 0;
+        padding-left: 0; padding-right: 0;
+        border-left-width: 3px;
+        position: relative;
+    }
+    html[data-rail] [data-nav-label],
+    html[data-rail] [data-caret] { display: none; }
+
+    /* a count still has to be visible, so it rides the corner of the icon */
+    html[data-rail] aside nav a [data-navcount] {
+        position: absolute; top: .3rem; right: .85rem;
+        margin: 0;
+    }
+
+    /* a sub-list has nowhere to go on a rail; the script widens the sidebar
+       on the first click instead, and this keeps any open one out of sight */
+    html[data-rail] aside nav > div { display: none; }
+
+    /* the account keeps its initial only */
+    html[data-rail] [data-account] > a[role="button"] { align-items: center; padding: .9rem .5rem; }
+    html[data-rail] [data-account-name],
+    html[data-rail] [data-account-role] { display: none; }
+    html[data-rail] [data-account] > a[role="button"]::after { display: none; }
+    html[data-rail] [data-account] ul#accountMenu { left: .4rem; width: 13rem; right: auto; }
+}
+
+/* off the rail the initial is not needed */
+[data-account-initial] { display: none; }
+@media (min-width: 768px) {
+    html[data-rail] [data-account-initial] {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 34px; height: 34px;
+        background: var(--navy-soft); border-radius: 50%;
+        font-weight: 700; color: #fff;
+    }
+}
+
+/* 5. THE SIGN-IN SCREEN ─────────────────────────────────────────────────────
+   body:not(:has(aside)) means "a page with no sidebar": sign in, access
+   denied, the forced password change. Navy ground, white card.            */
+body:not(:has(aside)) {
+    background: var(--navy);
+    color: var(--cream);
+    min-height: 100vh;
+}
+body:not(:has(aside)) > div { max-width: 560px; margin: 0 auto; padding: 3.5rem 1rem; }
+
+/* the wordmark and its strapline */
+body:not(:has(aside)) > div > div:first-child { text-align: center; margin-bottom: 1.75rem; }
+body:not(:has(aside)) h4 {
+    font-size: 3rem; font-weight: 700; line-height: 1.05; color: #fff;
+}
+body:not(:has(aside)) > div > div:first-child p {
+    margin-top: .4rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--cream);
+}
+
+/* the white card */
+body:not(:has(aside)) > div > div:last-child { background: #fff; border-radius: 6px; }
+body:not(:has(aside)) > div > div:last-child > div { padding: 2.25rem 2.75rem; color: var(--ink); }
+
+body:not(:has(aside)) form > div { margin-bottom: 1.1rem; }
+body:not(:has(aside)) label { display: block; margin-bottom: .35rem; color: var(--ink-soft); font-weight: 400; }
+
+/* [type] is deliberate: input[type="text"] in section 9 is more specific than
+   a bare "input", so without it these rules would lose */
+body:not(:has(aside)) input[type] { width: 100%; padding: .8rem 1rem; }
+body:not(:has(aside)) hr { margin: 1.5rem 0 1rem; }
+body:not(:has(aside)) form[method="post"] > button[type="submit"] { width: 100%; margin-top: .4rem; }
+
+/* Show, and the two quick-login buttons, are quiet outlines */
+body:not(:has(aside)) div:has(> input + button) { display: flex; gap: .5rem; }
+body:not(:has(aside)) div:has(> form + form) { display: flex; gap: .6rem; }
+body:not(:has(aside)) div:has(> form + form) form { flex: 1; }
+body:not(:has(aside)) div:has(> form + form) button { width: 100%; }
+body:not(:has(aside)) div:has(> input + button) > button,
+body:not(:has(aside)) div:has(> form + form) button {
+    background: #fff; color: var(--ink); border-color: var(--field-line); font-weight: 600;
+}
+body:not(:has(aside)) div:has(> input + button) > button:hover,
+body:not(:has(aside)) div:has(> form + form) button:hover { background: var(--field-bg); }
+
+/* 6. HEADER STRIP ───────────────────────────────────────────────────────── */
+/* The account moved to the foot of the sidebar, so on a wide screen this strip
+   has nothing left to hold and the first thing on the page is the module's own
+   heading. On a narrow one it still carries the control that opens the nav. */
+header {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .55rem 2rem;
+    border-bottom: 1px solid var(--line-soft);
+}
+/* The strip is back on every screen: it carries the control that narrows the
+   sidebar, and that control has to be reachable whatever the width. It is kept
+   slim and bottom-ruled so it reads as a ledge above the module rather than a
+   second heading competing with the module's own. */
+header > div { position: relative; margin-left: auto; }
+header > div > a { color: var(--ink); font-weight: 600; }
+header > div > a::after {
+    content: "";
+    display: inline-block;
+    margin-left: .4em;
+    border: .3em solid transparent;
+    border-top-color: currentColor;
+    vertical-align: .15em;
+}
+header ul#accountMenu {
+    position: absolute; right: 0; top: 100%; z-index: 20;
+    min-width: 13rem; margin: .25rem 0 0; padding: .35rem 0;
+    list-style: none; background: #fff;
+    border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: 0 8px 24px rgba(16,24,40,.12);
+}
+header ul#accountMenu a,
+header ul#accountMenu button {
+    display: block; width: 100%; padding: .45rem 1rem;
+    text-align: left; color: var(--ink);
+    background: none; border: 0; font: inherit; cursor: pointer;
+}
+header ul#accountMenu a:hover,
+header ul#accountMenu button:hover { background: var(--field-bg); text-decoration: none; }
+
+/* 7. MAIN & PAGE HEADINGS ───────────────────────────────────────────────── */
+main { flex: 1 1 auto; padding: 1.5rem 2rem; overflow-y: auto; }
+main h3, main h4 { font-size: 1.6rem; text-transform: uppercase; letter-spacing: .01em; }
+main h6 { font-size: 1.05rem; font-weight: 400; text-transform: uppercase; margin: 1.5rem 0 .6rem; }
+main p { margin: .35rem 0 1rem; color: var(--ink-soft); }
+
+/* page headers are marked up explicitly now — see section 16 */
+
+/* 8. BUTTONS ────────────────────────────────────────────────────────────── */
+button,
+main > div:has(> h3) > a,
+main > div:has(> h4) > a {
+    display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+    padding: .55rem 1.15rem;
+    font-family: var(--serif); font-size: 1rem; font-weight: 700;
+    color: #fff; background: var(--orange-btn);
+    border: 1px solid var(--orange-btn); border-radius: 6px;
+    cursor: pointer;
+}
+button:hover,
+main > div:has(> h3) > a:hover,
+main > div:has(> h4) > a:hover {
+    background: var(--orange-dark); border-color: var(--orange-dark);
+    color: #fff; text-decoration: none;
+}
+/* the ☰ is not an orange button */
+header > button { background: none; color: var(--ink); border-color: var(--line); font-size: 1.1rem; }
+header > button:hover { background: var(--field-bg); color: var(--ink); }
+
+/* 9. FILTER BAR & FIELDS ────────────────────────────────────────────────── */
+/* the filter bar wraps at any width, not only on a phone: Lost & Found carries
+   a search box, two selects and a Clear link, which was already one control
+   too many for a laptop window */
+main form[method="get"] { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin-bottom: 1.25rem; }
+main form[method="get"] a { font-weight: 600; }
+
+input[type="text"], input[type="number"], input[type="date"],
+input[type="password"], input[type="email"], select, textarea {
+    padding: .55rem .8rem;
+    font-family: var(--serif); font-size: 1rem; color: var(--ink);
+    background: var(--field-bg);              /* filled, per the design */
+    border: 1px solid var(--field-line);
+    border-radius: 6px;
+}
+input:focus, select:focus, textarea:focus {
+    outline: 0; border-color: var(--orange);
+    box-shadow: 0 0 0 3px rgba(250,82,3,.18);
+}
+label { display: inline-block; margin-bottom: .3rem; }
+
+/* 10. TABLES ────────────────────────────────────────────────────────────── */
+main div:has(> table) {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+table { width: 100%; border-collapse: collapse; background: #fff; }
+/* Headings used to be held on one line each. On a wide table — Billing carries
+   eleven columns — that alone made the table wider than the space it had, and
+   the Update and Delete buttons at the end of every row were pushed off the
+   edge. A two-word heading may take two lines; the table then fits. */
+thead th {
+    padding: .8rem .6rem;
+    background: var(--navy); color: #fff; font-weight: 700;
+    text-align: center;
+}
+tbody td {
+    padding: .7rem .6rem; text-align: center; vertical-align: middle;
+    border-top: 1px solid var(--line-soft);
+}
+tbody tr:hover { background: #f7f8f9; }
+/* The eye was styled by its exact label, so the one view that says
+   "View in Tenants" instead of "View" missed the rule and came out looking
+   like a different control from the same icon in the other six modules. It is
+   matched on being an icon now, not on its wording, and it wears the same box
+   as the buttons beside it so the row lines up. */
+tbody td a[aria-label^="View"] { color: var(--orange); }
+/* An icon button is a fixed square, and the empty slot that stands in for one
+   is the same square. Left to size themselves they came out 40px and 35px, and
+   the five-pixel difference pushed every button on that row out of line. */
+tbody td a[aria-label],
+tbody td span[data-ghost][data-icon] {
+    width: 2.5rem; padding: 0; justify-content: center;
+}
+
+/* ── The actions column ──────────────────────────────────────────────────────
+   Buttons were centred in their cell, so a row with three of them centred
+   differently from a row with one, and the column came out ragged — 65px of
+   drift down the Billing list, 40px down Lost & Found. Anchoring them to the
+   right edge gives every row the same edge to line up on, however many buttons
+   it happens to have. */
+tbody td:last-child { white-space: nowrap; }
+tbody td:last-child:has(a, button, span) { text-align: right; }
+thead th:last-child { text-align: right; }
+
+/* One height for everything that sits in a row, so the icons stop floating
+   above the buttons beside them: the eye was a bare 14px glyph next to 33px
+   buttons, on a different baseline. */
+tbody td a:not([data-record-link]),
+tbody td button,
+tbody td span[title],
+tbody td span[data-ghost] { min-height: 33px; }
+
+/* Every action in a row takes the same width, so a row ending in "Archive"
+   lines up with a row ending in "Update" — a word being one letter longer was
+   enough to shift the eye beside it six pixels sideways, and no two rows
+   agreed. A longer label (Reset Password) simply outgrows the slot; it is the
+   same on every row anyway. */
+tbody td:last-child a:not([aria-label]),
+tbody td:last-child button,
+tbody td:last-child span[data-ghost]:not([data-icon]) { min-width: 5.5rem; }
+tbody td a,
+tbody td button,
+tbody td form,
+tbody td span[title] { vertical-align: middle; }
+tbody td:last-child > a,
+tbody td:last-child > span { display: inline-block; margin: 0 .2rem; }
+
+/* A button that needs a form around it was getting the form's margin AND its
+   own, so it sat a few pixels further along than the plain links next to it and
+   the column would not line up. The gap belongs to the control, not to the
+   wrapper that happens to be needed to post it. */
+tbody td:last-child form { display: inline-block; margin: 0; }
+/* 11. FORM PANELS (create / edit) ───────────────────────────────────────────
+   These views are  div > div > (caption div) + (div > form).  The caption
+   becomes the navy bar across the top of the panel, as in the design.     */
+/* A form panel is named, not inferred. The previous rules said "a div followed
+   by a div holding a post form", which also described a page header whose
+   actions group happens to contain one — so the Notifications title was given
+   the navy caption meant for Add New Unit. Naming the parts ends that. */
+[data-form-panel] {
+    max-width: 720px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(16,24,40,.08);
+}
+[data-form-head] {
+    padding: .85rem 1.5rem;
+    background: var(--navy);
+    color: #fff;
+    font-size: 1.05rem;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+}
+[data-form-body] { padding: 1.75rem 1.5rem; background: #fff; }
+
+/* "any div that directly contains a post form" was too broad: it also matched
+   the notification panel's header, which holds the Mark-all-as-read form, and
+   painted it white — white text on white, an invisible bar. A panel header and
+   an actions group are never a form panel, so they are excluded by name. */
+
+
+form[method="post"] > div { margin-bottom: 1rem; }
+form[method="post"] label { display: block; margin-bottom: .3rem; }
+form[method="post"] input:not([type="checkbox"]):not([type="radio"]),
+form[method="post"] select,
+form[method="post"] textarea { width: 100%; }
+
+/* a currency field is  div > span + input */
+form div:has(> span + input) { display: flex; align-items: stretch; }
+form div:has(> span + input) > span {
+    display: flex; align-items: center;
+    padding: 0 .8rem;
+    background: var(--field-bg);
+    border: 1px solid var(--field-line); border-right: 0;
+    border-radius: 6px 0 0 6px;
+}
+form div:has(> span + input) > input { border-radius: 0 6px 6px 0; }
+
+/* the actions at the foot of a form sit to the right, Cancel quiet */
+form[method="post"] > div:last-child {
+    display: flex; align-items: center; justify-content: flex-end; gap: .75rem;
+    margin-bottom: 0; padding-top: .5rem;
+}
+form[method="post"] > div:last-child > a {
+    padding: .55rem 1.5rem;
+    color: var(--ink); background: #fff;
+    border: 1px solid var(--field-line); border-radius: 6px;
+    font-weight: 700;
+}
+form[method="post"] > div:last-child > a:hover { background: var(--field-bg); text-decoration: none; }
+
+/* helper text and validation */
+form span[class*="validation"], .field-validation-error { color: var(--red); font-size: .9rem; }
+.validation-summary-valid { display: none; }
+div[class*="validation-summary"]:not(.validation-summary-valid) {
+    margin-bottom: 1rem; padding: .7rem 1rem;
+    background: var(--red-bg); border: 1px solid #eeb0b6;
+    border-radius: 6px; color: #7a1d26;
+}
+input[class*="input-validation-error"] { border-color: var(--red); }
+
+/* 12. DASHBOARD STAT CARDS ──────────────────────────────────────────────────
+   Each card is  a > div > (div>svg) + (div > value + label).  The design has
+   no icons and puts the label above the number.                           */
+main > div:has(> div > a > div > div > svg) {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+main > div > div > a:has(> div > div > svg) {
+    display: block; height: 100%;
+    padding: 1rem .75rem 1.4rem;
+    text-align: center; color: var(--ink);
+    background: #fff;
+    border: 1px solid var(--line);
+    border-top: 5px solid var(--navy);     /* the dark cap from the design */
+    border-radius: var(--radius);
+    box-shadow: 0 2px 6px rgba(16,24,40,.06);
+}
+main > div > div > a:has(> div > div > svg):hover { text-decoration: none; }
+main > div > div > a:has(> div > div > svg) > div > div:first-child { display: none; }
+main > div > div > a:has(> div > div > svg) > div > div:last-child {
+    display: flex; flex-direction: column-reverse; gap: .45rem;
+}
+main > div > div > a:has(> div > div > svg) > div > div:last-child > div:first-child {
+    font-size: 2.3rem; line-height: 1;
+}
+
+/* 13. FLASH MESSAGES ────────────────────────────────────────────────────── */
+[data-flash] {
+    position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 1100;
+    display: flex; align-items: center; gap: .75rem;
+    max-width: 28rem; margin: 0; padding: .8rem 1rem;
+    border: 1px solid transparent; border-radius: 6px;
+    box-shadow: 0 6px 20px rgba(16,24,40,.18);
+    font-weight: 600;
+}
+[data-flash="success"] { background: var(--green-bg); border-color: #a9dcc2; color: #0b5132; }
+[data-flash="error"]   { background: var(--red-bg);   border-color: #eeb0b6; color: #7a1d26; }
+[data-flash] button {
+    padding: 0 .35rem; background: none; border: 0; color: inherit; font-size: 1.1rem;
+}
+[data-flash] button:hover { background: none; color: inherit; }
+
+/* 14. RESPONSIVE ────────────────────────────────────────────────────────── */
+@media (min-width: 768px) { header > button { display: none; } }
+@media (max-width: 767.98px) {
+    aside#appSidebar {
+        position: fixed; left: calc(var(--sidebar-w) * -1); top: 0;
+        height: 100%; z-index: 1045; transition: left .2s;
+    }
+    aside#appSidebar[data-open] { left: 0; }
+    main, header { padding-left: 1rem; padding-right: 1rem; }
+}
+
+/* ── 15. CORRECTIONS ─────────────────────────────────────────────────────────
+   Fixes for three faults visible once the design was on real screens.       */
+
+/* (a) The logo, now that wwwroot/images/logo.png is wired in. The brand link
+   sits inside [data-brand] with the rail toggle, so it is reached through that
+   rather than as a direct child of the sidebar. Named for the wordmark alone:
+   "any img in the brand link" also matched the Y and, coming later in the file
+   than the rule that hides it, showed both. */
+[data-logo-full] { display: block; width: 100%; max-width: 190px; margin: 0 auto; }
+body:not(:has(aside)) > div > div:first-child img { max-width: 340px; margin: 0 auto .25rem; }
+
+/* (b) Some pages nest the heading one level deeper —
+       main > div > (div > h4 + p) + a — so the title-row rules missed them and
+       the action rendered as bare orange text instead of a button. */
+main > div:has(> div > h3),
+main > div:has(> div > h4) {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+main > div:has(> div > h3) > a,
+main > div:has(> div > h4) > a {
+    flex: 0 0 auto;
+    display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+    padding: .55rem 1.15rem;
+    font-weight: 700; color: #fff;
+    background: var(--orange-btn);
+    border: 1px solid var(--orange-btn); border-radius: 6px;
+    white-space: nowrap;
+}
+main > div:has(> div > h3) > a:hover,
+main > div:has(> div > h4) > a:hover {
+    background: var(--orange-dark); border-color: var(--orange-dark);
+    color: #fff; text-decoration: none;
+}
+
+/* (c) A row of solid orange buttons in every table row turned the list into a
+       wall of colour and gave four things the same weight. One primary action
+       per screen — the one in the title row. Row actions are quiet, and only
+       Delete carries a warning colour. */
+/* A <button> used to be given its own padding here, a shade wider than the
+   <a> beside it carrying the same word, so Update-the-link and Archive-the-
+   button never sat on the same edge. Every control in a row wears the one
+   shell defined further up; nothing re-describes it. */
+tbody td a[asp-action="Delete"], tbody td a[href*="Delete"] { color: var(--red); }
+tbody td form { margin: 0; }
+/* keep every action on one baseline, icons included */
+tbody td:last-child { white-space: nowrap; }
+tbody td:last-child > a,
+tbody td:last-child > span,
+tbody td:last-child > form { display: inline-flex; vertical-align: middle; margin: 0 .1rem; }
+
+/* The gap belongs to the control, not to the form that happens to be needed to
+   post it — a button inside one was paying the margin twice and sat a few
+   pixels further along than its neighbours. */
+tbody td form > button { margin: 0; }
+
+/* the one-time temporary password after a reset — it must not look like an
+   ordinary row of text, because it is shown once and never again */
+[data-temp-password] {
+    margin-bottom: 1.25rem; padding: 1rem 1.25rem;
+    background: #fff;
+    border: 1px solid var(--line); border-left: 5px solid var(--orange);
+    border-radius: 8px;
+}
+[data-temp-password] code {
+    display: inline-block; margin-left: .4rem; padding: .25rem .6rem;
+    font-size: 1.15rem; letter-spacing: .06em;
+    background: var(--field-bg); border: 1px solid var(--field-line); border-radius: 6px;
+}
+[data-temp-password] p { margin: .5rem 0 0; font-size: .9rem; }
+
+/* the Forgot Password link sits under the password field, right-aligned */
+
+
+/* ══ 16. PAGE HEADERS AND ROW ACTIONS ═══════════════════════════════════════
+   Every list page used to nest its heading differently — six shapes in all —
+   so a rule written against the structure matched some pages and silently
+   missed others: the same "primary action" was an orange button on Tenants
+   and bare orange text on Units. The markup now says what a thing IS
+   (data-page-head, data-actions, data-primary) instead of the stylesheet
+   guessing from where it sits, so one rule covers every page and a new page
+   inherits the design by using the same three attributes.               */
+
+[data-page-head] {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+[data-page-head] > div:first-child { min-width: 0; }
+[data-page-head] p { margin: .35rem 0 0; }
+
+[data-page-head] [data-actions] {
+    flex: 0 0 auto;
+    display: flex; align-items: center; gap: .5rem;
+}
+[data-page-head] [data-actions] form { margin: 0; }
+
+/* exactly one primary action per page, and it says so */
+[data-primary] {
+    display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+    padding: .55rem 1.15rem;
+    font-family: var(--serif); font-size: 1rem; font-weight: 700;
+    color: #fff; background: var(--orange-btn);
+    border: 1px solid var(--orange-btn); border-radius: 6px;
+    white-space: nowrap; cursor: pointer;
+}
+[data-primary]:hover {
+    background: var(--orange-dark); border-color: var(--orange-dark);
+    color: #fff; text-decoration: none;
+}
+/* anything else in the header is secondary */
+[data-page-head] [data-actions] a:not([data-primary]),
+[data-page-head] [data-actions] button:not([data-primary]) {
+    padding: .5rem .9rem;
+    color: var(--ink); background: #fff;
+    border: 1px solid var(--field-line); border-radius: 6px;
+    font-weight: 600; white-space: nowrap;
+}
+[data-page-head] [data-actions] a:not([data-primary]):hover { background: var(--field-bg); text-decoration: none; }
+
+/* Row actions are links on some pages and buttons on others. They are the same
+   thing to a user, so they get the same quiet treatment either way — the loud
+   colour belongs to the one primary action, not to every row. */
+tbody td a:not([data-record-link]),
+tbody td button,
+tbody td span[data-ghost] {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: .3rem .75rem; margin: 0 .1rem;
+    font-family: var(--serif); font-size: .9rem; font-weight: 600;
+    color: var(--ink); background: #fff;
+    border: 1px solid var(--field-line); border-radius: 6px;
+    white-space: nowrap; cursor: pointer;
+}
+tbody td a:not([data-record-link]):hover,
+tbody td button:hover { background: var(--field-bg); color: var(--ink); text-decoration: none; }
+
+/* A slot that this row has nothing to put in, holding the exact space its real
+   twin takes in the rows above and below. Without it the eye shuffled sideways
+   on the rows that had one less button, and no two rows lined up. */
+tbody td span[data-ghost] { visibility: hidden; pointer-events: none; }
+
+/* Fixed slots were the right idea, but described for one module only and in
+   class names the rest of this sheet does not use — Billing, Users and Lost &
+   Found still drifted, and an 80px column would have clipped a longer word
+   (Reset Password is 122px). The rules above do the same thing for every
+   table, through the attributes everything else here is reached by. */
+
+/* A name in a data column that opens the record behind it is not a row action:
+   it is the reading itself, and giving it a button's box made all 44 tenant
+   names in the standing-balance report look like buttons. */
+tbody td a[data-record-link] { color: var(--ink); font-weight: 600; }
+tbody td a[data-record-link]:hover { color: var(--orange-btn); text-decoration: underline; }
+/* deleting is the one row action that should look different */
+tbody td a[href*="/Delete"] { color: var(--red); border-color: #e5b6bb; }
+tbody td a[href*="/Delete"]:hover { background: var(--red-bg); color: var(--red); }
+/* a disabled action (e.g. Update on a paid bill) reads as unavailable */
+tbody td span[title] { opacity: .45; }
+
+/* ══ 17. PANELS, REPORT FIGURES AND CHARTS ══════════════════════════════════
+   A titled card appears in three places that had nothing in common in the
+   markup: the notification feed, every Details and Delete confirmation, and
+   each section of Reports & Records. They are one component, so they are
+   marked as one — data-panel with a head and a body — rather than each being
+   reached through wherever it happens to sit.                             */
+[data-panel] {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 1.25rem;
+}
+[data-panel-head] {
+    display: flex; align-items: center; gap: .75rem;
+    padding: .7rem 1.15rem;
+    background: var(--navy); color: #fff;
+    font-weight: 600;
+}
+/* actions living in a panel header stay legible on the dark bar */
+[data-panel-head] a { color: #fff; text-decoration: underline; margin-left: auto; }
+[data-panel-head] form { margin: 0 0 0 auto; }
+[data-panel-head] button {
+    padding: .25rem .7rem; font-size: .85rem; font-weight: 600;
+    color: #fff; background: transparent;
+    border: 1px solid rgba(255,255,255,.45); border-radius: 6px; cursor: pointer;
+}
+[data-panel-head] button:hover { background: rgba(255,255,255,.12); color: #fff; }
+[data-panel-body] { padding: 1.25rem; }
+/* a panel whose body is nothing but a table should not double its padding */
+[data-panel-body]:has(> table) { padding: 0; }
+[data-panel-body] > table { border: 0; }
+
+/* detail pages read as label/value pairs, not as a wall of text */
+[data-panel-body] dl { display: grid; grid-template-columns: 12rem 1fr; gap: .55rem 1rem; margin: 0; }
+[data-panel-body] dt { color: var(--ink-soft); }
+[data-panel-body] dd { margin: 0; }
+@media (max-width: 600px) { [data-panel-body] dl { grid-template-columns: 1fr; gap: .15rem; } }
+
+/* The row of buttons at the foot of a page used to be described here as "the
+   last div in a panel body holding two links". Every such row carries
+   data-actions-row now (section 19), and the old description had started
+   claiming things that merely looked like it — the four At a Glance counts on
+   the profile are also a last div of two links, and this rule was laying them
+   out in a flex row instead of letting them be a grid. Described things are
+   styled by name; nothing is claimed by resemblance. */
+
+/* ── Reports & Records ───────────────────────────────────────────────────── */
+[data-stats] {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+[data-stats] > div { min-width: 0; }
+[data-stat] {
+    height: 100%;
+    padding: 1rem 1.1rem;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-top: 5px solid var(--navy);
+    border-radius: var(--radius);
+    box-shadow: 0 2px 6px rgba(16,24,40,.06);
+}
+[data-stat] > div > div:first-child { color: var(--ink-soft); }
+[data-stat] > div > div:nth-child(2) { font-size: 1.9rem; line-height: 1.15; margin: .2rem 0; }
+[data-stat] > div > div:nth-child(3) { font-size: .875rem; color: var(--muted); }
+
+/* The charts are inline SVG with a viewBox and no size, so they grew to fill
+   whatever space they were given — the occupancy ring alone filled a screen. */
+[data-panel-body] svg { display: block; width: 100%; height: auto; max-height: 220px; margin: 0 auto; }
+[data-panel-body] svg + div { text-align: center; }
+
+/* the occupancy bar under the report table */
+/* ── How the building is doing ────────────────────────────────────────────
+   The old bar was a full-width navy pill with the figure printed inside it, so
+   it read as completely full whatever the number said — 14% occupancy drew the
+   same solid bar as 100%. A bar has one job: to be as long as its number. */
+[data-meter] {
+    height: 14px;
+    margin: .25rem 0 .4rem;
+    background: var(--field-bg);
+    border: 1px solid var(--field-line);
+    border-radius: 999px;
+    overflow: hidden;
+}
+[data-meter-fill] {
+    height: 100%;
+    background: var(--orange-btn);
+    border-radius: 999px;
+}
+[data-meter-note] { margin-bottom: 1.1rem; color: var(--muted); font-size: .9rem; }
+
+/* the sentence that opens the panel, and the one that closes it */
+[data-lede] { margin: 0 0 .75rem; font-size: 1.05rem; color: var(--ink); }
+[data-takeaway] {
+    margin: 1rem 0 .35rem; padding: .75rem 1rem;
+    background: var(--field-bg); border-radius: 8px; color: var(--ink);
+}
+[data-footnote] { margin: 0; color: var(--muted); font-size: .9rem; }
+
+/* the "what it means" line under each state */
+[data-panel-body] td > div { color: var(--muted); font-size: .85rem; font-weight: 400; }
+
+/* report tables sit flush inside their panel */
+[data-panel-body] table { width: 100%; border-collapse: collapse; }
+[data-panel-body] table td { text-align: left; }
+[data-panel-body] table td:not(:first-child) { text-align: right; }
+[data-panel-body] table th:not(:first-child) { text-align: right; }
+
+/* the two report charts sit side by side; each is capped so an SVG with only a
+   viewBox cannot grow to fill the screen the way the occupancy ring did */
+[data-chart-row] {
+    display: grid;
+    grid-template-columns: minmax(240px, 1fr) minmax(320px, 2fr);
+    gap: 1rem;
+    align-items: start;
+}
+@media (max-width: 900px) { [data-chart-row] { grid-template-columns: 1fr; } }
+[data-chart-row] [data-panel-body] { display: flex; flex-direction: column; align-items: center; }
+[data-chart-row] svg { max-height: 200px; }
+
+/* an empty panel says so quietly and centred — no oversized icon */
+[data-empty] { text-align: center; color: var(--muted); padding: 2rem 1.25rem; }
+[data-empty] p { margin: 0 0 .35rem; }
+[data-empty] p:last-child { margin: 0; font-size: .9rem; }
+
+/* the unread list is a stack of rows, not a paragraph of links */
+[data-panel-body] > a { display: block; padding: .7rem 0; color: var(--ink); }
+[data-panel-body] > a + a { border-top: 1px solid var(--line-soft); }
+[data-panel-body] > a:hover { color: var(--ink); text-decoration: none; }
+
+/* ══ 18. THE NOTIFICATIONS LIST ═════════════════════════════════════════════
+   Every row here is a link, so without rules of its own the whole page came
+   out as a wall of orange text with the timestamps adrift on their own lines.
+   A row is a line of record, not a link to be advertised.                  */
+[data-list] { padding: 0; }
+
+[data-note] {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 1rem;
+    padding: .8rem 1.15rem;
+    color: var(--ink);
+}
+[data-note] + [data-note] { border-top: 1px solid var(--line-soft); }
+[data-note]:hover { background: #f7f8f9; color: var(--ink); text-decoration: none; }
+[data-note] > div:first-child { min-width: 0; }
+
+/* which module the line came from, set apart from the sentence itself */
+[data-module] {
+    display: inline-block; margin-right: .5rem; padding: .15rem .5rem;
+    background: var(--field-bg); border: 1px solid var(--field-line); border-radius: 999px;
+    font-size: .78rem; color: var(--ink-soft);
+}
+[data-meta] { flex: 0 0 auto; display: flex; align-items: center; gap: .5rem;
+              font-size: .875rem; color: var(--muted); white-space: nowrap; }
+
+/* an unread line leads; a read one recedes */
+[data-note][data-unread="true"] { background: #fffaf6; }
+[data-note][data-unread="true"] [data-message] { font-weight: 700; }
+[data-new] {
+    padding: .1rem .45rem; border-radius: 999px;
+    background: var(--orange-btn); color: #fff;
+    font-size: .7rem; font-weight: 700; text-transform: uppercase;
+}
+
+/* the unread tally beside the page title */
+[data-count] {
+    display: inline-block; margin-left: .5rem; padding: .05rem .55rem;
+    background: var(--orange-btn); color: #fff;
+    border-radius: 999px; font-size: .95rem; vertical-align: middle;
+}
+
+/* a caption that carries a heading rather than bare text still reads as one line */
+[data-form-head] h5, [data-form-head] h6 { margin: 0; font-size: inherit; font-weight: inherit; }
+
+/* a checkbox belongs beside its label, not stacked above it */
+[data-form-body] div:has(> input[type="checkbox"]) { display: flex; align-items: center; gap: .5rem; }
+[data-form-body] input[type="checkbox"] { width: auto; margin: 0; accent-color: var(--orange-btn); }
+[data-form-body] div:has(> input[type="checkbox"]) label { margin: 0; }
+
+/* the show/hide control sits inside the field, not as a slab under it */
+[data-form-body] div:has(> input + button) { display: flex; gap: .4rem; }
+[data-form-body] div:has(> input + button) > button {
+    flex: 0 0 auto;
+    padding: .5rem .7rem;
+    color: var(--ink-soft); background: #fff;
+    border: 1px solid var(--field-line); border-radius: 6px;
+}
+[data-form-body] div:has(> input + button) > button:hover { background: var(--field-bg); color: var(--ink); }
+
+/* the password rules list */
+#pwRules { margin: .5rem 0 1rem; padding: .6rem .9rem .6rem 2rem;
+           background: #f7f8f9; border: 1px solid var(--line-soft); border-radius: 6px;
+           font-size: .9rem; color: var(--ink-soft); }
+#pwRules li { padding: .1rem 0; }
+
+/* The row of actions at the foot of a detail page is a sibling of the body,
+   not a child of it, so it needs naming here too — otherwise Update, Archive
+   and Back to List run together as one line of orange text. */
+[data-panel] > div:last-child:not([data-panel-body]):not([data-panel-head]),
+[data-form-panel] > div:last-child:not([data-form-body]):not([data-form-head]) {
+    display: flex; align-items: center; flex-wrap: wrap; gap: .6rem;
+    padding: 1rem 1.25rem;
+    border-top: 1px solid var(--line-soft);
+    background: #fff;
+}
+[data-panel] > div:last-child:not([data-panel-body]):not([data-panel-head]) > a {
+    padding: .45rem 1rem;
+    color: var(--ink); background: #fff;
+    border: 1px solid var(--field-line); border-radius: 6px; font-weight: 600;
+}
+[data-panel] > div:last-child:not([data-panel-body]):not([data-panel-head]) > a:hover {
+    background: var(--field-bg); text-decoration: none;
+}
+/* the destructive one is set apart */
+[data-panel] > div:last-child > a[href*="/DeletePermanent"],
+[data-panel] > div:last-child > a[href*="/Delete"] { color: var(--red); border-color: #e5b6bb; }
+
+/* the unread tally beside a sidebar link — a count, not a word in the label */
+[data-navcount] {
+    margin-left: auto;
+    min-width: 1.35rem;
+    padding: .05rem .4rem;
+    background: var(--orange-btn); color: #fff;
+    border-radius: 999px;
+    font-size: .78rem; font-weight: 700; text-align: center;
+}
+/* a group toggle already sends its caret to the right, so the count stops short */
+aside nav a[data-collapse] [data-navcount] { margin-left: auto; margin-right: .5rem; }
+
+/* the unread banner above a module page is a panel, and it is the one place
+   the header is a sentence rather than a title */
+[data-module-alert] { margin-bottom: 1.25rem; }
+[data-module-alert] [data-panel-head] { font-weight: 400; font-size: .95rem; }
+
+/* a file picker should sit on the same footing as every other field */
+input[type="file"] {
+    width: 100%;
+    padding: .45rem .6rem;
+    background: var(--field-bg);
+    border: 1px solid var(--field-line);
+    border-radius: 6px;
+    font-family: var(--serif);
+}
+input[type="file"]::file-selector-button {
+    margin-right: .75rem;
+    padding: .35rem .9rem;
+    color: var(--ink); background: #fff;
+    border: 1px solid var(--field-line); border-radius: 6px;
+    font-family: var(--serif); font-weight: 600; cursor: pointer;
+}
+input[type="file"]::file-selector-button:hover { background: var(--field-bg); }
+
+/* ══ 19. THE ROW OF ACTIONS AT THE FOOT OF A PAGE ═══════════════════════════
+   These sit in three different places depending on the view — after the panel,
+   inside its body, or inside the confirm form itself — so a rule aimed at any
+   one position styled one page and left ten reading as bare orange text. The
+   row is named now, wherever it happens to sit.                            */
+[data-actions-row] {
+    display: flex; align-items: center; flex-wrap: wrap; gap: .6rem;
+    margin-top: 1.25rem; padding-top: 1rem;
+    border-top: 1px solid var(--line-soft);
+}
+/* a confirm button often comes wrapped in its own little form, so the form has
+   to behave as if it were the button itself */
+[data-actions-row] > form { display: contents; }
+
+/* Every way out of a page wears the same shell: a link in the row, a button in
+   the row, a button inside a confirm form, or a lone Back link on a page that
+   has no row at all. Naming them all here is what stops one of them turning up
+   later as bare orange text. */
+[data-actions-row] > a,
+[data-actions-row] > button,
+[data-actions-row] > form > button,
+[data-back] {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: .5rem 1.1rem;
+    max-width: 100%;
+    font-family: var(--serif); font-size: 1rem; font-weight: 600;
+    color: var(--ink); background: #fff;
+    border: 1px solid var(--field-line); border-radius: 6px;
+    cursor: pointer; text-align: center;
+}
+[data-back] { margin-top: 1rem; }
+[data-actions-row] > a:hover,
+[data-actions-row] > button:hover,
+[data-actions-row] > form > button:hover,
+[data-back]:hover { background: var(--field-bg); color: var(--ink); text-decoration: none; }
+
+/* Saving is the ordinary, expected end of a form, so it keeps the primary
+   colour. Only the actions marked destructive look like what they do. */
+[data-actions-row] > button[type="submit"]:not([data-danger]) {
+    color: #fff; background: var(--orange-btn); border-color: var(--orange-btn); font-weight: 700;
+}
+[data-actions-row] > button[type="submit"]:not([data-danger]):hover {
+    background: var(--orange-dark); border-color: var(--orange-dark); color: #fff;
+}
+/* a submit that lives inside its own form in the row still needs to be able to
+   say it is the primary action */
+[data-actions-row] button[data-primary] {
+    color: #fff; background: var(--orange-btn); border-color: var(--orange-btn); font-weight: 700;
+}
+[data-actions-row] button[data-primary]:hover {
+    background: var(--orange-dark); border-color: var(--orange-dark); color: #fff;
+}
+[data-actions-row] button[data-danger] {
+    color: #fff; background: var(--red); border-color: var(--red); font-weight: 700;
+}
+[data-actions-row] button[data-danger]:hover { background: #8f222c; border-color: #8f222c; color: #fff; }
+[data-actions-row] > a[href*="/Delete"],
+[data-actions-row] > a[href*="/DeletePermanent"] { color: var(--red); border-color: #e5b6bb; }
+
+/* ══ 20. MAKING THE PAGE SURVIVE A SMALL WINDOW ═════════════════════════════
+   A table is the one thing on these pages with a width of its own: it needs
+   every column it has, and it does not care how wide the window is. With
+   nothing to stop it, the table pushed the whole page wider than the screen
+   and the row buttons at the far right — Update, Delete — were left hanging
+   past the edge, sliced in half. The table scrolls inside its own box now, so
+   the page itself always fits and the buttons stay whole.                  */
+[data-table-wrap] { max-width: 100%; overflow-x: auto; }
+
+/* Billing carries eleven columns. At the old size every cell in it wrapped —
+   a due date of "Mar 31, 2027" came out over three lines and the rows stood
+   143px tall. A slightly smaller face and tighter cells give the columns the
+   room they were short of, and the rows come back down to a single line. */
+table { font-size: .9rem; }
+thead th { padding: .65rem .45rem; }
+tbody td { padding: .6rem .45rem; }
+
+/* the same reason, one level up: a flex child refuses to shrink past its
+   contents unless it is told it may */
+main { min-width: 0; }
+main > div, [data-panel], [data-form-panel] { min-width: 0; max-width: 100%; }
+
+/* nothing may reach past the screen, whatever it is */
+img, svg, table, pre { max-width: 100%; }
+
+@media (max-width: 700px) {
+    main { padding: 1.25rem 1rem; }
+
+    /* the header of a page stacks: title first, then its actions on their own
+       line, each one wide enough to read and to tap */
+    [data-page-head] { flex-direction: column; align-items: stretch; gap: .75rem; }
+    [data-page-head] [data-actions] { flex-wrap: wrap; }
+    [data-page-head] [data-actions] > a,
+    [data-page-head] [data-actions] > button { flex: 1 1 auto; }
+
+    /* one card per line rather than four squeezed side by side */
+    [data-stats] { grid-template-columns: 1fr; }
+
+    /* the way out of a page is the last thing that should be hard to hit, so
+       the buttons go full width and stack instead of spilling off the side */
+    [data-actions-row] { flex-direction: column; align-items: stretch; }
+    [data-actions-row] > a,
+    [data-actions-row] > button,
+    [data-actions-row] > form > button,
+    [data-back] { width: 100%; }
+
+    /* a filter bar is several controls on one line; give them a line each */
+    main form[method="get"] { flex-wrap: wrap; }
+    main form[method="get"] > * { flex: 1 1 12rem; }
+}
+
+/* ══ 21. THE PROFILE PAGES ══════════════════════════════════════════════════
+   Both profiles — the tenant's and the administrator's — were written as bare
+   divs and never given a single named part, so they rendered as a plain column
+   of unstyled text while every other module had been dressed. They share one
+   shape: a navy band with the picture sitting over it, then two columns.    */
+[data-identity] {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 1.25rem;
+}
+[data-identity-cover] { height: 110px; background: var(--navy); }
+[data-identity-body] {
+    display: flex; align-items: flex-end; flex-wrap: wrap; gap: 1rem;
+    padding: 0 1.5rem 1.25rem;
+}
+
+/* the picture straddles the band, so it is pulled up out of its own row */
+/* The circle does NOT clip its contents: the camera badge hangs over its edge
+   by design, and an overflow:hidden here sliced it in half. The picture inside
+   is rounded on its own instead. */
+[data-avatar] {
+    position: relative;
+    display: block;
+    width: 104px; height: 104px;
+    margin-top: -52px;
+    border-radius: 50%;
+    border: 4px solid #fff;
+    background: var(--field-bg);
+    cursor: pointer;
+    flex: 0 0 auto;
+}
+[data-avatar] > img {
+    width: 100%; height: 100%; display: block;
+    object-fit: cover; border-radius: 50%;
+}
+/* no photo yet: the initials stand in for one */
+[data-avatar] > div {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; height: 100%;
+    background: var(--navy-soft); color: #fff;
+    border-radius: 50%;
+    font-size: 2.4rem; font-weight: 700; letter-spacing: .02em;
+}
+[data-avatar-camera] {
+    position: absolute; right: -2px; bottom: -2px;
+    display: flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px;
+    background: #fff; border: 1px solid var(--line); border-radius: 50%;
+    font-size: .95rem;
+}
+[data-avatar]:hover [data-avatar-camera] { background: var(--field-bg); }
+
+/* the file picker is opened by clicking the picture, so the input itself has
+   no business being on the page — it was showing as a raw Choose File button */
+[data-photo-form] { margin: 0; }
+/* display:none rather than a clipped 1px box, because the form rules in
+   section 11 set every input to width:100% and out-specify anything narrower —
+   a "hidden" input was still 1300px wide and pushed the page off the screen.
+   A label still opens the picker for an input that is display:none. */
+[data-photo-form] > input[type="file"] { display: none; }
+
+[data-identity-name] { flex: 1 1 12rem; min-width: 0; padding-bottom: .35rem; }
+[data-identity-name] h4 { font-size: 1.75rem; text-transform: uppercase; letter-spacing: .01em; }
+[data-identity-name] > span { color: var(--muted); }
+[data-identity-body] [data-actions] { display: flex; gap: .6rem; padding-bottom: .35rem; }
+[data-identity-body] [data-actions] form { margin: 0; }
+[data-identity-body] [data-actions] a,
+[data-identity-body] [data-actions] button {
+    display: inline-flex; align-items: center;
+    padding: .5rem 1.1rem;
+    color: var(--ink); background: #fff;
+    border: 1px solid var(--field-line); border-radius: 6px;
+    font-family: var(--serif); font-size: 1rem; font-weight: 600; cursor: pointer;
+}
+[data-identity-body] [data-actions] a:hover,
+[data-identity-body] [data-actions] button:hover { background: var(--field-bg); color: var(--ink); text-decoration: none; }
+
+/* details on the left, the feed or the counts on the right */
+[data-profile-cols] { display: grid; grid-template-columns: 1.15fr 1fr; gap: 1.25rem; align-items: start; }
+[data-profile-cols] > div { min-width: 0; }
+
+/* four counts, each one a doorway into the module it counts */
+[data-glance] { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; }
+[data-glance] > a,
+[data-glance] > div {
+    display: block; padding: 1rem .75rem; text-align: center;
+    color: var(--ink); background: #fff;
+    border: 1px solid var(--line); border-radius: 8px;
+}
+[data-glance] > a:hover { border-color: var(--orange); color: var(--ink); text-decoration: none; }
+[data-glance] div:first-child { font-size: 1.9rem; line-height: 1.15; }
+[data-glance] div:last-child { color: var(--ink-soft); font-size: .9rem; }
+
+/* one line of the activity feed: what happened on the left, where it stands
+   on the right */
+[data-feed-row] {
+    display: flex; align-items: center; gap: .75rem;
+    padding: .8rem 1.25rem;
+}
+[data-feed-row] + [data-feed-row] { border-top: 1px solid var(--line-soft); }
+[data-feed-row] > div { flex: 1 1 auto; min-width: 0; }
+[data-feed-row] > span:last-child { color: var(--ink-soft); white-space: nowrap; }
+
+@media (max-width: 900px) {
+    [data-profile-cols] { grid-template-columns: 1fr; }
+}
+@media (max-width: 700px) {
+    [data-identity-body] { justify-content: center; text-align: center; }
+    [data-identity-name] { flex-basis: 100%; }
+    [data-glance] { grid-template-columns: 1fr; }
+}
