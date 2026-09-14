@@ -35,18 +35,15 @@
                     <img data-logo-full src="~/images/logo.png" alt="Ynclino Apartment Management System" />
                     <img data-logo-mark src="~/images/logo-y.png" alt="Ynclino" />
                 </a>
-                <button type="button" data-rail-toggle
-                        title="Collapse the menu" aria-label="Collapse the menu"
-                        aria-expanded="true" aria-controls="appSidebar">&#9776;</button>
             </div>
             <nav>
                 @* Each link is an icon slot, a label and (where it applies) its
                    count. Collapsed, only the icon and the count remain; the title
                    is what a hover then shows instead of the label.
-                   data-initial is a stand-in that draws the first letter until a
-                   real icon is pasted into the slot — delete it once they are in. *@
+                   The icon slot names its module; the stylesheet maps that name
+                   to a file in wwwroot/images/icons. *@
                 <a aria-current="@Active("Home")" asp-controller="Home" asp-action="Index" title="Dashboard">
-                    <span data-nav-icon data-initial="D"></span>
+                    <span data-nav-icon="dashboard"></span>
                     <span data-nav-label>Dashboard</span>
                 </a>
 
@@ -54,7 +51,7 @@
                 {
                     <a data-collapse="#unitsGroup" href="#unitsGroup" role="button" title="Units"
                        aria-expanded="@(unitsOpen ? "true" : "false")">
-                        <span data-nav-icon data-initial="U"></span>
+                        <span data-nav-icon="units"></span>
                         <span data-nav-label>Units</span>
                         @await Component.InvokeAsync("NavAlert", new { module = "Transfer" })
                         <span data-caret>&#9662;</span>
@@ -72,7 +69,7 @@
                 {
                     @* tenant: a single Units link (browse); My Unit / Transfer lives in their Profile *@
                     <a aria-current="@Active("Units")" asp-controller="Units" asp-action="Index" title="Units">
-                        <span data-nav-icon data-initial="U"></span>
+                        <span data-nav-icon="units"></span>
                         <span data-nav-label>Units</span>
                     </a>
                 }
@@ -80,11 +77,11 @@
                 @if (isAdmin)
                 {
                     <a aria-current="@Active("Users")" asp-controller="Users" asp-action="Index" title="User Management">
-                        <span data-nav-icon data-initial="A"></span>
+                        <span data-nav-icon="users"></span>
                         <span data-nav-label>User Management</span>
                     </a>
                     <a aria-current="@Active("Tenants")" asp-controller="Tenants" asp-action="Index" title="Tenants">
-                        <span data-nav-icon data-initial="T"></span>
+                        <span data-nav-icon="tenants"></span>
                         <span data-nav-label>Tenants</span>
                     </a>
                 }
@@ -95,7 +92,7 @@
                 {
                     <a data-collapse="#billingGroup" href="#billingGroup" role="button" title="Billing &amp; Payment"
                        aria-expanded="@(billingOpen ? "true" : "false")">
-                        <span data-nav-icon data-initial="B"></span>
+                        <span data-nav-icon="billing"></span>
                         <span data-nav-label>Billing &amp; Payment</span>
                         @await Component.InvokeAsync("NavAlert", new { module = "Billing" })
                         <span data-caret>&#9662;</span>
@@ -109,7 +106,7 @@
                 }
 
                 <a aria-current="@Active("Maintenance")" asp-controller="Maintenance" asp-action="Index" title="Maintenance">
-                    <span data-nav-icon data-initial="M"></span>
+                    <span data-nav-icon="maintenance"></span>
                     <span data-nav-label>Maintenance</span>
                     @await Component.InvokeAsync("NavAlert", new { module = "Maintenance" })
                 </a>
@@ -117,7 +114,7 @@
                 @if (!isStaff)
                 {
                     <a aria-current="@Active("LostFound")" asp-controller="LostFound" asp-action="Index" title="Lost &amp; Found">
-                        <span data-nav-icon data-initial="L"></span>
+                        <span data-nav-icon="lostfound"></span>
                         <span data-nav-label>Lost &amp; Found</span>
                         @await Component.InvokeAsync("NavAlert", new { module = "LostFound" })
                     </a>
@@ -127,7 +124,7 @@
                 @if (!isStaff)
                 {
                     <a aria-current="@Active("Reports")" asp-controller="Reports" asp-action="Index" title="Reports &amp; Records">
-                        <span data-nav-icon data-initial="R"></span>
+                        <span data-nav-icon="reports"></span>
                         <span data-nav-label>Reports &amp; Records</span>
                     </a>
                 }
@@ -166,10 +163,14 @@
         </aside>
 
         <div>
-            @* Only the control that opens the sidebar on a narrow screen is left
-               here; the stylesheet hides this strip entirely on a wide one. *@
+            @* The strip above the module. The one control it carries sits at the
+               far left, beside the module's own heading: on a wide screen it
+               narrows the sidebar to a rail, and on a narrow one — where there
+               is no rail, only a drawer — it slides the drawer in and out. *@
             <header>
-                <button type="button" onclick="document.getElementById('appSidebar').toggleAttribute('data-open')">☰</button>
+                <button type="button" data-rail-toggle
+                        title="Collapse the menu" aria-label="Collapse the menu"
+                        aria-expanded="true" aria-controls="appSidebar">&#9776;</button>
             </header>
 
             <main>
