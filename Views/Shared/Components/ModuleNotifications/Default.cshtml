@@ -3,16 +3,23 @@
 {
     <div data-panel data-module-alert>
         <div>
-            <div data-panel-head>
-                @Model.Count() unread notification@(Model.Count() > 1 ? "s" : "") — click to open and mark as read
-            </div>
+            <div data-panel-head>Needs your attention</div>
             <div data-panel-body data-list>
                 @foreach (var n in Model)
                 {
-                    <a data-note data-unread="true" href="/Notifications/Open/@n.NotificationID">
-                        <span data-message>@n.Message</span>
-                        <div data-meta><span>@n.CreatedAt.ToString("MMM dd, h:mm tt")</span></div>
-                    </a>
+                    @* nothing to mark as read — the line goes away when the work is done *@
+                    @if (string.IsNullOrEmpty(n.Link))
+                    {
+                        <div data-note data-unread="true">
+                            <span data-message>@n.Message</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <a data-note data-unread="true" href="@n.Link">
+                            <span data-message>@n.Message</span>
+                        </a>
+                    }
                 }
             </div>
         </div>

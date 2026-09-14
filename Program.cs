@@ -213,7 +213,6 @@ using (var scope = app.Services.CreateScope())
         db.tblLostFoundItems.AsNoTracking().FirstOrDefault();
         db.tblClaimRequests.AsNoTracking().FirstOrDefault();
         db.tblUnitTransferRequests.AsNoTracking().FirstOrDefault();
-        db.tblNotifications.AsNoTracking().FirstOrDefault();
     }
 
     try

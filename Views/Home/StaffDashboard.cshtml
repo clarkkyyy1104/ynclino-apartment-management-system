@@ -47,7 +47,7 @@
     </div>
 </div>
 
-@* the same unread feed the admin and tenant dashboards show *@
+@* the same panel the admin and tenant dashboards show *@
 <div>
-    <partial name="_NotificationFeed" model="(List<YnclinoApartmentManagementSystem.Models.tblNotification>)ViewBag.Unread" />
+    <partial name="_NotificationFeed" model="(List<YnclinoApartmentManagementSystem.Models.SystemNotification>)ViewBag.Notifications" />
 </div>

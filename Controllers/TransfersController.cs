@@ -73,9 +73,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             ViewBag.Archived = archived;
             ViewBag.ClosedStatuses = ClosedStatuses;
 
-            var meId = CurrentUserID();
-            ViewBag.UnreadIds = meId == null ? new HashSet<int>() : await NotificationHelper.UnreadTargetIdsAsync(_context, meId.Value, "Transfer");
-            ViewBag.ReadIds = meId == null ? new HashSet<int>() : await NotificationHelper.ReadTargetIdsAsync(_context, meId.Value, "Transfer");
             return View(shown);
         }
 
@@ -199,10 +196,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             await UnitStatusHelper.RefreshAsync(_context, requestedUnitID);
             await _context.SaveChangesAsync();
 
-            await NotificationHelper.NotifyAdminsAsync(_context, "Transfer",
-                isApplication ? $"{tenant.FullName} applied for a unit." : $"{tenant.FullName} requested a unit transfer.",
-                "/Transfers", newRequest.TransferID);
-
             TempData["Success"] = isApplication
                 ? "Your unit application has been submitted."
                 : "Your unit transfer request has been submitted.";
@@ -281,13 +274,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             await _context.SaveChangesAsync();
 
             string verb = isApplication ? "assigned to" : "moved to";
-            if (tenant.UserID != null)
-                await NotificationHelper.CreateAsync(_context, tenant.UserID.Value, "Transfer",
-                    $"Your unit request was approved — you've been {verb} unit {target.UnitNumber}.", "/Transfers", req.TransferID);
-
-            var approverId = CurrentUserID();
-            if (approverId != null) await NotificationHelper.MarkRecordReadAsync(_context, approverId.Value, "Transfer", req.TransferID);
-
             TempData["Success"] = $"{tenant.FullName} was {verb} unit {target.UnitNumber}.";
             return RedirectToAction(nameof(Index));
         }
@@ -314,14 +300,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             // release the reservation on the requested unit
             await UnitStatusHelper.RefreshAsync(_context, req.RequestedUnitID);
             await _context.SaveChangesAsync();
-
-            var rejectedTenant = await _context.tblTenants.FindAsync(req.TenantID);
-            if (rejectedTenant?.UserID != null)
-                await NotificationHelper.CreateAsync(_context, rejectedTenant.UserID.Value, "Transfer",
-                    "Your unit transfer request was rejected." + (string.IsNullOrEmpty(adminNotes) ? "" : $" Note: {adminNotes}"), "/Transfers", req.TransferID);
-
-            var reviewerId = CurrentUserID();
-            if (reviewerId != null) await NotificationHelper.MarkRecordReadAsync(_context, reviewerId.Value, "Transfer", req.TransferID);
 
             TempData["Success"] = "Transfer request rejected.";
             return RedirectToAction(nameof(Index));

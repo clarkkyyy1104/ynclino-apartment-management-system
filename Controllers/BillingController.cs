@@ -102,12 +102,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             ViewBag.StatusFilter = statusFilter;
             ViewBag.SearchTerm = searchTerm;
-            var uid = CurrentUserID();
-            ViewBag.UnreadIds = uid == null ? new HashSet<int>()
-                : await NotificationHelper.UnreadTargetIdsAsync(_context, uid.Value, "Billing");
-            ViewBag.ReadIds = uid == null ? new HashSet<int>()
-                : await NotificationHelper.ReadTargetIdsAsync(_context, uid.Value, "Billing");
-
             return View(await query.OrderByDescending(b => b.BillingPeriod).ToListAsync());
         }
 
@@ -255,9 +249,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 if (tenant == null || billing.TenantID != tenant.TenantID) return Forbid();
             }
 
-            var uid = CurrentUserID();
-            if (uid != null) await NotificationHelper.MarkRecordReadAsync(_context, uid.Value, "Billing", billing.BillingID);
-
             // A fully paid bill sends the admin here instead of Edit, so this page has to
             // show the whole money story on its own: every payment that settled the bill,
             // and any change from an overpayment that is now held as advance payment.
@@ -316,13 +307,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             // if the tenant is holding advance payment, use it on this new bill
             decimal usedAdvance = await UseAdvanceCreditAsync(billing);
-
-            // let the tenant know a new bill was issued
-            var billedTenant = await _context.tblTenants.FirstOrDefaultAsync(t => t.TenantID == vm.TenantID);
-            if (billedTenant?.UserID != null)
-                await NotificationHelper.CreateAsync(_context, billedTenant.UserID.Value, "Billing",
-                    $"A bill of ₱{billing.AmountDue:N0} for {period:MMMM yyyy} was issued (due {billing.DueDate:MMM dd}).",
-                    $"/Billing/Details/{billing.BillingID}", billing.BillingID);
 
             TempData["Success"] = usedAdvance > 0
                 ? $"Billing record created. ₱{usedAdvance:N0} of advance payment was applied automatically."
@@ -623,13 +607,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
                         extra = $" ₱{toAdvance:N0} became advance payment and will be deducted from the next bill.";
                     }
                 }
-
-                // tell the tenant their payment was posted
-                var payer = await _context.tblTenants.FirstOrDefaultAsync(t => t.TenantID == billing.TenantID);
-                if (payer?.UserID != null)
-                    await NotificationHelper.CreateAsync(_context, payer.UserID.Value, "Billing",
-                        $"Payment of ₱{paidNow:N0} received for {billing.BillingPeriod:MMMM yyyy}. Remaining balance: ₱{balanceAfter:N0}.{extra}",
-                        $"/Billing/Details/{billing.BillingID}", billing.BillingID);
 
                 TempData["Success"] = (balanceAfter <= 0
                     ? $"Payment of ₱{paidNow:N0} recorded. This bill is now fully paid."

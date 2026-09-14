@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using YnclinoApartmentManagementSystem.Data;
 using YnclinoApartmentManagementSystem.Models;
@@ -11,6 +12,28 @@ namespace YnclinoApartmentManagementSystem.Services
         public SystemNotificationService(ApplicationDbContext context)
         {
             _context = context;
+        }
+
+        // Convenience wrapper: works out the user id and the role from the
+        // signed-in principal, so callers don't each repeat that. Returns an
+        // empty list when nobody is signed in or the role isn't one we serve.
+        public Task<List<SystemNotification>> ForCurrentUserAsync(ClaimsPrincipal user)
+        {
+            if (!int.TryParse(user.FindFirstValue(ClaimTypes.NameIdentifier), out int userId))
+                return Task.FromResult(new List<SystemNotification>());
+
+            var role = user.IsInRole("Admin")
+                ? "Admin"
+                : user.IsInRole("Maintenance")
+                    ? "Maintenance"
+                    : user.IsInRole("Tenant")
+                        ? "Tenant"
+                        : string.Empty;
+
+            if (string.IsNullOrEmpty(role))
+                return Task.FromResult(new List<SystemNotification>());
+
+            return GetNotificationsAsync(userId, role);
         }
 
         public async Task<List<SystemNotification>> GetNotificationsAsync(

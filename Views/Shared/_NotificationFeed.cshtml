@@ -1,18 +1,19 @@
-@model IEnumerable<YnclinoApartmentManagementSystem.Models.tblNotification>
+@model IEnumerable<YnclinoApartmentManagementSystem.Models.SystemNotification>
 @*
-    The unread-notification feed, shared by all three dashboards so the admin,
-    the tenant and the maintenance staff see exactly the same thing.
+    The dashboard feed, shared by all three dashboards so the admin, the tenant
+    and the maintenance staff see exactly the same thing.
 
-    Only UNREAD notifications are passed in. Opening one marks it read, so it
-    disappears from here on the next page load.
+    There is no notifications table any more, so nothing here is "read" or
+    "unread" and there is nothing to mark off. SystemNotificationService works
+    each line out from the records, so a line disappears when the work behind it
+    is done — the bill is settled, the request is closed.
 
-    Usage:  <partial name="_NotificationFeed" model="Model.Unread" />
+    Usage:  <partial name="_NotificationFeed" model="Model.Notifications" />
 *@
 @{
-    var unread = (Model ?? new List<YnclinoApartmentManagementSystem.Models.tblNotification>()).ToList();
+    var notes = (Model ?? Enumerable.Empty<YnclinoApartmentManagementSystem.Models.SystemNotification>()).ToList();
 
-
-    // the database stores "LostFound"; people read "Lost & Found"
+    // the records say "LostFound" and "Transfer"; people read something friendlier
     string NoteLabel(string module) => module switch
     {
         "LostFound" => "Lost & Found",
@@ -23,46 +24,28 @@
 
 <div data-panel>
     <div data-panel-head>
-        <span>Notifications</span>
-        <a asp-controller="Notifications" asp-action="index">
-            <span>Show All</span>
-        </a>
-        @if (unread.Count > 0)
-        {
-            <form asp-controller="Notifications" asp-action="MarkAllRead" method="post">
-                @Html.AntiForgeryToken()
-                <button type="submit">Mark all as read</button>
-            </form>
-        }
+        <span>Needs attention</span>
     </div>
 
-    @if (unread.Count == 0)
+    @if (notes.Count == 0)
     {
         <div data-panel-body data-empty>
-            <p>You're all caught up.</p>
-            <p>New requests, payments and updates will show up here.</p>
+            <p>Nothing is waiting on you right now.</p>
+            <p>Unpaid bills, open requests and pending approvals will show up here on their own.</p>
         </div>
     }
     else
     {
         <div data-panel-body>
-            @foreach (var n in unread)
+            @foreach (var n in notes)
             {
-                @* the same row shape as the Notifications page, so a feed entry and
-                   a list entry read identically wherever the reader meets them *@
-                <a data-note data-unread="true" href="/Notifications/Open/@n.NotificationID">
+                <a data-note data-unread="true" href="@(n.Link ?? "#")">
                     <div>
                         <span data-module>@NoteLabel(n.Module)</span>
                         <span data-message>@n.Message</span>
                     </div>
-                    <div data-meta>
-                        <span>@n.CreatedAt.ToString("MMM dd, h:mm tt")</span>
-                    </div>
                 </a>
             }
-        </div>
-        <div>
-            <a asp-controller="Notifications" asp-action="Index">See all notifications</a>
         </div>
     }
 </div>

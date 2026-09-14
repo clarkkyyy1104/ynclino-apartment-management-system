@@ -4,25 +4,52 @@
 }
 
 <div>
+    <h4>Welcome, @(Model.Tenant?.FullName ?? User.Identity?.Name)</h4>
+    <p>
+        @if (Model.TotalNotifications > 0)
+        {
+            <text>There @(Model.TotalNotifications == 1 ? "is 1 thing" : $"are {Model.TotalNotifications} things") below that still needs you.</text>
+        }
+        else
+        {
+            <text>Nothing needs your attention right now.</text>
+        }
+    </p>
+</div>
+
+@* The three facts a tenant actually opens this page for: which unit is theirs,
+   what they owe, and what they have paid ahead. *@
+<div data-stats>
     <div>
-        <h4>Welcome, @(Model.Tenant?.FullName ?? User.Identity?.Name)</h4>
-        <p>
-            @if (Model.TotalUnread > 0)
-            {
-                <text>You have <strong>@Model.TotalUnread</strong> unread notification@(Model.TotalUnread > 1 ? "s" : "").</text>
-            }
-            else
-            {
-                <text>Nothing needs your attention right now.</text>
-            }
-        </p>
+        <div data-stat>
+            <div>
+                <div>My Unit</div>
+                <div>@(Model.Tenant?.Unit?.UnitNumber ?? "—")</div>
+            </div>
+            <div></div>
+        </div>
+    </div>
+    <div>
+        <div data-stat>
+            <div>
+                <div>Balance Due</div>
+                <div>₱@Model.Outstanding.ToString("N2")</div>
+            </div>
+            <div></div>
+        </div>
+    </div>
+    <div>
+        <div data-stat>
+            <div>
+                <div>Paid in Advance</div>
+                <div>₱@Model.AdvanceCredit.ToString("N2")</div>
+            </div>
+            <div></div>
+        </div>
     </div>
 </div>
 
+@* the same panel the admin and staff dashboards show *@
 <div>
-
-    @* ── Main column: the notification feed ── *@
-    <div>
-        <partial name="_NotificationFeed" model="Model.Unread" />
-    </div>
+    <partial name="_NotificationFeed" model="Model.Notifications" />
 </div>

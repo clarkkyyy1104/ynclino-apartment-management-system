@@ -4,8 +4,6 @@
     bool isAdmin = User.IsInRole("Admin");
     bool isStaff = User.IsInRole("Maintenance");
     bool archived = ViewBag.Archived == true;
-    var unreadIds = ViewBag.UnreadIds as HashSet<int> ?? new HashSet<int>();
-    var readIds = ViewBag.ReadIds as HashSet<int> ?? new HashSet<int>();
 }
 
 @await Component.InvokeAsync("ModuleNotifications", new { module = "Maintenance" })

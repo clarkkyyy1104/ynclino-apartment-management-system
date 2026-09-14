@@ -7,10 +7,10 @@
 --  on branch crud(copy).
 --
 --  Tables are ordered so that every foreign key target already exists.
---  10 tables:
+--  9 tables:
 --    tblUsers  ->  tblUnits  ->  tblTenants  ->  tblBillings  ->  tblPayments
 --    tblMaintenanceRequests, tblUnitTransferRequests,
---    tblLostFoundItems -> tblClaimRequests, tblNotifications
+--    tblLostFoundItems -> tblClaimRequests
 -- =====================================================================
 
 CREATE DATABASE IF NOT EXISTS `YnclinoApartmentManagementSystemDb`
@@ -244,20 +244,3 @@ CREATE TABLE `tblClaimRequests` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
--- ---------------------------------------------------------------------
--- 10. tblNotifications — the alert feed shown on every dashboard
--- ---------------------------------------------------------------------
-CREATE TABLE `tblNotifications` (
-  `NotificationID` int(11)      NOT NULL AUTO_INCREMENT,
-  `UserID`         int(11)      NOT NULL,
-  `Module`         varchar(30)  NOT NULL,   -- Billing | Maintenance | LostFound | Transfers | Tenants
-  `Message`        varchar(300) NOT NULL,
-  `Link`           varchar(300) DEFAULT NULL,
-  `TargetId`       int(11)      DEFAULT NULL,  -- the record this alert points at
-  `IsRead`         tinyint(1)   NOT NULL,
-  `CreatedAt`      datetime(6)  NOT NULL,
-  PRIMARY KEY (`NotificationID`),
-  KEY `IX_tblNotifications_UserID_IsRead` (`UserID`,`IsRead`),
-  CONSTRAINT `FK_tblNotifications_tblUsers_UserID`
-      FOREIGN KEY (`UserID`) REFERENCES `tblUsers` (`UserID`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

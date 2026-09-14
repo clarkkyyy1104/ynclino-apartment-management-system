@@ -2,8 +2,6 @@
 @{
     ViewData["Title"] = "Lost & Found";
     bool isAdmin = User.IsInRole("Admin");
-    var unreadIds = ViewBag.UnreadIds as HashSet<int> ?? new HashSet<int>();
-    var readIds = ViewBag.ReadIds as HashSet<int> ?? new HashSet<int>();
 }
 
 @await Component.InvokeAsync("ModuleNotifications", new { module = "LostFound" })

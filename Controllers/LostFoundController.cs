@@ -68,8 +68,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             ViewBag.SearchTerm = searchTerm;
             var meId = CurrentUserID();
             ViewBag.CurrentUserID = meId;
-            ViewBag.UnreadIds = meId == null ? new HashSet<int>() : await NotificationHelper.UnreadTargetIdsAsync(_context, meId.Value, "LostFound");
-            ViewBag.ReadIds = meId == null ? new HashSet<int>() : await NotificationHelper.ReadTargetIdsAsync(_context, meId.Value, "LostFound");
 
             return View(await query.OrderByDescending(l => l.DateReported).ToListAsync());
         }
@@ -90,9 +88,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             if (User.IsInRole("Tenant") && item.ItemType != "Found" && item.ReportedByUserID != CurrentUserID())
                 return Forbid();
-
-            var meId = CurrentUserID();
-            if (meId != null) await NotificationHelper.MarkRecordReadAsync(_context, meId.Value, "LostFound", item.ItemID);
 
             if (User.IsInRole("Admin"))
             {
@@ -381,10 +376,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             _context.tblClaimRequests.Add(claim);
             await _context.SaveChangesAsync();
 
-            await NotificationHelper.NotifyAdminsAsync(_context, "LostFound",
-                $"New ownership claim on \"{item.ItemName}\".",
-                $"/LostFound/Details/{item.ItemID}", item.ItemID);
-
             TempData["Success"] = "Your claim has been submitted. An admin will review it.";
             return RedirectToAction(nameof(Index));
         }
@@ -432,10 +423,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             }
 
             await _context.SaveChangesAsync();
-
-            await NotificationHelper.CreateAsync(_context, claim.ClaimantUserID, "LostFound",
-                $"Your claim on \"{claim.Item?.ItemName}\" was {decision.ToLower()}." + (string.IsNullOrEmpty(adminNotes) ? "" : $" Note: {adminNotes}"),
-                $"/LostFound/Details/{claim.ItemID}", claim.ItemID);
 
             TempData["Success"] = $"Claim has been {decision.ToLower()}.";
             return RedirectToAction(nameof(Details), new { id = claim.ItemID });

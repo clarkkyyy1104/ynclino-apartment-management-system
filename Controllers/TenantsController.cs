@@ -519,9 +519,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             await _context.tblUnitTransferRequests
                 .Where(r => r.TenantID == id).ExecuteDeleteAsync();
 
-            if (userId != null)
-                await _context.tblNotifications.Where(n => n.UserID == userId).ExecuteDeleteAsync();
-
             _context.tblTenants.Remove(tenant);
             await _context.SaveChangesAsync();
 
@@ -548,8 +545,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             ViewBag.PaymentCount = await _context.tblPayments.CountAsync(p => p.Billing!.TenantID == id);
             ViewBag.MaintenanceCount = await _context.tblMaintenanceRequests.CountAsync(m => m.TenantID == id);
             ViewBag.TransferCount = await _context.tblUnitTransferRequests.CountAsync(r => r.TenantID == id);
-            ViewBag.NotificationCount = tenant.UserID == null ? 0
-                : await _context.tblNotifications.CountAsync(n => n.UserID == tenant.UserID);
             ViewBag.LostFoundCount = tenant.UserID == null ? 0
                 : await _context.tblLostFoundItems.CountAsync(l => l.ReportedByUserID == tenant.UserID || l.ClaimedByUserID == tenant.UserID)
                 + await _context.tblClaimRequests.CountAsync(c => c.ClaimantUserID == tenant.UserID);

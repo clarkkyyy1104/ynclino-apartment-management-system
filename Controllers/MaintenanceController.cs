@@ -101,10 +101,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             ViewBag.StatusFilter = statusFilter;
             ViewBag.SearchTerm = searchTerm;
             ViewBag.Archived = archived;
-            var uid = CurrentUserID();
-            ViewBag.UnreadIds = uid == null ? new HashSet<int>() : await NotificationHelper.UnreadTargetIdsAsync(_context, uid.Value, "Maintenance");
-            ViewBag.ReadIds = uid == null ? new HashSet<int>() : await NotificationHelper.ReadTargetIdsAsync(_context, uid.Value, "Maintenance");
-
             return View(await query.OrderByDescending(m => m.DateSubmitted).ToListAsync());
         }
 
@@ -233,14 +229,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             _context.tblMaintenanceRequests.Add(request);
             await _context.SaveChangesAsync();
 
-            // a tenant-submitted request alerts the administrators
-            if (User.IsInRole("Tenant"))
-            {
-                await NotificationHelper.NotifyAdminsAsync(_context, "Maintenance",
-                    $"New {vm.Category} maintenance request from {owner?.FullName}.",
-                    $"/Maintenance/Details/{request.RequestID}", request.RequestID);
-            }
-
             TempData["Success"] = "Maintenance request submitted.";
             return RedirectToAction(nameof(Index));
         }
@@ -338,8 +326,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 return View(vm);
             }
 
-            var previousStatus = request.Status;
-            var previousStaff = request.AssignedStaffID;
 
             request.Category = vm.Category;
             request.Description = vm.Description ?? string.Empty;
@@ -356,18 +342,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 request.DateResolved = null;
 
             await _context.SaveChangesAsync();
-
-            // tell the tenant when staff change the status of their request
-            if (request.Tenant?.UserID != null && previousStatus != request.Status)
-                await NotificationHelper.CreateAsync(_context, request.Tenant.UserID.Value, "Maintenance",
-                    $"Your {request.Category} request was updated to \"{request.Status}\".",
-                    $"/Maintenance/Details/{request.RequestID}", request.RequestID);
-
-            // tell the staff member the moment a job lands on their plate
-            if (request.AssignedStaffID != null && request.AssignedStaffID != previousStaff)
-                await NotificationHelper.CreateAsync(_context, request.AssignedStaffID.Value, "Maintenance",
-                    $"You have been assigned a {request.Priority} {request.Category} request.",
-                    $"/Maintenance/Details/{request.RequestID}", request.RequestID);
 
             TempData["Success"] = "Maintenance request updated.";
             return RedirectToAction(nameof(Index));
@@ -456,7 +430,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 return View(vm);
             }
 
-            var previousStatus = request.Status;
 
             // ONLY these three fields — a staff member cannot change the category,
             // the priority, the tenant, or who the job is assigned to
@@ -467,18 +440,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 request.DateResolved = DateTime.Now;
 
             await _context.SaveChangesAsync();
-
-            if (previousStatus != request.Status)
-            {
-                if (request.Tenant?.UserID != null)
-                    await NotificationHelper.CreateAsync(_context, request.Tenant.UserID.Value, "Maintenance",
-                        $"Your {request.Category} request was updated to \"{request.Status}\".",
-                        $"/Maintenance/Details/{request.RequestID}", request.RequestID);
-
-                await NotificationHelper.NotifyAdminsAsync(_context, "Maintenance",
-                    $"{User.Identity?.Name} marked a {request.Category} request as \"{request.Status}\".",
-                    $"/Maintenance/Details/{request.RequestID}", request.RequestID);
-            }
 
             TempData["Success"] = "Request updated.";
             return RedirectToAction(nameof(Index));

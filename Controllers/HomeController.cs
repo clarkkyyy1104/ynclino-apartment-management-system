@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using YnclinoApartmentManagementSystem.Data;
 using YnclinoApartmentManagementSystem.Models;
 using YnclinoApartmentManagementSystem.Models.ViewModels;
+using YnclinoApartmentManagementSystem.Services;
 
 namespace YnclinoApartmentManagementSystem.Controllers
 {
@@ -12,25 +13,19 @@ namespace YnclinoApartmentManagementSystem.Controllers
     public class HomeController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly SystemNotificationService _notificationService;
 
-        public HomeController(ApplicationDbContext context)
+        public HomeController(ApplicationDbContext context, SystemNotificationService notificationService)
         {
             _context = context;
+            _notificationService = notificationService;
         }
 
-        // the unread notifications for whoever is signed in — every dashboard shows
-        // the same feed, so they all read from here
-        private async Task<List<tblNotification>> MyUnreadAsync()
-        {
-            if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int uid))
-                return new List<tblNotification>();
-
-            return await _context.tblNotifications
-                .Where(n => n.UserID == uid && !n.IsRead)
-                .OrderByDescending(n => n.CreatedAt)
-                .Take(20)
-                .ToListAsync();
-        }
+        // What still needs the signed-in user — every dashboard shows the same
+        // panel, so they all read from here. It is worked out from the records
+        // themselves, so it clears when the work is done.
+        private Task<List<SystemNotification>> MyNotificationsAsync() =>
+            _notificationService.ForCurrentUserAsync(User);
 
         public async Task<IActionResult> Index()
         {
@@ -44,7 +39,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 ViewBag.ActiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Active");
                 ViewBag.InactiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Inactive");
                 ViewBag.TotalUsers = await _context.tblUsers.CountAsync(u => u.IsActive);
-                ViewBag.Unread = await MyUnreadAsync();
+                ViewBag.Notifications = await MyNotificationsAsync();
                 return View("AdminDashboard");
             }
             else if (User.IsInRole("Maintenance"))
@@ -71,7 +66,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                     ResolvedCount = mine.Count(m => m.Status == "Resolved")
                 };
                 vm.UrgentCount = vm.MyOpenRequests.Count(m => m.Priority == "Urgent");
-                ViewBag.Unread = await MyUnreadAsync();
+                ViewBag.Notifications = await MyNotificationsAsync();
 
                 return View("StaffDashboard", vm);
             }
@@ -86,13 +81,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                         .Include(t => t.Unit)
                         .FirstOrDefaultAsync(t => t.UserID == userId && t.Status == "Active");
 
-                    // Only UNREAD notifications reach the dashboard. Opening one marks
-                    // it read, so it disappears from here on the next page load.
-                    vm.Unread = await _context.tblNotifications
-                        .Where(n => n.UserID == userId && !n.IsRead)
-                        .OrderByDescending(n => n.CreatedAt)
-                        .Take(20)
-                        .ToListAsync();
+                    vm.Notifications = await MyNotificationsAsync();
 
                     if (vm.Tenant != null)
                     {
