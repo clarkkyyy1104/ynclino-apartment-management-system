@@ -21,22 +21,17 @@
                     }
 
                     <div>
-                        <label asp-for="ItemType"></label>
-                        <select asp-for="ItemType">
-                            <option>Lost</option>
-                            <option>Found</option>
-                        </select>
-                    </div>
-
-                    <div>
                         <label asp-for="ItemName"></label>
                         <input asp-for="ItemName" />
                         <span asp-validation-for="ItemName"></span>
                     </div>
 
                     <div>
-                        <label asp-for="Description"></label>
-                        <textarea asp-for="Description" rows="2"></textarea>
+                        <label asp-for="ItemType"></label>
+                        <select asp-for="ItemType">
+                            <option>Lost</option>
+                            <option>Found</option>
+                        </select>
                     </div>
 
                     <div>
@@ -79,6 +74,11 @@
                         <input asp-for="ImageUpload" type="file" accept="image/*" />
                         <div>Upload to replace the current photo. JPG, PNG, GIF, or WEBP — up to 5 MB.</div>
                         <span asp-validation-for="ImageUpload"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="Description"></label>
+                        <textarea asp-for="Description" rows="2"></textarea>
                     </div>
 
                     <div data-actions-row>

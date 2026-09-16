@@ -8,7 +8,7 @@
     @* Applied before anything is drawn, so a collapsed rail does not flash open
        on every page load. *@
     <script>
-        try { if (localStorage.getItem('ynclino-rail') === '1') document.documentElement.setAttribute('data-rail', ''); } catch (e) { }
+        try { if (localStorage.getItem('ynclino-rail') !== '0') document.documentElement.setAttribute('data-rail', ''); } catch (e) { }
     </script>
 </head>
 <body>
@@ -54,7 +54,6 @@
                         <span data-nav-icon="units"></span>
                         <span data-nav-label>Units</span>
                         @await Component.InvokeAsync("NavAlert", new { module = "Transfer" })
-                        <span data-caret>&#9662;</span>
                     </a>
                     <div id="unitsGroup" hidden="@(unitsOpen ? null : "hidden")">
                         <div>
@@ -95,7 +94,6 @@
                         <span data-nav-icon="billing"></span>
                         <span data-nav-label>Billing and Payment</span>
                         @await Component.InvokeAsync("NavAlert", new { module = "Billing" })
-                        <span data-caret>&#9662;</span>
                     </a>
                     <div id="billingGroup" hidden="@(billingOpen ? null : "hidden")">
                         <div>
@@ -134,23 +132,48 @@
                top of the page, so the first thing at the top of every module is
                that module's own heading. *@
             <div data-account>
-                <img src="images/icons/logout.svg">
+                @if (isStaff && !isAdmin)
+                {
+                    <div class="maintenanceProfileCard" data-account-card title="My Profile">
+                    <span data-nav-icon="profile"></span>
+                    <span data-account-text>
+                        <span>@User.Identity?.Name</span>
+                        @if(isAdmin){ <span/> }
+                        else{<span>@(isAdmin ? "Admin" : isStaff ? "Maintenance Staff" : "Tenant")</span>}
+                    </span>
+                    </div>
+                    @* a form, not a link: Logout only accepts a POST carrying the token *@
+                    <form asp-controller="Account" asp-action="Logout" method="post" data-logout>
+                        @Html.AntiForgeryToken()
+                        <button type="submit" title="Logout">
+                            <span data-nav-icon="logout"></span>
+                            <span data-nav-label>Logout</span>
+                        </button>
+                    </form>
+                }
+                else 
+                {
+                    <a data-account-card aria-current="@Active("Profile")" asp-controller="Profile" asp-action="Index" title="My Profile">
+                    <span data-nav-icon="profile"></span>
+                    <span data-account-text>
+                        <span>@User.Identity?.Name</span>
+                        @if(isAdmin){ <span/> }
+                        else{<span>@(isAdmin ? "Admin" : isStaff ? "Maintenance Staff" : "Tenant")</span>}
+                    </span>
+                    </a>
+                    @* a form, not a link: Logout only accepts a POST carrying the token *@
+                    <form asp-controller="Account" asp-action="Logout" method="post" data-logout>
+                        @Html.AntiForgeryToken()
+                        <button type="submit" title="Logout">
+                            <span data-nav-icon="logout"></span>
+                            <span data-nav-label>Logout</span>
+                        </button>
+                    </form>
+                }
             </div>
-            <a data-panel-body>
-                @* the initial is all that fits on the rail *@
-                <span><img src="images/icons/profile.svg" alt=""></span>
-                <span data-account-name>@User.Identity.Name</span>
-                @if (!isStaff){}
-                else {<span data-account-role>@(isAdmin ? "Admin" : isStaff ? "Maintenance Staff" : "Tenant")</span>}
-            </a>
         </aside>
 
         <div>
-            <header>
-                <button type="button" data-rail-toggle
-                        title="Collapse the menu" aria-label="Collapse the menu"
-                        aria-expanded="true" aria-controls="appSidebar">&#9776;</button>
-            </header>
             <main>
                 @RenderBody()
             </main>
@@ -164,8 +187,22 @@ else
     </div>
 }
 
+@* The modal every "Add"/"Update" button opens. One shell for the whole system:
+   the button says which page to load, the script below fetches that page and
+   lifts its [data-form-panel] in here. *@
+<dialog data-modal id="appModal" aria-labelledby="appModalTitle">
+    <div data-modal-panel>
+        <div data-modal-head>
+            <span data-modal-title id="appModalTitle"></span>
+            <button type="button" data-modal-close aria-label="Close">&times;</button>
+        </div>
+        <div data-modal-body></div>
+    </div>
+</dialog>
+
     <script src="~/js/ynclino.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+    @* wrapped so the modal script can tell a page's own scripts from the layout's *@
+    <div data-page-scripts>@await RenderSectionAsync("Scripts", required: false)</div>
 
 @* flash messages: data-flash is the hook, ynclino.js removes them after 5s *@
 @if (TempData["Success"] != null)

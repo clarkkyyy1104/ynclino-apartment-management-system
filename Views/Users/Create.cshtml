@@ -9,7 +9,7 @@
             <div data-form-head>
                 <h5>User Management — Add Account</h5>
             </div>
-            <div data-form-body>
+            <div data-form-body data-cols="1">
                 <form asp-action="Create" method="post" id="userForm">
                     @Html.AntiForgeryToken()
                     <div asp-validation-summary="ModelOnly"></div>

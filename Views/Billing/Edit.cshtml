@@ -22,7 +22,6 @@
                     </div>
 
                     @* Bill details are fixed when the bill is issued — shown here, never edited *@
-                    <div>
                         <div>
                             <label>Billing Period (Month)</label>
                             <input value="@Model.BillingPeriod.ToString("MMMM yyyy")" disabled />
@@ -33,7 +32,6 @@
                             <input value="@Model.DueDate.ToString("MMM dd, yyyy")" disabled />
                             <input type="hidden" asp-for="DueDate" value="@Model.DueDate.ToString("yyyy-MM-dd")" />
                         </div>
-                    </div>
                     @* carried so model validation still passes; the controller ignores it *@
                     <input type="hidden" asp-for="AmountDue" />
                     <p>
@@ -41,7 +39,7 @@
                     </p>
 
                     @* running totals — computed from the payments below, never typed *@
-                    <div>
+                    <div data-span>
                         <div>
                             <div>
                                 <div>Amount Due</div>
@@ -83,7 +81,7 @@
 
                     @if (Model.AdvanceCredit > 0)
                     {
-                        <div>
+                        <div data-span>
                             This tenant is holding <strong>₱@Model.AdvanceCredit.ToString("N0")</strong>
                             in advance payment. It is applied automatically to their next bill.
                         </div>
@@ -91,7 +89,7 @@
 
                     @if (Model.Balance <= 0)
                     {
-                        <div>
+                        <div data-span>
                             This bill is fully settled — no further payment is needed.
                         </div>
                     }
@@ -103,7 +101,6 @@
                             and the balance and status update automatically.
                         </p>
 
-                        <div>
                             <div>
                                 <label asp-for="PaymentAmount"></label>
                                 <div>
@@ -122,7 +119,6 @@
                                 <input value="@DateTime.Today.ToString("MMM dd, yyyy")" disabled />
                                 <div>Recorded as today automatically.</div>
                             </div>
-                        </div>
                     }
 
                     <div data-actions-row>

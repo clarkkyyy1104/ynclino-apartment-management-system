@@ -8,7 +8,7 @@
     <div>
         <div data-form-panel>
             <div data-form-head>New Maintenance Request</div>
-            <div data-form-body>
+            <div data-form-body data-cols="@(isAdmin ? "2" : "1")">
                 <form asp-action="Create" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
                     <div asp-validation-summary="All"></div>
@@ -33,7 +33,6 @@
                         </div>
                     }
 
-                    <div>
                         <div>
                             <label asp-for="Category"></label>
                             <select asp-for="Category" id="categorySelect" required>
@@ -60,7 +59,6 @@
                             <span asp-validation-for="Priority"></span>
                         </div>
                         }
-                    </div>
 
                     <div id="descWrap">
                         <label asp-for="Description"></label>

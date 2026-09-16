@@ -13,6 +13,12 @@
                     <div asp-validation-summary="ModelOnly"></div>
 
                     <div>
+                        <label asp-for="ItemName"></label>
+                        <input asp-for="ItemName" placeholder="e.g. Black Wallet, Phone Charger" />
+                        <span asp-validation-for="ItemName"></span>
+                    </div>
+
+                    <div>
                         <label asp-for="ItemType"></label>
                         <select asp-for="ItemType" required>
                             <option value="">— Select —</option>
@@ -23,20 +29,7 @@
                     </div>
 
                     <div>
-                        <label asp-for="ItemName"></label>
-                        <input asp-for="ItemName" placeholder="e.g. Black Wallet, Phone Charger" />
-                        <span asp-validation-for="ItemName"></span>
-                    </div>
-
-                    <div>
-                        <label asp-for="Description"></label>
-                        <textarea asp-for="Description" rows="2"
-                                  placeholder="Color, brand, distinguishing features…"></textarea>
-                        <span asp-validation-for="Description"></span>
-                    </div>
-
-                    <div>
-                        <label asp-for="Location"></label>
+                        <label asp-for="Location">Last Known Location</label>
                         <input asp-for="Location" placeholder="e.g. Lobby, Floor 2 hallway" />
                         <span asp-validation-for="Location"></span>
                     </div>
@@ -44,8 +37,14 @@
                     <div>
                         <label asp-for="ImageUpload"></label>
                         <input asp-for="ImageUpload" type="file" accept="image/*" />
-                        <div>JPG, PNG, GIF, or WEBP — up to 5 MB.</div>
                         <span asp-validation-for="ImageUpload"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="Description"></label>
+                        <textarea asp-for="Description" rows="2"
+                                  placeholder="Color, brand, distinguishing features…"></textarea>
+                        <span asp-validation-for="Description"></span>
                     </div>
 
                     <div data-actions-row>

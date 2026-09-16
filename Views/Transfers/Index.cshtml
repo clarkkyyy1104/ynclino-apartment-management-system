@@ -27,7 +27,7 @@
     <div data-actions>
         @if (!isAdmin && !archived)
         {
-            <a asp-action="Create" data-primary>+ New Request</a>
+            <a data-modal-link asp-action="Create" data-primary>+ New Request</a>
         }
         @* One button, not a pair of tabs: it names the list you are NOT looking
            at, so it always reads as somewhere to go. *@

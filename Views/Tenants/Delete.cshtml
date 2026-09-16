@@ -3,37 +3,23 @@
     ViewData["Title"] = "Archive Tenant";
 }
 
-<div>
-    <div>
-        <div data-panel>
-            <div data-panel-head>Confirm Archive</div>
-            <div data-panel-body>
-                <div>
-                    <strong>Note:</strong> Archiving keeps the record. Their billing and maintenance
-                    history is preserved and the status is set to <em>Inactive</em>; their login is
-                    switched off. To remove them from the database entirely, archive them first and
-                    then use <em>Delete permanently</em>.
+<div data-modal-source data-confirm>
+    <div data-panel>
+        <div data-panel-head>Confirm Archive</div>
+        <div data-panel-body>
+            <p>Are you sure you want to archive <strong>@Model.FullName</strong>?</p>
+            <p data-footnote>
+                Archiving keeps their billing and maintenance history, sets them to Inactive
+                and switches their login off. To remove them from the database entirely,
+                archive them first, then use Delete Permanently.
+            </p>
+            <form asp-action="Delete" method="post">
+                <input type="hidden" name="id" value="@Model.TenantID" />
+                <div data-actions-row>
+                    <button type="submit" data-danger>Yes, Archive</button>
+                    <a asp-action="Index">Cancel</a>
                 </div>
-
-                <p>Are you sure you want to archive this tenant?</p>
-
-                <dl>
-                    <dt>Name</dt>
-                    <dd>@Model.LastName, @Model.FirstName</dd>
-                    <dt>Unit</dt>
-                    <dd>@(Model.Unit?.UnitNumber ?? "—")</dd>
-                    <dt>Status</dt>
-                    <dd>@Model.Status</dd>
-                </dl>
-
-                <form asp-action="Delete" method="post">
-                    <input type="hidden" name="id" value="@Model.TenantID" />
-                    <div data-actions-row>
-                        <button type="submit" data-danger>Yes, Archive</button>
-                        <a asp-action="Index">Cancel</a>
-                    </div>
-                </form>
-            </div>
+            </form>
         </div>
     </div>
 </div>

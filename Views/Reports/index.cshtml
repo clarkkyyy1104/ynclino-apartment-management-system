@@ -71,25 +71,27 @@
                     var rate = Model.OccupancyRate.ToString("F0");
                 }
 
-                <table>
-                    <thead>
-                        <tr><th>Right now</th><th>Units</th><th>Which ones</th><th>Rent a month</th></tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var s in Model.UnitStates)
-                        {
-                            <tr>
-                                <td>
-                                    @s.State
-                                    <div>@s.Meaning</div>
-                                </td>
-                                <td>@s.Count</td>
-                                <td>@(s.Count == 0 ? "none" : string.Join(", ", s.UnitNumbers))</td>
-                                <td>@(s.MonthlyRent > 0 ? "₱" + s.MonthlyRent.ToString("N0") : "—")</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                <div data-table-wrap>
+                    <table>
+                        <thead>
+                            <tr><th>Right now</th><th>Units</th><th>Which ones</th><th>Rent a month</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var s in Model.UnitStates)
+                            {
+                                <tr>
+                                    <td>
+                                        @s.State
+                                        <div>@s.Meaning</div>
+                                    </td>
+                                    <td>@s.Count</td>
+                                    <td>@(s.Count == 0 ? "none" : string.Join(", ", s.UnitNumbers))</td>
+                                    <td>@(s.MonthlyRent > 0 ? "₱" + s.MonthlyRent.ToString("N0") : "—")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
 
                 @if (Model.RentNotBeingEarned > 0)
                 {
@@ -120,22 +122,24 @@
         <div data-panel>
             <div data-panel-head><span>Monthly Income Summary</span></div>
             <div data-panel-body>
-                <table>
-                    <thead>
-                        <tr><th>Month</th><th>Billed</th><th>Collected</th><th>Uncollected</th></tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var m in Model.MonthlyIncome)
-                        {
-                            <tr>
-                                <td>@m.Month.ToString("MMMM yyyy")</td>
-                                <td>₱@m.Billed.ToString("N0")</td>
-                                <td>₱@m.Collected.ToString("N0")</td>
-                                <td>₱@m.Uncollected.ToString("N0")</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                <div data-table-wrap>
+                    <table>
+                        <thead>
+                            <tr><th>Month</th><th>Billed</th><th>Collected</th><th>Uncollected</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var m in Model.MonthlyIncome)
+                            {
+                                <tr>
+                                    <td>@m.Month.ToString("MMMM yyyy")</td>
+                                    <td>₱@m.Billed.ToString("N0")</td>
+                                    <td>₱@m.Collected.ToString("N0")</td>
+                                    <td>₱@m.Uncollected.ToString("N0")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -220,19 +224,21 @@
             <div data-panel>
                 <div data-panel-head><span>Maintenance Records</span></div>
                 <div data-panel-body>
-                    <table>
-                        <thead><tr><th>Status</th><th>Requests</th></tr></thead>
-                        <tbody>
-                            @foreach (var m in Model.MaintenanceByStatus)
-                            {
-                                <tr><td>@m.Status</td><td>@m.Count</td></tr>
-                            }
-                            @if (!Model.MaintenanceByStatus.Any())
-                            {
-                                <tr><td colspan="2">No maintenance requests yet.</td></tr>
-                            }
-                        </tbody>
-                    </table>
+                    <div data-table-wrap>
+                        <table>
+                            <thead><tr><th>Status</th><th>Requests</th></tr></thead>
+                            <tbody>
+                                @foreach (var m in Model.MaintenanceByStatus)
+                                {
+                                    <tr><td>@m.Status</td><td>@m.Count</td></tr>
+                                }
+                                @if (!Model.MaintenanceByStatus.Any())
+                                {
+                                    <tr><td colspan="2">No maintenance requests yet.</td></tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -242,36 +248,38 @@
             <div data-panel>
                 <div data-panel-head><span>Maintenance by Issue Type</span></div>
                 <div data-panel-body>
-                    <table>
-                        <thead>
-                            <tr><th>Issue Type</th><th>Requests</th></tr>
-                        </thead>
-                        <tbody>
-                            @{ int peakRequests = Model.MaintenanceByCategory.Count == 0 ? 1 : Math.Max(Model.MaintenanceByCategory.Max(c => c.Requests), 1); }
-                            @foreach (var c in Model.MaintenanceByCategory)
-                            {
+                    <div data-table-wrap>
+                        <table>
+                            <thead>
+                                <tr><th>Issue Type</th><th>Requests</th></tr>
+                            </thead>
+                            <tbody>
+                                @{ int peakRequests = Model.MaintenanceByCategory.Count == 0 ? 1 : Math.Max(Model.MaintenanceByCategory.Max(c => c.Requests), 1); }
+                                @foreach (var c in Model.MaintenanceByCategory)
+                                {
+                                    <tr>
+                                        <td>
+                                            @c.Category
+                                            <div>
+                                                <div></div>
+                                            </div>
+                                        </td>
+                                        <td>@c.Requests</td>
+                                    </tr>
+                                }
+                                @if (!Model.MaintenanceByCategory.Any())
+                                {
+                                    <tr><td colspan="2">No maintenance requests yet.</td></tr>
+                                }
+                            </tbody>
+                            <tfoot>
                                 <tr>
-                                    <td>
-                                        @c.Category
-                                        <div>
-                                            <div></div>
-                                        </div>
-                                    </td>
-                                    <td>@c.Requests</td>
+                                    <th>Total requests</th>
+                                    <th>@Model.MaintenanceByCategory.Sum(c => c.Requests)</th>
                                 </tr>
-                            }
-                            @if (!Model.MaintenanceByCategory.Any())
-                            {
-                                <tr><td colspan="2">No maintenance requests yet.</td></tr>
-                            }
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <th>Total requests</th>
-                                <th>@Model.MaintenanceByCategory.Sum(c => c.Requests)</th>
-                            </tr>
-                        </tfoot>
-                    </table>
+                            </tfoot>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

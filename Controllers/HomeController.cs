@@ -39,6 +39,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 ViewBag.ActiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Active");
                 ViewBag.InactiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Inactive");
                 ViewBag.TotalUsers = await _context.tblUsers.CountAsync(u => u.IsActive);
+                ViewBag.StaffCount = await _context.tblUsers.CountAsync(u => u.IsActive && u.Role == "Maintenance");
+                ViewBag.AdminCount = await _context.tblUsers.CountAsync(u => u.IsActive && u.Role == "Admin");
                 ViewBag.Notifications = await MyNotificationsAsync();
                 return View("AdminDashboard");
             }

@@ -20,12 +20,12 @@
                     <button type="submit">Load Sample Data</button>
                 </form>
             }
-            <a data-primary asp-action="Create">+ Add Unit</a>
+            <a data-modal-link data-primary asp-action="Create">+ Add Unit</a>
         </div>
     }
     @if (isTenant)
     {
-        <a asp-controller="Transfers" asp-action="Create">+ Request Transfer</a>
+        <a data-modal-link asp-controller="Transfers" asp-action="Create">+ Request Transfer</a>
     }
 </div>
 
@@ -81,11 +81,11 @@
                         <span>@unit.Status</span>
                     </td>
                     <td>
-                        <a asp-action="Details" asp-route-id="@unit.UnitID" title="View" aria-label="View"><img src="/images/icons/view.svg"/></a>
+                        <a data-modal-link asp-action="Details" asp-route-id="@unit.UnitID" title="View" aria-label="View"><img src="/images/icons/view.svg"/></a>
                         @if (isStaff)
                         {
-                            <a asp-action="Edit" asp-route-id="@unit.UnitID">Update</a>
-                            <a asp-action="Delete" asp-route-id="@unit.UnitID">Delete</a>
+                            <a data-modal-link asp-action="Edit" asp-route-id="@unit.UnitID">Update</a>
+                            <a data-modal-link asp-action="Delete" asp-route-id="@unit.UnitID">Delete</a>
                         }
                     </td>
                 </tr>

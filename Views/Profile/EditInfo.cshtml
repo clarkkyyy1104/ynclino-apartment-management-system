@@ -1,0 +1,62 @@
+@model YnclinoApartmentManagementSystem.Models.ViewModels.ProfileInfoViewModel
+@{
+    ViewData["Title"] = "Edit Personal Information";
+}
+
+<div data-form-panel>
+    <div data-form-head>Edit Personal Information</div>
+    <div data-form-body data-cols="inline">
+        <form asp-action="EditInfo" method="post">
+            <div asp-validation-summary="ModelOnly"></div>
+
+            <div>
+                <label asp-for="FirstName"></label>
+                <input asp-for="FirstName" />
+                <span asp-validation-for="FirstName"></span>
+            </div>
+            <div>
+                <label asp-for="LastName"></label>
+                <input asp-for="LastName" />
+                <span asp-validation-for="LastName"></span>
+            </div>
+            <div>
+                <label asp-for="ContactNumber"></label>
+                <input asp-for="ContactNumber" inputmode="numeric" maxlength="11" placeholder="e.g. 09123456789" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+                <span asp-validation-for="ContactNumber"></span>
+            </div>
+            <div>
+                <label asp-for="EmergencyContactName"></label>
+                <input asp-for="EmergencyContactName" placeholder="Full name" />
+                <span asp-validation-for="EmergencyContactName"></span>
+            </div>
+            <div>
+                <label asp-for="EmergencyContactRelationship"></label>
+                <select asp-for="EmergencyContactRelationship">
+                    <option value="">Relationship…</option>
+                    <option>Parent</option>
+                    <option>Spouse</option>
+                    <option>Sibling</option>
+                    <option>Child</option>
+                    <option>Relative</option>
+                    <option>Friend</option>
+                    <option>Guardian</option>
+                    <option>Other</option>
+                </select>
+            </div>
+            <div>
+                <label asp-for="EmergencyContactNumber"></label>
+                <input asp-for="EmergencyContactNumber" inputmode="numeric" maxlength="11" placeholder="e.g. 09181234567" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+                <span asp-validation-for="EmergencyContactNumber"></span>
+            </div>
+
+            <div data-actions-row>
+                <button type="submit">Save Changes</button>
+                <a asp-action="Index">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

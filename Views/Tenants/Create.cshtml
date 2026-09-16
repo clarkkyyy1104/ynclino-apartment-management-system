@@ -15,65 +15,59 @@
                     <h6>Tenant Profile</h6>
 
                     <div>
-                        <div>
-                            <label asp-for="FirstName"></label>
-                            <input asp-for="FirstName" id="firstNameInput" placeholder="First name" />
-                            <span asp-validation-for="FirstName"></span>
-                        </div>
-                        <div>
-                            <label asp-for="LastName"></label>
-                            <input asp-for="LastName" id="lastNameInput" placeholder="Last name" />
-                            <span asp-validation-for="LastName"></span>
-                        </div>
+                        <label asp-for="FirstName"></label>
+                        <input asp-for="FirstName" id="firstNameInput" placeholder="First name" />
+                        <span asp-validation-for="FirstName"></span>
+                    </div>
+                    <div>
+                        <label asp-for="LastName"></label>
+                        <input asp-for="LastName" id="lastNameInput" placeholder="Last name" />
+                        <span asp-validation-for="LastName"></span>
                     </div>
 
-                    <div>
-                        <label asp-for="UnitID"></label>
-                        <select asp-for="UnitID" asp-items="Model.AvailableUnits">
-                            <option value="">— Select Unit —</option>
-                        </select>
-                        <span asp-validation-for="UnitID"></span>
-                    </div>
-
+                    @* left: the unit and the tenant's own number; right: who to call *@
                     <div>
                         <div>
-                            <div>
-                                <label asp-for="ContactNumber"></label>
-                                <input asp-for="ContactNumber" id="contactInput" inputmode="numeric" minlength="11" maxlength="11" placeholder="e.g. 09123456789" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
-                                <span asp-validation-for="ContactNumber"></span>
-                            </div>
+                            <label asp-for="UnitID"></label>
+                            <select asp-for="UnitID" asp-items="Model.AvailableUnits">
+                                <option value="">— Select Unit —</option>
+                            </select>
+                            <span asp-validation-for="UnitID"></span>
                         </div>
                         <div>
-                            <div>
-                                <label>Emergency Contact</label>
-                                <div>
-                                    <input asp-for="EmergencyContactName" placeholder="Full name" />
-                                    <span asp-validation-for="EmergencyContactName"></span>
-                                </div>
-                                <div>
-                                    <select asp-for="EmergencyContactRelationship">
-                                        <option value="">Relationship…</option>
-                                        <option>Parent</option>
-                                        <option>Spouse</option>
-                                        <option>Sibling</option>
-                                        <option>Child</option>
-                                        <option>Relative</option>
-                                        <option>Friend</option>
-                                        <option>Guardian</option>
-                                        <option>Other</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <input asp-for="EmergencyContactNumber" inputmode="numeric" minlength="11" maxlength="11" placeholder="e.g. 09181234567" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
-                                    <span asp-validation-for="EmergencyContactNumber"></span>
-                                </div>
-                            </div>
+                            <label asp-for="ContactNumber"></label>
+                            <input asp-for="ContactNumber" id="contactInput" inputmode="numeric" minlength="11" maxlength="11" placeholder="e.g. 09123456789" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+                            <span asp-validation-for="ContactNumber"></span>
+                        </div>
+                    </div>
+                    <div>
+                        <label>Emergency Contact</label>
+                        <div>
+                            <input asp-for="EmergencyContactName" placeholder="Full name" />
+                            <span asp-validation-for="EmergencyContactName"></span>
+                        </div>
+                        <div>
+                            <select asp-for="EmergencyContactRelationship">
+                                <option value="">Relationship…</option>
+                                <option>Parent</option>
+                                <option>Spouse</option>
+                                <option>Sibling</option>
+                                <option>Child</option>
+                                <option>Relative</option>
+                                <option>Friend</option>
+                                <option>Guardian</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <input asp-for="EmergencyContactNumber" inputmode="numeric" minlength="11" maxlength="11" placeholder="e.g. 09181234567" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+                            <span asp-validation-for="EmergencyContactNumber"></span>
                         </div>
                     </div>
                     
                     <h6>Login Account</h6>
 
-                    <div>
+                    <div data-span>
                         <label>Username <span>(auto-generated)</span></label>
                         <input type="text" id="usernameDisplay" readonly
                                value="@($"{DateTime.Now:yy}-{DateTime.Now:MM}")" />
@@ -82,7 +76,7 @@
                         <span asp-validation-for="Username"></span>
                     </div>
 
-                    <div>
+                    <div data-span>
                         <label asp-for="Password"></label>
                         <div>
                             <input asp-for="Password" id="pw" autocomplete="new-password" oninput="checkStrength(this.value)" />
@@ -102,7 +96,7 @@
                         <li id="r-special"><span></span> At least one special character (!&#64;#$%^&amp;*)</li>
                     </ul>
 
-                    <div>
+                    <div data-span>
                         <label asp-for="ConfirmPassword"></label>
                         <div>
                             <input asp-for="ConfirmPassword" id="cpw" autocomplete="new-password" />

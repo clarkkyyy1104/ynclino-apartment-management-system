@@ -3,7 +3,7 @@
     ViewData["Title"] = "Request Details";
 }
 
-<div>
+<div data-modal-source>
     <div>
         <div data-panel>
             <div data-panel-head>
@@ -84,7 +84,7 @@
                     @if (User.IsInRole("Maintenance") &&
                          !YnclinoApartmentManagementSystem.Helpers.StatusFlowHelper.IsClosedMaintenance(Model.Status))
                     {
-                        <a asp-action="Work" asp-route-id="@Model.RequestID">Update Request</a>
+                        <a data-modal-link asp-action="Work" asp-route-id="@Model.RequestID">Update Request</a>
                     }
                     @if (User.IsInRole("Tenant") && Model.Status == "Pending")
                     {

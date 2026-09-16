@@ -50,6 +50,20 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return View(unit);
         }
 
+        // GET: Units/History/5 — who has lived in this unit, opened from its details
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> History(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var unit = await _context.tblUnits
+                .Include(u => u.Tenants)
+                .FirstOrDefaultAsync(u => u.UnitID == id);
+
+            if (unit == null) return NotFound();
+            return View(unit);
+        }
+
         // GET: Units/Create
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create()

@@ -3,11 +3,11 @@
     ViewData["Title"] = "Item Details";
 }
 
-<div>
+<div data-modal-source>
     <div>
         <div data-panel>
             <div data-panel-head>
-                @Model.ItemType Item — @Model.ItemName
+                @($"{Model.ItemType} Item - {Model.ItemName}".ToUpper())
             </div>
             <div data-panel-body>
                 <dl>
