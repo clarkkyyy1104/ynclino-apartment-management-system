@@ -10,7 +10,8 @@
 --   4. Splits TenantInfo into TenantProfiles and TenantUnitAssignments so unit/
 --      lease history is preserved when a tenant transfers.
 --   5. Tenant-only records reference TenantProfiles instead of generic Users.
---   6. Removes Billings.AmountPaid duplication; Payments is the source of truth.
+--   6. Uses Payments as the ledger; AmountPaid remains a compatibility cache
+--      for the current billing screens and is refreshed by the application.
 --   7. Avoids cascading deletion of historical/financial records.
 --   8. Adds useful indexes, uniqueness rules, defaults, and basic CHECK constraints.
 --   9. Enforces at most one Active unit assignment per tenant using a generated
@@ -116,12 +117,32 @@ CREATE TABLE Units (
 -- ============================================================================
 -- 4. TENANT PROFILES
 -- One tenant profile per user account.
--- Unit and lease information is deliberately NOT stored here.
+-- Current unit and lease fields support the existing tenant screens. Every
+-- change of current unit is also recorded in TenantUnitAssignments.
+-- FirstName, LastName and ContactNumber are current tenant details edited on
+-- tenant/profile screens. The application copies them to Users on each save so
+-- account displays agree. Run schema_consistency_checks.sql after direct SQL
+-- edits, which bypass that application synchronization.
 -- ============================================================================
 
 CREATE TABLE TenantProfiles (
     TenantID INT UNSIGNED NOT NULL AUTO_INCREMENT,
     UserID INT UNSIGNED NOT NULL,
+
+    -- Existing tenant screens still edit these details. User identity is also
+    -- copied to Users on save so account lists and tenant records agree.
+    UnitID INT UNSIGNED NULL,
+    FirstName VARCHAR(80) NOT NULL,
+    LastName VARCHAR(80) NOT NULL,
+    ContactNumber VARCHAR(30) NULL,
+    EmergencyContactName VARCHAR(100) NULL,
+    EmergencyContactRelationship VARCHAR(50) NULL,
+    EmergencyContactNumber VARCHAR(20) NULL,
+    MoveInDate DATETIME(6) NULL,
+    MoveOutDate DATETIME(6) NULL,
+    LeaseStart DATETIME(6) NULL,
+    LeaseEnd DATETIME(6) NULL,
+    PhotoPath VARCHAR(300) NULL,
 
     AdvanceCredit DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     Status VARCHAR(20) NOT NULL DEFAULT 'Active',
@@ -137,6 +158,9 @@ CREATE TABLE TenantProfiles (
         REFERENCES Users(UserID)
         ON DELETE RESTRICT,
 
+    CONSTRAINT fk_tenant_profiles_current_unit
+        FOREIGN KEY (UnitID) REFERENCES Units(UnitID) ON DELETE RESTRICT,
+
     CONSTRAINT chk_tenant_advance_credit_nonnegative CHECK (AdvanceCredit >= 0),
 
     INDEX idx_tenant_profiles_status (Status)
@@ -147,6 +171,9 @@ CREATE TABLE TenantProfiles (
 -- Preserves every unit assignment instead of overwriting TenantInfo.UnitID.
 -- A tenant can have many historical assignments but only one row with
 -- Status = 'Active' at a time.
+-- TenantProfiles.UnitID is the current pointer used by existing screens;
+-- assignment rows are the historical record. They are intentionally related,
+-- and their active values must agree.
 -- ============================================================================
 
 CREATE TABLE TenantUnitAssignments (
@@ -217,6 +244,7 @@ CREATE TABLE LostFoundItems (
 
     DateReported DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     DateClaimed DATETIME(6) NULL,
+    ArchivedAt DATETIME(6) NULL,
     Notes VARCHAR(500) NULL,
     ImagePath VARCHAR(260) NULL,
 
@@ -235,6 +263,7 @@ CREATE TABLE LostFoundItems (
     INDEX idx_lostfound_reporter (ReportedByUserID),
     INDEX idx_lostfound_claimant (ClaimedByUserID),
     INDEX idx_lostfound_status (Status),
+    INDEX idx_lostfound_archived (ArchivedAt),
     INDEX idx_lostfound_reported_date (DateReported)
 );
 
@@ -275,13 +304,17 @@ CREATE TABLE ClaimRequests (
 -- ============================================================================
 -- 8. UNIT TRANSFER REQUESTS
 -- Tenant-only transaction: references TenantProfiles rather than Users.
--- The current unit is obtained from the tenant's Active unit assignment.
+-- CurrentUnitID records the unit at request time; assignment history is also
+-- kept in TenantUnitAssignments.
+-- CurrentUnitID is a snapshot, so an approved transfer does not change what
+-- the request originally asked to move from.
 -- ============================================================================
 
 CREATE TABLE UnitTransferRequests (
     TransferID BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     TenantID INT UNSIGNED NOT NULL,
     RequestedUnitID INT UNSIGNED NOT NULL,
+    CurrentUnitID INT UNSIGNED NULL,
 
     Reason VARCHAR(500) NOT NULL,
     Status VARCHAR(20) NOT NULL DEFAULT 'Pending',
@@ -304,6 +337,9 @@ CREATE TABLE UnitTransferRequests (
         REFERENCES Units(UnitID)
         ON DELETE RESTRICT,
 
+    CONSTRAINT fk_transfer_current_unit
+        FOREIGN KEY (CurrentUnitID) REFERENCES Units(UnitID) ON DELETE RESTRICT,
+
     INDEX idx_transfer_tenant (TenantID),
     INDEX idx_transfer_unit (RequestedUnitID),
     INDEX idx_transfer_status (Status),
@@ -313,8 +349,11 @@ CREATE TABLE UnitTransferRequests (
 -- ============================================================================
 -- 9. BILLINGS
 -- Tenant-only financial record: references TenantProfiles.
--- AmountPaid is intentionally NOT stored here because Payments is the source
--- of truth. Total paid should be calculated as SUM(Payments.Amount).
+-- Payments is the source of truth. AmountPaid is a compatibility cache for
+-- existing screens and should equal the sum of related payment rows.
+-- DatePaid caches the latest payment date. Deposit and Advance are amounts
+-- charged on this particular bill, while Units.Deposit/AdvancePayment are
+-- current unit prices and can change independently.
 -- ============================================================================
 
 CREATE TABLE Billings (
@@ -323,6 +362,9 @@ CREATE TABLE Billings (
 
     BillingPeriod DATE NOT NULL,
     AmountDue DECIMAL(10,2) NOT NULL,
+    -- Compatibility cache for existing billing screens; Payments remains the
+    -- authoritative ledger and the application refreshes this on each payment.
+    AmountPaid DECIMAL(10,2) NULL,
     Deposit DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     Advance DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     DueDate DATE NOT NULL,
@@ -389,6 +431,8 @@ CREATE TABLE Payments (
 -- TenantID identifies the tenant who submitted the request.
 -- AssignedStaffUserID references Users so the assigned maintenance account
 -- remains part of the centralized account model.
+-- UnitID identifies the unit where this request occurred; it can differ from
+-- the tenant's current UnitID after a transfer.
 -- ============================================================================
 
 CREATE TABLE MaintenanceRequests (

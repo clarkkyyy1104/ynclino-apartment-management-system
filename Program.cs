@@ -9,6 +9,10 @@ using YnclinoApartmentManagementSystem.Models;
 using YnclinoApartmentManagementSystem.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+// Event Log is not writable in some local Windows setups. Keep database
+// diagnostics on the console, where startup failures can be inspected.
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
 
 // Per-developer overrides (your local MySQL password) live in appsettings.Local.json,
 // which is git-ignored so secrets never get committed.
@@ -96,12 +100,10 @@ using (var scope = app.Services.CreateScope())
     // once the database exists. If the database is missing, we want to say so
     // plainly rather than invent one.
     if (!db.Database.CanConnect())
-    {
-        Console.WriteLine("[schema] Cannot reach the database named in the connection string.");
-        Console.WriteLine("[schema] Create it first:  mysql -u root -p < Database/ynclino_schema.sql");
-    }
-    // A database built by Database/ynclino_schema.sql already has every table and
-    // column the application expects, so there is nothing to patch at startup.
+        throw new InvalidOperationException("Cannot connect to YAMSDB. Check the connection string and MySQL service.");
+    // A database built by the current Database/ynclino_schema.sql has every
+    // table and column the application expects. Older YAMSDB installations
+    // need the additive Database/yamsdb_app_compat.sql patch.
     // What used to live here — sixteen AddColumnIfMissing calls, a CREATE TABLE
     // for tblPayments, and a run of one-time backfills and label migrations
     // (Low/Medium/High to Minor/Moderate/Major, "Late" to "Overdue", "Vacant" to
@@ -125,17 +127,13 @@ using (var scope = app.Services.CreateScope())
         db.tblLostFoundItems.AsNoTracking().FirstOrDefault();
         db.tblClaimRequests.AsNoTracking().FirstOrDefault();
         db.tblUnitTransferRequests.AsNoTracking().FirstOrDefault();
+        db.TenantUnitAssignments.AsNoTracking().FirstOrDefault();
     }
     catch (Exception ex)
     {
         db.ChangeTracker.Clear();
-
-        Console.WriteLine("==================================================================");
-        Console.WriteLine(" SCHEMA MISMATCH - the database does not match the current models.");
-        Console.WriteLine(" " + ex.Message);
-        Console.WriteLine(" NOTHING WAS DELETED. Rebuild it from the script:");
-        Console.WriteLine("   mysql -u root -p < Database/ynclino_schema.sql");
-        Console.WriteLine("==================================================================");
+        throw new InvalidOperationException(
+            "YAMSDB does not match the application model. Run Database/yamsdb_app_compat.sql if this database was created before the app update.", ex);
     }
 }
 

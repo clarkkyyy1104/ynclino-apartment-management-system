@@ -74,6 +74,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 return View(vm);
             }
 
+            user.LastLoginAt = DateTime.Now;
+            await _context.SaveChangesAsync();
             await SignInUserAsync(user);
 
             // a forced password change takes priority over everything else. It applies

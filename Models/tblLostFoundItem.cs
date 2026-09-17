@@ -40,6 +40,9 @@ namespace YnclinoApartmentManagementSystem.Models
         [Display(Name = "Date Claimed")]
         public DateTime? DateClaimed { get; set; }
 
+        [Display(Name = "Archived")]
+        public DateTime? ArchivedAt { get; set; }
+
         [MaxLength(500)]
         public string? Notes { get; set; }
 

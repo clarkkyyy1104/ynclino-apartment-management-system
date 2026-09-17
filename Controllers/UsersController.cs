@@ -116,6 +116,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 Username     = vm.Username,
                 Password     = PasswordHelper.Hash(vm.Password!),
                 Role         = vm.Role,
+                FirstName    = vm.Username,
+                LastName     = vm.Role == "Admin" ? "Administrator" : "Staff",
                 IsActive     = vm.IsActive,
                 IsMainAdmin = false,
                 // an account created FOR someone else must have its password changed on

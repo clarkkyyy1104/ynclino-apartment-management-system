@@ -1,7 +1,6 @@
 @model YnclinoApartmentManagementSystem.Models.ViewModels.LoginViewModel
 @{
     Layout = null;
-    bool visiblePass = false;
     ViewData["Title"] = "Login";
 }
 <!DOCTYPE html>
@@ -42,17 +41,10 @@
                         <div class="pw-wrap">
                             <input asp-for="Password" id="loginPassword"
                                 placeholder="Password" autocomplete="current-password" />
-                            @if (visiblePass)
-                            {
-                                <button type="button" tabindex="-1"
-                                        onclick="const i=document.getElementById('loginPassword');
-                                                 i.type=i.type==='password'?'text':'password';">
-                                    <img src="/images/icons/eye-slash.svg"/>
-                                </button>
-                            }
+                            @await Html.PartialAsync("_PasswordToggle", "loginPassword")
                         </div>
                     </div>
-                    <button type="submit">Sign In</button>
+                    <button type="submit">Login</button>
 
                 </form>
 
@@ -60,13 +52,7 @@
         </div>
     </div>
 
-    <script>
-        function togglePassword(inputId, btn) {
-            var input = document.getElementById(inputId);
-            if (input.type === 'password') { input.type = 'text'; btn.textContent = 'Hide'; }
-            else { input.type = 'password'; btn.textContent = 'Show'; }
-        }
-    </script>
+    <script src="~/js/password.js" asp-append-version="true"></script>
     <script src="~/js/ynclino.js" asp-append-version="true"></script>
 </body>
 </html>

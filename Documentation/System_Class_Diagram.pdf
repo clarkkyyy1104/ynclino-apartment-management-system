@@ -1,0 +1,691 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R 4 0 R 5 0 R] /Count 3 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 1510 1010] /Resources << /Font << /F1 9 0 R /F2 10 0 R /F3 11 0 R /F4 12 0 R >> >> /Contents 6 0 R >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 1510 1010] /Resources << /Font << /F1 9 0 R /F2 10 0 R /F3 11 0 R /F4 12 0 R >> >> /Contents 7 0 R >>
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 1510 1010] /Resources << /Font << /F1 9 0 R /F2 10 0 R /F3 11 0 R /F4 12 0 R >> >> /Contents 8 0 R >>
+endobj
+6 0 obj
+<< /Length 8064 >>
+stream
+0.965 0.973 0.984 rg
+0 0 1510 1010 re f
+0.157 0.271 0.400 rg
+0 1002 1510 8 re f
+0.082 0.141 0.224 rg
+BT /F2 31 Tf 45 955 Td (Accounts, tenancy & unit transfers) Tj ET
+0.322 0.392 0.478 rg
+BT /F1 17 Tf 45 926 Td (Identity, current occupancy, assignment history and transfer requests) Tj ET
+0.467 0.529 0.604 rg
+BT /F1 13 Tf 1280 955 Td (SYSTEM CLASS DIAGRAM - 1 / 3) Tj ET
+0.396 0.467 0.561 RG
+2.2 w
+360 730 m 480 730 l S
+1.000 1.000 1.000 rg
+379 741 82 27 re f
+0.263 0.337 0.431 rg
+BT /F2 13 Tf 397.6 749 Td (account) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 369 709 Td (1) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 443 709 Td (0..1) Tj ET
+0.396 0.467 0.561 RG
+2.2 w
+870 730 m 1020 730 l S
+1.000 1.000 1.000 rg
+885.4 741 119.19999999999999 27 re f
+0.263 0.337 0.431 rg
+BT /F2 13 Tf 906.6 749 Td (current unit) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 879 709 Td (0..*) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 983 709 Td (0..1) Tj ET
+0.396 0.467 0.561 RG
+2.2 w
+665 475 m 665 387 l S
+1.000 1.000 1.000 rg
+684 420 82 27 re f
+0.263 0.337 0.431 rg
+BT /F2 13 Tf 702.6 428 Td (history) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 677 454 Td (1) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 677 395 Td (0..*) Tj ET
+0.396 0.467 0.561 RG
+2.2 w
+1185 610 m 1185 456 l 900 456 l 900 264 l 870 264 l S
+1.000 1.000 1.000 rg
+976.35 463 127.3 27 re f
+0.263 0.337 0.431 rg
+BT /F2 13 Tf 998.4 471 Td (assigned unit) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 1197 589 Td (1) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 851 243 Td (0..*) Tj ET
+0.396 0.467 0.561 RG
+2.2 w
+870 543 m 960 543 l 960 308 l 1020 308 l S
+1.000 1.000 1.000 rg
+866.6 552 86.8 27 re f
+0.263 0.337 0.431 rg
+BT /F2 13 Tf 884.4 560 Td (requests) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 879 522 Td (1) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 983 287 Td (0..*) Tj ET
+0.396 0.467 0.561 RG
+2.2 w
+1250 610 m 1250 402 l S
+1.000 1.000 1.000 rg
+1252.3 479 135.39999999999998 27 re f
+0.263 0.337 0.431 rg
+BT /F2 13 Tf 1275.2 487 Td (requested unit) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 1262 589 Td (1) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 1262 410 Td (0..*) Tj ET
+0.396 0.467 0.561 RG
+2.2 w
+1340 610 m 1410 610 l 1410 232 l S
+1.000 1.000 1.000 rg
+1326.35 414 127.3 27 re f
+0.263 0.337 0.431 rg
+BT /F2 13 Tf 1348.4 422 Td (previous unit) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 1349 589 Td (0..1) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 1422 240 Td (0..*) Tj ET
+1.000 1.000 1.000 rg
+45 500 315 356 re f
+0.667 0.722 0.784 RG
+1.5 w
+45 500 315 356 re S
+0.137 0.231 0.384 rg
+45 798 315 58 re f
+1.000 1.000 1.000 rg
+BT /F2 22 Tf 65 828 Td (User) Tj ET
+0.867 0.914 0.961 rg
+BT /F1 13 Tf 65 809 Td (C# tblUser) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 65 770 Td (UserID : int {PK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 65 748 Td (Username : string) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 65 726 Td (Password : string) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 65 704 Td (Role : string {RoleID}) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 65 682 Td (FirstName : string) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 65 660 Td (LastName : string) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 65 638 Td (Email : string?) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 65 616 Td (ContactNumber : string?) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 65 594 Td (IsActive : bool) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 65 572 Td (MustChangePassword : bool) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 65 550 Td (IsMainAdmin : bool) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 65 528 Td (LastLoginAt : DateTime?) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 65 506 Td (DisplayName : string {derived}) Tj ET
+1.000 1.000 1.000 rg
+480 475 390 422 re f
+0.667 0.722 0.784 RG
+1.5 w
+480 475 390 422 re S
+0.090 0.416 0.424 rg
+480 839 390 58 re f
+1.000 1.000 1.000 rg
+BT /F2 22 Tf 500 869 Td (TenantProfile) Tj ET
+0.867 0.914 0.961 rg
+BT /F1 13 Tf 500 850 Td (C# tblTenant) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 500 811 Td (TenantID : int {PK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 500 789 Td (UserID : int? {FK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 500 767 Td (UnitID : int? {FK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 500 745 Td (FirstName : string) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 500 723 Td (LastName : string) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 500 701 Td (ContactNumber : string?) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 500 679 Td (EmergencyContactName : string?) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 500 657 Td (EmergencyContactNumber : string?) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 500 635 Td (MoveInDate : DateTime?) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 500 613 Td (MoveOutDate : DateTime?) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 500 591 Td (LeaseStart : DateTime?) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 500 569 Td (LeaseEnd : DateTime?) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 500 547 Td (AdvanceCredit : decimal) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 500 525 Td (Status : string) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 500 503 Td (PhotoPath : string?) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 500 481 Td (FullName : string {derived}) Tj ET
+1.000 1.000 1.000 rg
+1020 610 330 246 re f
+0.667 0.722 0.784 RG
+1.5 w
+1020 610 330 246 re S
+0.090 0.416 0.424 rg
+1020 798 330 58 re f
+1.000 1.000 1.000 rg
+BT /F2 22 Tf 1040 828 Td (Unit) Tj ET
+0.867 0.914 0.961 rg
+BT /F1 13 Tf 1040 809 Td (C# tblUnit) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 1040 770 Td (UnitID : int {PK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 1040 748 Td (UnitNumber : string) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 1040 726 Td (UnitType : string) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 1040 704 Td (RentPrice : decimal) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 1040 682 Td (Deposit : decimal) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 1040 660 Td (AdvancePayment : decimal) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 1040 638 Td (Capacity : int) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 1040 616 Td (Status : string) Tj ET
+1.000 1.000 1.000 rg
+480 141 390 246 re f
+0.667 0.722 0.784 RG
+1.5 w
+480 141 390 246 re S
+0.090 0.416 0.424 rg
+480 329 390 58 re f
+1.000 1.000 1.000 rg
+BT /F2 22 Tf 500 359 Td (TenantUnitAssignment) Tj ET
+0.867 0.914 0.961 rg
+BT /F1 13 Tf 500 340 Td (C# TenantUnitAssignment) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 500 301 Td (AssignmentID : long {PK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 500 279 Td (TenantID : int {FK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 500 257 Td (UnitID : int {FK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 500 235 Td (MoveInDate : DateTime?) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 500 213 Td (MoveOutDate : DateTime?) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 500 191 Td (LeaseStart : DateTime?) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 500 169 Td (LeaseEnd : DateTime?) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 500 147 Td (Status : string) Tj ET
+1.000 1.000 1.000 rg
+1020 112 390 290 re f
+0.667 0.722 0.784 RG
+1.5 w
+1020 112 390 290 re S
+0.608 0.357 0.075 rg
+1020 344 390 58 re f
+1.000 1.000 1.000 rg
+BT /F2 22 Tf 1040 374 Td (UnitTransferRequest) Tj ET
+0.867 0.914 0.961 rg
+BT /F1 13 Tf 1040 355 Td (C# tblUnitTransferRequest) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 1040 316 Td (TransferID : int {PK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 1040 294 Td (TenantID : int {FK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 1040 272 Td (CurrentUnitID : int? {FK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 1040 250 Td (RequestedUnitID : int {FK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 1040 228 Td (Reason : string) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 1040 206 Td (Status : string) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 1040 184 Td (DateRequested : DateTime) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 1040 162 Td (DateReviewed : DateTime?) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 1040 140 Td (TenantArchivedAt : DateTime?) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 1040 118 Td (StaffArchivedAt : DateTime?) Tj ET
+0.910 0.929 0.957 rg
+45 21 1420 38 re f
+0.263 0.337 0.431 rg
+BT /F1 15 Tf 62 34 Td (User.Password maps to SQL PasswordHash. TenantProfile.UnitID is current; assignments retain history. Transfer.CurrentUnitID is a snapshot.) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Length 6911 >>
+stream
+0.965 0.973 0.984 rg
+0 0 1510 1010 re f
+0.157 0.271 0.400 rg
+0 1002 1510 8 re f
+0.082 0.141 0.224 rg
+BT /F2 31 Tf 45 955 Td (Billing, payments & maintenance) Tj ET
+0.322 0.392 0.478 rg
+BT /F1 17 Tf 45 926 Td (Money received is recorded per payment; maintenance stays linked to its original unit) Tj ET
+0.467 0.529 0.604 rg
+BT /F1 13 Tf 1280 955 Td (SYSTEM CLASS DIAGRAM - 2 / 3) Tj ET
+0.396 0.467 0.561 RG
+2.2 w
+410 740 m 535 740 l S
+1.000 1.000 1.000 rg
+432 751 82 27 re f
+0.263 0.337 0.431 rg
+BT /F2 13 Tf 457 759 Td (bills) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 419 719 Td (1) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 498 719 Td (0..*) Tj ET
+0.396 0.467 0.561 RG
+2.2 w
+925 740 m 1050 740 l S
+1.000 1.000 1.000 rg
+944.6 751 86.8 27 re f
+0.263 0.337 0.431 rg
+BT /F2 13 Tf 962.4 759 Td (payments) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 934 719 Td (1) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 1013 719 Td (0..*) Tj ET
+0.396 0.467 0.561 RG
+2.2 w
+228 653 m 228 460 l 535 460 l 535 300 l S
+1.000 1.000 1.000 rg
+339 467 82 27 re f
+0.263 0.337 0.431 rg
+BT /F2 13 Tf 357.6 475 Td (submits) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 240 632 Td (1) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 547 308 Td (0..*) Tj ET
+0.396 0.467 0.561 RG
+2.2 w
+410 255 m 535 255 l S
+1.000 1.000 1.000 rg
+405.3 266 135.39999999999998 27 re f
+0.263 0.337 0.431 rg
+BT /F2 13 Tf 428.2 274 Td (assigned staff) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 419 234 Td (0..1) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 498 234 Td (0..*) Tj ET
+0.396 0.467 0.561 RG
+2.2 w
+1050 255 m 925 255 l S
+1.000 1.000 1.000 rg
+932.45 266 111.1 27 re f
+0.263 0.337 0.431 rg
+BT /F2 13 Tf 952.8 274 Td (repair unit) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 1041 234 Td (0..1) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 906 234 Td (0..*) Tj ET
+1.000 1.000 1.000 rg
+45 653 365 202 re f
+0.667 0.722 0.784 RG
+1.5 w
+45 653 365 202 re S
+0.090 0.416 0.424 rg
+45 797 365 58 re f
+1.000 1.000 1.000 rg
+BT /F2 22 Tf 65 827 Td (TenantProfile) Tj ET
+0.867 0.914 0.961 rg
+BT /F1 13 Tf 65 808 Td (C# tblTenant) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 65 769 Td (TenantID : int {PK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 65 747 Td (UserID : int? {FK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 65 725 Td (UnitID : int? {FK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 65 703 Td (FullName : string {derived}) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 65 681 Td (Status : string) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 65 659 Td (AdvanceCredit : decimal) Tj ET
+1.000 1.000 1.000 rg
+535 563 390 334 re f
+0.667 0.722 0.784 RG
+1.5 w
+535 563 390 334 re S
+0.412 0.278 0.631 rg
+535 839 390 58 re f
+1.000 1.000 1.000 rg
+BT /F2 22 Tf 555 869 Td (Billing) Tj ET
+0.867 0.914 0.961 rg
+BT /F1 13 Tf 555 850 Td (C# tblBilling) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 555 811 Td (BillingID : int {PK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 555 789 Td (TenantID : int {FK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 555 767 Td (BillingPeriod : DateTime) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 555 745 Td (AmountDue : decimal) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 555 723 Td (AmountPaid : decimal? {cache}) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 555 701 Td (Deposit : decimal) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 555 679 Td (Advance : decimal) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 555 657 Td (DueDate : DateTime) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 555 635 Td (AdvanceFromOverpayment : decimal) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 555 613 Td (DatePaid : DateTime? {cache}) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 555 591 Td (Status : string) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 555 569 Td (ArchivedAt : DateTime?) Tj ET
+1.000 1.000 1.000 rg
+1050 631 340 224 re f
+0.667 0.722 0.784 RG
+1.5 w
+1050 631 340 224 re S
+0.412 0.278 0.631 rg
+1050 797 340 58 re f
+1.000 1.000 1.000 rg
+BT /F2 22 Tf 1070 827 Td (Payment) Tj ET
+0.867 0.914 0.961 rg
+BT /F1 13 Tf 1070 808 Td (C# tblPayment) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 1070 769 Td (PaymentID : int {PK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 1070 747 Td (BillingID : int {FK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 1070 725 Td (Amount : decimal) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 1070 703 Td (DatePaid : DateTime) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 1070 681 Td (Method : string?) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 1070 659 Td (Remarks : string?) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 1070 637 Td (RecordedAt : DateTime) Tj ET
+1.000 1.000 1.000 rg
+45 184 365 158 re f
+0.667 0.722 0.784 RG
+1.5 w
+45 184 365 158 re S
+0.137 0.231 0.384 rg
+45 284 365 58 re f
+1.000 1.000 1.000 rg
+BT /F2 22 Tf 65 314 Td (User) Tj ET
+0.867 0.914 0.961 rg
+BT /F1 13 Tf 65 295 Td (C# tblUser) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 65 256 Td (UserID : int {PK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 65 234 Td (Username : string) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 65 212 Td (Role : string {RoleID}) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 65 190 Td (IsActive : bool) Tj ET
+1.000 1.000 1.000 rg
+535 71 390 334 re f
+0.667 0.722 0.784 RG
+1.5 w
+535 71 390 334 re S
+0.608 0.357 0.075 rg
+535 347 390 58 re f
+1.000 1.000 1.000 rg
+BT /F2 22 Tf 555 377 Td (MaintenanceRequest) Tj ET
+0.867 0.914 0.961 rg
+BT /F1 13 Tf 555 358 Td (C# tblMaintenanceRequest) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 555 319 Td (RequestID : int {PK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 555 297 Td (TenantID : int {FK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 555 275 Td (UnitID : int? {FK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 555 253 Td (AssignedStaffID : int? {FK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 555 231 Td (Category : string) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 555 209 Td (Description : string) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 555 187 Td (Priority : string) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 555 165 Td (Status : string) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 555 143 Td (DateSubmitted : DateTime) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 555 121 Td (DateResolved : DateTime?) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 555 99 Td (TenantArchivedAt : DateTime?) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 555 77 Td (StaffArchivedAt : DateTime?) Tj ET
+1.000 1.000 1.000 rg
+1050 184 340 158 re f
+0.667 0.722 0.784 RG
+1.5 w
+1050 184 340 158 re S
+0.090 0.416 0.424 rg
+1050 284 340 58 re f
+1.000 1.000 1.000 rg
+BT /F2 22 Tf 1070 314 Td (Unit) Tj ET
+0.867 0.914 0.961 rg
+BT /F1 13 Tf 1070 295 Td (C# tblUnit) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 1070 256 Td (UnitID : int {PK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 1070 234 Td (UnitNumber : string) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 1070 212 Td (UnitType : string) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 1070 190 Td (Status : string) Tj ET
+0.910 0.929 0.957 rg
+45 21 1420 38 re f
+0.263 0.337 0.431 rg
+BT /F1 15 Tf 62 34 Td (Payments is the ledger. Billing.AmountPaid and Billing.DatePaid are synchronized summaries. AssignedStaffID maps to AssignedStaffUserID in SQL.) Tj ET
+endstream
+endobj
+8 0 obj
+<< /Length 4592 >>
+stream
+0.965 0.973 0.984 rg
+0 0 1510 1010 re f
+0.157 0.271 0.400 rg
+0 1002 1510 8 re f
+0.082 0.141 0.224 rg
+BT /F2 31 Tf 45 955 Td (Lost & Found and ownership claims) Tj ET
+0.322 0.392 0.478 rg
+BT /F1 17 Tf 45 926 Td (Admins and tenants report items; tenant ownership claims are reviewed by an admin) Tj ET
+0.467 0.529 0.604 rg
+BT /F1 13 Tf 1280 955 Td (SYSTEM CLASS DIAGRAM - 3 / 3) Tj ET
+0.396 0.467 0.561 RG
+2.2 w
+410 720 m 555 720 l S
+1.000 1.000 1.000 rg
+426.45 731 111.1 27 re f
+0.263 0.337 0.431 rg
+BT /F2 13 Tf 446.8 739 Td (reported by) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 419 699 Td (1) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 518 699 Td (0..*) Tj ET
+0.396 0.467 0.561 RG
+2.2 w
+410 608 m 555 608 l S
+1.000 1.000 1.000 rg
+430.5 619 103 27 re f
+0.263 0.337 0.431 rg
+BT /F2 13 Tf 450 627 Td (claimed by) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 419 587 Td (0..1) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 518 587 Td (0..*) Tj ET
+0.396 0.467 0.561 RG
+2.2 w
+955 710 m 1105 710 l S
+1.000 1.000 1.000 rg
+989 721 82 27 re f
+0.263 0.337 0.431 rg
+BT /F2 13 Tf 1010.8 729 Td (claims) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 964 689 Td (1) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 1068 689 Td (0..*) Tj ET
+0.396 0.467 0.561 RG
+2.2 w
+228 527 m 228 292 l 1280 292 l 1280 549 l S
+1.000 1.000 1.000 rg
+711.6 302 86.8 27 re f
+0.263 0.337 0.431 rg
+BT /F2 13 Tf 729.4 310 Td (claimant) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 240 506 Td (1) Tj ET
+0.200 0.290 0.400 rg
+BT /F2 14 Tf 1292 528 Td (0..*) Tj ET
+1.000 1.000 1.000 rg
+45 527 365 268 re f
+0.667 0.722 0.784 RG
+1.5 w
+45 527 365 268 re S
+0.137 0.231 0.384 rg
+45 737 365 58 re f
+1.000 1.000 1.000 rg
+BT /F2 22 Tf 65 767 Td (User) Tj ET
+0.867 0.914 0.961 rg
+BT /F1 13 Tf 65 748 Td (C# tblUser) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 65 709 Td (UserID : int {PK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 65 687 Td (Username : string) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 65 665 Td (Role : string {RoleID}) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 65 643 Td (FirstName : string) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 65 621 Td (LastName : string) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 65 599 Td (Email : string?) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 65 577 Td (ContactNumber : string?) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 65 555 Td (IsActive : bool) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 65 533 Td (DisplayName : string {derived}) Tj ET
+1.000 1.000 1.000 rg
+555 534 400 312 re f
+0.667 0.722 0.784 RG
+1.5 w
+555 534 400 312 re S
+0.639 0.247 0.353 rg
+555 788 400 58 re f
+1.000 1.000 1.000 rg
+BT /F2 22 Tf 575 818 Td (LostFoundItem) Tj ET
+0.867 0.914 0.961 rg
+BT /F1 13 Tf 575 799 Td (C# tblLostFoundItem) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 575 760 Td (ItemID : int {PK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 575 738 Td (ReportedByUserID : int {FK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 575 716 Td (ClaimedByUserID : int? {FK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 575 694 Td (ItemName : string) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 575 672 Td (ItemType : string) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 575 650 Td (Location : string?) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 575 628 Td (Status : string) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 575 606 Td (DateReported : DateTime) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 575 584 Td (DateClaimed : DateTime?) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 575 562 Td (ArchivedAt : DateTime?) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 575 540 Td (ImagePath : string?) Tj ET
+1.000 1.000 1.000 rg
+1105 549 350 246 re f
+0.667 0.722 0.784 RG
+1.5 w
+1105 549 350 246 re S
+0.639 0.247 0.353 rg
+1105 737 350 58 re f
+1.000 1.000 1.000 rg
+BT /F2 22 Tf 1125 767 Td (ClaimRequest) Tj ET
+0.867 0.914 0.961 rg
+BT /F1 13 Tf 1125 748 Td (C# tblClaimRequest) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 1125 709 Td (ClaimID : int {PK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 1125 687 Td (ItemID : int {FK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F4 14 Tf 1125 665 Td (ClaimantUserID : int {FK}) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 1125 643 Td (VerificationDetails : string) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 1125 621 Td (SubmittedAt : DateTime) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 1125 599 Td (Status : string) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 1125 577 Td (AdminNotes : string?) Tj ET
+0.157 0.212 0.282 rg
+BT /F3 14 Tf 1125 555 Td (ImagePath : string?) Tj ET
+0.910 0.929 0.957 rg
+45 21 1420 38 re f
+0.263 0.337 0.431 rg
+BT /F1 15 Tf 62 34 Td (ClaimedByUserID is optional until handover. An approved claim closes an item; admins can also record a direct handover without an online claim.) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+10 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+11 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+12 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier-Bold >>
+endobj
+xref
+0 13
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000288 00000 n 
+0000000449 00000 n 
+0000000610 00000 n 
+0000008725 00000 n 
+0000015687 00000 n 
+0000020330 00000 n 
+0000020400 00000 n 
+0000020476 00000 n 
+0000020545 00000 n 
+trailer
+<< /Size 13 /Root 1 0 R >>
+startxref
+20619
+%%EOF

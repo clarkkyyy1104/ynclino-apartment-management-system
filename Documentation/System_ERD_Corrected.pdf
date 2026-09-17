@@ -1,0 +1,288 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 1684 1191] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 11166 >>
+stream
+0.55 G 0.5 w
+643 961 m 231 961 l S
+1467 961 m 643 961 l S
+1467 961 m 1055 961 l S
+231 588 m 1467 961 l S
+231 588 m 1055 961 l S
+643 588 m 643 961 l S
+643 588 m 643 961 l S
+1055 588 m 643 588 l S
+1055 588 m 643 961 l S
+1467 588 m 1467 961 l S
+1467 588 m 1055 961 l S
+1467 588 m 1055 961 l S
+231 215 m 1467 961 l S
+643 215 m 231 215 l S
+1055 215 m 1467 961 l S
+1055 215 m 1055 961 l S
+1055 215 m 643 961 l S
+0 G 0 g
+BT /F1 20 Tf 36 1161 Td (YNCLINO - Current YAMSDB ERD) Tj ET
+1 1 1 rg
+36 786 390 350 re f
+0.25 0.35 0.48 RG
+36 786 390 350 re S
+0.89 0.93 0.97 rg
+37 1107 388 28 re f
+0 g
+BT /F1 13 Tf 45 1116 Td (Roles) Tj ET
+BT /F1 9 Tf 45 1092 Td (PK RoleID : TINYINT UNSIGNED) Tj ET
+BT /F1 9 Tf 45 1079 Td (   RoleName : VARCHAR\(50\)) Tj ET
+1 1 1 rg
+448 786 390 350 re f
+0.25 0.35 0.48 RG
+448 786 390 350 re S
+0.89 0.93 0.97 rg
+449 1107 388 28 re f
+0 g
+BT /F1 13 Tf 457 1116 Td (Users) Tj ET
+BT /F1 9 Tf 457 1092 Td (PK UserID : INT UNSIGNED) Tj ET
+BT /F1 9 Tf 457 1079 Td (FK RoleID : TINYINT UNSIGNED) Tj ET
+BT /F1 9 Tf 457 1066 Td (   Username : VARCHAR\(50\)) Tj ET
+BT /F1 9 Tf 457 1053 Td (   PasswordHash : VARCHAR\(255\)) Tj ET
+BT /F1 9 Tf 457 1040 Td (   FirstName : VARCHAR\(80\)) Tj ET
+BT /F1 9 Tf 457 1027 Td (   LastName : VARCHAR\(80\)) Tj ET
+BT /F1 9 Tf 457 1014 Td (   Email : VARCHAR\(150\)) Tj ET
+BT /F1 9 Tf 457 1001 Td (   ContactNumber : VARCHAR\(30\)) Tj ET
+BT /F1 9 Tf 457 988 Td (   IsActive : BOOLEAN) Tj ET
+BT /F1 9 Tf 457 975 Td (   MustChangePassword : BOOLEAN) Tj ET
+BT /F1 9 Tf 457 962 Td (   IsMainAdmin : BOOLEAN) Tj ET
+BT /F1 9 Tf 457 949 Td (   LastLoginAt : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 457 936 Td (   DateCreated : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 457 923 Td (   DateUpdated : DATETIME\(6\)) Tj ET
+BT /F1 8 Tf 457 907 Td (References:) Tj ET
+BT /F1 8 Tf 457 896 Td (RoleID -> Roles.RoleID) Tj ET
+1 1 1 rg
+860 786 390 350 re f
+0.25 0.35 0.48 RG
+860 786 390 350 re S
+0.89 0.93 0.97 rg
+861 1107 388 28 re f
+0 g
+BT /F1 13 Tf 869 1116 Td (Units) Tj ET
+BT /F1 9 Tf 869 1092 Td (PK UnitID : INT UNSIGNED) Tj ET
+BT /F1 9 Tf 869 1079 Td (   UnitNumber : VARCHAR\(20\)) Tj ET
+BT /F1 9 Tf 869 1066 Td (   UnitType : VARCHAR\(50\)) Tj ET
+BT /F1 9 Tf 869 1053 Td (   RentPrice : DECIMAL\(10,2\)) Tj ET
+BT /F1 9 Tf 869 1040 Td (   Deposit : DECIMAL\(10,2\)) Tj ET
+BT /F1 9 Tf 869 1027 Td (   AdvancePayment : DECIMAL\(10,2\)) Tj ET
+BT /F1 9 Tf 869 1014 Td (   Capacity : INT UNSIGNED) Tj ET
+BT /F1 9 Tf 869 1001 Td (   Status : VARCHAR\(20\)) Tj ET
+BT /F1 9 Tf 869 988 Td (   DateAdded : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 869 975 Td (   DateUpdated : DATETIME\(6\)) Tj ET
+1 1 1 rg
+1272 786 390 350 re f
+0.25 0.35 0.48 RG
+1272 786 390 350 re S
+0.89 0.93 0.97 rg
+1273 1107 388 28 re f
+0 g
+BT /F1 13 Tf 1281 1116 Td (TenantProfiles) Tj ET
+BT /F1 9 Tf 1281 1092 Td (PK TenantID : INT UNSIGNED) Tj ET
+BT /F1 9 Tf 1281 1079 Td (FK UserID : INT UNSIGNED) Tj ET
+BT /F1 9 Tf 1281 1066 Td (FK UnitID : INT UNSIGNED) Tj ET
+BT /F1 9 Tf 1281 1053 Td (   FirstName : VARCHAR\(80\)) Tj ET
+BT /F1 9 Tf 1281 1040 Td (   LastName : VARCHAR\(80\)) Tj ET
+BT /F1 9 Tf 1281 1027 Td (   ContactNumber : VARCHAR\(30\)) Tj ET
+BT /F1 9 Tf 1281 1014 Td (   EmergencyContactName : VARCHAR\(100\)) Tj ET
+BT /F1 9 Tf 1281 1001 Td (   EmergencyContactRelationship : VARCHAR\(50\)) Tj ET
+BT /F1 9 Tf 1281 988 Td (   EmergencyContactNumber : VARCHAR\(20\)) Tj ET
+BT /F1 9 Tf 1281 975 Td (   MoveInDate : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 1281 962 Td (   MoveOutDate : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 1281 949 Td (   LeaseStart : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 1281 936 Td (   LeaseEnd : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 1281 923 Td (   PhotoPath : VARCHAR\(300\)) Tj ET
+BT /F1 9 Tf 1281 910 Td (   AdvanceCredit : DECIMAL\(10,2\)) Tj ET
+BT /F1 9 Tf 1281 897 Td (   Status : VARCHAR\(20\)) Tj ET
+BT /F1 9 Tf 1281 884 Td (   DateRecorded : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 1281 871 Td (   DateUpdated : DATETIME\(6\)) Tj ET
+BT /F1 8 Tf 1281 855 Td (References:) Tj ET
+BT /F1 8 Tf 1281 844 Td (UserID -> Users.UserID) Tj ET
+BT /F1 8 Tf 1281 833 Td (UnitID -> Units.UnitID) Tj ET
+1 1 1 rg
+36 413 390 350 re f
+0.25 0.35 0.48 RG
+36 413 390 350 re S
+0.89 0.93 0.97 rg
+37 734 388 28 re f
+0 g
+BT /F1 13 Tf 45 743 Td (TenantUnitAssignments) Tj ET
+BT /F1 9 Tf 45 719 Td (PK AssignmentID : BIGINT UNSIGNED) Tj ET
+BT /F1 9 Tf 45 706 Td (FK TenantID : INT UNSIGNED) Tj ET
+BT /F1 9 Tf 45 693 Td (FK UnitID : INT UNSIGNED) Tj ET
+BT /F1 9 Tf 45 680 Td (   MoveInDate : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 45 667 Td (   MoveOutDate : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 45 654 Td (   LeaseStart : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 45 641 Td (   LeaseEnd : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 45 628 Td (   Status : VARCHAR\(20\)) Tj ET
+BT /F1 9 Tf 45 615 Td (   DateRecorded : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 45 602 Td (   DateUpdated : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 45 589 Td (   ActiveTenantID : INT UNSIGNED) Tj ET
+BT /F1 8 Tf 45 573 Td (References:) Tj ET
+BT /F1 8 Tf 45 562 Td (TenantID -> TenantProfiles.TenantID) Tj ET
+BT /F1 8 Tf 45 551 Td (UnitID -> Units.UnitID) Tj ET
+1 1 1 rg
+448 413 390 350 re f
+0.25 0.35 0.48 RG
+448 413 390 350 re S
+0.89 0.93 0.97 rg
+449 734 388 28 re f
+0 g
+BT /F1 13 Tf 457 743 Td (LostFoundItems) Tj ET
+BT /F1 9 Tf 457 719 Td (PK ItemID : BIGINT UNSIGNED) Tj ET
+BT /F1 9 Tf 457 706 Td (FK ReportedByUserID : INT UNSIGNED) Tj ET
+BT /F1 9 Tf 457 693 Td (FK ClaimedByUserID : INT UNSIGNED) Tj ET
+BT /F1 9 Tf 457 680 Td (   ItemName : VARCHAR\(100\)) Tj ET
+BT /F1 9 Tf 457 667 Td (   Description : VARCHAR\(500\)) Tj ET
+BT /F1 9 Tf 457 654 Td (   ItemType : VARCHAR\(20\)) Tj ET
+BT /F1 9 Tf 457 641 Td (   Location : VARCHAR\(200\)) Tj ET
+BT /F1 9 Tf 457 628 Td (   Status : VARCHAR\(20\)) Tj ET
+BT /F1 9 Tf 457 615 Td (   DateReported : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 457 602 Td (   DateClaimed : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 457 589 Td (   ArchivedAt : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 457 576 Td (   Notes : VARCHAR\(500\)) Tj ET
+BT /F1 9 Tf 457 563 Td (   ImagePath : VARCHAR\(260\)) Tj ET
+BT /F1 8 Tf 457 547 Td (References:) Tj ET
+BT /F1 8 Tf 457 536 Td (ReportedByUserID -> Users.UserID) Tj ET
+BT /F1 8 Tf 457 525 Td (ClaimedByUserID -> Users.UserID) Tj ET
+1 1 1 rg
+860 413 390 350 re f
+0.25 0.35 0.48 RG
+860 413 390 350 re S
+0.89 0.93 0.97 rg
+861 734 388 28 re f
+0 g
+BT /F1 13 Tf 869 743 Td (ClaimRequests) Tj ET
+BT /F1 9 Tf 869 719 Td (PK ClaimID : BIGINT UNSIGNED) Tj ET
+BT /F1 9 Tf 869 706 Td (FK ItemID : BIGINT UNSIGNED) Tj ET
+BT /F1 9 Tf 869 693 Td (FK ClaimantUserID : INT UNSIGNED) Tj ET
+BT /F1 9 Tf 869 680 Td (   VerificationDetails : VARCHAR\(1000\)) Tj ET
+BT /F1 9 Tf 869 667 Td (   SubmittedAt : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 869 654 Td (   Status : VARCHAR\(20\)) Tj ET
+BT /F1 9 Tf 869 641 Td (   AdminNotes : VARCHAR\(500\)) Tj ET
+BT /F1 9 Tf 869 628 Td (   ImagePath : VARCHAR\(300\)) Tj ET
+BT /F1 8 Tf 869 612 Td (References:) Tj ET
+BT /F1 8 Tf 869 601 Td (ItemID -> LostFoundItems.ItemID) Tj ET
+BT /F1 8 Tf 869 590 Td (ClaimantUserID -> Users.UserID) Tj ET
+1 1 1 rg
+1272 413 390 350 re f
+0.25 0.35 0.48 RG
+1272 413 390 350 re S
+0.89 0.93 0.97 rg
+1273 734 388 28 re f
+0 g
+BT /F1 13 Tf 1281 743 Td (UnitTransferRequests) Tj ET
+BT /F1 9 Tf 1281 719 Td (PK TransferID : BIGINT UNSIGNED) Tj ET
+BT /F1 9 Tf 1281 706 Td (FK TenantID : INT UNSIGNED) Tj ET
+BT /F1 9 Tf 1281 693 Td (FK RequestedUnitID : INT UNSIGNED) Tj ET
+BT /F1 9 Tf 1281 680 Td (FK CurrentUnitID : INT UNSIGNED) Tj ET
+BT /F1 9 Tf 1281 667 Td (   Reason : VARCHAR\(500\)) Tj ET
+BT /F1 9 Tf 1281 654 Td (   Status : VARCHAR\(20\)) Tj ET
+BT /F1 9 Tf 1281 641 Td (   DateRequested : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 1281 628 Td (   DateReviewed : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 1281 615 Td (   TenantArchivedAt : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 1281 602 Td (   StaffArchivedAt : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 1281 589 Td (   AdminNotes : VARCHAR\(500\)) Tj ET
+BT /F1 8 Tf 1281 573 Td (References:) Tj ET
+BT /F1 8 Tf 1281 562 Td (TenantID -> TenantProfiles.TenantID) Tj ET
+BT /F1 8 Tf 1281 551 Td (RequestedUnitID -> Units.UnitID) Tj ET
+BT /F1 8 Tf 1281 540 Td (CurrentUnitID -> Units.UnitID) Tj ET
+1 1 1 rg
+36 40 390 350 re f
+0.25 0.35 0.48 RG
+36 40 390 350 re S
+0.89 0.93 0.97 rg
+37 361 388 28 re f
+0 g
+BT /F1 13 Tf 45 370 Td (Billings) Tj ET
+BT /F1 9 Tf 45 346 Td (PK BillingID : BIGINT UNSIGNED) Tj ET
+BT /F1 9 Tf 45 333 Td (FK TenantID : INT UNSIGNED) Tj ET
+BT /F1 9 Tf 45 320 Td (   BillingPeriod : DATE) Tj ET
+BT /F1 9 Tf 45 307 Td (   AmountDue : DECIMAL\(10,2\)) Tj ET
+BT /F1 9 Tf 45 294 Td (   AmountPaid : DECIMAL\(10,2\)) Tj ET
+BT /F1 9 Tf 45 281 Td (   Deposit : DECIMAL\(10,2\)) Tj ET
+BT /F1 9 Tf 45 268 Td (   Advance : DECIMAL\(10,2\)) Tj ET
+BT /F1 9 Tf 45 255 Td (   DueDate : DATE) Tj ET
+BT /F1 9 Tf 45 242 Td (   AdvanceFromOverpayment : DECIMAL\(10,2\)) Tj ET
+BT /F1 9 Tf 45 229 Td (   IssuedFromAdvance : BOOLEAN) Tj ET
+BT /F1 9 Tf 45 216 Td (   DatePaid : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 45 203 Td (   Status : VARCHAR\(20\)) Tj ET
+BT /F1 9 Tf 45 190 Td (   Notes : VARCHAR\(500\)) Tj ET
+BT /F1 9 Tf 45 177 Td (   DateIssued : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 45 164 Td (   ArchivedAt : DATETIME\(6\)) Tj ET
+BT /F1 8 Tf 45 148 Td (References:) Tj ET
+BT /F1 8 Tf 45 137 Td (TenantID -> TenantProfiles.TenantID) Tj ET
+1 1 1 rg
+448 40 390 350 re f
+0.25 0.35 0.48 RG
+448 40 390 350 re S
+0.89 0.93 0.97 rg
+449 361 388 28 re f
+0 g
+BT /F1 13 Tf 457 370 Td (Payments) Tj ET
+BT /F1 9 Tf 457 346 Td (PK PaymentID : BIGINT UNSIGNED) Tj ET
+BT /F1 9 Tf 457 333 Td (FK BillingID : BIGINT UNSIGNED) Tj ET
+BT /F1 9 Tf 457 320 Td (   Amount : DECIMAL\(10,2\)) Tj ET
+BT /F1 9 Tf 457 307 Td (   DatePaid : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 457 294 Td (   Method : VARCHAR\(50\)) Tj ET
+BT /F1 9 Tf 457 281 Td (   Remarks : VARCHAR\(300\)) Tj ET
+BT /F1 9 Tf 457 268 Td (   RecordedAt : DATETIME\(6\)) Tj ET
+BT /F1 8 Tf 457 252 Td (References:) Tj ET
+BT /F1 8 Tf 457 241 Td (BillingID -> Billings.BillingID) Tj ET
+1 1 1 rg
+860 40 390 350 re f
+0.25 0.35 0.48 RG
+860 40 390 350 re S
+0.89 0.93 0.97 rg
+861 361 388 28 re f
+0 g
+BT /F1 13 Tf 869 370 Td (MaintenanceRequests) Tj ET
+BT /F1 9 Tf 869 346 Td (PK RequestID : BIGINT UNSIGNED) Tj ET
+BT /F1 9 Tf 869 333 Td (FK TenantID : INT UNSIGNED) Tj ET
+BT /F1 9 Tf 869 320 Td (FK UnitID : INT UNSIGNED) Tj ET
+BT /F1 9 Tf 869 307 Td (FK AssignedStaffUserID : INT UNSIGNED) Tj ET
+BT /F1 9 Tf 869 294 Td (   Category : VARCHAR\(50\)) Tj ET
+BT /F1 9 Tf 869 281 Td (   Description : VARCHAR\(500\)) Tj ET
+BT /F1 9 Tf 869 268 Td (   Priority : VARCHAR\(20\)) Tj ET
+BT /F1 9 Tf 869 255 Td (   Status : VARCHAR\(30\)) Tj ET
+BT /F1 9 Tf 869 242 Td (   DateSubmitted : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 869 229 Td (   DateResolved : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 869 216 Td (   TenantArchivedAt : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 869 203 Td (   StaffArchivedAt : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 869 190 Td (   StaffNotes : VARCHAR\(500\)) Tj ET
+BT /F1 9 Tf 869 177 Td (   ImagePath : VARCHAR\(260\)) Tj ET
+BT /F1 8 Tf 869 161 Td (References:) Tj ET
+BT /F1 8 Tf 869 150 Td (TenantID -> TenantProfiles.TenantID) Tj ET
+BT /F1 8 Tf 869 139 Td (UnitID -> Units.UnitID) Tj ET
+BT /F1 8 Tf 869 128 Td (AssignedStaffUserID -> Users.UserID) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000243 00000 n 
+0000011461 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+11531
+%%EOF

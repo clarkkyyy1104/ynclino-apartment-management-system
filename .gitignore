@@ -36,3 +36,4 @@ Thumbs.db
 
 # per-developer local config (contains DB password) — never commit
 appsettings.Local.json
+/Database/demo_accounts.local.csv

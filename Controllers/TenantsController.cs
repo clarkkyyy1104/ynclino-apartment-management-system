@@ -185,7 +185,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 if (unit != null) 
                 {
                     decimal moveInTotal = unit.Deposit + unit.AdvancePayment;
-                    _context.tblBillings.Add(new tblBilling
+                    var moveInBill = new tblBilling
                     {
                         TenantID = tenant.TenantID,
                         BillingPeriod = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1),
@@ -198,8 +198,21 @@ namespace YnclinoApartmentManagementSystem.Controllers
                         Status = "Paid",
                         Notes = $"Move-in payment - Deposit ₱{unit.Deposit:N0} + Advance Payment ₱{unit.AdvancePayment:N0}",
                         DateIssued = DateTime.Now
-                    });
+                    };
+                    _context.tblBillings.Add(moveInBill);
                     await _context.SaveChangesAsync();
+                    if (moveInTotal > 0)
+                    {
+                        _context.tblPayments.Add(new tblPayment
+                        {
+                            BillingID = moveInBill.BillingID,
+                            Amount = moveInTotal,
+                            DatePaid = DateTime.Today,
+                            Method = "Cash",
+                            Remarks = "Move-in deposit and advance payment"
+                        });
+                        await _context.SaveChangesAsync();
+                    }
                 }
                 TempData["Success"] = $"Tenant {tenant.FullName} has been registered and assigned to unit {unit?.UnitNumber}.";
                 if (passwordWasGenerated) StashFirstPassword(user.Username, vm.Password!);
@@ -507,6 +520,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 }
             }
 
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+
             // Deleted in dependency order. Payments hang off bills, so they go first
             // even though the database would cascade them anyway — being explicit
             // means the order is obvious to whoever reads this next.
@@ -518,6 +533,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 .Where(m => m.TenantID == id).ExecuteDeleteAsync();
             await _context.tblUnitTransferRequests
                 .Where(r => r.TenantID == id).ExecuteDeleteAsync();
+            await _context.TenantUnitAssignments
+                .Where(a => a.TenantID == id).ExecuteDeleteAsync();
 
             _context.tblTenants.Remove(tenant);
             await _context.SaveChangesAsync();
@@ -532,6 +549,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 await SyncUnitStatusAsync(unitId.Value);
                 await _context.SaveChangesAsync();
             }
+
+            await transaction.CommitAsync();
 
             TempData["Success"] = $"{name} and all of their records have been permanently deleted.";
             return RedirectToAction(nameof(Index));

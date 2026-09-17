@@ -155,6 +155,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
                     Username = username,
                     Password = PasswordHelper.Hash("Tenant@123"),
                     Role = "Tenant",
+                    FirstName = first,
+                    LastName = last,
                     IsActive = true,
                     IsMainAdmin = false,
                     DateCreated = regDate
@@ -548,6 +550,14 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (unit.Tenants.Any())
             {
                 TempData["Error"] = $"Unit {unit.UnitNumber} has tenancy history and cannot be deleted.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (await _context.TenantUnitAssignments.AnyAsync(a => a.UnitID == id) ||
+                await _context.tblMaintenanceRequests.AnyAsync(m => m.UnitID == id) ||
+                await _context.tblUnitTransferRequests.AnyAsync(r => r.RequestedUnitID == id || r.CurrentUnitID == id))
+            {
+                TempData["Error"] = $"Unit {unit.UnitNumber} has request or assignment history and cannot be deleted.";
                 return RedirectToAction(nameof(Index));
             }
 

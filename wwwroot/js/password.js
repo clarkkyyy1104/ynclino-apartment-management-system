@@ -27,18 +27,18 @@ function meetsAllRules(value) {
     return Object.values(RULES).every(function (fn) { return fn(value); });
 }
 
-function togglePw(inputId) {
-    var input = document.getElementById(inputId);
-    var eye = document.getElementById(inputId + '-eye');
-    var slash = document.getElementById(inputId + '-eye-slash');
+document.addEventListener('click', function (event) {
+    var button = event.target.closest('.password-toggle');
+    if (!button) return;
+
+    var input = document.getElementById(button.dataset.passwordTarget);
     if (!input) return;
-    if (input.type === 'password') {
-        input.type = 'text';
-        if (eye) eye.style.display = 'none';
-        if (slash) slash.style.display = '';
-    } else {
-        input.type = 'password';
-        if (eye) eye.style.display = '';
-        if (slash) slash.style.display = 'none';
-    }
-}
+
+    var showing = input.type === 'password';
+    input.type = showing ? 'text' : 'password';
+    button.setAttribute('aria-label', showing ? 'Hide password' : 'Show password');
+    button.setAttribute('aria-pressed', String(showing));
+    button.querySelector('img').src = showing
+        ? button.dataset.hideIcon
+        : button.dataset.showIcon;
+});

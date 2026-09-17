@@ -39,7 +39,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int id) ? id : null;
 
         // GET: LostFound
-        public async Task<IActionResult> Index(string? typeFilter, string? statusFilter, string? searchTerm)
+        public async Task<IActionResult> Index(string? typeFilter, string? statusFilter, string? searchTerm, bool archived = false)
         {
             IQueryable<tblLostFoundItem> query = _context.tblLostFoundItems
                 .Include(l => l.ReportedBy).ThenInclude(u => u!.Tenants)
@@ -51,6 +51,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 var uid = CurrentUserID();
                 query = query.Where(l => l.ReportedByUserID == uid || l.ItemType == "Found");
             }
+
+            query = archived
+                ? query.Where(l => l.ArchivedAt != null)
+                : query.Where(l => l.ArchivedAt == null);
 
             if (!string.IsNullOrEmpty(typeFilter))
                 query = query.Where(l => l.ItemType == typeFilter);
@@ -66,10 +70,48 @@ namespace YnclinoApartmentManagementSystem.Controllers
             ViewBag.TypeFilter = typeFilter;
             ViewBag.StatusFilter = statusFilter;
             ViewBag.SearchTerm = searchTerm;
+            ViewBag.Archived = archived;
             var meId = CurrentUserID();
             ViewBag.CurrentUserID = meId;
 
             return View(await query.OrderByDescending(l => l.DateReported).ToListAsync());
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Archive(int id)
+        {
+            var item = await _context.tblLostFoundItems.FindAsync(id);
+            if (item == null) return NotFound();
+            if (item.ArchivedAt != null || !StatusFlowHelper.IsClosedLostFound(item.Status))
+            {
+                TempData["Error"] = "Only a claimed item in the active list can be archived.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+            if (await _context.tblClaimRequests.AnyAsync(c => c.ItemID == id && c.Status == "Pending"))
+            {
+                TempData["Error"] = "Review pending ownership claims before archiving this item.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+            item.ArchivedAt = DateTime.Now;
+            await _context.SaveChangesAsync();
+            TempData["Success"] = $"{item.ItemName} moved to the Lost & Found archive.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Restore(int id)
+        {
+            var item = await _context.tblLostFoundItems.FindAsync(id);
+            if (item == null) return NotFound();
+            if (item.ArchivedAt == null) return RedirectToAction(nameof(Index), new { archived = true });
+            item.ArchivedAt = null;
+            await _context.SaveChangesAsync();
+            TempData["Success"] = $"{item.ItemName} restored to the active list.";
+            return RedirectToAction(nameof(Index), new { archived = true });
         }
 
         // GET: LostFound/Details/5
