@@ -49,7 +49,7 @@
                     <dt>Username</dt><dd>@Model.Username</dd>
                     <dt>Role</dt><dd>@roleLabel</dd>
                     <dt>Status</dt>
-                    <dd><span>@(Model.IsActive ? "Active" : "Inactive")</span></dd>
+                    <dd><span data-status="@(Model.IsActive ? "active" : "inactive")">@(Model.IsActive ? "Active" : "Inactive")</span></dd>
                     <dt>Member Since</dt><dd>@Model.DateCreated.ToString("MMMM dd, yyyy")</dd>
                 </dl>
             </div>

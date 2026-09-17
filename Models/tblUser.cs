@@ -23,9 +23,6 @@ namespace YnclinoApartmentManagementSystem.Models
         [Required, MaxLength(80)]
         public string LastName { get; set; } = string.Empty;
 
-        [MaxLength(150)]
-        public string? Email { get; set; }
-
         [MaxLength(30)]
         public string? ContactNumber { get; set; }
 

@@ -3,10 +3,11 @@
     ViewData["Title"] = "Tenants";
 }
 
+<div data-module-shell>
 <div data-page-head>
     <div><h3>Tenants</h3></div>
     <div data-actions>
-        <a data-modal-link data-primary asp-action="Create">+ Register Tenant</a>
+        <a data-modal-link data-primary asp-action="Create">Register Tenant</a>
     </div>
 </div>
 
@@ -39,6 +40,7 @@
         <a asp-action="Index">Clear</a>
     </div>
 </form>
+</div>
 
 <div data-table-wrap>
     <table>
@@ -62,7 +64,7 @@
                         @* One badge: the tenancy and the login are switched together,
                            so Status says both. The only thing it cannot say is that a
                            tenant has no login at all, which is noted underneath. *@
-                        <span
+                        <span data-status="@tenant.Status.ToLowerInvariant()"
                               title="@(tenant.Status == "Active" ? "Renting, and can sign in" : "Not renting, and cannot sign in")">
                             @tenant.Status
                         </span>

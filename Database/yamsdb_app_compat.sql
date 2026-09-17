@@ -11,11 +11,7 @@ ALTER TABLE TenantProfiles
     ADD COLUMN EmergencyContactName VARCHAR(100) NULL AFTER ContactNumber,
     ADD COLUMN EmergencyContactRelationship VARCHAR(50) NULL AFTER EmergencyContactName,
     ADD COLUMN EmergencyContactNumber VARCHAR(20) NULL AFTER EmergencyContactRelationship,
-    ADD COLUMN MoveInDate DATETIME(6) NULL AFTER EmergencyContactNumber,
-    ADD COLUMN MoveOutDate DATETIME(6) NULL AFTER MoveInDate,
-    ADD COLUMN LeaseStart DATETIME(6) NULL AFTER MoveOutDate,
-    ADD COLUMN LeaseEnd DATETIME(6) NULL AFTER LeaseStart,
-    ADD COLUMN PhotoPath VARCHAR(300) NULL AFTER LeaseEnd,
+    ADD COLUMN PhotoPath VARCHAR(300) NULL AFTER EmergencyContactNumber,
     ADD CONSTRAINT fk_tenant_profiles_current_unit
         FOREIGN KEY (UnitID) REFERENCES Units(UnitID) ON DELETE RESTRICT;
 

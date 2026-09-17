@@ -37,16 +37,16 @@ namespace YnclinoApartmentManagementSystem.Models
         [Display(Name = "Emergency Contact Number")]
         public string? EmergencyContactNumber { get; set; }
 
-        [Display(Name = "Move-In Date")]
+        [NotMapped, Display(Name = "Move-In Date")]
         public DateTime? MoveInDate { get; set; }
 
-        [Display(Name = "Move-Out Date")]
+        [NotMapped, Display(Name = "Move-Out Date")]
         public DateTime? MoveOutDate { get; set; }
 
-        [Display(Name = "Lease Start")]
+        [NotMapped, Display(Name = "Lease Start")]
         public DateTime? LeaseStart { get; set; }
 
-        [Display(Name = "Lease End")]
+        [NotMapped, Display(Name = "Lease End")]
         public DateTime? LeaseEnd { get; set; }
 
         [Required, MaxLength(20)]

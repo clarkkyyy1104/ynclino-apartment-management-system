@@ -11,6 +11,13 @@
     <span>As of @DateTime.Today.ToString("MMMM dd, yyyy")</span>
 </div>
 
+<nav data-report-pagination aria-label="Report sections">
+    <button type="button" data-report-previous>Previous</button>
+    <span data-report-position aria-live="polite"></span>
+    <button type="button" data-report-next>Next</button>
+</nav>
+
+<div data-report-page data-report-group="Overview" data-report-title="Overview">
 @* ── Headline figures ── *@
 <div data-stats>
     <div>
@@ -54,7 +61,11 @@
 </div>
 
 @* ── Graphs ── *@
+</div>
+
+<div data-report-page data-report-group="Overview" data-report-title="Charts">
 <partial name="_Charts" model="Model" />
+</div>
 
 <div>
     @* ── How the building is doing ──
@@ -62,7 +73,7 @@
        "Available: 5" cannot be acted on without knowing which five units are
        empty, or what standing empty is costing. It reads as a sentence now, and
        every state names its own units. *@
-    <div>
+    <div data-report-page data-report-group="Operations" data-report-title="Building status">
         <div data-panel>
             <div data-panel-head><span>How the Building Is Doing</span></div>
             <div data-panel-body>
@@ -72,9 +83,9 @@
                 }
 
                 <div data-table-wrap>
-                    <table>
+                    <table data-page-size="4">
                         <thead>
-                            <tr><th>Right now</th><th>Units</th><th>Which ones</th><th>Rent a month</th></tr>
+                            <tr><th>Right now</th><th>Units</th><th>Occupied</th><th>Rent a month</th></tr>
                         </thead>
                         <tbody>
                             @foreach (var s in Model.UnitStates)
@@ -118,12 +129,12 @@
     </div>
 
     @* ── Monthly income summary ── *@
-    <div>
+    <div data-report-page data-report-group="Operations" data-report-title="Monthly income">
         <div data-panel>
             <div data-panel-head><span>Monthly Income Summary</span></div>
             <div data-panel-body>
                 <div data-table-wrap>
-                    <table>
+                    <table data-page-size="4">
                         <thead>
                             <tr><th>Month</th><th>Billed</th><th>Collected</th><th>Uncollected</th></tr>
                         </thead>
@@ -151,12 +162,12 @@
        line now, the arithmetic on each line is shown in full — Billed − Paid =
        Balance — and the name opens that tenant's own billing record so the
        figures can be traced to the bills they came from. *@
-    <div>
+    <div data-report-page data-report-group="Tenant records" data-report-title="Tenant balances">
         <div data-panel>
             <div data-panel-head><span>Tenant Accounts &amp; Standing Balance</span></div>
             <div data-panel-body>
                 <div data-table-wrap>
-                <table>
+                <table data-page-size="2">
                     <thead>
                         <tr>
                             <th>Tenant</th><th>Unit</th><th>Status</th>
@@ -173,7 +184,7 @@
                                     <a asp-controller="Billing" asp-action="TenantHistory" asp-route-id="@t.TenantID" data-record-link>@t.TenantName</a>
                                 </td>
                                 <td>@(t.UnitNumber ?? "—")</td>
-                                <td>@t.Status</td>
+                                <td><span data-status="@t.Status.ToLowerInvariant()">@t.Status</span></td>
                                 <td>@t.BillsIssued</td>
                                 <td>₱@t.Billed.ToString("N0")</td>
                                 <td>₱@t.Paid.ToString("N0")</td>
@@ -220,12 +231,12 @@
 <div>
     <div data-chart-row>    
         @* ── Maintenance records ── *@
-        <div>
+        <div data-report-page data-report-group="Maintenance" data-report-title="Maintenance records">
             <div data-panel>
                 <div data-panel-head><span>Maintenance Records</span></div>
                 <div data-panel-body>
                     <div data-table-wrap>
-                        <table>
+                        <table data-page-size="4">
                             <thead><tr><th>Status</th><th>Requests</th></tr></thead>
                             <tbody>
                                 @foreach (var m in Model.MaintenanceByStatus)
@@ -244,12 +255,12 @@
         </div>
 
         @* ── Maintenance requests by issue type ── *@
-        <div>
+        <div data-report-page data-report-group="Maintenance" data-report-title="Maintenance issue types">
             <div data-panel>
                 <div data-panel-head><span>Maintenance by Issue Type</span></div>
                 <div data-panel-body>
                     <div data-table-wrap>
-                        <table>
+                        <table data-page-size="4">
                             <thead>
                                 <tr><th>Issue Type</th><th>Requests</th></tr>
                             </thead>
@@ -285,7 +296,7 @@
         </div>
     </div>
 </div>
-<div>
+<div data-report-page data-report-group="Tenant records" data-report-title="Tenant histories">
 
     @* ── Tenant histories ── *@
     <div>
@@ -293,7 +304,7 @@
             <div data-panel-head><span>Tenant Histories</span></div>
             <div data-panel-body>
                 <div data-table-wrap>
-                    <table>
+                    <table data-page-size="2">
                         <thead>
                             <tr>
                                 <th>Tenant</th><th>Unit</th><th>Status</th>
@@ -317,7 +328,7 @@
                                         <a asp-controller="Billing" asp-action="TenantHistory" asp-route-id="@h.TenantID" data-record-link>@h.TenantName</a>
                                     </td>
                                     <td>@(h.UnitNumber ?? "—")</td>
-                                    <td><span>@h.Status</span></td>
+                                    <td><span data-status="@h.Status.ToLowerInvariant()">@h.Status</span></td>
                                     <td>@(h.MoveInDate?.ToString("MMM dd, yyyy") ?? "—")</td>
                                     <td>@(h.MoveOutDate?.ToString("MMM dd, yyyy") ?? "—")</td>
                                     <td>@h.MonthsBilled</td>

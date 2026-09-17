@@ -15,6 +15,24 @@
                     <div asp-validation-summary="ModelOnly"></div>
 
                     <div>
+                        <label asp-for="FirstName"></label>
+                        <input asp-for="FirstName" autocomplete="given-name" />
+                        <span asp-validation-for="FirstName"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="LastName"></label>
+                        <input asp-for="LastName" autocomplete="family-name" />
+                        <span asp-validation-for="LastName"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="ContactNumber"></label>
+                        <input asp-for="ContactNumber" type="tel" autocomplete="tel" />
+                        <span asp-validation-for="ContactNumber"></span>
+                    </div>
+
+                    <div>
                         <label asp-for="Username"></label>
                         <input asp-for="Username" autocomplete="username" />
                         <span asp-validation-for="Username"></span>

@@ -87,6 +87,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
                     if (vm.Tenant != null)
                     {
+                        await _context.LoadTenantDatesAsync(vm.Tenant);
                         vm.AdvanceCredit = vm.Tenant.AdvanceCredit;
                         vm.Outstanding = await _context.tblBillings
                             .Where(b => b.TenantID == vm.Tenant.TenantID && b.Status != "Paid")

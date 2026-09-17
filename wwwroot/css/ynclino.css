@@ -15,7 +15,7 @@
 
 /* 1. TOKENS ─────────────────────────────────────────────────────────────── */
 :root {
-    --navy:       #2B3648;   /* sidebar, sign-in page, table headers, card cap */
+    --navy:       #2B3648;   /* sidebar, sign-in page, table headers, card accent */
     --navy-soft:  #2B3648;   /* the current nav item */
     --orange:     #FA5203;   /* accent bar, active icon, eye icon */
     --orange-btn: #F94C01;   /* buttons */
@@ -34,7 +34,7 @@
     --green: #157347;  --green-bg: #d9f2e4;
     --red:   #b02a37;  --red-bg:   #fadbde;
 
-    --serif: Georgia, "Times New Roman", Cambria, serif;
+    --font-family: Arial, Helvetica, sans-serif;
     --radius: 10px;
     --sidebar-w: 264px;
 }
@@ -43,7 +43,7 @@
 *, *::before, *::after { box-sizing: border-box; }
 body {
     margin: 0;
-    font-family: var(--serif);
+    font-family: var(--font-family);
     line-height: 1.5;
     color: var(--ink);
     background: #fff;
@@ -298,7 +298,7 @@ main > div:has(> h3) > a,
 main > div:has(> h4) > a {
     display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
     padding: .55rem 1.15rem;
-    font-family: var(--serif); font-size: 1rem; font-weight: 700;
+    font-family: var(--font-family); font-size: 1rem; font-weight: 700;
     color: #fff; background: var(--orange-btn);
     border: 1px solid var(--orange-btn); border-radius: 6px;
     cursor: pointer;
@@ -348,7 +348,7 @@ main form[method="get"] a { font-weight: 600; }
 input[type="text"], input[type="number"], input[type="date"],
 input[type="password"], input[type="email"], select, textarea {
     padding: .55rem .8rem;
-    font-family: var(--serif); font-size: 1rem; color: var(--ink);
+    font-family: var(--font-family); font-size: 1rem; color: var(--ink);
     background: var(--field-bg);              /* filled, per the design */
     border: 1px solid var(--field-line);
     border-radius: 6px;
@@ -372,8 +372,9 @@ table { width: 100%; border-collapse: collapse; background: #fff; }
    edge. A two-word heading may take two lines; the table then fits. */
 thead th {
     padding: .8rem .6rem;
-    background: var(--navy); color: #fff; font-weight: 700;
+    background: #fff; color: var(--ink); font-weight: 700;
     text-align: center;
+    border-bottom: 1px solid var(--line);
 }
 tbody td {
     padding: .7rem .6rem; text-align: center; vertical-align: middle;
@@ -403,6 +404,7 @@ tbody td span[data-ghost][data-icon] {
 tbody td:last-child { white-space: nowrap; }
 tbody td:last-child:has(a, button, span) { text-align: right; }
 thead th:last-child { text-align: right; }
+table [data-user-actions] { text-align: center !important; }
 
 /* One height for everything that sits in a row, so the icons stop floating
    above the buttons beside them: the eye was a bare 14px glyph next to 33px
@@ -523,7 +525,7 @@ main > div > div > a:has(> div > div > svg) {
     text-align: center; color: var(--ink);
     background: #fff;
     border: 1px solid var(--line);
-    border-top: 5px solid var(--navy);     /* the dark cap from the design */
+    border-left: 5px solid var(--navy);
     border-radius: var(--radius);
     box-shadow: 0 2px 6px rgba(16,24,40,.06);
 }
@@ -666,7 +668,7 @@ tbody td form > button { margin: 0; }
 [data-primary] {
     display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
     padding: .55rem 1.15rem;
-    font-family: var(--serif); font-size: 1rem; font-weight: 700;
+    font-family: var(--font-family); font-size: 1rem; font-weight: 700;
     color: #fff; background: var(--orange-btn);
     border: 1px solid var(--orange-btn); border-radius: 6px;
     white-space: nowrap; cursor: pointer;
@@ -694,7 +696,7 @@ tbody td button,
 tbody td span[data-ghost] {
     display: inline-flex; align-items: center; justify-content: center;
     padding: .3rem .75rem; margin: 0 .1rem;
-    font-family: var(--serif); font-size: .9rem; font-weight: 600;
+    font-family: var(--font-family); font-size: .9rem; font-weight: 600;
     color: var(--ink); background: #fff;
     border: 1px solid var(--field-line); border-radius: 6px;
     white-space: nowrap; cursor: pointer;
@@ -740,18 +742,19 @@ tbody td span[title] { opacity: .45; }
 [data-panel-head] {
     display: flex; align-items: center; gap: .75rem;
     padding: .7rem 1.15rem;
-    background: var(--navy); color: #fff;
+    background: #fff; color: var(--ink);
+    border-bottom: 1px solid var(--line);
     font-weight: 600;
 }
 /* actions living in a panel header stay legible on the dark bar */
-[data-panel-head] a { color: #fff; text-decoration: underline; margin-left: auto; }
+[data-panel-head] a { color: var(--ink); text-decoration: underline; margin-left: auto; }
 [data-panel-head] form { margin: 0 0 0 auto; }
 [data-panel-head] button {
     padding: .25rem .7rem; font-size: .85rem; font-weight: 600;
-    color: #fff; background: transparent;
-    border: 1px solid rgba(255,255,255,.45); border-radius: 6px; cursor: pointer;
+    color: var(--ink); background: #fff;
+    border: 1px solid #888; border-radius: 6px; cursor: pointer;
 }
-[data-panel-head] button:hover { background: rgba(255,255,255,.12); color: #fff; }
+[data-panel-head] button:hover { background: #f1f1f1; color: var(--ink); }
 [data-panel-body] { padding: 1.25rem; }
 /* a panel whose body is nothing but a table should not double its padding */
 [data-panel-body]:has(> table) { padding: 0; }
@@ -784,7 +787,7 @@ tbody td span[title] { opacity: .45; }
     padding: 1rem 1.1rem;
     background: #fff;
     border: 1px solid var(--line);
-    border-top: 5px solid var(--navy);
+    border-left: 5px solid var(--navy);
     border-radius: var(--radius);
     box-shadow: 0 2px 6px rgba(16,24,40,.06);
 }
@@ -865,13 +868,34 @@ tbody td span[title] { opacity: .45; }
 [data-list] { padding: 0; }
 
 [data-note] {
-    display: flex; align-items: baseline; justify-content: space-between; gap: 1rem;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
     padding: .8rem 1.15rem;
     color: var(--ink);
 }
 [data-note] + [data-note] { border-top: 1px solid var(--line-soft); }
-[data-note]:hover { background: #f7f8f9; color: var(--ink); text-decoration: none; }
-[data-note] > div:first-child { min-width: 0; }
+[data-note]:hover { background: #f7f8f9; }
+[data-note-link] { flex: 1; min-width: 0; color: var(--ink); }
+[data-note-link]:hover { color: var(--ink); text-decoration: underline; }
+[data-note] [data-mark-read] {
+    flex: 0 0 auto;
+    padding: .4rem .75rem;
+    background: #fff;
+    border: 1px solid var(--orange-btn);
+    border-radius: 6px;
+    color: var(--orange-btn);
+    font-size: .85rem;
+    font-weight: 600;
+}
+[data-note] [data-mark-read]:hover {
+    background: #fff3ec;
+    color: var(--orange-dark);
+    border-color: var(--orange-dark);
+}
+[data-mark-read][hidden], [data-mark-all-read][hidden] { display: none; }
+@media (max-width: 600px) {
+    [data-note] { flex-wrap: wrap; }
+    [data-note] [data-mark-read] { margin-left: auto; }
+}
 
 /* which module the line came from, set apart from the sentence itself */
 [data-module] {
@@ -956,11 +980,6 @@ tbody td span[title] { opacity: .45; }
 /* a group toggle already sends its caret to the right, so the count stops short */
 aside nav a[data-collapse] [data-navcount] { margin-left: auto; margin-right: .5rem; }
 
-/* the unread banner above a module page is a panel, and it is the one place
-   the header is a sentence rather than a title */
-[data-module-alert] { margin-bottom: 1.25rem; }
-[data-module-alert] [data-panel-head] { font-weight: 400; font-size: .95rem; }
-
 /* a file picker should sit on the same footing as every other field */
 input[type="file"] {
     width: 100%;
@@ -968,14 +987,14 @@ input[type="file"] {
     background: var(--field-bg);
     border: 1px solid var(--field-line);
     border-radius: 6px;
-    font-family: var(--serif);
+    font-family: var(--font-family);
 }
 input[type="file"]::file-selector-button {
     margin-right: .75rem;
     padding: .35rem .9rem;
     color: var(--ink); background: #fff;
     border: 1px solid var(--field-line); border-radius: 6px;
-    font-family: var(--serif); font-weight: 600; cursor: pointer;
+    font-family: var(--font-family); font-weight: 600; cursor: pointer;
 }
 input[type="file"]::file-selector-button:hover { background: var(--field-bg); }
 
@@ -1004,7 +1023,7 @@ input[type="file"]::file-selector-button:hover { background: var(--field-bg); }
     display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
     padding: .5rem 1.1rem;
     max-width: 100%;
-    font-family: var(--serif); font-size: 1rem; font-weight: 600;
+    font-family: var(--font-family); font-size: 1rem; font-weight: 600;
     color: var(--ink); background: #fff;
     border: 1px solid var(--field-line); border-radius: 6px;
     cursor: pointer; text-align: center;
@@ -1163,7 +1182,7 @@ img, svg, table, pre { max-width: 100%; }
     padding: .5rem 1.1rem;
     color: var(--ink); background: #fff;
     border: 1px solid var(--field-line); border-radius: 6px;
-    font-family: var(--serif); font-size: 1rem; font-weight: 600; cursor: pointer;
+    font-family: var(--font-family); font-size: 1rem; font-weight: 600; cursor: pointer;
 }
 [data-identity-body] [data-actions] a:hover,
 [data-identity-body] [data-actions] button:hover { background: var(--field-bg); color: var(--ink); text-decoration: none; }
@@ -1224,7 +1243,8 @@ img, svg, table, pre { max-width: 100%; }
 [data-modal-head] {
     display: flex; align-items: center; justify-content: space-between; gap: 1rem;
     padding: .85rem 1.15rem;
-    background: var(--navy); color: #fff;
+    background: #fff; color: var(--ink);
+    border-bottom: 1px solid var(--line);
     font-weight: 700;
 }
 [data-modal-head] [data-modal-close] {
@@ -1357,3 +1377,455 @@ img, svg, table, pre { max-width: 100%; }
     order: 1; color: #fff; background: var(--orange-btn); border-color: var(--orange-btn);
 }
 [data-modal-body] [data-panel] > div[data-actions-row]:last-child > [data-primary]:hover { color: #fff; background: var(--orange-dark); border-color: var(--orange-dark); }
+
+/* Tables supply their own navy column header. Keep that inner card and show
+   section titles as plain text instead of wrapping the table in another card. */
+main [data-panel]:is([data-table-section], :has(> [data-panel-body] > [data-table-wrap])) {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+}
+main [data-panel]:is([data-table-section], :has(> [data-panel-body] > [data-table-wrap])) > [data-panel-head] {
+    padding: 0 0 .75rem;
+    background: transparent;
+    color: #000;
+}
+main [data-panel]:is([data-table-section], :has(> [data-panel-body] > [data-table-wrap])) > [data-panel-body] {
+    padding: 0;
+}
+main [data-panel] > [data-panel-body] > [data-table-wrap] {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: #fff;
+}
+main [data-panel][data-table-section] > [data-panel-body] > [data-empty] {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: #fff;
+}
+
+[data-pagination] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .75rem;
+    padding: .8rem 0 1rem;
+    color: var(--ink);
+    font-size: .9rem;
+}
+[data-pagination-controls] { display: flex; align-items: center; gap: .3rem; }
+[data-pagination-controls] select { width: auto; min-width: 3.25rem; padding: .3rem; font-size: .8rem; }
+[data-pagination-current] { min-width: 1.8rem; padding: .4rem; text-align: center; background: #e9e9e9; border-radius: 3px; }
+[data-pagination] button {
+    padding: .4rem .6rem;
+    border: 1px solid var(--field-line);
+    border-radius: 3px;
+    background: #fff;
+    color: var(--ink);
+    cursor: pointer;
+}
+[data-pagination] button:disabled {
+    opacity: .5;
+    cursor: default;
+}
+
+/* Reports show one section at a time so the dashboard does not become a long
+   stack of panels. Each section's own table pager handles additional records. */
+[data-report-pagination] { display: none; }
+[data-reports-ready] [data-report-pagination] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: .75rem 0 1.25rem;
+    color: var(--ink);
+    font-weight: 600;
+}
+[data-report-pagination] button {
+    padding: .45rem .9rem;
+    border: 1px solid var(--field-line);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--ink);
+    cursor: pointer;
+}
+[data-report-pagination] button:disabled { opacity: .45; cursor: default; }
+[data-report-page][hidden] { display: none; }
+[data-report-page] { min-width: 0; }
+[data-chart-row]:has(> [data-report-page]) { display: block; }
+[data-report-page] [data-chart-row] { margin-bottom: 0; }
+[data-report-page] [data-table-wrap] table {
+    width: 100%;
+    table-layout: fixed;
+}
+[data-report-page] table th,
+[data-report-page] table td {
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+@media (max-width: 900px) {
+    [data-report-page] [data-table-wrap] table { font-size: .78rem; }
+    [data-report-page] table th,
+[data-report-page] table td { padding: .35rem .2rem; }
+}
+
+/* Related reports share a page; cards retain their natural size. */
+main > div:has(> [data-report-group="Operations"]) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+[data-report-group="Tenant records"] { grid-column: 1 / -1; }
+[data-chart-row]:has(> [data-report-group="Maintenance"]) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (max-width: 1050px) {
+    main > div:has(> [data-report-group="Operations"]),
+    [data-chart-row]:has(> [data-report-group="Maintenance"]) {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Shared module heading and controls. The title is a full-width strip; search,
+   filters, navigation and the primary action share the row beneath it. */
+main:has(> [data-module-shell]) { padding-top: 0; }
+main > [data-module-shell] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 1rem;
+    row-gap: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+main > [data-module-shell] > [data-page-head] { display: contents; }
+main > [data-module-shell] > [data-page-head] > :first-child {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    margin: 0 -2rem;
+    padding: .62rem 2rem;
+    background: #fff;
+    border-bottom: 2px solid #dfe2e6;
+    box-shadow: 0 2px 3px rgba(24, 35, 47, .08);
+}
+main > [data-module-shell] > [data-page-head] h3,
+main > [data-module-shell] > [data-page-head] h4 { font-size: 1.55rem; line-height: 1.15; }
+main > [data-module-shell] > [data-page-head] > [data-actions],
+main > [data-module-shell] > [data-page-head] > a,
+main > [data-module-shell] > [data-page-head] > span {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+}
+main > [data-module-shell] > [data-page-head] > [data-actions] {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: .5rem;
+}
+main > [data-module-shell] > [data-page-head] > [data-actions] > [data-primary] { order: 2; }
+main > [data-module-shell] > [data-page-head] > [data-actions] > [data-primary]::before {
+    content: none;
+}
+
+/* Wireframe controls keep the same position and weight across list pages. */
+main > [data-module-shell] > [data-page-head] > [data-actions] > a,
+main > [data-module-shell] > [data-page-head] > [data-actions] > form > button {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    min-height: 34px;
+    padding: .4rem .8rem;
+    border: 1px solid #888;
+    border-radius: 5px;
+    background: #fff;
+    color: var(--ink);
+    font-size: .85rem;
+    font-weight: 500;
+    text-decoration: none;
+}
+main > [data-module-shell] > [data-page-head] > [data-actions] > a:hover,
+main > [data-module-shell] > [data-page-head] > [data-actions] > form > button:hover {
+    background: #f1f1f1;
+    color: var(--ink);
+    border-color: #555;
+}
+svg[data-action-icon] {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+main > [data-module-shell] > form[method="get"] { margin-bottom: 0; }
+main > [data-module-shell] + [data-table-wrap] { margin-top: 0; }
+
+main [data-table-wrap] > table > thead th { background: #fff; color: var(--ink); }
+main [data-table-wrap] > table > tbody tr { height: 3.25rem; }
+main [data-table-wrap] > table > tbody td { border-top-color: #dedede; }
+main [data-table-wrap] > table > tbody td:last-child a,
+main [data-table-wrap] > table > tbody td:last-child button { font-size: .82rem; }
+
+[data-modal-body] [data-actions-row] > a,
+[data-modal-body] [data-actions-row] > button,
+[data-modal-body] [data-actions-row] > form > button,
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > a,
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > button,
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > form > button {
+    min-width: 6.5rem;
+    padding: .5rem .85rem;
+    border-color: #888;
+    background: #fff;
+    color: var(--ink);
+    font-size: .85rem;
+    font-weight: 500;
+}
+[data-modal-body] [data-actions-row] > button[type="submit"],
+[data-modal-body] [data-actions-row] > form > button[type="submit"],
+[data-modal-body] [data-actions-row] > [data-primary],
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > [data-primary],
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > button[type="submit"],
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > form > button[type="submit"] {
+    border-color: #888;
+    background: #fff;
+    color: var(--ink);
+}
+main > [data-module-shell] > [data-page-head] > a {
+    display: inline-flex;
+    align-items: center;
+    padding: .55rem .95rem;
+    border: 1px solid var(--field-line);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--ink);
+}
+main > [data-module-shell] > form[method="get"] {
+    grid-column: 1;
+    grid-row: 2;
+    min-width: 0;
+    margin: 0;
+}
+main > [data-module-shell] > form[method="get"] > div:has(input[name="searchTerm"]) { margin-right: 2.35rem; }
+main > [data-module-shell] > form[method="get"] input[name="searchTerm"] {
+    width: min(18rem, 100%);
+    height: 38px;
+    background: #fff;
+    border-color: #757575;
+    box-shadow: 0 2px 3px rgba(20, 20, 20, .14);
+}
+main > [data-module-shell] > form[method="get"] select {
+    min-width: 8rem;
+    height: 33px;
+    padding: .3rem .65rem;
+    background: #fff;
+    box-shadow: 0 2px 3px rgba(20, 20, 20, .12);
+}
+main > [data-module-shell] > form[method="get"] a,
+main > [data-module-shell] > form[method="get"] button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 33px;
+    padding: .3rem .8rem;
+    color: var(--ink);
+    background: #fff;
+    border: 1px solid #757575;
+    border-radius: 6px;
+    box-shadow: 0 2px 3px rgba(20, 20, 20, .12);
+    font-size: .9rem;
+    font-weight: 500;
+}
+main > [data-module-shell] > [data-page-intro] {
+    grid-column: 1;
+    grid-row: 2;
+    margin: 0;
+}
+main > [data-module-shell] > [data-temp-password],
+main > [data-module-shell] > [data-advance-note] {
+    grid-column: 1 / -1;
+    grid-row: 3;
+}
+@media (max-width: 1050px) {
+    main > [data-module-shell] { grid-template-columns: minmax(0, 1fr); }
+    main > [data-module-shell] > form[method="get"] { grid-column: 1; grid-row: 2; }
+    main > [data-module-shell] > [data-page-head] > [data-actions],
+    main > [data-module-shell] > [data-page-head] > a,
+    main > [data-module-shell] > [data-page-head] > span {
+        grid-column: 1;
+        grid-row: 3;
+        justify-self: start;
+        justify-content: flex-start;
+    }
+    main > [data-module-shell]:not(:has(> form[method="get"])):not(:has(> [data-page-intro])) > [data-page-head] > [data-actions],
+    main > [data-module-shell]:not(:has(> form[method="get"])):not(:has(> [data-page-intro])) > [data-page-head] > span { grid-row: 2; }
+    main > [data-module-shell] > [data-temp-password],
+    main > [data-module-shell] > [data-advance-note] { grid-row: 4; }
+}
+@media (max-width: 700px) {
+    main > [data-module-shell] > [data-page-head] > :first-child {
+        margin: 0 -1rem;
+        padding: .72rem 1rem;
+    }
+    main > [data-module-shell] > form[method="get"] > div:has(input[name="searchTerm"]) { margin-right: 0; }
+    main > [data-module-shell] > form[method="get"] input[name="searchTerm"] { width: 100%; }
+}
+
+/* Issue Bill: matching field heights and readable guidance in both columns. */
+[data-form-body] > form[data-billing-create] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 1.15rem;
+    align-items: start;
+}
+[data-billing-create] > .validation-summary-errors,
+[data-billing-create] > .validation-summary-valid,
+[data-billing-create] > [data-actions-row] { grid-column: 1 / -1; }
+[data-billing-create] > .validation-summary-valid { display: none; }
+[data-billing-create] > div:not([data-actions-row]) { min-width: 0; margin: 0; }
+[data-billing-create] label { margin-bottom: .35rem; font-size: .9rem; font-weight: 600; }
+[data-billing-create] > div > select,
+[data-billing-create] > div > input,
+[data-billing-create] [data-currency-field] {
+    width: 100%;
+    min-height: 42px;
+}
+[data-billing-create] > div > input[type="month"],
+[data-billing-create] > div > input[type="date"],
+[data-billing-create] > div > select,
+[data-billing-create] [data-currency-field] > input {
+    height: 42px;
+    padding: .55rem .75rem;
+    background: #fff;
+    border: 1px solid var(--field-line);
+    border-radius: 6px;
+    color: var(--ink);
+    font: inherit;
+}
+[data-billing-create] [data-currency-field] > span {
+    min-width: 42px;
+    justify-content: center;
+    background: #f7f7f7;
+}
+[data-billing-create] [data-currency-field] > input {
+    flex: 1 1 auto;
+    min-width: 0;
+    border-radius: 0 6px 6px 0;
+}
+[data-billing-create] [data-field-note] {
+    margin-top: .35rem;
+    color: var(--muted);
+    font-size: .78rem;
+    font-weight: 400;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+[data-billing-create] [data-field-note]:empty { display: none; }
+[data-billing-create] > [data-actions-row] { margin-top: .25rem; }
+@media (max-width: 560px) {
+    [data-form-body] > form[data-billing-create] { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Action colors follow the consequence of the action across lists and dialogs. */
+[data-action-tone="green"] {
+    --action-ink: #6EC531;
+    --action-bg: #e5f5e9;
+    --action-hover: #ccebd4;
+}
+[data-action-tone="orange"] {
+    --action-ink: #9a3412;
+    --action-bg: #ffeddc;
+    --action-hover: #ffddbd;
+}
+[data-action-tone="gray"] {
+    --action-ink: #374151;
+    --action-bg: #f3f4f6;
+    --action-hover: #e5e7eb;
+}
+[data-action-tone="amber"] {
+    --action-ink: #854d0e;
+    --action-bg: #fff4d6;
+    --action-hover: #fde8ad;
+}
+[data-action-tone="red"] {
+    --action-ink: #991b1b;
+    --action-bg: #fee9e8;
+    --action-hover: #fbd1ce;
+}
+[data-status="active"], [data-status="inactive"] {
+    display: inline-block;
+    padding: .2rem .65rem;
+    border-radius: 999px;
+    border: 1px solid;
+    font-size: .83rem;
+    font-weight: 700;
+    line-height: 1.3;
+}
+[data-status="active"] {
+    color: #166534;
+    background: #e5f5e9;
+    border-color: #79bb8d;
+}
+[data-status="inactive"] {
+    color: #991b1b;
+    background: #fee9e8;
+    border-color: #dc8d88;
+}
+:is(a, button)[data-action-tone] {
+    color: var(--action-ink) !important;
+    background: var(--action-bg) !important;
+    border: 0 !important;
+    text-decoration: none;
+}
+:is(a, button)[data-action-tone]:hover {
+    color: var(--action-ink) !important;
+    background: var(--action-hover) !important;
+    text-decoration: none;
+}
+:is(a, button)[data-action-tone]:focus-visible {
+    outline: 2px solid var(--action-ink);
+    outline-offset: 2px;
+}
+
+/* Keep the eye inside its password field on login and modal forms. */
+body .pw-wrap {
+    position: relative;
+    display: block;
+}
+body .pw-wrap > input {
+    width: 100%;
+    padding-right: 3.2rem;
+}
+body .pw-wrap > button.password-toggle,
+body:not(:has(aside)) .pw-wrap > button.password-toggle,
+[data-form-body] .pw-wrap > button.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: .4rem;
+    transform: translateY(-50%);
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    box-shadow: none;
+    color: var(--ink-soft);
+}
+body .pw-wrap > button.password-toggle:hover,
+body:not(:has(aside)) .pw-wrap > button.password-toggle:hover,
+[data-form-body] .pw-wrap > button.password-toggle:hover {
+    border: 0;
+    background: rgba(0, 0, 0, .06);
+    color: var(--ink);
+}
+body .pw-wrap > button.password-toggle img { width: 18px; height: 18px; }

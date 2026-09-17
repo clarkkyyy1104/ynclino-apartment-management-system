@@ -3,12 +3,16 @@
     ViewData["Title"] = $"Tenancy History — Unit {Model.UnitNumber}";
 }
 
+@{
+    var assignments = ViewBag.Assignments as List<YnclinoApartmentManagementSystem.Models.TenantUnitAssignment>
+        ?? new List<YnclinoApartmentManagementSystem.Models.TenantUnitAssignment>();
+}
 @* Who has lived in this unit. Opened from the unit's own details modal. *@
 <div data-modal-source>
     <div data-panel>
         <div data-panel-head>Tenancy History</div>
         <div data-panel-body>
-            @if (Model.Tenants.Any())
+            @if (assignments.Any())
             {
                 <div data-table-wrap>
                     <table>
@@ -22,15 +26,15 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var tenant in Model.Tenants.OrderByDescending(t => t.Status == "Active").ThenByDescending(t => t.DateRecorded))
+                            @foreach (var assignment in assignments)
                             {
                                 <tr>
-                                    <td>@tenant.LastName, @tenant.FirstName</td>
-                                    <td>@tenant.DateRecorded.ToString("MMM dd, yyyy")</td>
-                                    <td>@(tenant.MoveOutDate?.ToString("MMM dd, yyyy") ?? "-")</td>
-                                    <td>@tenant.Status</td>
+                                    <td>@assignment.Tenant?.LastName, @assignment.Tenant?.FirstName</td>
+                                    <td>@(assignment.MoveInDate?.ToString("MMM dd, yyyy") ?? assignment.DateRecorded.ToString("MMM dd, yyyy"))</td>
+                                    <td>@(assignment.MoveOutDate?.ToString("MMM dd, yyyy") ?? "-")</td>
+                                    <td>@assignment.Status</td>
                                     <td>
-                                        <a data-modal-link asp-controller="Tenants" asp-action="Details" asp-route-id="@tenant.TenantID" title="View" aria-label="View"><img src="/images/icons/view.svg" alt="" /></a>
+                                        <a data-modal-link asp-controller="Tenants" asp-action="Details" asp-route-id="@assignment.TenantID" title="View" aria-label="View"><img src="/images/icons/view.svg" alt="" /></a>
                                     </td>
                                 </tr>
                             }

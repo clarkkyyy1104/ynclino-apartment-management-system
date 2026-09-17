@@ -91,6 +91,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (User.IsInRole("Tenant") && tenant.UserID != CurrentUserID())
                 return Forbid();
 
+            await _context.LoadTenantDatesAsync(tenant);
             return View(tenant);
         }
 
@@ -233,6 +234,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             var tenant = await _context.tblTenants.FindAsync(id);
             if (tenant == null) return NotFound();
+            await _context.LoadTenantDatesAsync(tenant);
 
             // pull the linked account username if there is one
             tblUser? linkedUser = null;
@@ -280,6 +282,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             var tenant = await _context.tblTenants.FindAsync(id);
             if (tenant == null) return NotFound();
+            await _context.LoadTenantDatesAsync(tenant);
 
             // The username is bound to the account from the moment it is created and is
             // never editable. Whatever the form posted is discarded here and replaced
@@ -294,6 +297,15 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 vm.Username = GenerateUsername(vm.FirstName, vm.LastName);   // no login yet: issue one
 
             ModelState.Remove(nameof(vm.Username));
+
+            // Dates need an assignment row. A never-assigned tenant has no unit
+            // for that row, so reject date input rather than silently losing it.
+            if (tenant.UnitID == null &&
+                (vm.MoveInDate.HasValue || vm.MoveOutDate.HasValue ||
+                 vm.LeaseStart.HasValue || vm.LeaseEnd.HasValue) &&
+                !await _context.TenantUnitAssignments.AnyAsync(a => a.TenantID == tenant.TenantID))
+                ModelState.AddModelError(nameof(vm.MoveInDate),
+                    "Assign a unit before recording occupancy or lease dates.");
 
             if (!ModelState.IsValid)
             {
@@ -384,6 +396,25 @@ namespace YnclinoApartmentManagementSystem.Controllers
                     ?? (previousStatus == "Active" ? DateTime.Now : tenant.MoveOutDate);
 
             await _context.SaveChangesAsync();
+
+            // A date edit without a unit/status change does not create a new
+            // assignment, so update the existing assignment itself.
+            if (previousUnitID == tenant.UnitID && previousStatus == tenant.Status)
+            {
+                var assignment = await _context.TenantUnitAssignments
+                    .Where(a => a.TenantID == tenant.TenantID)
+                    .OrderByDescending(a => a.Status == "Active")
+                    .ThenByDescending(a => a.AssignmentID)
+                    .FirstOrDefaultAsync();
+                if (assignment != null)
+                {
+                    assignment.MoveInDate = tenant.MoveInDate;
+                    assignment.MoveOutDate = tenant.MoveOutDate;
+                    assignment.LeaseStart = tenant.LeaseStart;
+                    assignment.LeaseEnd = tenant.LeaseEnd;
+                    await _context.SaveChangesAsync();
+                }
+            }
 
 
             // when a tenant leaves, their security deposit settles the final month's rent

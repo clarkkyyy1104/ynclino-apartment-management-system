@@ -11,7 +11,7 @@ const classes = {
   User: { model: 'tblUser', tone: 'blue', fields: [
     'UserID : int {PK}', 'Username : string', 'Password : string',
     'Role : string {RoleID}', 'FirstName : string', 'LastName : string',
-    'Email : string?', 'ContactNumber : string?', 'IsActive : bool',
+    'ContactNumber : string?', 'IsActive : bool',
     'MustChangePassword : bool', 'IsMainAdmin : bool', 'LastLoginAt : DateTime?',
     'DisplayName : string {derived}'
   ]},
@@ -117,7 +117,7 @@ const pages = [
     id: '03_lost_found', title: 'Lost & Found and ownership claims',
     subtitle: 'Admins and tenants report items; tenant ownership claims are reviewed by an admin',
     nodes: { User: [45, 215, 365], LostFoundItem: [555, 164, 400], ClaimRequest: [1105, 215, 350] },
-    concise: { User: ['UserID : int {PK}', 'Username : string', 'Role : string {RoleID}', 'FirstName : string', 'LastName : string', 'Email : string?', 'ContactNumber : string?', 'IsActive : bool', 'DisplayName : string {derived}'] },
+    concise: { User: ['UserID : int {PK}', 'Username : string', 'Role : string {RoleID}', 'FirstName : string', 'LastName : string', 'ContactNumber : string?', 'IsActive : bool', 'DisplayName : string {derived}'] },
     links: [
       { a: 'User', b: 'LostFoundItem', label: 'reported by', mult: ['1', '0..*'], points: [[410, 290], [555, 290]], at: [482, 268] },
       { a: 'User', b: 'LostFoundItem', label: 'claimed by', mult: ['0..1', '0..*'], points: [[410, 402], [555, 402]], at: [482, 380] },

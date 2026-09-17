@@ -5,14 +5,13 @@
     bool archived = ViewBag.Archived == true;
 }
 
-@await Component.InvokeAsync("ModuleNotifications", new { module = "LostFound" })
-
+<div data-module-shell>
 <div data-page-head>
     <div><h3>@(archived ? "Lost & Found Archive" : "Lost & Found")</h3></div>
     <div data-actions>
         @if (!archived)
         {
-            <a data-modal-link data-primary asp-action="Create">+ Report Item</a>
+            <a data-modal-link data-primary asp-action="Create">Report Item</a>
             <a asp-action="Index" asp-route-archived="true"><img src="~/images/icons/archive.svg" alt="" width="16" height="16" /> Archive</a>
         }
         else
@@ -45,6 +44,7 @@
         <a asp-action="Index" asp-route-archived="@archived">Clear</a>
     </div>
 </form>
+</div>
 
 <div data-table-wrap>
     <table>

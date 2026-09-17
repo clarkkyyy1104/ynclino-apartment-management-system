@@ -1,15 +1,5 @@
 @model IEnumerable<YnclinoApartmentManagementSystem.Models.SystemNotification>
-@*
-    The dashboard feed, shared by all three dashboards so the admin, the tenant
-    and the maintenance staff see exactly the same thing.
-
-    There is no notifications table any more, so nothing here is "read" or
-    "unread" and there is nothing to mark off. SystemNotificationService works
-    each line out from the records, so a line disappears when the work behind it
-    is done — the bill is settled, the request is closed.
-
-    Usage:  <partial name="_NotificationFeed" model="Model.Notifications" />
-*@
+@using System.Security.Claims
 @{
     var notes = (Model ?? Enumerable.Empty<YnclinoApartmentManagementSystem.Models.SystemNotification>()).ToList();
 
@@ -22,9 +12,13 @@
     };
 }
 
-<div data-panel>
+<div data-panel data-notification-feed data-notification-user="@User.FindFirstValue(ClaimTypes.NameIdentifier)">
     <div data-panel-head>
         <span>Notifications</span>
+        @if (notes.Count > 0)
+        {
+            <button type="button" data-mark-all-read>Mark all as read</button>
+        }
     </div>
 
     @if (notes.Count == 0)
@@ -39,12 +33,13 @@
         <div data-panel-body>
             @foreach (var n in notes)
             {
-                <a data-note data-unread="true" href="@(n.Link ?? "#")">
-                    <div>
+                <div data-note data-unread="true" data-notification-key="@($"{n.Module}|{n.TargetId}|{n.Message}")">
+                    <a data-note-link href="@(n.Link ?? "#")">
                         <span data-module>@NoteLabel(n.Module)</span>
                         <span data-message>@n.Message</span>
-                    </div>
-                </a>
+                    </a>
+                    <button type="button" data-mark-read>Mark as read</button>
+                </div>
             }
         </div>
     }

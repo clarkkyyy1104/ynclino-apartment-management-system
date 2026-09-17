@@ -20,6 +20,33 @@ namespace YnclinoApartmentManagementSystem.Data
         public DbSet<tblPayment> tblPayments { get; set; }
         public DbSet<TenantUnitAssignment> TenantUnitAssignments { get; set; }
 
+        // These values are display/edit conveniences on tblTenant; the assignment
+        // row is their only persisted source.
+        public async Task LoadTenantDatesAsync(IEnumerable<tblTenant> tenants, CancellationToken cancellationToken = default)
+        {
+            var list = tenants.ToList();
+            var ids = list.Select(t => t.TenantID).ToList();
+            if (ids.Count == 0) return;
+            var assignments = await TenantUnitAssignments.AsNoTracking()
+                .Where(a => ids.Contains(a.TenantID))
+                .OrderByDescending(a => a.Status == "Active")
+                .ThenByDescending(a => a.AssignmentID)
+                .ToListAsync(cancellationToken);
+            var latest = assignments.GroupBy(a => a.TenantID)
+                .ToDictionary(g => g.Key, g => g.First());
+            foreach (var tenant in list)
+            {
+                if (!latest.TryGetValue(tenant.TenantID, out var assignment)) continue;
+                tenant.MoveInDate = assignment.MoveInDate;
+                tenant.MoveOutDate = assignment.MoveOutDate;
+                tenant.LeaseStart = assignment.LeaseStart;
+                tenant.LeaseEnd = assignment.LeaseEnd;
+            }
+        }
+
+        public Task LoadTenantDatesAsync(tblTenant tenant, CancellationToken cancellationToken = default) =>
+            LoadTenantDatesAsync(new[] { tenant }, cancellationToken);
+
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             var changedTenants = ChangeTracker.Entries<tblTenant>()

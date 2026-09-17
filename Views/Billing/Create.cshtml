@@ -8,7 +8,7 @@
         <div data-form-panel>
             <div data-form-head>Issue New Bill</div>
             <div data-form-body>
-                <form asp-action="Create" method="post">
+                <form asp-action="Create" method="post" data-billing-create>
                     @Html.AntiForgeryToken()
                     <div asp-validation-summary="ModelOnly"></div>
 
@@ -24,23 +24,23 @@
                             <label asp-for="BillingPeriod">Billing Period (Month)</label>
                             <input asp-for="BillingPeriod" id="periodInput" type="month"
                                    value="@Model.BillingPeriod.ToString("yyyy-MM")" />
-                            <div>Filled in automatically from the tenant's last bill.</div>
+                            <div data-field-note>Filled in automatically from the tenant's last bill.</div>
                             <span asp-validation-for="BillingPeriod"></span>
                         </div>
                         <div>
                             <label asp-for="DueDate"></label>
                             <input asp-for="DueDate" id="dueDateInput" type="date" />
-                            <div>Set to the last day of the billing month — you can change it.</div>
+                            <div data-field-note>Set to the last day of the billing month — you can change it.</div>
                             <span asp-validation-for="DueDate"></span>
                         </div>
 
                     <div>
                         <label asp-for="AmountDue"></label>
-                        <div>
+                        <div data-currency-field>
                             <span>₱</span>
                             <input asp-for="AmountDue" id="amountDueInput" type="number" min="0" step="1" placeholder="0" />
                         </div>
-                        <div id="amountHint"></div>
+                        <div id="amountHint" data-field-note aria-live="polite"></div>
                         <span asp-validation-for="AmountDue"></span>
                     </div>
 

@@ -9,7 +9,7 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 1684 1191] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
 endobj
 4 0 obj
-<< /Length 11166 >>
+<< /Length 11109 >>
 stream
 0.55 G 0.5 w
 643 961 m 231 961 l S
@@ -55,16 +55,15 @@ BT /F1 9 Tf 457 1066 Td (   Username : VARCHAR\(50\)) Tj ET
 BT /F1 9 Tf 457 1053 Td (   PasswordHash : VARCHAR\(255\)) Tj ET
 BT /F1 9 Tf 457 1040 Td (   FirstName : VARCHAR\(80\)) Tj ET
 BT /F1 9 Tf 457 1027 Td (   LastName : VARCHAR\(80\)) Tj ET
-BT /F1 9 Tf 457 1014 Td (   Email : VARCHAR\(150\)) Tj ET
-BT /F1 9 Tf 457 1001 Td (   ContactNumber : VARCHAR\(30\)) Tj ET
-BT /F1 9 Tf 457 988 Td (   IsActive : BOOLEAN) Tj ET
-BT /F1 9 Tf 457 975 Td (   MustChangePassword : BOOLEAN) Tj ET
-BT /F1 9 Tf 457 962 Td (   IsMainAdmin : BOOLEAN) Tj ET
-BT /F1 9 Tf 457 949 Td (   LastLoginAt : DATETIME\(6\)) Tj ET
-BT /F1 9 Tf 457 936 Td (   DateCreated : DATETIME\(6\)) Tj ET
-BT /F1 9 Tf 457 923 Td (   DateUpdated : DATETIME\(6\)) Tj ET
-BT /F1 8 Tf 457 907 Td (References:) Tj ET
-BT /F1 8 Tf 457 896 Td (RoleID -> Roles.RoleID) Tj ET
+BT /F1 9 Tf 457 1014 Td (   ContactNumber : VARCHAR\(30\)) Tj ET
+BT /F1 9 Tf 457 1001 Td (   IsActive : BOOLEAN) Tj ET
+BT /F1 9 Tf 457 988 Td (   MustChangePassword : BOOLEAN) Tj ET
+BT /F1 9 Tf 457 975 Td (   IsMainAdmin : BOOLEAN) Tj ET
+BT /F1 9 Tf 457 962 Td (   LastLoginAt : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 457 949 Td (   DateCreated : DATETIME\(6\)) Tj ET
+BT /F1 9 Tf 457 936 Td (   DateUpdated : DATETIME\(6\)) Tj ET
+BT /F1 8 Tf 457 920 Td (References:) Tj ET
+BT /F1 8 Tf 457 909 Td (RoleID -> Roles.RoleID) Tj ET
 1 1 1 rg
 860 786 390 350 re f
 0.25 0.35 0.48 RG
@@ -280,9 +279,9 @@ xref
 0000000058 00000 n 
 0000000115 00000 n 
 0000000243 00000 n 
-0000011461 00000 n 
+0000011404 00000 n 
 trailer
 << /Size 6 /Root 1 0 R >>
 startxref
-11531
+11474
 %%EOF

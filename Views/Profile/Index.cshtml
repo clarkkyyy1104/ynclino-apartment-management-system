@@ -19,9 +19,6 @@
     var initials = $"{(Model.FirstName.Length > 0 ? Model.FirstName[0] : ' ')}{(Model.LastName.Length > 0 ? Model.LastName[0] : ' ')}".Trim();
 }
 
-@* Unread unit-request alerts (e.g. "approved") — clicking one marks it read and clears the red badge *@
-@await Component.InvokeAsync("ModuleNotifications", new { module = "Transfer" })
-
 @* The identity band. The file input itself is never shown — the photo (or the
    initials standing in for one) is the label, so clicking the picture is what
    opens the file picker, and the little camera says so. *@

@@ -56,7 +56,6 @@ CREATE TABLE Users (
 
     FirstName VARCHAR(80) NOT NULL,
     LastName VARCHAR(80) NOT NULL,
-    Email VARCHAR(150) NULL,
     ContactNumber VARCHAR(30) NULL,
 
     IsActive BOOLEAN NOT NULL DEFAULT TRUE,
@@ -70,7 +69,6 @@ CREATE TABLE Users (
 
     PRIMARY KEY (UserID),
     CONSTRAINT uq_users_username UNIQUE (Username),
-    CONSTRAINT uq_users_email UNIQUE (Email),
 
     CONSTRAINT fk_users_role
         FOREIGN KEY (RoleID)
@@ -138,10 +136,6 @@ CREATE TABLE TenantProfiles (
     EmergencyContactName VARCHAR(100) NULL,
     EmergencyContactRelationship VARCHAR(50) NULL,
     EmergencyContactNumber VARCHAR(20) NULL,
-    MoveInDate DATETIME(6) NULL,
-    MoveOutDate DATETIME(6) NULL,
-    LeaseStart DATETIME(6) NULL,
-    LeaseEnd DATETIME(6) NULL,
     PhotoPath VARCHAR(300) NULL,
 
     AdvanceCredit DECIMAL(10,2) NOT NULL DEFAULT 0.00,
@@ -507,7 +501,6 @@ INSERT INTO Users
     PasswordHash,
     FirstName,
     LastName,
-    Email,
     ContactNumber,
     IsActive,
     MustChangePassword,
@@ -520,7 +513,6 @@ VALUES
     'djYghAu8O+sp9Cvf31GmHYlY3jXA5UjsxHi0K88subOp77uz49xjukaeeYt2LqGh',
     'System',
     'Administrator',
-    NULL,
     NULL,
     TRUE,
     FALSE,

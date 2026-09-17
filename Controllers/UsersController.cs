@@ -58,6 +58,15 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return View((ViewBag.Accounts as List<tblUser>)!);
         }
 
+        // GET: Users/Details/5 — account information for every role.
+        public async Task<IActionResult> Details(int id)
+        {
+            var user = await _context.tblUsers
+                .Include(u => u.Tenants)
+                .FirstOrDefaultAsync(u => u.UserID == id);
+            return user == null ? NotFound() : View(user);
+        }
+
         // GET: Users/Create — staff accounts only
         public IActionResult Create()
         {
@@ -84,6 +93,14 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             bool isMainAdmin = CurrentUserIsMainAdmin();
             bool isAdmin = User.IsInRole("Admin");
+
+            vm.FirstName = vm.FirstName?.Trim() ?? string.Empty;
+            vm.LastName = vm.LastName?.Trim() ?? string.Empty;
+            vm.ContactNumber = string.IsNullOrWhiteSpace(vm.ContactNumber) ? null : vm.ContactNumber.Trim();
+            if (string.IsNullOrWhiteSpace(vm.FirstName))
+                ModelState.AddModelError(nameof(vm.FirstName), "First name is required.");
+            if (string.IsNullOrWhiteSpace(vm.LastName))
+                ModelState.AddModelError(nameof(vm.LastName), "Last name is required.");
 
             // this module creates staff accounts only — Admin or Maintenance. Anything
             // else (a forged "Tenant", say) is REFUSED, never quietly turned into an
@@ -116,8 +133,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 Username     = vm.Username,
                 Password     = PasswordHelper.Hash(vm.Password!),
                 Role         = vm.Role,
-                FirstName    = vm.Username,
-                LastName     = vm.Role == "Admin" ? "Administrator" : "Staff",
+                FirstName    = vm.FirstName,
+                LastName     = vm.LastName,
+                ContactNumber = vm.ContactNumber,
                 IsActive     = vm.IsActive,
                 IsMainAdmin = false,
                 // an account created FOR someone else must have its password changed on

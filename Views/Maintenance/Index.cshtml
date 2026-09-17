@@ -6,8 +6,7 @@
     bool archived = ViewBag.Archived == true;
 }
 
-@await Component.InvokeAsync("ModuleNotifications", new { module = "Maintenance" })
-
+<div data-module-shell>
 <div data-page-head>
     <div>
         <h3>
@@ -18,7 +17,7 @@
         @* staff carry out work; they do not raise requests *@
         @if (!archived && !isStaff)
         {
-            <a data-modal-link data-primary asp-action="Create">+ New Request</a>
+            <a data-modal-link data-primary asp-action="Create">New Request</a>
         }
         @* One button, not a pair of tabs: it names the list you are NOT looking
            at, so it always reads as somewhere to go rather than as a choice
@@ -55,6 +54,7 @@
         <a asp-action="Index" asp-route-archived="@archived.ToString().ToLower()">Clear</a>
     </div>
 </form>
+</div>
 
 <div data-table-wrap>
     <table>

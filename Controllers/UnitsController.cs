@@ -61,6 +61,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 .FirstOrDefaultAsync(u => u.UnitID == id);
 
             if (unit == null) return NotFound();
+            ViewBag.Assignments = await _context.TenantUnitAssignments
+                .Include(a => a.Tenant)
+                .Where(a => a.UnitID == unit.UnitID)
+                .OrderByDescending(a => a.AssignmentID)
+                .ToListAsync();
             return View(unit);
         }
 

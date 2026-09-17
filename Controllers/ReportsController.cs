@@ -123,6 +123,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 .Include(t => t.Unit)
                 .OrderBy(t => t.LastName).ThenBy(t => t.FirstName)
                 .ToListAsync();
+            await _context.LoadTenantDatesAsync(allTenants);
 
             // ── Where every tenant's account stands ──
             // Built from the tenant list rather than from the bills, so a tenant

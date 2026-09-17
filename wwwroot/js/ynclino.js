@@ -137,6 +137,151 @@
        Nothing here is required for the app to work. Without <dialog> support,
        or with JavaScript off, the links stay ordinary links and every form is
        still reachable at its own address.                                    */
+    /* Paginate each record table independently. Search and status filters still
+       run on the server; this limits the rows shown from their current result. */
+    function paginateTables(scope) {
+        scope.querySelectorAll('[data-table-wrap] > table').forEach(function (table) {
+            if (table.hasAttribute('data-paginated')) return;
+            var body = table.tBodies[0];
+            if (!body) return;
+            var rows = Array.prototype.filter.call(body.rows, function (row) {
+                return !row.hasAttribute('data-no-paginate');
+            });
+            var requestedSize = Number(table.getAttribute('data-page-size'));
+            var pageSize = Number.isInteger(requestedSize) && requestedSize > 0
+                ? requestedSize : 5;
+            if (table.closest('[data-report-page]')) {
+                pageSize = Math.min(pageSize, window.innerHeight < 650 ? 1
+                    : window.innerHeight < 850 ? 2 : 4);
+            }
+            if (!rows.length) return;
+            table.setAttribute('data-paginated', '');
+
+            var nav = document.createElement('nav');
+            nav.setAttribute('data-pagination', '');
+            nav.setAttribute('aria-label', 'Table pages');
+            var previous = document.createElement('button');
+            previous.type = 'button';
+            previous.textContent = 'Previous';
+            var status = document.createElement('span');
+            status.setAttribute('aria-live', 'polite');
+            status.setAttribute('data-pagination-count', '');
+            var controls = document.createElement('div');
+            controls.setAttribute('data-pagination-controls', '');
+            var size = document.createElement('select');
+            size.setAttribute('aria-label', 'Rows per page');
+            Array.from(new Set([pageSize, 5, 10, 20, 50])).sort(function (a, b) { return a - b; }).forEach(function (value) {
+                var option = document.createElement('option');
+                option.value = value;
+                option.textContent = value;
+                size.appendChild(option);
+            });
+            size.value = String(pageSize);
+            var next = document.createElement('button');
+            next.type = 'button';
+            next.textContent = 'Next';
+            var current = document.createElement('span');
+            current.setAttribute('data-pagination-current', '');
+            controls.append(size, previous, current, next);
+            nav.append(status, controls);
+            table.parentElement.insertAdjacentElement('afterend', nav);
+
+            var page = 0;
+            function showPage() {
+                var pageCount = Math.ceil(rows.length / pageSize);
+                rows.forEach(function (row, index) {
+                    row.hidden = index < page * pageSize || index >= (page + 1) * pageSize;
+                });
+                status.textContent = 'Showing ' + (page * pageSize + 1) + '-' + Math.min((page + 1) * pageSize, rows.length) + ' of ' + rows.length + ' records';
+                current.textContent = String(page + 1);
+                current.setAttribute('aria-label', 'Page ' + (page + 1) + ' of ' + pageCount);
+                previous.disabled = page === 0;
+                next.disabled = page === pageCount - 1;
+            }
+            size.addEventListener('change', function () { pageSize = Number(size.value); page = 0; showPage(); });
+            previous.addEventListener('click', function () { page--; showPage(); });
+            next.addEventListener('click', function () { page++; showPage(); });
+            showPage();
+        });
+    }
+
+    function paginateReportSections() {
+        var nav = document.querySelector('[data-report-pagination]');
+        if (!nav) return;
+        var pages = Array.prototype.slice.call(document.querySelectorAll('[data-report-page]'));
+        if (!pages.length) return;
+        var groups = pages.reduce(function (names, section) {
+            var name = section.getAttribute('data-report-group');
+            if (names.indexOf(name) === -1) names.push(name);
+            return names;
+        }, []);
+        var previous = nav.querySelector('[data-report-previous]');
+        var next = nav.querySelector('[data-report-next]');
+        var position = nav.querySelector('[data-report-position]');
+        var page = 0;
+        function showPage() {
+            pages.forEach(function (section) {
+                var current = section.getAttribute('data-report-group') === groups[page];
+                section.hidden = !current;
+                section.toggleAttribute('data-report-current', current);
+            });
+            position.textContent = groups[page] + ' · ' + (page + 1) + ' of ' + groups.length;
+            previous.disabled = page === 0;
+            next.disabled = page === groups.length - 1;
+        }
+        previous.addEventListener('click', function () { page--; showPage(); });
+        next.addEventListener('click', function () { page++; showPage(); });
+        showPage();
+        document.documentElement.setAttribute('data-reports-ready', '');
+    }
+
+    function wireNotificationFeeds() {
+        document.querySelectorAll('[data-notification-feed]').forEach(function (feed) {
+            var userId = feed.getAttribute('data-notification-user');
+            if (!userId) return;
+            var storageKey = 'ynclino-read-notifications-' + userId;
+            var saved = [];
+            try {
+                var value = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                if (Array.isArray(value)) saved = value.filter(function (item) { return typeof item === 'string'; });
+            } catch (err) { }
+            var read = new Set(saved);
+            var rows = Array.prototype.slice.call(feed.querySelectorAll('[data-notification-key]'));
+            var markAll = feed.querySelector('[data-mark-all-read]');
+
+            function update() {
+                rows.forEach(function (row) {
+                    var isRead = read.has(row.getAttribute('data-notification-key'));
+                    if (isRead) row.removeAttribute('data-unread');
+                    else row.setAttribute('data-unread', 'true');
+                    var button = row.querySelector('[data-mark-read]');
+                    if (button) button.hidden = isRead;
+                });
+                if (markAll) markAll.hidden = rows.every(function (row) {
+                    return read.has(row.getAttribute('data-notification-key'));
+                });
+            }
+
+            function save() {
+                try { localStorage.setItem(storageKey, JSON.stringify(Array.from(read).slice(-200))); }
+                catch (err) { }
+                update();
+            }
+
+            feed.addEventListener('click', function (event) {
+                var button = event.target.closest('[data-mark-read]');
+                if (button) {
+                    read.add(button.closest('[data-notification-key]').getAttribute('data-notification-key'));
+                    save();
+                } else if (event.target.closest('[data-mark-all-read]')) {
+                    rows.forEach(function (row) { read.add(row.getAttribute('data-notification-key')); });
+                    save();
+                }
+            });
+            update();
+        });
+    }
+
     var dlg = document.getElementById('appModal');
     var canModal = dlg && typeof dlg.showModal === 'function';
 
@@ -202,6 +347,8 @@
         var body = dlg.querySelector('[data-modal-body]');
         body.innerHTML = '';
         body.appendChild(panel);
+        paginateTables(body);
+        decorateActions(body);
         runPageScripts(doc, function () { wireValidation(body); });
         return true;
     }
@@ -283,7 +430,81 @@
         });
     }
 
+    function decorateActions(scope) {
+        var selector = [
+            '[data-page-head] [data-actions] a',
+            '[data-page-head] [data-actions] button',
+            'main [data-identity] [data-actions] a',
+            'main [data-identity] [data-actions] button',
+            'main form[method="get"] button',
+            'main form[method="get"] a',
+            'main [data-actions-row] a',
+            'main [data-actions-row] button',
+            'main [data-table-wrap] td:last-child a',
+            'main [data-table-wrap] td:last-child button',
+            'main [data-form-panel] button[type="submit"]',
+            'body:not(:has(aside)) form[method="post"] > button[type="submit"]',
+            'main [data-panel-head] button',
+            'main [data-pagination] button',
+            'main [data-report-pagination] button',
+            '[data-modal-body] [data-actions-row] a',
+            '[data-modal-body] [data-actions-row] button',
+            '[data-modal-body] [data-form-panel] button[type="submit"]',
+            '[data-notification-feed] [data-mark-read]',
+            '[data-notification-feed] [data-mark-all-read]'
+        ].join(',');
+        scope.querySelectorAll(selector).forEach(function (control) {
+            var label = (control.textContent || control.getAttribute('aria-label') || '').trim().toLowerCase().replace(/^\+\s*/, '');
+            if (label === 'login') return;
+            var tone;
+            if (control.hasAttribute('data-danger') ||
+                /^(delete|remove|yes, delete|deactivate|reject|cancel request|sign out instead)/.test(label))
+                tone = 'red';
+            else if (/^(archive|yes, archive|move to archive|reset password)/.test(label))
+                tone = 'amber';
+            else if (/^(update|edit|save|submit|approve|claim|restore|reactivate|put back|mark .*read)/.test(label))
+                tone = 'green';
+            else if (control.hasAttribute('data-primary') ||
+                /^(add|new|create|register|report item|issue bill|request|apply|load sample|login|sign in)/.test(label))
+                tone = 'orange';
+            else
+                tone = 'gray';
+            control.setAttribute('data-action-tone', tone);
+            if (control.querySelector('img, svg, [data-action-icon]')) return;
+            var icon = null;
+            if (/^(add|new|create|register|report item|issue bill|load sample)/.test(label)) icon = 'add';
+            else if (/^(request|apply|submit request|submit report)/.test(label)) icon = 'send';
+            else if (/^(update|edit)/.test(label)) icon = 'edit';
+            else if (/^(save|upload)/.test(label)) icon = 'save';
+            else if (/^(delete|remove|yes, delete)/.test(label)) icon = 'trash';
+            else if (/^(archive|yes, archive|move to archive)/.test(label)) icon = 'archive';
+            else if (/^(restore|reactivate|put back)/.test(label)) icon = 'restore';
+            else if (/^(back|← back|cancel)/.test(label)) icon = label === 'cancel' ? 'close' : 'back';
+            else if (/^previous/.test(label)) icon = 'back';
+            else if (/^next/.test(label)) icon = 'forward';
+            else if (/^(approve|claim|mark .*read)/.test(label)) icon = 'check';
+            else if (/^(reject|deactivate)/.test(label)) icon = 'close';
+            else if (/^(reset password|change password)/.test(label)) icon = 'key';
+            else if (/^(login|sign in)/.test(label)) icon = 'lock';
+            else if (/^(tenancy history|payment history|my transfer requests|my requests)/.test(label)) icon = 'clock';
+            else if (/^(view|details)/.test(label)) icon = 'file';
+            else if (/^search/.test(label)) icon = 'search';
+            if (!icon) return;
+            var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('data-action-icon', '');
+            svg.setAttribute('aria-hidden', 'true');
+            var use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+            use.setAttribute('href', '/images/icons/actions.svg#' + icon);
+            svg.appendChild(use);
+            control.insertBefore(svg, control.firstChild);
+        });
+    }
+
     window.addEventListener('DOMContentLoaded', function () {
+        paginateTables(document);
+        paginateReportSections();
+        wireNotificationFeeds();
+        decorateActions(document);
         /* the head script set the attribute before paint; the button has to agree */
         if (document.documentElement.hasAttribute('data-rail')) setRail(true);
         document.querySelectorAll('[data-flash]').forEach(function (msg) {
