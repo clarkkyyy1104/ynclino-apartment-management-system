@@ -21,6 +21,8 @@
     bool isStaff = User.IsInRole("Maintenance");
     bool isTenant = User.IsInRole("Tenant");
     bool unitsOpen = activeController == "Units" || activeController == "Transfers";
+    bool maintenanceOpen = activeController == "Maintenance";
+    bool maintenanceArchived = Context.Request.Query["archived"].ToString().Equals("true", System.StringComparison.OrdinalIgnoreCase);
     var activeAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
     bool billingOpen = activeController == "Billing";
 }
@@ -54,6 +56,7 @@
                         <span data-nav-icon="units"></span>
                         <span data-nav-label>Units</span>
                         @await Component.InvokeAsync("NavAlert", new { module = "Transfer" })
+                        <svg data-caret aria-hidden="true" viewBox="0 0 16 16" fill="none"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
                     </a>
                     <div id="unitsGroup" hidden="@(unitsOpen ? null : "hidden")">
                         <div>
@@ -94,6 +97,7 @@
                         <span data-nav-icon="billing"></span>
                         <span data-nav-label>Billing and Payment</span>
                         @await Component.InvokeAsync("NavAlert", new { module = "Billing" })
+                        <svg data-caret aria-hidden="true" viewBox="0 0 16 16" fill="none"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
                     </a>
                     <div id="billingGroup" hidden="@(billingOpen ? null : "hidden")">
                         <div>
@@ -103,11 +107,19 @@
                     </div>
                 }
 
-                <a aria-current="@Active("Maintenance")" asp-controller="Maintenance" asp-action="Index" title="Maintenance">
+                <a data-collapse="#maintenanceGroup" href="#maintenanceGroup" role="button" title="Maintenance"
+                   aria-expanded="@(maintenanceOpen ? "true" : "false")">
                     <span data-nav-icon="maintenance"></span>
                     <span data-nav-label>Maintenance</span>
                     @await Component.InvokeAsync("NavAlert", new { module = "Maintenance" })
+                    <svg data-caret aria-hidden="true" viewBox="0 0 16 16" fill="none"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
                 </a>
+                <div id="maintenanceGroup" hidden="@(maintenanceOpen ? null : "hidden")">
+                    <div>
+                        <a aria-current="@(maintenanceOpen && !maintenanceArchived ? "page" : null)" asp-controller="Maintenance" asp-action="Index">@(isStaff ? "My Assigned Requests" : "Requests")</a>
+                        <a aria-current="@(maintenanceOpen && maintenanceArchived ? "page" : null)" asp-controller="Maintenance" asp-action="Index" asp-route-archived="true">Archive</a>
+                    </div>
+                </div>
 
                 @if (!isStaff)
                 {

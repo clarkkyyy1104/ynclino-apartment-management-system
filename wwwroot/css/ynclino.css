@@ -179,7 +179,7 @@ aside nav a:hover { background: rgba(255,255,255,.06); color: #fff; text-decorat
 [data-nav-icon="profile"]     { --nav-icon: url("/images/icons/profile.svg"); }
 [data-nav-icon="logout"]      { --nav-icon: url("/images/icons/logout.svg"); }
 [data-nav-label] { flex: 1 1 auto; min-width: 0; }
-[data-caret] { margin-left: auto; transition: transform .15s; }
+[data-caret] { flex: 0 0 16px; width: 16px; height: 16px; transition: transform .15s; }
 aside nav a[aria-expanded="true"] [data-caret] { transform: rotate(180deg); }
 
 /* the page you are on — this is why the markup carries aria-current */
@@ -343,14 +343,22 @@ main form[method="get"] a { font-weight: 600; }
     align-items: center;
     line-height: 1;
 }
+
 .pw-wrap > button:hover { color: var(--ink); background: none; }
 .pw-wrap > button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .pw-wrap > button img { width: 18px; height: 18px; display: block; }
-input[type="text"], input[type="number"], input[type="date"],
-input[type="password"], input[type="email"], select, textarea {
+input[type="number"],
+input[type="date"],
+input[type="password"],
+input[type="email"],
+input[type="tel"],
+select,
+textarea {
     padding: .55rem .8rem;
-    font-family: var(--font-family); font-size: 1rem; color: var(--ink);
-    background: var(--field-bg);              /* filled, per the design */
+    font-family: var(--font-family);
+    font-size: 1rem;
+    color: var(--ink);
+    background: var(--field-bg);
     border: 1px solid var(--field-line);
     border-radius: 6px;
 }
@@ -387,11 +395,22 @@ tbody tr:hover { background: #f7f8f9; }
    like a different control from the same icon in the other six modules. It is
    matched on being an icon now, not on its wording, and it wears the same box
    as the buttons beside it so the row lines up. */
-tbody td a[aria-label^="View"] { color: var(--orange); }
+tbody td a[aria-label^="View"] {
+    color: #FA5203;
+}
+
+tbody td a[aria-label^="View"] img {
+    display: block;
+    width: 16px;
+    height: 16px;
+}
+tbody td a[aria-label^="View"]:hover {
+    background: #FFF1EA;
+    border-color: #FA5203;
+}
 /* An icon button is a fixed square, and the empty slot that stands in for one
    is the same square. Left to size themselves they came out 40px and 35px, and
    the five-pixel difference pushed every button on that row out of line. */
-tbody td a[aria-label],
 tbody td span[data-ghost][data-icon] {
     width: 2.5rem; padding: 0; justify-content: center;
 }
@@ -1281,6 +1300,8 @@ img, svg, table, pre { max-width: 100%; }
    way the design shows it. */
 [data-modal][data-kind="details"] { width: min(620px, calc(100vw - 2rem)); }
 [data-modal][data-kind="confirm"] { width: min(480px, calc(100vw - 2rem)); }
+#appModal:has(#cpwForm),
+#mandatoryPasswordDialog { width: min(560px, calc(100vw - 2rem)); }
 [data-modal-head] { padding: .95rem 1.6rem; font-size: 1.1rem; }
 [data-modal][data-kind="form"] [data-modal-title],
 [data-modal][data-kind="confirm"] [data-modal-title] { text-transform: uppercase; letter-spacing: .02em; font-weight: 400; }
@@ -1434,25 +1455,63 @@ main [data-panel][data-table-section] > [data-panel-body] > [data-empty] {
 
 /* Reports show one section at a time so the dashboard does not become a long
    stack of panels. Each section's own table pager handles additional records. */
-[data-report-pagination] { display: none; }
+/* Reports use the same pagination layout as every other module */
+[data-report-pagination] {
+    display: none;
+}
+
 [data-reports-ready] [data-report-pagination] {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
-    margin: .75rem 0 1.25rem;
+    flex-wrap: wrap;
+    gap: .75rem;
+
+    padding: .8rem 0 1rem;
+    margin: 0;
+
     color: var(--ink);
-    font-weight: 600;
+    font-size: .9rem;
+    font-weight: 400;
 }
+
+[data-report-pagination] [data-report-position] {
+    color: var(--ink-soft);
+    font-size: .9rem;
+}
+
+[data-report-pagination] [data-pagination-controls] {
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+}
+
 [data-report-pagination] button {
-    padding: .45rem .9rem;
-    border: 1px solid var(--field-line);
-    border-radius: 6px;
-    background: #fff;
+    min-height: 32px;
+    padding: .4rem .65rem;
+
     color: var(--ink);
+    background: #fff;
+
+    border: 1px solid var(--field-line);
+    border-radius: 3px;
+
+    font-family: var(--font-family);
+    font-size: .85rem;
+    font-weight: 500;
+
     cursor: pointer;
 }
-[data-report-pagination] button:disabled { opacity: .45; cursor: default; }
+
+[data-report-pagination] button:hover:not(:disabled) {
+    background: var(--field-bg);
+    border-color: #888;
+}
+
+[data-report-pagination] button:disabled {
+    opacity: .45;
+    cursor: default;
+}
 [data-report-page][hidden] { display: none; }
 [data-report-page] { min-width: 0; }
 [data-chart-row]:has(> [data-report-page]) { display: block; }
@@ -1728,6 +1787,13 @@ main > [data-module-shell] > [data-advance-note] {
     overflow-wrap: anywhere;
 }
 [data-billing-create] [data-field-note]:empty { display: none; }
+[data-billing-edit] [data-field-note] {
+    margin-top: .35rem;
+    color: var(--muted);
+    font-size: .82rem;
+    font-weight: 400;
+    line-height: 1.4;
+}
 [data-billing-create] > [data-actions-row] { margin-top: .25rem; }
 @media (max-width: 560px) {
     [data-form-body] > form[data-billing-create] { grid-template-columns: minmax(0, 1fr); }
@@ -1831,6 +1897,13 @@ body:not(:has(aside)) .pw-wrap > button.password-toggle:hover,
 }
 body .pw-wrap > button.password-toggle img { width: 18px; height: 18px; }
 
+/* Give record text and its context a little more visual weight. */
+main > [data-module-shell] > [data-page-intro],
+main [data-table-wrap] tbody td,
+[data-pagination-count] {
+    font-weight: 600;
+}
+
 /* ========================================================================== 
    22. FIGMA ALIGNMENT — THESIS2 / YNCLINO AMS
    Reference frame: 250:1843
@@ -1841,6 +1914,45 @@ body .pw-wrap > button.password-toggle img { width: 18px; height: 18px; }
    This section restores one consistent YNCLINO presentation without changing
    the Razor markup or application behaviour.
    ========================================================================== */
+:root {
+    --font-family: Arial, Helvetica, sans-serif;
+}
+
+body,
+table,
+input,
+select,
+textarea,
+button {
+    font-family: var(--font-family);
+}
+tbody td {
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: 400;
+}
+tbody td,
+p,
+dd,
+[data-pagination][data-pagination] {
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: 400;
+}[data-report-pagination],
+[data-pagination-info] {
+    font-weight: 400;
+}
+
+label,
+dt {
+    font-weight: 500;
+}
+
+thead th,
+h3,
+h4,
+[data-page-head] h3,
+[data-page-head] h4 {
+    font-weight: 600;
+}
 
 :root {
     --figma-navy: #2B3648;
@@ -1917,6 +2029,20 @@ main > [data-module-shell] > [data-page-head] h3,
 main > [data-module-shell] > [data-page-head] h4 {
     font-size: 1.5rem;
     font-weight: 700;
+}
+/* Dashboards, profiles, reports, and history pages use the same title strip
+   as the module lists, even when they have no filter toolbar. */
+main > [data-page-head] {
+    align-items: center;
+    margin: -1.5rem -2rem 1.25rem;
+    padding: .85rem 2rem;
+    background: #fff;
+    border-bottom: 1px solid #DFE2E6;
+    box-shadow: 0 2px 4px rgba(24, 35, 47, .08);
+}
+main > [data-page-head] > div:first-child { margin-left: 0; }
+@media (max-width: 767.98px) {
+    main > [data-page-head] { margin: -1.25rem -1rem 1.25rem; padding: .8rem 1rem; }
 }
 main > [data-module-shell] > form[method="get"] { gap: .65rem; }
 main > [data-module-shell] > form[method="get"] > div:has(input[name="searchTerm"]) {
@@ -2045,6 +2171,7 @@ tbody td a[href*="DeletePermanent"]:hover { background: #FADBDE; color: #B02A37;
 
 /* Fields and forms */
 input[type="text"],
+input[type="tel"],
 input[type="number"],
 input[type="date"],
 input[type="month"],
@@ -2258,4 +2385,158 @@ body:not(:has(aside)) form[method="post"] > button[type="submit"]:hover {
     [data-modal-body] [data-actions-row] > button,
     [data-modal-body] [data-actions-row] > form > button { width: 100%; }
     body:not(:has(aside)) > div > div:last-child > div { padding: 1.5rem 1.25rem; }
+}
+/* ==========================================================================
+   23. VIEW / DETAILS ACTION
+   One eye only. Always YNCLINO orange.
+   ========================================================================== */
+
+tbody td a[aria-label^="View"] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 34px;
+    min-width: 34px;
+    height: 32px;
+    padding: 0;
+
+    color: #FA5203 !important;
+    background: #fff;
+    border: 1px solid #F4B89D;
+    border-radius: 5px;
+}
+
+/* Kill any old pseudo-eye rule left from previous edits. */
+tbody td a[aria-label^="View"]::before,
+tbody td a[aria-label^="View"]::after {
+    content: none !important;
+    display: none !important;
+}
+
+/* The actual eye */
+tbody td a[aria-label^="View"] > svg {
+    display: block;
+    width: 16px;
+    height: 16px;
+    fill: #FA5203 !important;
+    color: #FA5203 !important;
+    flex: 0 0 16px;
+}
+
+tbody td a[aria-label^="View"]:hover {
+    color: #FA5203 !important;
+    background: #FFF1EA !important;
+    border-color: #FA5203 !important;
+}
+
+tbody td a[aria-label^="View"]:hover > svg {
+    fill: #FA5203 !important;
+    color: #FA5203 !important;
+}
+
+/* Keep the Add Account dialog compact on desktop while preserving a readable
+   single-column form on narrow screens. */
+[data-modal-body] #userForm {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .75rem 1rem;
+}
+[data-modal-body] #userForm > div { min-width: 0; margin-bottom: 0; }
+[data-modal-body] #userForm #pwRules {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .15rem 1rem;
+    margin: 0;
+    padding: .65rem 1rem .65rem 2rem;
+}
+[data-modal-body] #userForm > [data-actions-row] { margin-top: .25rem; }
+@media (max-width: 560px) {
+    [data-modal-body] #userForm,
+    [data-modal-body] #userForm #pwRules { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Administrator sign-in, based on the supplied login reference. */
+body.login-page {
+    display: block;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: 0;
+    background: #202a38;
+    color: #151515;
+}
+body.login-page > .login-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    max-width: none;
+    margin: 0;
+    padding: 1rem 1.5rem 4rem;
+    background: #202a38;
+}
+.login-brand { display: flex; flex-direction: column; align-items: flex-end; width: min(76vw, 380px); margin-bottom: 25px; }
+.login-brand img { display: block; width: 100%; height: auto; }
+.login-brand span {
+    margin-top: -1.5rem;
+    margin-right: 2px;
+    color: #e7e5e4;
+    font: 14px/1.2 Georgia, 'Times New Roman', serif;
+    white-space: nowrap;
+}
+body.login-page .login-card {
+    width: min(100%, 420px);
+    padding: 1.5rem clamp(1.5rem, 5vw, 3rem) 2rem;
+    border-radius: 5px;
+    background: #fff;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, .35);
+    color: #171717;
+    font-family: Georgia, 'Times New Roman', serif;
+}
+.login-card h1 {
+    margin: 0 0 37px;
+    text-align: center;
+    font: 400 17px/1.4 Georgia, 'Times New Roman', serif;
+}
+.login-card form > div { margin-bottom: 24px; }
+.login-card label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+body.login-page .login-card input:not([type="hidden"]) {
+    width: 100%;
+    height: 40px;
+    min-height: 40px;
+    padding: .55rem 1rem;
+    border: 1px solid #777;
+    border-radius: 6px;
+    background: #f7f5f6;
+    color: #151515;
+    font: 14px Georgia, 'Times New Roman', serif;
+}
+body.login-page .login-card .pw-wrap > input { padding-right: 3rem; }
+body.login-page .login-card .password-toggle { width: 30px; height: 30px; }
+body.login-page .login-card form > button[type="submit"] {
+    width: 100%;
+    min-height: 40px;
+    margin-top: 19px;
+    padding: .55rem 1rem;
+    border: 0;
+    border-radius: 5px;
+    background: #fa5203;
+    color: #fff;
+    font: 400 16px Georgia, 'Times New Roman', serif;
+}
+body.login-page .login-card form > button[type="submit"]:hover { background: #d74600; }
+@media (max-width: 540px) {
+    body.login-page > .login-stage { padding: 1rem 1rem 3rem; }
+    body.login-page .login-card { padding: 1.5rem; }
+    .login-brand { margin-bottom: 30px; }
+    .login-brand span { font-size: 11px; }
 }

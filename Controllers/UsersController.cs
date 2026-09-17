@@ -68,6 +68,58 @@ namespace YnclinoApartmentManagementSystem.Controllers
         }
 
         // GET: Users/Create — staff accounts only
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var user = await _context.tblUsers.FindAsync(id);
+            if (user == null) return NotFound();
+            if (user.IsMainAdmin) return Forbid();
+
+            return View(new EditUserInfoViewModel
+            {
+                UserID = user.UserID,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                ContactNumber = user.ContactNumber
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, EditUserInfoViewModel vm)
+        {
+            var user = await _context.tblUsers.Include(u => u.Tenants)
+                .FirstOrDefaultAsync(u => u.UserID == id);
+            if (user == null) return NotFound();
+            if (user.IsMainAdmin) return Forbid();
+            if (vm.UserID != id) return BadRequest();
+
+            vm.FirstName = vm.FirstName?.Trim() ?? string.Empty;
+            vm.LastName = vm.LastName?.Trim() ?? string.Empty;
+            vm.ContactNumber = string.IsNullOrWhiteSpace(vm.ContactNumber) ? null : vm.ContactNumber.Trim();
+            if (string.IsNullOrWhiteSpace(vm.FirstName))
+                ModelState.AddModelError(nameof(vm.FirstName), "First name is required.");
+            if (string.IsNullOrWhiteSpace(vm.LastName))
+                ModelState.AddModelError(nameof(vm.LastName), "Last name is required.");
+            if (!ModelState.IsValid) return View(vm);
+
+            user.FirstName = vm.FirstName;
+            user.LastName = vm.LastName;
+            user.ContactNumber = vm.ContactNumber;
+            user.DateUpdated = DateTime.Now;
+
+            foreach (var tenant in user.Tenants)
+            {
+                tenant.FirstName = vm.FirstName;
+                tenant.LastName = vm.LastName;
+                tenant.ContactNumber = vm.ContactNumber;
+            }
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = $"Account details for '{user.Username}' have been updated.";
+            return RedirectToAction(nameof(Index));
+        }
+
         public IActionResult Create()
         {
             bool isMainAdmin = CurrentUserIsMainAdmin();

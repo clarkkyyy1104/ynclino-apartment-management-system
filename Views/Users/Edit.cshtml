@@ -1,0 +1,40 @@
+@model YnclinoApartmentManagementSystem.Models.ViewModels.EditUserInfoViewModel
+@{
+    ViewData["Title"] = "Update Account Information";
+}
+
+<div data-form-panel>
+    <div data-form-head>Update Account Information</div>
+    <div data-form-body>
+        <form asp-action="Edit" asp-route-id="@Model.UserID" method="post">
+            @Html.AntiForgeryToken()
+            <input asp-for="UserID" type="hidden" />
+            <div asp-validation-summary="ModelOnly"></div>
+
+            <div>
+                <label asp-for="FirstName"></label>
+                <input asp-for="FirstName" autocomplete="given-name" />
+                <span asp-validation-for="FirstName"></span>
+            </div>
+            <div>
+                <label asp-for="LastName"></label>
+                <input asp-for="LastName" autocomplete="family-name" />
+                <span asp-validation-for="LastName"></span>
+            </div>
+            <div>
+                <label asp-for="ContactNumber"></label>
+                <input asp-for="ContactNumber" type="tel" autocomplete="tel" />
+                <span asp-validation-for="ContactNumber"></span>
+            </div>
+
+            <div data-actions-row>
+                <button type="submit">Update</button>
+                <a asp-action="Index">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

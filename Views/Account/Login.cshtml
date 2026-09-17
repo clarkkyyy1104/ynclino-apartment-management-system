@@ -11,15 +11,15 @@
     <title>Login — Apartment Management System</title>
     <link rel="stylesheet" href="~/css/ynclino.css" asp-append-version="true" />
 </head>
-<body>
-    <div>
-        <div>
-            <img src="~/images/logo.png" alt="Ynclino Apartment Management System" />
-            <p>Please sign in to your account</p>
+<body class="login-page">
+    <main class="login-stage">
+        <div class="login-brand">
+            <img src="~/images/logo.png" alt="Ynclino" />
+            <span>APARTMENT MANAGEMENT SYSTEM</span>
         </div>
 
-        <div>
-            <div>
+        <section class="login-card" aria-labelledby="login-heading">
+            <h1 id="login-heading">Please sign in to your administrator account</h1>
                 <form asp-action="Login" method="post">
                     <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
                     @Html.AntiForgeryToken()
@@ -48,9 +48,8 @@
 
                 </form>
 
-            </div>
-        </div>
-    </div>
+        </section>
+    </main>
 
     <script src="~/js/password.js" asp-append-version="true"></script>
     <script src="~/js/ynclino.js" asp-append-version="true"></script>

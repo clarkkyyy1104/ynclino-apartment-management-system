@@ -3,14 +3,14 @@
     ViewData["Title"] = "Change Password";
 }
 
-<div>
-    <div>
-        <div data-form-panel>
-            <div data-form-head>
-                <h5>For Your Own Security,</h5>
-                <h5>Change Your Password</h5>
-            </div>
-            <div data-form-body>
+<dialog data-modal data-kind="form" id="mandatoryPasswordDialog" aria-labelledby="mandatoryPasswordTitle" open>
+    <div data-modal-panel>
+        <div data-modal-head>
+            <span id="mandatoryPasswordTitle">For Your Own Security, Change Your Password</span>
+        </div>
+        <div data-modal-body>
+            <div data-form-panel>
+                <div data-form-body data-cols="1">
                 <form asp-action="MandatoryPassChange" method="post" id="cpwForm">
                     @Html.AntiForgeryToken()
                     <div asp-validation-summary="ModelOnly"></div>
@@ -55,15 +55,21 @@
                         <button type="submit">Sign out instead</button>
                     </form>
                 </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
+</dialog>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/password.js" asp-append-version="true"></script>
     <script>
+        var mandatoryDialog = document.getElementById('mandatoryPasswordDialog');
+        mandatoryDialog.addEventListener('cancel', function (e) { e.preventDefault(); });
+        mandatoryDialog.close();
+        mandatoryDialog.showModal();
+
         var pwInput = document.getElementById('pw');
         pwInput.addEventListener('input', function () {
             var rules = document.getElementById('pwRules');

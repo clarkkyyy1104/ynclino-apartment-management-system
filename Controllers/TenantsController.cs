@@ -151,6 +151,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var user = new tblUser
             {
                 Username = vm.Username!,
+                FirstName = vm.FirstName,
+                LastName = vm.LastName,
+                ContactNumber = vm.ContactNumber,
                 Password = PasswordHelper.Hash(vm.Password!),
                 Role = "Tenant",
                 IsActive = true,
@@ -344,6 +347,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 if (linkedUser != null)
                 {
                     // username deliberately NOT touched — it is fixed at creation
+                    linkedUser.FirstName = vm.FirstName;
+                    linkedUser.LastName = vm.LastName;
+                    linkedUser.ContactNumber = vm.ContactNumber;
+                    linkedUser.DateUpdated = DateTime.Now;
                     if (isMainAdmin && !string.IsNullOrWhiteSpace(vm.Password))
                     {
                         linkedUser.Password = PasswordHelper.Hash(vm.Password);
@@ -365,6 +372,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 var newUser = new tblUser
                 {
                     Username = vm.Username!,
+                    FirstName = vm.FirstName,
+                    LastName = vm.LastName,
+                    ContactNumber = vm.ContactNumber,
                     Password = PasswordHelper.Hash(password),
                     Role = "Tenant",
                     IsActive = becomingActive,

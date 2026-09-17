@@ -4,7 +4,7 @@
     var tenant = ViewBag.Tenant as YnclinoApartmentManagementSystem.Models.tblTenant;
 }
 
-<div data-page-head>
+<header data-page-head>
     <div>
         <h3>My Records</h3>
         <div>
@@ -12,7 +12,7 @@
         </div>
     </div>
     <span>As of @DateTime.Today.ToString("MMMM dd, yyyy")</span>
-</div>
+</header>
 
 @if (tenant == null)
 {

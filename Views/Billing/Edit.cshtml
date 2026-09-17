@@ -8,7 +8,7 @@
         <div data-form-panel>
             <div data-form-head>Update Bill</div>
             <div data-form-body>
-                <form asp-action="Edit" method="post">
+                <form asp-action="Edit" method="post" data-billing-edit>
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="BillingID" />
                     <div asp-validation-summary="ModelOnly"></div>
@@ -24,12 +24,12 @@
                     @* Bill details are fixed when the bill is issued — shown here, never edited *@
                         <div>
                             <label>Billing Period (Month)</label>
-                            <input value="@Model.BillingPeriod.ToString("MMMM yyyy")" disabled />
+                            <input type="text" value="@Model.BillingPeriod.ToString("MMMM yyyy")" disabled />
                             <input type="hidden" asp-for="BillingPeriod" value="@Model.BillingPeriod.ToString("yyyy-MM-dd")" />
                         </div>
                         <div>
                             <label>Due Date</label>
-                            <input value="@Model.DueDate.ToString("MMM dd, yyyy")" disabled />
+                            <input type="text" value="@Model.DueDate.ToString("MMM dd, yyyy")" disabled />
                             <input type="hidden" asp-for="DueDate" value="@Model.DueDate.ToString("yyyy-MM-dd")" />
                         </div>
                     @* carried so model validation still passes; the controller ignores it *@
@@ -116,8 +116,8 @@
                             </div>
                             <div>
                                 <label>Date Paid</label>
-                                <input value="@DateTime.Today.ToString("MMM dd, yyyy")" disabled />
-                                <div>Recorded as today automatically.</div>
+                                <input type="text" value="@DateTime.Today.ToString("MMM dd, yyyy")" disabled />
+                                <div data-field-note>Recorded as today automatically.</div>
                             </div>
                     }
 

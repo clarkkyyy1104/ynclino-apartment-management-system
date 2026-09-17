@@ -3,19 +3,15 @@
     ViewData["Title"] = "Reports & Records";
 }
 
-<div data-page-head>
+<header data-page-head>
     <div>
         <h3>Reports &amp; Records</h3>
         <div>Summary of apartment operations · viewable on screen only</div>
     </div>
     <span>As of @DateTime.Today.ToString("MMMM dd, yyyy")</span>
-</div>
+</header>
 
-<nav data-report-pagination aria-label="Report sections">
-    <button type="button" data-report-previous>Previous</button>
-    <span data-report-position aria-live="polite"></span>
-    <button type="button" data-report-next>Next</button>
-</nav>
+
 
 <div data-report-page data-report-group="Overview" data-report-title="Overview">
 @* ── Headline figures ── *@
@@ -351,3 +347,16 @@
         </div>
     </div>
 </div>
+<nav data-report-pagination data-pagination aria-label="Report sections">
+    <span data-report-position aria-live="polite"></span>
+
+    <div data-pagination-controls>
+        <button type="button" data-report-previous aria-label="Previous report section">
+            ← Previous
+        </button>
+
+        <button type="button" data-report-next aria-label="Next report section">
+            Next →
+        </button>
+    </div>
+</nav>

@@ -9,7 +9,7 @@
             <div data-form-head>
                 <h5>User Management — Add Account</h5>
             </div>
-            <div data-form-body data-cols="1">
+            <div data-form-body data-cols="2">
                 <form asp-action="Create" method="post" id="userForm">
                     @Html.AntiForgeryToken()
                     <div asp-validation-summary="ModelOnly"></div>
@@ -47,14 +47,6 @@
                         <span asp-validation-for="Password"></span>
                     </div>
 
-                    <ul id="pwRules">
-                        <li id="r-len"><span></span> At least 8 characters</li>
-                        <li id="r-upper"><span></span> At least one uppercase letter</li>
-                        <li id="r-lower"><span></span> At least one lowercase letter</li>
-                        <li id="r-digit"><span></span> At least one number</li>
-                        <li id="r-special"><span></span> At least one special character (!&#64;#$%^&amp;*)</li>
-                    </ul>
-
                     <div>
                         <label asp-for="ConfirmPassword"></label>
                         <div class="pw-wrap">
@@ -63,6 +55,14 @@
                         </div>
                         <span asp-validation-for="ConfirmPassword"></span>
                     </div>
+
+                    <ul id="pwRules">
+                        <li id="r-len"><span></span> At least 8 characters</li>
+                        <li id="r-upper"><span></span> At least one uppercase letter</li>
+                        <li id="r-lower"><span></span> At least one lowercase letter</li>
+                        <li id="r-digit"><span></span> At least one number</li>
+                        <li id="r-special"><span></span> At least one special character (!&#64;#$%^&amp;*)</li>
+                    </ul>
 
                     <div>
                         <label asp-for="Role"></label>

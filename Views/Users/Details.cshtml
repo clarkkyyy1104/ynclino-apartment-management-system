@@ -28,9 +28,13 @@
     </div>
     <div data-actions-row>
         <a asp-action="Index">Back to Users</a>
+        @if (!Model.IsMainAdmin)
+        {
+            <a data-modal-link data-primary asp-action="Edit" asp-route-id="@Model.UserID">Update</a>
+        }
         @if (tenant != null)
         {
-            <a data-modal-link data-primary asp-controller="Tenants" asp-action="Details" asp-route-id="@tenant.TenantID">View Tenant Record</a>
+            <a data-modal-link asp-controller="Tenants" asp-action="Details" asp-route-id="@tenant.TenantID">View Tenant Record</a>
         }
     </div>
 </div>

@@ -345,11 +345,19 @@ main form[method="get"] a { font-weight: 600; }
 .pw-wrap > button:hover { color: var(--ink); background: none; }
 .pw-wrap > button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .pw-wrap > button img { width: 18px; height: 18px; display: block; }
-input[type="text"], input[type="number"], input[type="date"],
-input[type="password"], input[type="email"], select, textarea {
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="password"],
+input[type="email"],
+input[type="tel"],
+select,
+textarea {
     padding: .55rem .8rem;
-    font-family: var(--font-family); font-size: 1rem; color: var(--ink);
-    background: var(--field-bg);              /* filled, per the design */
+    font-family: var(--font-family);
+    font-size: 1rem;
+    color: var(--ink);
+    background: var(--field-bg);
     border: 1px solid var(--field-line);
     border-radius: 6px;
 }

@@ -7,6 +7,10 @@
     var transfers = ViewBag.Transfers as IEnumerable<tblUnitTransferRequest> ?? Enumerable.Empty<tblUnitTransferRequest>();
 }
 
+<header data-page-head>
+    <div><h3>My Profile</h3></div>
+</header>
+
 @if (Model == null)
 {
     <div data-panel>
@@ -42,7 +46,7 @@
         <div data-actions>
             <a data-modal-link asp-action="EditInfo">Edit</a>
             @* Change Password lived in the sidebar's account menu, which is gone *@
-            <a asp-controller="Account" asp-action="ChangePassword">Change Password</a>
+            <a data-modal-link asp-controller="Account" asp-action="ChangePassword">Change Password</a>
             @if (!string.IsNullOrEmpty(Model.PhotoPath))
             {
                 <div class="profButton">

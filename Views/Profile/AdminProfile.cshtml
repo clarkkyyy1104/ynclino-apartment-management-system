@@ -3,6 +3,10 @@
     ViewData["Title"] = "My Profile";
 }
 
+<header data-page-head>
+    <div><h3>My Profile</h3></div>
+</header>
+
 @if (Model == null)
 {
     <div data-panel>
@@ -29,7 +33,7 @@
             <span>@roleLabel</span>
         </div>
         <div data-actions>
-            <a asp-controller="Account" asp-action="ChangePassword">Change Password</a>
+            <a data-modal-link asp-controller="Account" asp-action="ChangePassword">Change Password</a>
         </div>
     </div>
 </div>

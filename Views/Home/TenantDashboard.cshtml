@@ -8,12 +8,12 @@
    a welcome line, then Personal Information beside Unit Information. The same
    two panels appear on My Profile, so the fields and their order are kept
    identical between the two screens. *@
-<div data-page-head>
+<header data-page-head>
     <div>
         <h4>Dashboard</h4>
-        <p>Welcome, @(t?.FullName ?? User.Identity?.Name).</p>
     </div>
-</div>
+</header>
+<p>Welcome, @(t?.FullName ?? User.Identity?.Name).</p>
 
 <div data-profile-cols>
     <div>

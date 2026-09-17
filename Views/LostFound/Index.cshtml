@@ -16,7 +16,7 @@
         }
         else
         {
-            <a asp-action="Index">&larr; Back</a>
+            <a asp-action="Index">Back</a>
         }
     </div>
 </div>
@@ -124,3 +124,8 @@
         </tbody>
     </table>
 </div>
+<nav data-report-pagination aria-label="Report sections">
+    <button type="button" data-report-previous>Previous</button>
+    <span data-report-position aria-live="polite"></span>
+    <button type="button" data-report-next>Next</button>
+</nav>

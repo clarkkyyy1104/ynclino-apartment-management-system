@@ -10,7 +10,7 @@
     var unpaid       = Model.Count(r => r.Balance > 0);
 }
 
-<div data-page-head>
+<header data-page-head>
     <div>
         <h3>@(tenant?.FullName ?? "Billing Record")</h3>
         <div>
@@ -23,7 +23,7 @@
             <a asp-action="History">← All Tenants</a>
         }
     </div>
-</div>
+</header>
 
 @* These three figures are the same three the Reports page shows for this
    tenant, added up from the same bills, so the two can be checked against
