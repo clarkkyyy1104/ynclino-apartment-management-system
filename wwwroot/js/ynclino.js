@@ -500,7 +500,49 @@
         });
     }
 
+    function wireAutoSearch() {
+        var key = 'ynclino-search-focus';
+        var pending = null;
+        try {
+            pending = JSON.parse(sessionStorage.getItem(key) || 'null');
+            sessionStorage.removeItem(key);
+        } catch (err) { /* Search still works when storage is unavailable. */ }
+
+        document.querySelectorAll('form[data-auto-search]').forEach(function (form) {
+            var input = form.querySelector('input[name="searchTerm"]');
+            if (!input) return;
+
+            if (pending && pending.path === location.pathname && pending.value === input.value) {
+                input.focus({ preventScroll: true });
+                try { input.setSelectionRange(pending.start, pending.end); } catch (err) { }
+            }
+
+            var timer;
+            var composing = false;
+            function scheduleSearch() {
+                clearTimeout(timer);
+                timer = setTimeout(function () {
+                    if (input.value === (new URLSearchParams(location.search).get('searchTerm') || '')) return;
+                    try {
+                        sessionStorage.setItem(key, JSON.stringify({
+                            path: location.pathname,
+                            value: input.value,
+                            start: input.selectionStart,
+                            end: input.selectionEnd
+                        }));
+                    } catch (err) { }
+                    form.requestSubmit();
+                }, 500);
+            }
+            input.addEventListener('compositionstart', function () { composing = true; clearTimeout(timer); });
+            input.addEventListener('compositionend', function () { composing = false; scheduleSearch(); });
+            input.addEventListener('input', function () { if (!composing) scheduleSearch(); });
+            form.addEventListener('submit', function () { clearTimeout(timer); });
+        });
+    }
+
     window.addEventListener('DOMContentLoaded', function () {
+        wireAutoSearch();
         paginateTables(document);
         paginateReportSections();
         wireNotificationFeeds();

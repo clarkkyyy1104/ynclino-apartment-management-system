@@ -7,12 +7,11 @@
     <div><h3>Payment History</h3></div>
 </header>
 
-<form method="get">
+<form method="get" data-auto-search>
     <div>
         <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" placeholder="Search tenant name..." />
     </div>
     <div>
-        <button type="submit">Search</button>
         <a asp-action="History">Clear</a>
     </div>
 </form>

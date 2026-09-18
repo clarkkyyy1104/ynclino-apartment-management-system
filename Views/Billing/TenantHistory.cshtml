@@ -11,19 +11,15 @@
 }
 
 <header data-page-head>
-    <div>
-        <h3>@(tenant?.FullName ?? "Billing Record")</h3>
-        <div>
-            Unit @(tenant?.Unit?.UnitNumber ?? "—") · every bill issued to this tenant
-        </div>
-    </div>
-    <div data-actions>
+    <h3>@(tenant?.FullName ?? "Billing Record")</h3>
+</header>
+<p data-page-meta>Unit @(tenant?.Unit?.UnitNumber ?? "—") · every bill issued to this tenant</p>
+    <div data-page-actions>
         @if (isAdmin)
         {
             <a asp-action="History">← All Tenants</a>
         }
     </div>
-</header>
 
 @* These three figures are the same three the Reports page shows for this
    tenant, added up from the same bills, so the two can be checked against

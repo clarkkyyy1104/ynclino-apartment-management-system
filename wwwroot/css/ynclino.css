@@ -2534,6 +2534,92 @@ body.login-page .login-card form > button[type="submit"] {
     font: 400 16px Georgia, 'Times New Roman', serif;
 }
 body.login-page .login-card form > button[type="submit"]:hover { background: #d74600; }
+/* Page titles stay in the header; controls and record context follow below. */
+main > [data-module-shell] > [data-page-actions] {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: .5rem;
+}
+main > [data-module-shell] > [data-page-actions] > a:not([data-primary]),
+main > [data-module-shell] > [data-page-actions] > button:not([data-primary]),
+main > [data-page-actions] > a:not([data-primary]) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    min-height: 40px;
+    padding: .5rem .9rem;
+    color: var(--ink);
+    background: #fff;
+    border: 1px solid var(--field-line);
+    border-radius: 6px;
+    font-weight: 600;
+    text-decoration: none;
+}
+main > [data-module-shell] > [data-page-actions] > a:not([data-primary]):hover,
+main > [data-page-actions] > a:not([data-primary]):hover { background: var(--field-bg); }
+[data-page-meta] { margin: 0 0 1.25rem; color: var(--ink-soft); }
+main > [data-page-head]:has(> h3) { display: block; }
+@media (max-width: 1050px) {
+    main > [data-module-shell]:has(> form[method="get"]) > [data-page-actions] {
+        grid-column: 1;
+        grid-row: 3;
+        justify-self: start;
+    }
+    main > [data-module-shell]:not(:has(> form[method="get"])) > [data-page-actions] {
+        grid-column: 1;
+        grid-row: 2;
+        justify-self: start;
+    }
+}
+
+/* A modest but visible type increase across navigation, forms and tables. */
+html { font-size: 18px; }
+main h3, main h4,
+main > [data-module-shell] > [data-page-head] h3,
+main > [data-module-shell] > [data-page-head] h4 { font-size: 1.65rem; }
+aside nav a { font-size: 1.05rem; }
+main > [data-module-shell] > form[method="get"] input[name="searchTerm"],
+main > [data-module-shell] > form[method="get"] select,
+main > [data-module-shell] > form[method="get"] a,
+main > [data-module-shell] > form[method="get"] button,
+main > [data-module-shell] > [data-page-actions] > a,
+main > [data-module-shell] > [data-page-actions] > button { font-size: 1rem; }
+table, main [data-table-wrap] table { font-size: .95rem; }
+[data-panel-body] td > div,
+tbody td a,
+tbody td button { font-size: .92rem; }
+body.login-page .login-card form > button[type="submit"] { font-size: 17px; }
+@media (max-width: 767.98px) {
+    main > [data-module-shell] > [data-page-actions] { width: 100%; }
+    main > [data-module-shell] > [data-page-actions] > a { flex: 1 1 auto; }
+}
+/* Back links share the main action color across pages and dialogs. */
+a[data-back],
+main > [data-module-shell] > [data-page-head] > [data-actions] > a[data-back],
+[data-modal-body] [data-actions-row] > a[data-back],
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > a[data-back] {
+    color: #fff !important;
+    background: var(--orange-btn) !important;
+    border-color: var(--orange-btn) !important;
+}
+a[data-back]:hover,
+main > [data-module-shell] > [data-page-head] > [data-actions] > a[data-back]:hover,
+[data-modal-body] [data-actions-row] > a[data-back]:hover,
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > a[data-back]:hover {
+    color: #fff !important;
+    background: var(--orange-dark) !important;
+    border-color: var(--orange-dark) !important;
+    text-decoration: none;
+}
+[data-actions-row] > a[data-back],
+[data-actions] > a[data-back],
+[data-page-actions] > a[data-back] { margin-top: 0; }
 @media (max-width: 540px) {
     body.login-page > .login-stage { padding: 1rem 1rem 3rem; }
     body.login-page .login-card { padding: 1.5rem; }

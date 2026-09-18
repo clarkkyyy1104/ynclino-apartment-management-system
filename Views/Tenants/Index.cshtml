@@ -6,11 +6,10 @@
 <div data-module-shell>
 <div data-page-head>
     <div><h3>Tenants</h3></div>
-    <div data-actions>
+</div>
+    <div data-page-actions>
         <a data-modal-link data-primary asp-action="Create">Register Tenant</a>
     </div>
-</div>
-
 @if (TempData["TempPassword"] != null)
 {
     @* shown once, on this page load only — it is not stored anywhere in plain text *@
@@ -24,7 +23,7 @@
     </div>
 }
 
-<form method="get">
+<form method="get" data-auto-search>
     <div>
         <input type="text" name="searchTerm" value="@ViewBag.SearchTerm"
                placeholder="Search by name…" />

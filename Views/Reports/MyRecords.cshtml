@@ -5,14 +5,9 @@
 }
 
 <header data-page-head>
-    <div>
-        <h3>My Records</h3>
-        <div>
-            @(tenant?.FullName ?? "—") · Unit @(tenant?.Unit?.UnitNumber ?? "—") · view only
-        </div>
-    </div>
-    <span>As of @DateTime.Today.ToString("MMMM dd, yyyy")</span>
+    <h3>My Records</h3>
 </header>
+<p data-page-meta>@(tenant?.FullName ?? "—") · Unit @(tenant?.Unit?.UnitNumber ?? "—") · view only · As of @DateTime.Today.ToString("MMMM dd, yyyy")</p>
 
 @if (tenant == null)
 {

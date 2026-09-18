@@ -8,7 +8,8 @@
 <div data-module-shell>
 <div data-page-head>
     <div><h3>@(archived ? "Lost & Found Archive" : "Lost & Found")</h3></div>
-    <div data-actions>
+</div>
+    <div data-page-actions>
         @if (!archived)
         {
             <a data-modal-link data-primary asp-action="Create">Report Item</a>
@@ -16,12 +17,10 @@
         }
         else
         {
-            <a asp-action="Index">Back</a>
+            <a asp-action="Index" data-back>Back</a>
         }
     </div>
-</div>
-
-<form method="get">
+<form method="get" data-auto-search>
     <input type="hidden" name="archived" value="@archived.ToString().ToLowerInvariant()" />
     <div>
         <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" placeholder="Search item or location…" />

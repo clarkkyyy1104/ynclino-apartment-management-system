@@ -8,7 +8,8 @@
 <div data-module-shell>
 <div data-page-head>
     <div><h3>Billing &amp; Payment</h3></div>
-    <div data-actions>
+</div>
+    <div data-page-actions>
         @if (isAdmin)
         {
             @if (!archived)
@@ -19,7 +20,7 @@
                looking at, so it always reads as somewhere to go. *@
             @if (archived)
             {
-                <a asp-action="Index">Back</a>
+                <a asp-action="Index" data-back>Back</a>
             }
             else
             {
@@ -27,8 +28,6 @@
             }
         }
     </div>
-</div>
-
 @{
     decimal advanceCredit = (decimal)(ViewBag.AdvanceCredit ?? 0m);
 }
@@ -40,7 +39,7 @@
     </div>
 }
 
-<form method="get">
+<form method="get" data-auto-search>
     @if (isAdmin)
     {
         <div>

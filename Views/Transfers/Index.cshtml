@@ -11,7 +11,8 @@
     <div>
         <h3>@title</h3>
     </div>
-    <div data-actions>
+</div>
+    <div data-page-actions>
         @if (!isAdmin && !archived)
         {
             <a data-modal-link asp-action="Create" data-primary>New Request</a>
@@ -20,14 +21,13 @@
            at, so it always reads as somewhere to go. *@
         @if (archived)
         {
-            <a asp-action="Index">Back</a>
+            <a asp-action="Index" data-back>Back</a>
         }
         else
         {
             <a asp-action="Index" asp-route-archived="true">Archive</a>
         }
     </div>
-</div>
 <p data-page-intro>
     @if (archived)
     {

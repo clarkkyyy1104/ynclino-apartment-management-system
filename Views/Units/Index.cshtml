@@ -8,21 +8,20 @@
 <div data-module-shell>
 <div data-page-head>
     <div><h3>Units</h3></div>
+</div>
     @if (isStaff)
     {
-        <div data-actions>
+        <div data-page-actions>
             <a data-modal-link data-primary asp-action="Create">Add Unit</a>
         </div>
     }
     @if (isTenant)
     {
-        <div data-actions>
+        <div data-page-actions>
             <a data-modal-link data-primary asp-controller="Transfers" asp-action="Create">Request Transfer</a>
         </div>
     }
-</div>
-
-<form method="get">
+<form method="get" data-auto-search>
     <div>
         <input type="text" name="searchTerm" value="@ViewBag.SearchTerm"
                placeholder="Search unit number or type…" />
