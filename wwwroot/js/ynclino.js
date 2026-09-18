@@ -150,6 +150,10 @@
             var requestedSize = Number(table.getAttribute('data-page-size'));
             var pageSize = Number.isInteger(requestedSize) && requestedSize > 0
                 ? requestedSize : 5;
+            if (table.closest('[data-report-page]')) {
+                pageSize = Math.min(pageSize, window.innerHeight < 650 ? 1
+                    : window.innerHeight < 850 ? 2 : 4);
+            }
             if (!rows.length) return;
             table.setAttribute('data-paginated', '');
 
@@ -164,8 +168,12 @@
             status.setAttribute('data-pagination-count', '');
             var controls = document.createElement('div');
             controls.setAttribute('data-pagination-controls', '');
+            var sizeLabel = document.createElement('label');
+            sizeLabel.setAttribute('data-pagination-size', '');
+            var sizeText = document.createElement('span');
+            sizeText.textContent = 'Items per page';
             var size = document.createElement('select');
-            size.setAttribute('aria-label', 'Rows per page');
+            size.setAttribute('aria-label', 'Items per page');
             Array.from(new Set([pageSize, 5, 10, 20, 50])).sort(function (a, b) { return a - b; }).forEach(function (value) {
                 var option = document.createElement('option');
                 option.value = value;
@@ -178,7 +186,11 @@
             next.textContent = 'Next';
             var current = document.createElement('span');
             current.setAttribute('data-pagination-current', '');
-            controls.append(size, previous, current, next);
+            var pages = document.createElement('div');
+            pages.setAttribute('data-pagination-pages', '');
+            sizeLabel.append(sizeText, size);
+            pages.append(previous, current, next);
+            controls.append(sizeLabel, pages);
             nav.append(status, controls);
             table.parentElement.insertAdjacentElement('afterend', nav);
 
@@ -199,6 +211,36 @@
             next.addEventListener('click', function () { page++; showPage(); });
             showPage();
         });
+    }
+
+    function paginateReportSections() {
+        var nav = document.querySelector('[data-report-pagination]');
+        if (!nav) return;
+        var pages = Array.prototype.slice.call(document.querySelectorAll('[data-report-page]'));
+        if (!pages.length) return;
+        var groups = pages.reduce(function (names, section) {
+            var name = section.getAttribute('data-report-group');
+            if (names.indexOf(name) === -1) names.push(name);
+            return names;
+        }, []);
+        var previous = nav.querySelector('[data-report-previous]');
+        var next = nav.querySelector('[data-report-next]');
+        var position = nav.querySelector('[data-report-position]');
+        var page = 0;
+        function showPage() {
+            pages.forEach(function (section) {
+                var current = section.getAttribute('data-report-group') === groups[page];
+                section.hidden = !current;
+                section.toggleAttribute('data-report-current', current);
+            });
+            position.textContent = groups[page] + ' · ' + (page + 1) + ' of ' + groups.length;
+            previous.disabled = page === 0;
+            next.disabled = page === groups.length - 1;
+        }
+        previous.addEventListener('click', function () { page--; showPage(); });
+        next.addEventListener('click', function () { page++; showPage(); });
+        showPage();
+        document.documentElement.setAttribute('data-reports-ready', '');
     }
 
     function wireNotificationFeeds() {
@@ -410,13 +452,14 @@
             'body:not(:has(aside)) form[method="post"] > button[type="submit"]',
             'main [data-panel-head] button',
             'main [data-pagination] button',
+            'main [data-report-pagination] button',
             '[data-modal-body] [data-actions-row] a',
             '[data-modal-body] [data-actions-row] button',
             '[data-modal-body] [data-form-panel] button[type="submit"]',
             '[data-notification-feed] [data-mark-all-read]'
         ].join(',');
         scope.querySelectorAll(selector).forEach(function (control) {
-            var label = (control.textContent || control.getAttribute('aria-label') || '').trim().toLowerCase().replace(/^\+\s*/, '');
+            var label = ((control.textContent || '').trim() || control.getAttribute('aria-label') || control.getAttribute('title') || '').trim().toLowerCase().replace(/^\+\s*/, '');
             if (label === 'login') return;
             var tone = control.getAttribute('data-action-tone');
             if (!tone && (control.hasAttribute('data-danger') ||
@@ -510,6 +553,7 @@
     window.addEventListener('DOMContentLoaded', function () {
         wireAutoSearch();
         paginateTables(document);
+        paginateReportSections();
         wireNotificationFeeds();
         decorateActions(document);
         /* the head script set the attribute before paint; the button has to agree */
