@@ -126,14 +126,14 @@ aside#appSidebar + div { flex: 1 1 auto; min-width: 0; display: flex; flex-direc
 [data-account-text] span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 [data-logout] { margin: 0; border-top: 1px solid rgba(255,255,255,.14); }
 [data-logout] button {
-    display: flex; align-items: center; justify-content: center; gap: .55rem;
+    display: flex; align-items: center; justify-content: flex-start; gap: .8rem;
     width: 100%; padding: .9rem 1.35rem;
     background: none; border: 0; color: var(--cream);
+    border-left: 5px solid transparent;
     font: inherit; cursor: pointer;
 }
 [data-logout] button:hover { background: rgba(255,255,255,.06); }
-[data-logout] [data-nav-icon] { width: 20px; height: 20px; }
-/* a nav label stretches to fill its row; here it must not, or Logout stops centring */
+[data-logout] [data-nav-icon] { width: 24px; height: 24px; }
 [data-logout] [data-nav-label] { flex: 0 0 auto; }
 
 /* 4. SIDEBAR NAVIGATION ─────────────────────────────────────────────────── */
@@ -319,7 +319,25 @@ header > button:hover { background: var(--field-bg); color: var(--ink); }
    a search box, two selects and a Clear link, which was already one control
    too many for a laptop window */
 main form[method="get"] { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin-bottom: 1.25rem; }
-main form[method="get"] a { font-weight: 600; }
+main form[method="get"] a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: .5rem .9rem;
+    color: var(--ink);
+    background: #fff;
+    border: 1px solid var(--field-line);
+    border-radius: 6px;
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+}
+main form[method="get"] a:hover { background: var(--field-bg); text-decoration: none; }
+main form[method="get"] a:focus-visible {
+    outline: 2px solid var(--ink-soft);
+    outline-offset: 2px;
+}
 
 /* password field with inline show/hide toggle */
 .pw-wrap {
@@ -461,8 +479,8 @@ tbody td:last-child form { display: inline-block; margin: 0; }
 tbody td:last-child form[data-wide-icon-action] { margin: 0 .2rem; }
 tbody td:last-child form[data-wide-icon-action] button { margin: 0; }
 /* 11. FORM PANELS (create / edit) ───────────────────────────────────────────
-   These views are  div > div > (caption div) + (div > form).  The caption
-   becomes the navy bar across the top of the panel, as in the design.     */
+   These views are div > div > (caption div) + (div > form), with the caption
+   presented as the panel's navy header.                                  */
 /* A form panel is named, not inferred. The previous rules said "a div followed
    by a div holding a post form", which also described a page header whose
    actions group happens to contain one — so the Notifications title was given
@@ -478,6 +496,7 @@ tbody td:last-child form[data-wide-icon-action] button { margin: 0; }
     padding: .85rem 1.5rem;
     background: var(--navy);
     color: #fff;
+    border-bottom: 0;
     font-size: 1.05rem;
     letter-spacing: .02em;
     text-transform: uppercase;
@@ -767,7 +786,7 @@ tbody td span[title] { opacity: .45; }
     font-weight: 600;
 }
 /* actions living in a panel header stay legible on the dark bar */
-[data-panel-head] a { color: var(--ink); text-decoration: underline; margin-left: auto; }
+[data-panel-head] a { color: #fff; text-decoration: underline; margin-left: auto; }
 [data-panel-head] form { margin: 0 0 0 auto; }
 [data-panel-head] button {
     padding: .25rem .7rem; font-size: .85rem; font-weight: 600;
@@ -896,25 +915,26 @@ tbody td span[title] { opacity: .45; }
 [data-note]:hover { background: #f7f8f9; }
 [data-note-link] { flex: 1; min-width: 0; color: var(--ink); }
 [data-note-link]:hover { color: var(--ink); text-decoration: underline; }
-[data-note] [data-mark-read] {
-    flex: 0 0 auto;
-    padding: .4rem .75rem;
-    background: #fff;
-    border: 1px solid var(--orange-btn);
+[data-notification-actions] {
+    display: flex;
+    justify-content: flex-end;
+    padding: .8rem 1.15rem;
+    border-top: 1px solid var(--line-soft);
+}
+[data-notification-actions]:has(> [hidden]) { display: none; }
+[data-mark-all-read] {
+    padding: .5rem .9rem;
+    background: transparent;
+    border: 1px solid var(--red);
     border-radius: 6px;
-    color: var(--orange-btn);
+    color: var(--red);
     font-size: .85rem;
     font-weight: 600;
 }
-[data-note] [data-mark-read]:hover {
-    background: #fff3ec;
-    color: var(--orange-dark);
-    border-color: var(--orange-dark);
-}
-[data-mark-read][hidden], [data-mark-all-read][hidden] { display: none; }
+[data-mark-all-read]:hover { background: var(--red-bg); }
+[data-mark-all-read][hidden] { display: none; }
 @media (max-width: 600px) {
     [data-note] { flex-wrap: wrap; }
-    [data-note] [data-mark-read] { margin-left: auto; }
 }
 
 /* which module the line came from, set apart from the sentence itself */
@@ -922,6 +942,16 @@ tbody td span[title] { opacity: .45; }
     display: inline-block; margin-right: .5rem; padding: .15rem .5rem;
     background: var(--field-bg); border: 1px solid var(--field-line); border-radius: 999px;
     font-size: .78rem; color: var(--ink-soft);
+}
+[data-note-module="LostFound"] [data-note-link] [data-module] {
+    color: #b43a00;
+    background: #fff3ec;
+    border-color: #f4b89d;
+}
+[data-note-module="LostFound"] [data-note-link]:hover [data-module] {
+    color: #963100;
+    background: #ffe4d6;
+    border-color: #f28a5c;
 }
 [data-meta] { flex: 0 0 auto; display: flex; align-items: center; gap: .5rem;
               font-size: .875rem; color: var(--muted); white-space: nowrap; }
@@ -1012,11 +1042,11 @@ input[type="file"] {
 input[type="file"]::file-selector-button {
     margin-right: .75rem;
     padding: .35rem .9rem;
-    color: var(--ink); background: #fff;
-    border: 1px solid var(--field-line); border-radius: 6px;
+    color: #fff; background: var(--navy);
+    border: 1px solid var(--navy); border-radius: 6px;
     font-family: var(--font-family); font-weight: 600; cursor: pointer;
 }
-input[type="file"]::file-selector-button:hover { background: var(--field-bg); }
+input[type="file"]::file-selector-button:hover { background: #1F2937; }
 
 /* ══ 19. THE ROW OF ACTIONS AT THE FOOT OF A PAGE ═══════════════════════════
    These sit in three different places depending on the view — after the panel,
@@ -1071,9 +1101,9 @@ input[type="file"]::file-selector-button:hover { background: var(--field-bg); }
     background: var(--orange-dark); border-color: var(--orange-dark); color: #fff;
 }
 [data-actions-row] button[data-danger] {
-    color: #fff; background: var(--red); border-color: var(--red); font-weight: 700;
+    color: var(--red); background: transparent; border-color: var(--red); font-weight: 700;
 }
-[data-actions-row] button[data-danger]:hover { background: #8f222c; border-color: #8f222c; color: #fff; }
+[data-actions-row] button[data-danger]:hover { background: var(--red-bg); border-color: #8f222c; color: #8f222c; }
 [data-actions-row] > a[href*="/Delete"],
 [data-actions-row] > a[href*="/DeletePermanent"] { color: var(--red); border-color: #e5b6bb; }
 
@@ -1400,21 +1430,6 @@ img, svg, table, pre { max-width: 100%; }
 }
 [data-modal-body] [data-panel] > div[data-actions-row]:last-child > [data-primary]:hover { color: #fff; background: var(--orange-dark); border-color: var(--orange-dark); }
 
-/* Report section headers stay light so they read separately from table headers. */
-[data-report-page] [data-panel] {
-    background: #fff;
-    border: 1px solid var(--figma-line);
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: var(--figma-shadow);
-}
-[data-report-page] [data-panel-head] {
-    background: #fff;
-    color: #000;
-    padding: .7rem 1.15rem;
-    font-weight: 700;
-    border-bottom: 1px solid var(--figma-line);
-}
 [data-report-page] [data-panel-body]:has(> [data-table-wrap]) {
     padding: 0;
 }
@@ -1450,66 +1465,8 @@ img, svg, table, pre { max-width: 100%; }
     cursor: default;
 }
 
-/* Reports show one section at a time so the dashboard does not become a long
-   stack of panels. Each section's own table pager handles additional records. */
-/* Reports use the same pagination layout as every other module */
-[data-report-pagination] {
-    display: none;
-}
-
-[data-reports-ready] [data-report-pagination] {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: .75rem;
-
-    padding: .8rem 0 1rem;
-    margin: 0;
-
-    color: var(--ink);
-    font-size: .9rem;
-    font-weight: 400;
-}
-
-[data-report-pagination] [data-report-position] {
-    color: var(--ink-soft);
-    font-size: .9rem;
-}
-
-[data-report-pagination] [data-pagination-controls] {
-    display: flex;
-    align-items: center;
-    gap: .3rem;
-}
-
-[data-report-pagination] button {
-    min-height: 32px;
-    padding: .4rem .65rem;
-
-    color: var(--ink);
-    background: #fff;
-
-    border: 1px solid var(--field-line);
-    border-radius: 3px;
-
-    font-family: var(--font-family);
-    font-size: .85rem;
-    font-weight: 500;
-
-    cursor: pointer;
-}
-
-[data-report-pagination] button:hover:not(:disabled) {
-    background: var(--field-bg);
-    border-color: #888;
-}
-
-[data-report-pagination] button:disabled {
-    opacity: .45;
-    cursor: default;
-}
-[data-report-page][hidden] { display: none; }
+/* Each report table owns a single footer paginator. All sections stay visible. */
+[data-chart-row] [data-pagination] { align-self: stretch; }
 [data-report-page] { min-width: 0; }
 [data-chart-row]:has(> [data-report-page]) { display: block; }
 [data-report-page] [data-chart-row] { margin-bottom: 0; }
@@ -1791,6 +1748,25 @@ main > [data-module-shell] > [data-advance-note] {
     font-weight: 400;
     line-height: 1.4;
 }
+[data-billing-summary] {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .75rem;
+    align-items: stretch;
+}
+[data-billing-summary] > [data-stat] {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+[data-billing-summary] > div > div > div:nth-child(3) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .2rem .4rem;
+    margin-top: .35rem;
+}
+@media (max-width: 640px) {
+    [data-billing-summary] { grid-template-columns: minmax(0, 1fr); }
+}
 [data-billing-create] > [data-actions-row] { margin-top: .25rem; }
 @media (max-width: 560px) {
     [data-form-body] > form[data-billing-create] { grid-template-columns: minmax(0, 1fr); }
@@ -1798,29 +1774,52 @@ main > [data-module-shell] > [data-advance-note] {
 
 /* Action colors follow the consequence of the action across lists and dialogs. */
 [data-action-tone="green"] {
-    --action-ink: #6EC531;
-    --action-bg: #e5f5e9;
-    --action-hover: #ccebd4;
+    --action-ink: var(--green);
+    --action-bg: transparent;
+    --action-border: var(--green);
+    --action-hover-ink: #0f5c38;
+    --action-hover-bg: var(--green-bg);
+    --action-hover-border: #0f5c38;
 }
 [data-action-tone="orange"] {
-    --action-ink: #9a3412;
-    --action-bg: #ffeddc;
-    --action-hover: #ffddbd;
+    --action-ink: #fff;
+    --action-bg: var(--orange-btn);
+    --action-border: var(--orange-btn);
+    --action-hover-ink: #fff;
+    --action-hover-bg: var(--orange-dark);
+    --action-hover-border: var(--orange-dark);
+}
+[data-action-tone="orange-outline"] {
+    --action-ink: var(--orange-btn);
+    --action-bg: #fff;
+    --action-border: var(--orange-btn);
+    --action-hover-ink: #963100;
+    --action-hover-bg: #ffe4d6;
+    --action-hover-border: #f28a5c;
 }
 [data-action-tone="gray"] {
     --action-ink: #374151;
-    --action-bg: #f3f4f6;
-    --action-hover: #e5e7eb;
+    --action-bg: transparent;
+    --action-border: #6b7280;
+    --action-hover-ink: #1f2937;
+    --action-hover-bg: #f3f4f6;
+    --action-hover-border: #374151;
 }
 [data-action-tone="amber"] {
-    --action-ink: #854d0e;
-    --action-bg: #fff4d6;
-    --action-hover: #fde8ad;
+    --action-ink: #b43a00;
+    --action-bg: #fff3ec;
+    --action-border: #f4b89d;
+    --action-hover-ink: #963100;
+    --action-hover-bg: #ffe4d6;
+    --action-hover-border: #f28a5c;
 }
 [data-action-tone="red"] {
-    --action-ink: #991b1b;
-    --action-bg: #fee9e8;
-    --action-hover: #fbd1ce;
+    --action-ink: var(--red);
+    --action-bg: transparent;
+    --action-border: var(--red);
+    --action-hover-ink: #8f222c;
+    --action-hover-bg: var(--red-bg);
+    --action-hover-border: #8f222c;
 }
 [data-status="active"], [data-status="inactive"] {
     display: inline-block;
@@ -1842,14 +1841,19 @@ main > [data-module-shell] > [data-advance-note] {
     border-color: #dc8d88;
 }
 :is(a, button)[data-action-tone] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
     color: var(--action-ink) !important;
     background: var(--action-bg) !important;
-    border: 0 !important;
+    border: 1px solid var(--action-border) !important;
     text-decoration: none;
 }
 :is(a, button)[data-action-tone]:hover {
-    color: var(--action-ink) !important;
-    background: var(--action-hover) !important;
+    color: var(--action-hover-ink) !important;
+    background: var(--action-hover-bg) !important;
+    border-color: var(--action-hover-border) !important;
     text-decoration: none;
 }
 :is(a, button)[data-action-tone]:focus-visible {
@@ -1933,7 +1937,7 @@ dd,
 [data-pagination][data-pagination] {
     font-family: Arial, Helvetica, sans-serif;
     font-weight: 400;
-}[data-report-pagination],
+}
 [data-pagination-info] {
     font-weight: 400;
 }
@@ -2081,12 +2085,23 @@ main > [data-module-shell] > [data-page-head] > [data-actions] > button[data-pri
     font-size: .95rem;
     font-weight: 700;
 }
+main > [data-module-shell] > [data-page-head] > [data-actions] > [data-primary]:is([data-action-tone="green"], [data-action-tone="red"], [data-action-tone="gray"], [data-action-tone="amber"]) {
+    color: var(--action-ink) !important;
+    background: var(--action-bg) !important;
+    border-color: var(--action-border) !important;
+    box-shadow: none;
+}
 main > [data-module-shell] > [data-page-head] > [data-actions] > [data-primary]:hover,
 main > [data-module-shell] > [data-page-head] > [data-actions] > a[data-primary]:hover,
 main > [data-module-shell] > [data-page-head] > [data-actions] > button[data-primary]:hover {
     color: #fff !important;
     background: var(--figma-orange-dark) !important;
     border-color: var(--figma-orange-dark) !important;
+}
+main > [data-module-shell] > [data-page-head] > [data-actions] > [data-primary]:is([data-action-tone="green"], [data-action-tone="red"], [data-action-tone="gray"], [data-action-tone="amber"]):hover {
+    color: var(--action-hover-ink) !important;
+    background: var(--action-hover-bg) !important;
+    border-color: var(--action-hover-border) !important;
 }
 main > [data-module-shell] > [data-page-head] > [data-actions] > a:not([data-primary]),
 main > [data-module-shell] > [data-page-head] > [data-actions] > form > button:not([data-primary]) {
@@ -2164,8 +2179,6 @@ tbody td a[href*="DeletePermanent"] {
 }
 tbody td a[href*="/Delete"]:hover,
 tbody td a[href*="DeletePermanent"]:hover { background: #FADBDE; color: #B02A37; }
-:is(a, button)[data-action-tone] { border: 0 !important; }
-
 /* Fields and forms */
 input[type="text"],
 input[type="tel"],
@@ -2207,6 +2220,7 @@ label {
     padding: .9rem 1.5rem;
     background: var(--figma-navy);
     color: #fff;
+    border-bottom: 0;
     font-weight: 700;
 }
 [data-form-body] { padding: 1.5rem; }
@@ -2231,8 +2245,38 @@ label {
     box-shadow: var(--figma-shadow);
 }
 [data-panel-head] {
-    border-bottom-color: var(--figma-line);
+    background: var(--figma-navy);
+    color: #fff;
+    border-bottom-color: transparent;
     font-weight: 700;
+}
+
+/* A table already has its own navy column header. Remove the surrounding card
+   chrome so its section title does not look like a second header. */
+main [data-panel]:is([data-table-section], :has(> [data-panel-body] > [data-table-wrap])) {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+    box-shadow: none;
+}
+main [data-panel]:is([data-table-section], :has(> [data-panel-body] > [data-table-wrap])) > [data-panel-head] {
+    padding: 0 0 .75rem;
+    background: transparent;
+    color: #000;
+    border-bottom: 0;
+}
+main [data-panel]:is([data-table-section], :has(> [data-panel-body] > [data-table-wrap])) > [data-panel-head] a {
+    color: #000;
+}
+main [data-panel]:is([data-table-section], :has(> [data-panel-body] > [data-table-wrap])) > [data-panel-body] {
+    padding: 0;
+}
+main [data-panel][data-table-section] > [data-panel-body] > [data-empty] {
+    border: 1px solid var(--figma-line);
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: var(--figma-shadow);
 }
 [data-stat],
 main > div > div > a:has(> div > div > svg) {
@@ -2245,8 +2289,8 @@ main > div > div > a:has(> div > div > svg):hover,
 [data-stat]:hover { border-left-color: var(--figma-orange); }
 [data-meter-fill] { background: var(--figma-orange-btn); }
 
-/* Modals. The modal script removes [data-form-head], so the dialog header must
-   inherit the same navy caption or the modal stops matching the source form. */
+/* The modal script removes [data-form-head], so the dialog supplies the same
+   navy header treatment itself. */
 [data-modal] {
     border: 0;
     border-radius: 10px;
@@ -2267,13 +2311,13 @@ main > div > div > a:has(> div > div > svg):hover,
 [data-modal-body] { padding: 1.45rem 1.5rem 1.5rem; }
 [data-modal-body] [data-form-body] > form { gap: .9rem 1.15rem; }
 
-/* Secondary modal buttons: outlined orange. */
-[data-modal-body] [data-actions-row] > a,
-[data-modal-body] [data-actions-row] > button,
-[data-modal-body] [data-actions-row] > form > button,
-[data-modal-body] [data-panel] > div[data-actions-row]:last-child > a,
-[data-modal-body] [data-panel] > div[data-actions-row]:last-child > button,
-[data-modal-body] [data-panel] > div[data-actions-row]:last-child > form > button {
+/* Fallback modal treatment before the action classifier assigns a tone. */
+[data-modal-body] [data-actions-row] > a:not([data-action-tone]),
+[data-modal-body] [data-actions-row] > button:not([data-action-tone]),
+[data-modal-body] [data-actions-row] > form > button:not([data-action-tone]),
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > a:not([data-action-tone]),
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > button:not([data-action-tone]),
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > form > button:not([data-action-tone]) {
     min-width: 7rem;
     padding: .55rem 1rem;
     color: var(--figma-orange-btn) !important;
@@ -2283,32 +2327,47 @@ main > div > div > a:has(> div > div > svg):hover,
     font-size: .9rem;
     font-weight: 700;
 }
-[data-modal-body] [data-actions-row] > a:hover,
-[data-modal-body] [data-actions-row] > button:hover,
-[data-modal-body] [data-actions-row] > form > button:hover,
-[data-modal-body] [data-panel] > div[data-actions-row]:last-child > a:hover,
-[data-modal-body] [data-panel] > div[data-actions-row]:last-child > button:hover,
-[data-modal-body] [data-panel] > div[data-actions-row]:last-child > form > button:hover {
+[data-modal-body] [data-actions-row] > a:not([data-action-tone]):hover,
+[data-modal-body] [data-actions-row] > button:not([data-action-tone]):hover,
+[data-modal-body] [data-actions-row] > form > button:not([data-action-tone]):hover,
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > a:not([data-action-tone]):hover,
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > button:not([data-action-tone]):hover,
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > form > button:not([data-action-tone]):hover {
     color: var(--figma-orange-dark) !important;
     background: #FFF3EC !important;
     border-color: var(--figma-orange-dark) !important;
 }
 
 /* Primary modal buttons. A late wireframe rule previously reset these to white. */
-[data-modal-body] [data-actions-row] > button[type="submit"]:not([data-danger]),
-[data-modal-body] [data-actions-row] > form > button[type="submit"]:not([data-danger]),
-[data-modal-body] [data-actions-row] > [data-primary],
-[data-modal-body] [data-panel] > div[data-actions-row]:last-child > [data-primary],
-[data-modal-body] [data-panel] > div[data-actions-row]:last-child > button[type="submit"]:not([data-danger]),
-[data-modal-body] [data-panel] > div[data-actions-row]:last-child > form > button[type="submit"]:not([data-danger]) {
+[data-modal-body] [data-actions-row] > button[type="submit"]:not([data-danger]):not([data-action-tone]),
+[data-modal-body] [data-actions-row] > form > button[type="submit"]:not([data-danger]):not([data-action-tone]),
+[data-modal-body] [data-actions-row] > [data-primary]:not([data-action-tone]),
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > [data-primary]:not([data-action-tone]),
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > button[type="submit"]:not([data-danger]):not([data-action-tone]),
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > form > button[type="submit"]:not([data-danger]):not([data-action-tone]) {
     color: #fff !important;
     background: var(--figma-orange-btn) !important;
     border-color: var(--figma-orange-btn) !important;
 }
 [data-modal-body] [data-actions-row] button[data-danger] {
-    color: #fff !important;
-    background: #B02A37 !important;
+    color: #B02A37 !important;
+    background: transparent !important;
     border-color: #B02A37 !important;
+}
+
+/* Secondary semantic actions keep their assigned tone in every modal layout,
+   including panel-foot actions with stronger structural rules. */
+[data-modal-body] [data-actions-row] :is(a, button)[data-action-tone],
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child :is(a, button)[data-action-tone] {
+    color: var(--action-ink) !important;
+    background: var(--action-bg) !important;
+    border: 1px solid var(--action-border) !important;
+}
+[data-modal-body] [data-actions-row] :is(a, button)[data-action-tone]:hover,
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child :is(a, button)[data-action-tone]:hover {
+    color: var(--action-hover-ink) !important;
+    background: var(--action-hover-bg) !important;
+    border-color: var(--action-hover-border) !important;
 }
 
 /* Login */
@@ -2542,9 +2601,14 @@ main > [data-module-shell] > [data-page-actions] {
     justify-content: flex-end;
     gap: .5rem;
 }
-main > [data-module-shell] > [data-page-actions] > a:not([data-primary]),
-main > [data-module-shell] > [data-page-actions] > button:not([data-primary]),
-main > [data-page-actions] > a:not([data-primary]) {
+main > [data-module-shell] > [data-page-meta] {
+    grid-column: 1;
+    grid-row: 2;
+    margin: 0;
+}
+main > [data-module-shell] > [data-page-actions] > a,
+main > [data-module-shell] > [data-page-actions] > button,
+main > [data-page-actions] > a {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -2572,6 +2636,9 @@ main > [data-page-head]:has(> h3) { display: block; }
         grid-column: 1;
         grid-row: 2;
         justify-self: start;
+    }
+    main > [data-module-shell]:has(> [data-page-meta]) > [data-page-actions] {
+        grid-row: 3;
     }
 }
 
@@ -2601,17 +2668,17 @@ a[data-back],
 main > [data-module-shell] > [data-page-head] > [data-actions] > a[data-back],
 [data-modal-body] [data-actions-row] > a[data-back],
 [data-modal-body] [data-panel] > div[data-actions-row]:last-child > a[data-back] {
-    color: #fff !important;
-    background: var(--orange-btn) !important;
+    color: var(--orange-btn) !important;
+    background: transparent !important;
     border-color: var(--orange-btn) !important;
 }
 a[data-back]:hover,
 main > [data-module-shell] > [data-page-head] > [data-actions] > a[data-back]:hover,
 [data-modal-body] [data-actions-row] > a[data-back]:hover,
 [data-modal-body] [data-panel] > div[data-actions-row]:last-child > a[data-back]:hover {
-    color: #fff !important;
-    background: var(--orange-dark) !important;
-    border-color: var(--orange-dark) !important;
+    color: #963100 !important;
+    background: #ffe4d6 !important;
+    border-color: #f28a5c !important;
     text-decoration: none;
 }
 [data-actions-row] > a[data-back],
@@ -2622,4 +2689,31 @@ main > [data-module-shell] > [data-page-head] > [data-actions] > a[data-back]:ho
     body.login-page .login-card { padding: 1.5rem; }
     .login-brand { margin-bottom: 30px; }
     .login-brand span { font-size: 11px; }
+}
+
+/* Update forms use the same field grid both on their own page and in a dialog. */
+[data-form-body] > form[data-form-grid],
+[data-modal-body] [data-form-body] > form[data-form-grid] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 1.15rem;
+    align-items: start;
+}
+[data-form-body] > form[data-form-grid] > * { min-width: 0; margin: 0; }
+[data-form-body] > form[data-form-grid] > :is(h6, p, ul, [data-span], [data-actions-row], .validation-summary-errors, .validation-summary-valid) {
+    grid-column: 1 / -1;
+}
+[data-form-body] > form[data-form-grid] > h6 { margin-top: .5rem; }
+[data-form-body] > form[data-form-grid] > h6:first-of-type { margin-top: 0; }
+[data-form-body] > form[data-form-grid] > div > :is(input:not([type="hidden"]), select),
+[data-form-body] > form[data-form-grid] .pw-wrap > input { min-height: 44px; }
+[data-form-body] > form[data-form-grid] > div:has(> label) > div:not(.pw-wrap):not(:has(input)) {
+    margin-top: .35rem;
+    color: var(--muted);
+    font-size: .82rem;
+    line-height: 1.4;
+}
+@media (max-width: 560px) {
+    [data-form-body] > form[data-form-grid],
+    [data-modal-body] [data-form-body] > form[data-form-grid] { grid-template-columns: minmax(0, 1fr); }
 }

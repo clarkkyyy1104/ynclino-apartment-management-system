@@ -10,7 +10,7 @@
                 Update Request #@Model.RequestID — @Model.TenantName
             </div>
             <div data-form-body>
-                <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                <form asp-action="Edit" method="post" enctype="multipart/form-data" data-form-grid>
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="RequestID" />
                     <input type="hidden" asp-for="TenantID" />
@@ -40,13 +40,13 @@
                             </select>
                         </div>
 
-                    <div id="descWrap">
+                    <div id="descWrap" data-span>
                         <label asp-for="Description"></label>
                         <textarea asp-for="Description" rows="3"></textarea>
                         <span asp-validation-for="Description"></span>
                     </div>
 
-                    <div>
+                    <div data-span>
                         <label asp-for="ImageUpload"></label>
                         @if (!string.IsNullOrEmpty(Model.ImagePath))
                         {
@@ -59,7 +59,7 @@
                         <span asp-validation-for="ImageUpload"></span>
                     </div>
 
-                    <div>
+                    <div data-span>
                         <label asp-for="Status"></label>
                         @{
                             var allowedStatuses = ViewBag.AllowedStatuses as List<string>
@@ -77,7 +77,7 @@
                         </div>
                     </div>
 
-                    <div>
+                    <div data-span>
                         <label asp-for="AssignedStaffID"></label>
                         <select asp-for="AssignedStaffID"
                                 asp-items="Model.AvailableStaff">

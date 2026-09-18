@@ -1,0 +1,187 @@
+@startuml YnclinoClassDiagram
+title YNCLINO Apartment Management System\nClass Diagram
+
+top to bottom direction
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype polyline
+skinparam nodesep 45
+skinparam ranksep 55
+
+skinparam class {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Black
+    FontSize 12
+}
+
+' =========================
+' CORE CLASSES
+' =========================
+
+class tblUser {
+    + UserID : int <<PK>>
+    + Username : string
+    + Password : string
+    + Role : string
+    + FirstName : string
+    + LastName : string
+    + ContactNumber : string?
+    + IsActive : bool
+    + MustChangePassword : bool
+    + DateCreated : DateTime
+}
+
+class tblTenant {
+    + TenantID : int <<PK>>
+    + UserID : int? <<FK>>
+    + UnitID : int? <<FK>>
+    + FirstName : string
+    + LastName : string
+    + ContactNumber : string?
+    + Status : string
+    + AdvanceCredit : decimal
+    + DateRecorded : DateTime
+}
+
+class tblUnit {
+    + UnitID : int <<PK>>
+    + UnitNumber : string
+    + UnitType : string
+    + RentPrice : decimal
+    + Deposit : decimal
+    + AdvancePayment : decimal
+    + Capacity : int
+    + Status : string
+}
+
+class TenantUnitAssignment {
+    + AssignmentID : long <<PK>>
+    + TenantID : int <<FK>>
+    + UnitID : int <<FK>>
+    + MoveInDate : DateTime?
+    + MoveOutDate : DateTime?
+    + LeaseStart : DateTime?
+    + LeaseEnd : DateTime?
+    + Status : string
+}
+
+' =========================
+' BILLING
+' =========================
+
+class tblBilling {
+    + BillingID : int <<PK>>
+    + TenantID : int <<FK>>
+    + BillingPeriod : DateTime
+    + AmountDue : decimal
+    + DueDate : DateTime
+    + AmountPaid : decimal?
+    + Status : string
+    + DateIssued : DateTime
+}
+
+class tblPayment {
+    + PaymentID : int <<PK>>
+    + BillingID : int <<FK>>
+    + Amount : decimal
+    + DatePaid : DateTime
+    + Method : string?
+    + RecordedAt : DateTime
+}
+
+' =========================
+' MAINTENANCE
+' =========================
+
+class tblMaintenanceRequest {
+    + RequestID : int <<PK>>
+    + TenantID : int <<FK>>
+    + UnitID : int? <<FK>>
+    + AssignedStaffID : int? <<FK>>
+    + Category : string
+    + Priority : string
+    + Status : string
+    + DateSubmitted : DateTime
+    + DateResolved : DateTime?
+}
+
+' =========================
+' UNIT REQUESTS
+' =========================
+
+class tblUnitTransferRequest {
+    + TransferID : int <<PK>>
+    + TenantID : int <<FK>>
+    + CurrentUnitID : int? <<FK>>
+    + RequestedUnitID : int <<FK>>
+    + Reason : string
+    + Status : string
+    + DateRequested : DateTime
+    + DateReviewed : DateTime?
+}
+
+' =========================
+' LOST AND FOUND
+' =========================
+
+class tblLostFoundItem {
+    + ItemID : int <<PK>>
+    + ReportedByUserID : int <<FK>>
+    + ClaimedByUserID : int? <<FK>>
+    + ItemName : string
+    + ItemType : string
+    + Location : string?
+    + Status : string
+    + DateReported : DateTime
+    + DateClaimed : DateTime?
+}
+
+class tblClaimRequest {
+    + ClaimID : int <<PK>>
+    + ItemID : int <<FK>>
+    + ClaimantUserID : int <<FK>>
+    + VerificationDetails : string
+    + SubmittedAt : DateTime
+    + Status : string
+}
+
+' =========================
+' MAIN RELATIONSHIPS
+' =========================
+
+tblUser "1" -down- "0..1" tblTenant
+
+tblUnit "1" -right- "0..*" tblTenant
+
+tblTenant "1" -down- "0..*" tblBilling
+tblBilling "1" -down- "0..*" tblPayment
+
+tblTenant "1" -right- "0..*" tblMaintenanceRequest
+tblUnit "1" -- "0..*" tblMaintenanceRequest
+tblUser "1" -- "0..*" tblMaintenanceRequest : assigned staff
+
+tblTenant "1" -left- "0..*" tblUnitTransferRequest
+tblUnit "1" -- "0..*" tblUnitTransferRequest : requested unit
+
+tblTenant "1" -- "0..*" TenantUnitAssignment
+tblUnit "1" -- "0..*" TenantUnitAssignment
+
+tblUser "1" -right- "0..*" tblLostFoundItem : reports
+tblUser "1" -- "0..*" tblLostFoundItem : claimant
+
+tblLostFoundItem "1" -down- "0..*" tblClaimRequest
+tblUser "1" -- "0..*" tblClaimRequest : claimant
+
+' =========================
+' LAYOUT ASSISTANCE
+' =========================
+
+tblUnit -[hidden]right- tblUser
+tblUser -[hidden]right- tblLostFoundItem
+
+tblUnitTransferRequest -[hidden]right- tblBilling
+tblBilling -[hidden]right- tblMaintenanceRequest
+
+@enduml

@@ -8,12 +8,12 @@
         <div data-form-panel>
             <div data-form-head>Update Bill</div>
             <div data-form-body>
-                <form asp-action="Edit" method="post" data-billing-edit>
+                <form asp-action="Edit" method="post" data-billing-edit data-form-grid>
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="BillingID" />
                     <div asp-validation-summary="ModelOnly"></div>
 
-                    <div>
+                    <div data-span>
                         <label asp-for="TenantID"></label>
                         <select asp-for="TenantID" asp-items="Model.AvailableTenants">
                             <option value="">— Select Tenant —</option>
@@ -39,14 +39,14 @@
                     </p>
 
                     @* running totals — computed from the payments below, never typed *@
-                    <div data-span>
-                        <div>
+                    <div data-span data-billing-summary>
+                        <div data-stat>
                             <div>
                                 <div>Amount Due</div>
                                 <div>₱@Model.AmountDue.ToString("N0")</div>
                             </div>
                         </div>
-                        <div>
+                        <div data-stat>
                             <div>
                                 <div>Total Paid</div>
                                 @* the full amount received, then where it went *@
@@ -61,7 +61,7 @@
                                 }
                             </div>
                         </div>
-                        <div>
+                        <div data-stat>
                             <div>
                                 <div>Balance</div>
                                 <div>₱@Model.Balance.ToString("N0")</div>

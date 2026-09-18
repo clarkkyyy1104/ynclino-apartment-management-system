@@ -15,10 +15,6 @@
 <div data-panel data-notification-feed data-notification-user="@User.FindFirstValue(ClaimTypes.NameIdentifier)">
     <div data-panel-head>
         <span>Notifications</span>
-        @if (notes.Count > 0)
-        {
-            <button type="button" data-mark-all-read>Mark all as read</button>
-        }
     </div>
 
     @if (notes.Count == 0)
@@ -33,14 +29,16 @@
         <div data-panel-body>
             @foreach (var n in notes)
             {
-                <div data-note data-unread="true" data-notification-key="@($"{n.Module}|{n.TargetId}|{n.Message}")">
+                <div data-note data-note-module="@n.Module" data-unread="true" data-notification-key="@($"{n.Module}|{n.TargetId}|{n.Message}")">
                     <a data-note-link href="@(n.Link ?? "#")">
                         <span data-module>@NoteLabel(n.Module)</span>
                         <span data-message>@n.Message</span>
                     </a>
-                    <button type="button" data-mark-read>Mark as read</button>
                 </div>
             }
+        </div>
+        <div data-notification-actions>
+            <button type="button" data-mark-all-read data-action-tone="red">Mark all as read</button>
         </div>
     }
 </div>

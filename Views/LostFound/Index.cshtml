@@ -12,8 +12,8 @@
     <div data-page-actions>
         @if (!archived)
         {
+            <a asp-action="Index" asp-route-archived="true" data-action-tone="amber"><img src="~/images/icons/archive.svg" alt="" width="16" height="16" /> Archive</a>
             <a data-modal-link data-primary asp-action="Create">Report Item</a>
-            <a asp-action="Index" asp-route-archived="true"><img src="~/images/icons/archive.svg" alt="" width="16" height="16" /> Archive</a>
         }
         else
         {
@@ -40,7 +40,7 @@
         </select>
     </div>
     <div>
-        <a asp-action="Index" asp-route-archived="@archived">Clear</a>
+        <a asp-action="Index" asp-route-archived="@archived" data-action-tone="gray">Clear</a>
     </div>
 </form>
 </div>
@@ -123,8 +123,3 @@
         </tbody>
     </table>
 </div>
-<nav data-report-pagination aria-label="Report sections">
-    <button type="button" data-report-previous>Previous</button>
-    <span data-report-position aria-live="polite"></span>
-    <button type="button" data-report-next>Next</button>
-</nav>

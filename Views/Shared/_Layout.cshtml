@@ -17,6 +17,9 @@
     // marks the current page semantically: style it with a[aria-current="page"]
     string? Active(string c) => activeController == c ? "page" : null;
     bool isAdmin = User.IsInRole("Admin");
+    var accountName = User.Identity?.Name ?? "";
+    if (isAdmin && accountName.Length > 0)
+        accountName = char.ToUpperInvariant(accountName[0]) + accountName.Substring(1);
     // three roles now, so "not admin" no longer means "tenant" — name each one
     bool isStaff = User.IsInRole("Maintenance");
     bool isTenant = User.IsInRole("Tenant");
@@ -139,7 +142,7 @@
                     <div class="maintenanceProfileCard" data-account-card title="My Profile">
                     <span data-nav-icon="profile"></span>
                     <span data-account-text>
-                        <span>@User.Identity?.Name</span>
+                        <span>@accountName</span>
                         @if(isAdmin){ <span/> }
                         else{<span>@(isAdmin ? "Admin" : isStaff ? "Maintenance Staff" : "Tenant")</span>}
                     </span>
@@ -158,7 +161,7 @@
                     <a data-account-card aria-current="@Active("Profile")" asp-controller="Profile" asp-action="Index" title="My Profile">
                     <span data-nav-icon="profile"></span>
                     <span data-account-text>
-                        <span>@User.Identity?.Name</span>
+                        <span>@accountName</span>
                         @if(isAdmin){ <span/> }
                         else{<span>@(isAdmin ? "Admin" : isStaff ? "Maintenance Staff" : "Tenant")</span>}
                     </span>

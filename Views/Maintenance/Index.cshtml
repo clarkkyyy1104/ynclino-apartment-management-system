@@ -15,11 +15,6 @@
     </div>
 </div>
     <div data-page-actions>
-        @* staff carry out work; they do not raise requests *@
-        @if (!archived && !isStaff)
-        {
-            <a data-modal-link data-primary asp-action="Create">New Request</a>
-        }
         @* One button, not a pair of tabs: it names the list you are NOT looking
            at, so it always reads as somewhere to go rather than as a choice
            between two things one of which you are already on. *@
@@ -29,7 +24,12 @@
         }
         else
         {
-            <a asp-action="Index" asp-route-archived="true">Archive</a>
+            <a asp-action="Index" asp-route-archived="true" data-action-tone="amber">Archive</a>
+        }
+        @* staff carry out work; they do not raise requests *@
+        @if (!archived && !isStaff)
+        {
+            <a data-modal-link data-primary asp-action="Create">New Request</a>
         }
     </div>
 
@@ -51,7 +51,7 @@
         </select>
     </div>
     <div>
-        <a asp-action="Index" asp-route-archived="@archived.ToString().ToLower()">Clear</a>
+        <a asp-action="Index" asp-route-archived="@archived.ToString().ToLower()" data-action-tone="gray">Clear</a>
     </div>
 </form>
 </div>

@@ -12,10 +12,6 @@
     <div data-page-actions>
         @if (isAdmin)
         {
-            @if (!archived)
-            {
-                <a data-modal-link data-primary asp-action="Create">Issue Bill</a>
-            }
             @* One button, not a pair of tabs: it names the list you are NOT
                looking at, so it always reads as somewhere to go. *@
             @if (archived)
@@ -24,7 +20,11 @@
             }
             else
             {
-                <a asp-action="Index" asp-route-archived="true">Archive</a>
+                <a asp-action="Index" asp-route-archived="true" data-action-tone="amber">Archive</a>
+            }
+            @if (!archived)
+            {
+                <a data-modal-link data-primary asp-action="Create">Issue Bill</a>
             }
         }
     </div>
@@ -56,7 +56,7 @@
         </select>
     </div>
     <div>
-        <a asp-action="Index">Clear</a>
+        <a asp-action="Index" data-action-tone="gray">Clear</a>
     </div>
 </form>
 </div>

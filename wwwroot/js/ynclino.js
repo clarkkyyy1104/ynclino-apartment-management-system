@@ -150,10 +150,6 @@
             var requestedSize = Number(table.getAttribute('data-page-size'));
             var pageSize = Number.isInteger(requestedSize) && requestedSize > 0
                 ? requestedSize : 5;
-            if (table.closest('[data-report-page]')) {
-                pageSize = Math.min(pageSize, window.innerHeight < 650 ? 1
-                    : window.innerHeight < 850 ? 2 : 4);
-            }
             if (!rows.length) return;
             table.setAttribute('data-paginated', '');
 
@@ -205,36 +201,6 @@
         });
     }
 
-    function paginateReportSections() {
-        var nav = document.querySelector('[data-report-pagination]');
-        if (!nav) return;
-        var pages = Array.prototype.slice.call(document.querySelectorAll('[data-report-page]'));
-        if (!pages.length) return;
-        var groups = pages.reduce(function (names, section) {
-            var name = section.getAttribute('data-report-group');
-            if (names.indexOf(name) === -1) names.push(name);
-            return names;
-        }, []);
-        var previous = nav.querySelector('[data-report-previous]');
-        var next = nav.querySelector('[data-report-next]');
-        var position = nav.querySelector('[data-report-position]');
-        var page = 0;
-        function showPage() {
-            pages.forEach(function (section) {
-                var current = section.getAttribute('data-report-group') === groups[page];
-                section.hidden = !current;
-                section.toggleAttribute('data-report-current', current);
-            });
-            position.textContent = groups[page] + ' · ' + (page + 1) + ' of ' + groups.length;
-            previous.disabled = page === 0;
-            next.disabled = page === groups.length - 1;
-        }
-        previous.addEventListener('click', function () { page--; showPage(); });
-        next.addEventListener('click', function () { page++; showPage(); });
-        showPage();
-        document.documentElement.setAttribute('data-reports-ready', '');
-    }
-
     function wireNotificationFeeds() {
         document.querySelectorAll('[data-notification-feed]').forEach(function (feed) {
             var userId = feed.getAttribute('data-notification-user');
@@ -254,8 +220,6 @@
                     var isRead = read.has(row.getAttribute('data-notification-key'));
                     if (isRead) row.removeAttribute('data-unread');
                     else row.setAttribute('data-unread', 'true');
-                    var button = row.querySelector('[data-mark-read]');
-                    if (button) button.hidden = isRead;
                 });
                 if (markAll) markAll.hidden = rows.every(function (row) {
                     return read.has(row.getAttribute('data-notification-key'));
@@ -269,11 +233,7 @@
             }
 
             feed.addEventListener('click', function (event) {
-                var button = event.target.closest('[data-mark-read]');
-                if (button) {
-                    read.add(button.closest('[data-notification-key]').getAttribute('data-notification-key'));
-                    save();
-                } else if (event.target.closest('[data-mark-all-read]')) {
+                if (event.target.closest('[data-mark-all-read]')) {
                     rows.forEach(function (row) { read.add(row.getAttribute('data-notification-key')); });
                     save();
                 }
@@ -432,6 +392,10 @@
 
     function decorateActions(scope) {
         var selector = [
+            '[data-page-actions] a',
+            '[data-page-actions] button',
+            'main a[data-primary]',
+            'main a[data-modal-link]',
             '[data-page-head] [data-actions] a',
             '[data-page-head] [data-actions] button',
             'main [data-identity] [data-actions] a',
@@ -446,43 +410,45 @@
             'body:not(:has(aside)) form[method="post"] > button[type="submit"]',
             'main [data-panel-head] button',
             'main [data-pagination] button',
-            'main [data-report-pagination] button',
             '[data-modal-body] [data-actions-row] a',
             '[data-modal-body] [data-actions-row] button',
             '[data-modal-body] [data-form-panel] button[type="submit"]',
-            '[data-notification-feed] [data-mark-read]',
             '[data-notification-feed] [data-mark-all-read]'
         ].join(',');
         scope.querySelectorAll(selector).forEach(function (control) {
             var label = (control.textContent || control.getAttribute('aria-label') || '').trim().toLowerCase().replace(/^\+\s*/, '');
             if (label === 'login') return;
-            var tone;
-            if (control.hasAttribute('data-danger') ||
-                /^(delete|remove|yes, delete|deactivate|reject|cancel request|sign out instead)/.test(label))
+            var tone = control.getAttribute('data-action-tone');
+            if (!tone && (control.hasAttribute('data-danger') ||
+                /^(delete|remove|yes, delete|deactivate|reject|mark .*read|sign out instead)/.test(label)))
                 tone = 'red';
-            else if (/^(archive|yes, archive|move to archive|reset password)/.test(label))
+            else if (!tone && /^(cancel|exit|close)\b/.test(label))
+                tone = 'orange-outline';
+            else if (!tone && /^(reset password)/.test(label))
                 tone = 'amber';
-            else if (/^(update|edit|save|submit|approve|claim|restore|reactivate|put back|mark .*read)/.test(label))
+            else if (!tone && /^(archive|yes, archive|move to archive)/.test(label))
+                tone = 'amber';
+            else if (!tone && /^(update|edit|restore|reactivate|put back)/.test(label))
                 tone = 'green';
-            else if (control.hasAttribute('data-primary') ||
-                /^(add|new|create|register|report item|issue bill|request|apply|load sample|login|sign in)/.test(label))
+            else if (!tone && (control.hasAttribute('data-primary') ||
+                /^(add|new|create|register|report item|issue|request|apply|load sample|save|submit|approve|agree|accept|confirm|claim|login|sign in)/.test(label)))
                 tone = 'orange';
-            else
+            else if (!tone)
                 tone = 'gray';
             control.setAttribute('data-action-tone', tone);
             if (control.querySelector('img, svg, [data-action-icon]')) return;
             var icon = null;
-            if (/^(add|new|create|register|report item|issue bill|load sample)/.test(label)) icon = 'add';
-            else if (/^(request|apply|submit request|submit report)/.test(label)) icon = 'send';
+            if (/^(add|new|create|register|report item|issue|request|apply|submit request|submit report|submit application|load sample)/.test(label)) icon = 'add';
             else if (/^(update|edit)/.test(label)) icon = 'edit';
             else if (/^(save|upload)/.test(label)) icon = 'save';
             else if (/^(delete|remove|yes, delete)/.test(label)) icon = 'trash';
             else if (/^(archive|yes, archive|move to archive)/.test(label)) icon = 'archive';
             else if (/^(restore|reactivate|put back)/.test(label)) icon = 'restore';
-            else if (/^(back|← back|cancel)/.test(label)) icon = label === 'cancel' ? 'close' : 'back';
+            else if (/^(cancel|exit|close)\b/.test(label)) icon = 'close';
+            else if (/^(back|← back)/.test(label)) icon = 'back';
             else if (/^previous/.test(label)) icon = 'back';
             else if (/^next/.test(label)) icon = 'forward';
-            else if (/^(approve|claim|mark .*read)/.test(label)) icon = 'check';
+            else if (/^(approve|agree|accept|confirm|claim|mark .*read)/.test(label)) icon = 'check';
             else if (/^(reject|deactivate)/.test(label)) icon = 'close';
             else if (/^(reset password|change password)/.test(label)) icon = 'key';
             else if (/^(login|sign in)/.test(label)) icon = 'lock';
@@ -544,7 +510,6 @@
     window.addEventListener('DOMContentLoaded', function () {
         wireAutoSearch();
         paginateTables(document);
-        paginateReportSections();
         wireNotificationFeeds();
         decorateActions(document);
         /* the head script set the attribute before paint; the button has to agree */
