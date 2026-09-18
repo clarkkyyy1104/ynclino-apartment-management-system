@@ -34,6 +34,26 @@ var localPassword = builder.Configuration["MySqlPassword"];
 if (!string.IsNullOrWhiteSpace(localPassword) && connectionString != null && connectionString.Contains("YOUR_MYSQL_PASSWORD"))
     connectionString = connectionString.Replace("YOUR_MYSQL_PASSWORD", localPassword);
 
+if (string.IsNullOrWhiteSpace(connectionString))
+    throw new InvalidOperationException("ConnectionStrings:DefaultConnection is not configured.");
+
+// MySQL 8 uses caching_sha2_password by default. When a developer deliberately
+// disables TLS for a localhost-only connection, MySqlConnector needs permission
+// to retrieve MySQL's RSA public key or authentication fails before startup.
+// Apply that compatibility setting only to loopback hosts so it can never weaken
+// a connection to a remote database.
+var connectionBuilder = new MySqlConnector.MySqlConnectionStringBuilder(connectionString);
+var isLocalDatabase =
+    string.Equals(connectionBuilder.Server, "localhost", StringComparison.OrdinalIgnoreCase) ||
+    string.Equals(connectionBuilder.Server, "127.0.0.1", StringComparison.OrdinalIgnoreCase) ||
+    string.Equals(connectionBuilder.Server, "::1", StringComparison.OrdinalIgnoreCase);
+
+if (isLocalDatabase && connectionBuilder.SslMode == MySqlConnector.MySqlSslMode.Disabled)
+{
+    connectionBuilder.AllowPublicKeyRetrieval = true;
+    connectionString = connectionBuilder.ConnectionString;
+}
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 

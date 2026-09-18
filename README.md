@@ -99,7 +99,9 @@ The committed `appsettings.json` points to `YAMSDB`. A full
 `ConnectionStrings:DefaultConnection` in `appsettings.Local.json` overrides it;
 make sure that override also names `YAMSDB`. If MySqlConnector reports a local
 Windows SSL authentication error, add `SslMode=Disabled` to a **localhost-only**
-connection string in the private file.
+connection string in the private file. The app automatically enables MySQL RSA
+public-key retrieval for that localhost-only configuration so MySQL 8's default
+`caching_sha2_password` authentication can complete.
 
 ### 4. Run the app
 Press **F5** in Visual Studio (or `dotnet run`). It connects to the database you

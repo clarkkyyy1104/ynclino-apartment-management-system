@@ -150,10 +150,7 @@
             var requestedSize = Number(table.getAttribute('data-page-size'));
             var pageSize = Number.isInteger(requestedSize) && requestedSize > 0
                 ? requestedSize : 5;
-            if (table.closest('[data-report-page]')) {
-                pageSize = Math.min(pageSize, window.innerHeight < 650 ? 1
-                    : window.innerHeight < 850 ? 2 : 4);
-            }
+            var canChoosePageSize = !table.closest('[data-report-page]');
             if (!rows.length) return;
             table.setAttribute('data-paginated', '');
 
@@ -168,19 +165,24 @@
             status.setAttribute('data-pagination-count', '');
             var controls = document.createElement('div');
             controls.setAttribute('data-pagination-controls', '');
-            var sizeLabel = document.createElement('label');
-            sizeLabel.setAttribute('data-pagination-size', '');
-            var sizeText = document.createElement('span');
-            sizeText.textContent = 'Items per page';
-            var size = document.createElement('select');
-            size.setAttribute('aria-label', 'Items per page');
-            Array.from(new Set([pageSize, 5, 10, 20, 50])).sort(function (a, b) { return a - b; }).forEach(function (value) {
-                var option = document.createElement('option');
-                option.value = value;
-                option.textContent = value;
-                size.appendChild(option);
-            });
-            size.value = String(pageSize);
+            var size = null;
+            if (canChoosePageSize) {
+                var sizeLabel = document.createElement('label');
+                sizeLabel.setAttribute('data-pagination-size', '');
+                var sizeText = document.createElement('span');
+                sizeText.textContent = 'Items per page';
+                size = document.createElement('select');
+                size.setAttribute('aria-label', 'Items per page');
+                Array.from(new Set([pageSize, 5, 10, 20, 50])).sort(function (a, b) { return a - b; }).forEach(function (value) {
+                    var option = document.createElement('option');
+                    option.value = value;
+                    option.textContent = value;
+                    size.appendChild(option);
+                });
+                size.value = String(pageSize);
+                sizeLabel.append(sizeText, size);
+                controls.append(sizeLabel);
+            }
             var next = document.createElement('button');
             next.type = 'button';
             next.textContent = 'Next';
@@ -188,9 +190,8 @@
             current.setAttribute('data-pagination-current', '');
             var pages = document.createElement('div');
             pages.setAttribute('data-pagination-pages', '');
-            sizeLabel.append(sizeText, size);
             pages.append(previous, current, next);
-            controls.append(sizeLabel, pages);
+            controls.append(pages);
             nav.append(status, controls);
             table.parentElement.insertAdjacentElement('afterend', nav);
 
@@ -206,7 +207,9 @@
                 previous.disabled = page === 0;
                 next.disabled = page === pageCount - 1;
             }
-            size.addEventListener('change', function () { pageSize = Number(size.value); page = 0; showPage(); });
+            if (size) {
+                size.addEventListener('change', function () { pageSize = Number(size.value); page = 0; showPage(); });
+            }
             previous.addEventListener('click', function () { page--; showPage(); });
             next.addEventListener('click', function () { page++; showPage(); });
             showPage();
