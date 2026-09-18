@@ -87,14 +87,6 @@
                         <span asp-validation-for="AssignedStaffID"></span>
                     </div>
 
-                    @if (!string.IsNullOrWhiteSpace(Model.StaffNotes))
-                    {
-                        <div>
-                            <label>Work Notes (from maintenance staff)</label>
-                            <p>@Model.StaffNotes</p>
-                        </div>
-                    }
-
                     <div data-actions-row>
                         <button type="submit">Save Changes</button>
                         <a asp-action="Index">Cancel</a>

@@ -65,18 +65,6 @@
                             <span>Not yet assigned</span>
                         }
                     </dd>
-
-                    <dt>Work Notes</dt>
-                    <dd>
-                        @if (string.IsNullOrWhiteSpace(Model.StaffNotes))
-                        {
-                            <span>No work has been reported yet.</span>
-                        }
-                        else
-                        {
-                            @Model.StaffNotes
-                        }
-                    </dd>
                 </dl>
 
                 <div data-actions-row>
