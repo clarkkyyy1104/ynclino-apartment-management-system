@@ -17,7 +17,7 @@ namespace YnclinoApartmentManagementSystem.Helpers
             var unit = await db.tblUnits.FindAsync(unitId.Value);
             if (unit == null || unit.Status == "Under Maintenance") return;
 
-            int active = await db.tblTenants.CountAsync(t => t.UnitID == unitId && t.Status == "Active");
+            int active = await db.tblTenants.CountAsync(t => t.Assignments.Any(a => a.Status == "Active" && a.UnitID == unitId) && t.Status == "Active");
             if (active >= unit.Capacity)
             {
                 unit.Status = "Occupied";

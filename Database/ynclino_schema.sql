@@ -98,7 +98,6 @@ CREATE TABLE TenantProfiles (
 
     -- Existing tenant screens still edit these details. User identity is also
     -- copied to Users on save so account lists and tenant records agree.
-    UnitID INT UNSIGNED NULL,
     FirstName VARCHAR(80) NOT NULL,
     LastName VARCHAR(80) NOT NULL,
     ContactNumber VARCHAR(30) NULL,
@@ -121,9 +120,6 @@ CREATE TABLE TenantProfiles (
         REFERENCES Users(UserID)
         ON DELETE RESTRICT,
 
-    CONSTRAINT fk_tenant_profiles_current_unit
-        FOREIGN KEY (UnitID) REFERENCES Units(UnitID) ON DELETE RESTRICT,
-
     CONSTRAINT chk_tenant_advance_credit_nonnegative CHECK (AdvanceCredit >= 0),
 
     INDEX idx_tenant_profiles_status (Status)
@@ -131,12 +127,11 @@ CREATE TABLE TenantProfiles (
 
 -- ============================================================================
 -- 5. TENANT UNIT ASSIGNMENTS / LEASE HISTORY
--- Preserves every unit assignment instead of overwriting TenantInfo.UnitID.
+-- Sole source of current occupancy and historical unit assignments.
 -- A tenant can have many historical assignments but only one row with
 -- Status = 'Active' at a time.
--- TenantProfiles.UnitID is the current pointer used by existing screens;
--- assignment rows are the historical record. They are intentionally related,
--- and their active values must agree.
+-- The Active row identifies the tenant's current unit. No Active row means
+-- no current unit; Ended rows are history and must not count as occupants.
 -- ============================================================================
 
 CREATE TABLE TenantUnitAssignments (

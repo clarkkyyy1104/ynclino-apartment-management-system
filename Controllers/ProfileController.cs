@@ -39,7 +39,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             }
 
             var tenant = await _context.tblTenants
-                .Include(t => t.Unit)
+                .Include(t => t.Assignments).ThenInclude(a => a.Unit)
                 .Include(t => t.User)
                 .FirstOrDefaultAsync(t => t.UserID == uid);
 

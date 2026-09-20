@@ -123,7 +123,7 @@ using (var scope = app.Services.CreateScope())
         throw new InvalidOperationException("Cannot connect to YAMSDB. Check the connection string and MySQL service.");
     // A database built by the current Database/ynclino_schema.sql has every
     // table and column the application expects. Older YAMSDB installations
-    // need the additive Database/yamsdb_app_compat.sql patch.
+    // need the migration described in Database/UNIT_ASSIGNMENTS_MIGRATION.md.
     // What used to live here — sixteen AddColumnIfMissing calls, a CREATE TABLE
     // for tblPayments, and a run of one-time backfills and label migrations
     // (Low/Medium/High to Minor/Moderate/Major, "Late" to "Overdue", "Vacant" to
@@ -153,7 +153,7 @@ using (var scope = app.Services.CreateScope())
     {
         db.ChangeTracker.Clear();
         throw new InvalidOperationException(
-            "YAMSDB does not match the application model. Run Database/yamsdb_app_compat.sql if this database was created before the app update.", ex);
+            "YAMSDB does not match the application model. Check Database/UNIT_ASSIGNMENTS_MIGRATION.md for the existing-database migration; do not rerun the destructive fresh-install schema on existing data.", ex);
     }
 }
 

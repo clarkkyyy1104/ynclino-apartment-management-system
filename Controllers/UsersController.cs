@@ -276,6 +276,15 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var tenant = user.Tenants?.FirstOrDefault();
             if (tenant != null)
             {
+                if (activating)
+                {
+                    var error = await _context.PrepareTenantReactivationAsync(tenant);
+                    if (error != null)
+                    {
+                        TempData["Error"] = error;
+                        return RedirectToAction(nameof(Index));
+                    }
+                }
                 tenant.Status = activating ? "Active" : "Inactive";
 
                 // an active tenant has no move-out date; a deactivated one is stamped

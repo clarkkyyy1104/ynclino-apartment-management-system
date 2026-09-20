@@ -21,7 +21,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // GET: Units
         public async Task<IActionResult> Index(string? statusFilter, string? searchTerm)
         {
-            var query = _context.tblUnits.Include(u => u.Tenants).AsQueryable();
+            var query = _context.tblUnits.Include(u => u.Assignments).ThenInclude(a => a.Tenant).AsQueryable();
 
             if (!string.IsNullOrEmpty(statusFilter))
                 query = query.Where(u => u.Status == statusFilter);
@@ -43,7 +43,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (id == null) return NotFound();
 
             var unit = await _context.tblUnits
-                .Include(u => u.Tenants)
+                .Include(u => u.Assignments).ThenInclude(a => a.Tenant)
                 .FirstOrDefaultAsync(u => u.UnitID == id);
 
             if (unit == null) return NotFound();
@@ -57,7 +57,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (id == null) return NotFound();
 
             var unit = await _context.tblUnits
-                .Include(u => u.Tenants)
+                .Include(u => u.Assignments).ThenInclude(a => a.Tenant)
                 .FirstOrDefaultAsync(u => u.UnitID == id);
 
             if (unit == null) return NotFound();
@@ -193,7 +193,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             // mark the fully-filled units Occupied; the rest stay Available
             foreach (var unit in units)
             {
-                int active = await _context.tblTenants.CountAsync(t => t.UnitID == unit.UnitID && t.Status == "Active");
+                int active = await _context.tblTenants.CountAsync(t => t.Assignments.Any(a => a.Status == "Active" && a.UnitID == unit.UnitID) && t.Status == "Active");
                 unit.Status = active >= unit.Capacity ? "Occupied" : "Available";
             }
             await _context.SaveChangesAsync();
@@ -481,7 +481,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             // keep the status honest against actual tenancy — "Occupied" means full,
             // so a partially filled unit legitimately stays Available
-            int activeTenants = await _context.tblTenants.CountAsync(t => t.UnitID == id && t.Status == "Active");
+            int activeTenants = await _context.tblTenants.CountAsync(t => t.Assignments.Any(a => a.Status == "Active" && a.UnitID == id) && t.Status == "Active");
             if (vm.Status == "Available" && activeTenants >= vm.Capacity)
             {
                 ModelState.AddModelError("Status", "This unit is at full capacity. Move a tenant out before marking it Available.");
@@ -529,7 +529,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (id == null) return NotFound();
 
             var unit = await _context.tblUnits
-                .Include(u => u.Tenants)
+                .Include(u => u.Assignments).ThenInclude(a => a.Tenant)
                 .FirstOrDefaultAsync(u => u.UnitID == id);
 
             if (unit == null) return NotFound();
@@ -542,7 +542,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var unit = await _context.tblUnits.Include(u => u.Tenants).FirstOrDefaultAsync(u => u.UnitID == id);
+            var unit = await _context.tblUnits.Include(u => u.Assignments).ThenInclude(a => a.Tenant).FirstOrDefaultAsync(u => u.UnitID == id);
             if (unit == null) return NotFound();
 
             if (unit.Tenants.Any(t => t.Status == "Active"))

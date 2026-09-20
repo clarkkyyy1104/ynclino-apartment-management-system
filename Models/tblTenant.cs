@@ -10,8 +10,27 @@ namespace YnclinoApartmentManagementSystem.Models
 
         public int? UserID { get; set; }
 
-        // a tenant may exist without a unit until they apply for one and it's approved
-        public int? UnitID { get; set; }
+        // UI compatibility only: the database stores occupancy in assignments.
+        // A setter stages an assignment change; SaveChangesAsync persists it.
+        private int? requestedUnitID;
+        [NotMapped]
+        public bool HasPendingUnitChange { get; private set; }
+        [NotMapped]
+        public int? UnitID
+        {
+            get => HasPendingUnitChange ? requestedUnitID : CurrentAssignment?.UnitID;
+            set { requestedUnitID = value; HasPendingUnitChange = true; }
+        }
+
+        public ICollection<TenantUnitAssignment> Assignments { get; set; } = new List<TenantUnitAssignment>();
+        [NotMapped]
+        public TenantUnitAssignment? CurrentAssignment => Assignments.SingleOrDefault(a => a.Status == "Active");
+
+        internal void AcceptUnitChange()
+        {
+            requestedUnitID = null;
+            HasPendingUnitChange = false;
+        }
 
         [Required, MaxLength(50)]
         [Display(Name = "First Name")]
@@ -68,8 +87,8 @@ namespace YnclinoApartmentManagementSystem.Models
         [ForeignKey("UserID")]
         public tblUser? User { get; set; }
 
-        [ForeignKey("UnitID")]
-        public tblUnit? Unit { get; set; }
+        [NotMapped]
+        public tblUnit? Unit => CurrentAssignment?.Unit;
 
         [NotMapped]
         public string FullName => $"{FirstName} {LastName}";

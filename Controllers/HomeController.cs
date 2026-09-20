@@ -80,7 +80,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 if (int.TryParse(userIdStr, out int userId))
                 {
                     vm.Tenant = await _context.tblTenants
-                        .Include(t => t.Unit)
+                        .Include(t => t.Assignments).ThenInclude(a => a.Unit)
                         .FirstOrDefaultAsync(t => t.UserID == userId && t.Status == "Active");
 
                     vm.Notifications = await MyNotificationsAsync();

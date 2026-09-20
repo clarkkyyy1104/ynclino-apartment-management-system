@@ -120,7 +120,7 @@
     /* flash messages remove themselves; the close button removes one early */
     document.addEventListener('click', function (e) {
         var close = e.target.closest('[data-dismiss]');
-        if (close && close.parentElement) close.parentElement.remove();
+        if (close && close.parentElement) { close.parentElement.remove(); scheduleTableFit(); }
     });
 
         /* ── Modals ───────────────────────────────────────────────────────────
@@ -137,23 +137,163 @@
        Nothing here is required for the app to work. Without <dialog> support,
        or with JavaScript off, the links stay ordinary links and every form is
        still reachable at its own address.                                    */
-    /* Paginate each record table independently. Search and status filters still
-       run on the server; this limits the rows shown from their current result. */
+    /* One pager per table. The viewport, not a dropdown, determines capacity.
+       Reserve the actual header/footer/filter space and measure wrapped rows.
+       Tables keep their natural height, with the pager just below the records. */
+    var tablePagers = [];
+    var fitTimer;
+    var fittingTables = false;
+    var tableResizeObserver = typeof ResizeObserver === 'function' ? new ResizeObserver(function (entries) {
+        if (entries.some(function (entry) {
+            var width = Math.round(entry.contentRect.width);
+            if (entry.target._paginationWidth === width) return false;
+            entry.target._paginationWidth = width;
+            return true;
+        })) scheduleTableFit();
+    }) : null;
+
+    function scheduleTableFit() {
+        clearTimeout(fitTimer);
+        fitTimer = setTimeout(fitTablesToScreen, 80);
+    }
+
+    function fitTablesToScreen() {
+        if (fittingTables) return;
+        fittingTables = true;
+        try {
+            tablePagers = tablePagers.filter(function (state) {
+                if (state.table.isConnected) return true;
+                if (tableResizeObserver) tableResizeObserver.unobserve(state.wrap);
+                return false;
+            });
+            var roots = new Map();
+            tablePagers.forEach(function (state) {
+                if (!state.table.getClientRects().length || state.table.closest('[hidden]')) return;
+                var root = state.table.closest('[data-modal-body]') || state.table.closest('main');
+                if (!root) return;
+                if (!roots.has(root)) roots.set(root, []);
+                roots.get(root).push(state);
+            });
+            roots.forEach(function (states, root) {
+                var modal = root.closest('[data-modal]');
+                var viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+                var rootStyle = getComputedStyle(root);
+                var rootRect = root.getBoundingClientRect();
+                var budget = Math.min(root.clientHeight, viewportHeight - Math.max(0, rootRect.top));
+                if (modal) {
+                    var head = modal.querySelector('[data-modal-head]');
+                    budget = viewportHeight - 48 - (head ? head.getBoundingClientRect().height : 0) - 4;
+                }
+                budget = Math.max(0, budget - 2);
+                var marker = document.createElement('span');
+                marker.setAttribute('data-pagination-end', '');
+                marker.style.cssText = 'display:block;height:0;margin:0;padding:0;border:0;clear:both';
+                root.appendChild(marker);
+                function contentHeight() {
+                    return marker.getBoundingClientRect().top - root.getBoundingClientRect().top +
+                        root.scrollTop + (parseFloat(rootStyle.paddingBottom) || 0);
+                }
+
+                states.forEach(function (state) {
+                    state.anchor = state.page * state.pageSize;
+                    state.wrap.style.removeProperty('height');
+                    state.table.style.tableLayout = state.originalLayout;
+                    if (state.columns) { state.columns.remove(); state.columns = null; }
+                    state.rows.forEach(function (row) { row.hidden = false; });
+
+                    // Keep columns steady when a different page has longer values.
+                    // Respect authored colgroups and tables containing merged cells.
+                    var sample = state.rows.find(function (row) {
+                        return Array.from(row.cells).every(function (cell) { return cell.colSpan === 1; });
+                    });
+                    if (sample && !state.table.querySelector('colgroup')) {
+                        var width = state.table.getBoundingClientRect().width;
+                        var columns = document.createElement('colgroup');
+                        Array.from(sample.cells).forEach(function (cell) {
+                            var col = document.createElement('col');
+                            col.style.width = (cell.getBoundingClientRect().width / width * 100) + '%';
+                            columns.appendChild(col);
+                        });
+                        state.table.insertBefore(columns, state.table.tHead || state.table.tBodies[0]);
+                        state.columns = columns;
+                        state.table.style.tableLayout = 'fixed';
+                    }
+                    var heights = state.rows.map(function (row) { return row.getBoundingClientRect().height; });
+                    var rowsHeight = heights.reduce(function (sum, height) { return sum + height; }, 0);
+                    // Includes the table head, foot, unpaginated rows, borders and
+                    // any horizontal scrollbar already required by a narrow screen.
+                    state.fixedHeight = Math.ceil(state.table.getBoundingClientRect().height - rowsHeight +
+                        state.wrap.offsetHeight - state.wrap.clientHeight);
+                    // Reserve only the tallest actual PAGE, not N copies of the
+                    // tallest row. A single wrapped note must not waste space
+                    // on every other record. This keeps one capacity per screen
+                    // while ensuring that subsequent pages also fit.
+                    state.measurePageHeight = function () {
+                        var tallest = 0;
+                        for (var first = 0; first < heights.length; first += state.pageSize) {
+                            var height = 0;
+                            for (var i = first; i < Math.min(first + state.pageSize, heights.length); i++) {
+                                height += heights[i];
+                            }
+                            tallest = Math.max(tallest, height);
+                        }
+                        return state.fixedHeight + Math.ceil(tallest);
+                    };
+                    state.pageSize = 1;
+                    state.areaHeight = state.measurePageHeight();
+                    state.wrap.style.height = state.areaHeight + 'px';
+                    state.render();
+                });
+
+                // Grow tables round-robin: stacked tables share space while
+                // side-by-side report cards can each use the full row height.
+                var growing = states.slice();
+                while (growing.length) {
+                    growing = growing.filter(function (state) {
+                        if (state.pageSize >= state.rows.length) return false;
+                        state.pageSize++;
+                        state.areaHeight = state.measurePageHeight();
+                        state.wrap.style.height = state.areaHeight + 'px';
+                        state.render();
+                        if (contentHeight() <= budget) return true;
+                        state.pageSize--;
+                        state.areaHeight = state.measurePageHeight();
+                        state.wrap.style.height = state.areaHeight + 'px';
+                        state.render();
+                        return false;
+                    });
+                }
+
+                states.forEach(function (state) {
+                    state.page = Math.min(Math.floor(state.anchor / state.pageSize),
+                        Math.ceil(state.rows.length / state.pageSize) - 1);
+                    state.table.setAttribute('data-fitted-page-size', String(state.pageSize));
+                    state.render();
+                    // The measurement budget is not visible padding. Let the
+                    // border and pager follow the final row, including last pages.
+                    state.wrap.style.removeProperty('height');
+                });
+                // Do not clip content at extreme zoom/short viewports where even
+                // the filters, header and ONE row cannot physically fit.
+                root.toggleAttribute('data-pagination-overflow', contentHeight() > budget + 2);
+                marker.remove();
+            });
+        } finally {
+            fittingTables = false;
+        }
+    }
+
     function paginateTables(scope) {
         scope.querySelectorAll('[data-table-wrap] > table').forEach(function (table) {
             if (table.hasAttribute('data-paginated')) return;
             var body = table.tBodies[0];
             if (!body) return;
             var rows = Array.prototype.filter.call(body.rows, function (row) {
-                return !row.hasAttribute('data-no-paginate');
+                return !row.hasAttribute('data-no-paginate') &&
+                    !(row.cells.length === 1 && row.cells[0].colSpan > 1);
             });
-            var requestedSize = Number(table.getAttribute('data-page-size'));
-            var pageSize = Number.isInteger(requestedSize) && requestedSize > 0
-                ? requestedSize : 5;
-            var canChoosePageSize = !table.closest('[data-report-page]');
             if (!rows.length) return;
             table.setAttribute('data-paginated', '');
-
             var nav = document.createElement('nav');
             nav.setAttribute('data-pagination', '');
             nav.setAttribute('aria-label', 'Table pages');
@@ -165,24 +305,6 @@
             status.setAttribute('data-pagination-count', '');
             var controls = document.createElement('div');
             controls.setAttribute('data-pagination-controls', '');
-            var size = null;
-            if (canChoosePageSize) {
-                var sizeLabel = document.createElement('label');
-                sizeLabel.setAttribute('data-pagination-size', '');
-                var sizeText = document.createElement('span');
-                sizeText.textContent = 'Items per page';
-                size = document.createElement('select');
-                size.setAttribute('aria-label', 'Items per page');
-                Array.from(new Set([pageSize, 5, 10, 20, 50])).sort(function (a, b) { return a - b; }).forEach(function (value) {
-                    var option = document.createElement('option');
-                    option.value = value;
-                    option.textContent = value;
-                    size.appendChild(option);
-                });
-                size.value = String(pageSize);
-                sizeLabel.append(sizeText, size);
-                controls.append(sizeLabel);
-            }
             var next = document.createElement('button');
             next.type = 'button';
             next.textContent = 'Next';
@@ -193,28 +315,43 @@
             pages.append(previous, current, next);
             controls.append(pages);
             nav.append(status, controls);
-            table.parentElement.insertAdjacentElement('afterend', nav);
+            var wrap = table.parentElement;
+            wrap.setAttribute('data-viewport-table', '');
+            wrap.insertAdjacentElement('afterend', nav);
 
-            var page = 0;
-            function showPage() {
-                var pageCount = Math.ceil(rows.length / pageSize);
+            var state = { table: table, wrap: wrap, rows: rows, page: 0, pageSize: 1,
+                columns: null, originalLayout: table.style.tableLayout };
+            state.render = function () {
+                var pageCount = Math.ceil(rows.length / state.pageSize);
+                state.page = Math.max(0, Math.min(state.page, pageCount - 1));
+                var first = state.page * state.pageSize;
                 rows.forEach(function (row, index) {
-                    row.hidden = index < page * pageSize || index >= (page + 1) * pageSize;
+                    row.hidden = index < first || index >= first + state.pageSize;
                 });
-                status.textContent = 'Showing ' + (page * pageSize + 1) + '-' + Math.min((page + 1) * pageSize, rows.length) + ' of ' + rows.length + ' records';
-                current.textContent = String(page + 1);
-                current.setAttribute('aria-label', 'Page ' + (page + 1) + ' of ' + pageCount);
-                previous.disabled = page === 0;
-                next.disabled = page === pageCount - 1;
-            }
-            if (size) {
-                size.addEventListener('change', function () { pageSize = Number(size.value); page = 0; showPage(); });
-            }
-            previous.addEventListener('click', function () { page--; showPage(); });
-            next.addEventListener('click', function () { page++; showPage(); });
-            showPage();
+                status.textContent = 'Showing ' + (first + 1) + '-' +
+                    Math.min(first + state.pageSize, rows.length) + ' of ' + rows.length + ' records';
+                current.textContent = String(state.page + 1);
+                current.setAttribute('aria-label', 'Page ' + (state.page + 1) + ' of ' + pageCount);
+                previous.disabled = state.page === 0;
+                next.disabled = state.page === pageCount - 1;
+            };
+            previous.addEventListener('click', function () { state.page--; state.render(); });
+            next.addEventListener('click', function () { state.page++; state.render(); });
+            tablePagers.push(state);
+            if (tableResizeObserver) tableResizeObserver.observe(wrap);
+            state.render();
         });
+        scheduleTableFit();
     }
+
+    window.addEventListener('resize', scheduleTableFit);
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', scheduleTableFit);
+    if (document.fonts) document.fonts.ready.then(scheduleTableFit);
+    document.addEventListener('load', function (event) {
+        if (event.target.tagName === 'IMG') scheduleTableFit();
+    }, true);
+    new MutationObserver(scheduleTableFit).observe(document.documentElement,
+        { attributes: true, attributeFilter: ['data-rail', 'data-peek'] });
 
     function paginateReportSections() {
         var nav = document.querySelector('[data-report-pagination]');
@@ -239,6 +376,7 @@
             position.textContent = groups[page] + ' · ' + (page + 1) + ' of ' + groups.length;
             previous.disabled = page === 0;
             next.disabled = page === groups.length - 1;
+            scheduleTableFit();
         }
         previous.addEventListener('click', function () { page--; showPage(); });
         next.addEventListener('click', function () { page++; showPage(); });
@@ -289,6 +427,8 @@
 
     var dlg = document.getElementById('appModal');
     var canModal = dlg && typeof dlg.showModal === 'function';
+    if (dlg) new MutationObserver(scheduleTableFit).observe(dlg,
+        { attributes: true, attributeFilter: ['open'] });
 
     /* Markup injected as HTML never runs its own <script> tags, so they are
        re-added here — one at a time, each waiting for the last. Appending them
@@ -562,7 +702,7 @@
         /* the head script set the attribute before paint; the button has to agree */
         if (document.documentElement.hasAttribute('data-rail')) setRail(true);
         document.querySelectorAll('[data-flash]').forEach(function (msg) {
-            setTimeout(function () { msg.remove(); }, 5000);
+            setTimeout(function () { msg.remove(); scheduleTableFit(); }, 5000);
         });
     });
 })();

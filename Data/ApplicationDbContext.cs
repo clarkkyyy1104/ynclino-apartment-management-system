@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using YnclinoApartmentManagementSystem.Models;
+using YnclinoApartmentManagementSystem.Helpers;
 
 namespace YnclinoApartmentManagementSystem.Data
 {
@@ -50,18 +51,19 @@ namespace YnclinoApartmentManagementSystem.Data
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             var changedTenants = ChangeTracker.Entries<tblTenant>()
-                .Where(e => e.State is EntityState.Added or EntityState.Modified)
+                .Where(e => e.State is EntityState.Added or EntityState.Modified ||
+                    (e.State == EntityState.Unchanged && e.Entity.HasPendingUnitChange))
                 .Select(e => new
                 {
                     Entry = e,
-                    OldUnit = e.State == EntityState.Added ? null : e.OriginalValues.GetValue<int?>(nameof(tblTenant.UnitID)),
-                    OldStatus = e.State == EntityState.Added ? null : e.OriginalValues.GetValue<string>(nameof(tblTenant.Status)),
                     IsNew = e.State == EntityState.Added
                 }).ToList();
 
             foreach (var change in changedTenants)
             {
                 var tenant = change.Entry.Entity;
+                if (!change.IsNew && !change.Entry.Collection(t => t.Assignments).IsLoaded)
+                    await change.Entry.Collection(t => t.Assignments).LoadAsync(cancellationToken);
                 var user = tenant.User ?? (tenant.UserID.HasValue
                     ? await tblUsers.FindAsync(new object[] { tenant.UserID.Value }, cancellationToken)
                     : null);
@@ -78,39 +80,72 @@ namespace YnclinoApartmentManagementSystem.Data
                 ? await Database.BeginTransactionAsync(cancellationToken)
                 : null;
 
-            var count = await base.SaveChangesAsync(cancellationToken);
+            var affectedUnits = new HashSet<int>();
+            var newAssignments = new List<TenantUnitAssignment>();
             foreach (var change in changedTenants)
             {
                 var tenant = change.Entry.Entity;
-                bool wasAssigned = change.OldStatus == "Active" && change.OldUnit.HasValue;
-                bool isAssigned = tenant.Status == "Active" && tenant.UnitID.HasValue;
-                bool unitChanged = change.OldUnit != tenant.UnitID;
-                bool statusChanged = wasAssigned != isAssigned;
-                if (!change.IsNew && !unitChanged && !statusChanged) continue;
+                var current = tenant.CurrentAssignment;
+                int? desiredUnit = tenant.Status == "Active" ? tenant.UnitID : null;
+                if (current?.UnitID == desiredUnit) continue;
 
-                await TenantUnitAssignments
-                    .Where(a => a.TenantID == tenant.TenantID && a.Status == "Active")
-                    .ExecuteUpdateAsync(s => s
-                        .SetProperty(a => a.Status, "Ended")
-                        .SetProperty(a => a.MoveOutDate, tenant.MoveOutDate ?? DateTime.Now), cancellationToken);
-
-                if (isAssigned)
+                if (current != null)
                 {
-                    TenantUnitAssignments.Add(new TenantUnitAssignment
+                    current.Status = "Ended";
+                    current.MoveOutDate = tenant.MoveOutDate ?? DateTime.Now;
+                    current.DateUpdated = DateTime.Now;
+                    affectedUnits.Add(current.UnitID);
+                }
+                if (desiredUnit.HasValue)
+                {
+                    newAssignments.Add(new TenantUnitAssignment
                     {
-                        TenantID = tenant.TenantID,
-                        UnitID = tenant.UnitID!.Value,
-                        MoveInDate = tenant.MoveInDate ?? DateTime.Now,
+                        Tenant = tenant,
+                        UnitID = desiredUnit.Value,
+                        // A transfer/reactivation starts a new occupancy period.
+                        MoveInDate = change.IsNew ? tenant.MoveInDate ?? DateTime.Now : DateTime.Now,
                         LeaseStart = tenant.LeaseStart,
                         LeaseEnd = tenant.LeaseEnd
                     });
+                    affectedUnits.Add(desiredUnit.Value);
                 }
             }
 
-            if (ChangeTracker.Entries<TenantUnitAssignment>().Any(e => e.State == EntityState.Added))
+            // Flush Ended rows BEFORE adding replacements: the unique active-tenant
+            // index must never see two Active rows, even inside this transaction.
+            var count = await base.SaveChangesAsync(cancellationToken);
+            if (newAssignments.Count > 0)
+            {
+                TenantUnitAssignments.AddRange(newAssignments);
+                count += await base.SaveChangesAsync(cancellationToken);
+            }
+            foreach (var unitId in affectedUnits)
+                await UnitStatusHelper.RefreshAsync(this, unitId);
+            if (affectedUnits.Count > 0)
                 count += await base.SaveChangesAsync(cancellationToken);
             if (transaction != null) await transaction.CommitAsync(cancellationToken);
+            foreach (var change in changedTenants) change.Entry.Entity.AcceptUnitChange();
             return count;
+        }
+
+        // Reactivation used to reuse TenantProfiles.UnitID. Recover it explicitly
+        // from history, but never silently put someone into a full/closed unit.
+        public async Task<string?> PrepareTenantReactivationAsync(tblTenant tenant)
+        {
+            if (tenant.CurrentAssignment != null) return null;
+            var previous = await TenantUnitAssignments
+                .Where(a => a.TenantID == tenant.TenantID)
+                .OrderByDescending(a => a.AssignmentID).FirstOrDefaultAsync();
+            if (previous == null) return null; // a tenant who has never had a unit
+            var unit = previous.Unit!;
+            int occupants = await TenantUnitAssignments.CountAsync(a =>
+                a.UnitID == unit.UnitID && a.Status == "Active" && a.Tenant!.Status == "Active");
+            if (unit.Status == "Under Maintenance" || occupants >= unit.Capacity)
+                return "The previous unit is unavailable. Free a space or resolve its maintenance status before reactivating this tenant.";
+            tenant.UnitID = previous.UnitID;
+            tenant.LeaseStart = previous.LeaseStart;
+            tenant.LeaseEnd = previous.LeaseEnd;
+            return null;
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -158,10 +193,9 @@ namespace YnclinoApartmentManagementSystem.Data
                       .HasForeignKey(t => t.UserID)
                       .OnDelete(DeleteBehavior.Restrict);
 
-                entity.HasOne(t => t.Unit)
-                      .WithMany(u => u.Tenants)
-                      .HasForeignKey(t => t.UnitID)
-                      .OnDelete(DeleteBehavior.Restrict);
+                // Includes FindAsync and tenants reached through bills/accounts.
+                // Unit/UnitID are derived conveniences, never profile columns.
+                entity.Navigation(t => t.Assignments).AutoInclude();
             });
 
             modelBuilder.Entity<tblBilling>(entity =>
@@ -281,8 +315,10 @@ namespace YnclinoApartmentManagementSystem.Data
                 entity.Property(e => e.Status).HasMaxLength(20);
                 entity.Property<int?>("ActiveTenantID")
                     .HasComputedColumnSql("CASE WHEN `Status` = 'Active' THEN `TenantID` ELSE NULL END", stored: true);
-                entity.HasOne(e => e.Tenant).WithMany().HasForeignKey(e => e.TenantID).OnDelete(DeleteBehavior.Restrict);
-                entity.HasOne(e => e.Unit).WithMany().HasForeignKey(e => e.UnitID).OnDelete(DeleteBehavior.Restrict);
+                entity.HasIndex("ActiveTenantID").IsUnique();
+                entity.HasOne(e => e.Tenant).WithMany(t => t.Assignments).HasForeignKey(e => e.TenantID).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.Unit).WithMany(u => u.Assignments).HasForeignKey(e => e.UnitID).OnDelete(DeleteBehavior.Restrict);
+                entity.Navigation(e => e.Unit).AutoInclude();
             });
 
         }

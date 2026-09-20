@@ -36,7 +36,6 @@ class tblUser {
 class tblTenant {
     + TenantID : int <<PK>>
     + UserID : int? <<FK>>
-    + UnitID : int? <<FK>>
     + FirstName : string
     + LastName : string
     + ContactNumber : string?
@@ -153,7 +152,6 @@ class tblClaimRequest {
 
 tblUser "1" -down- "0..1" tblTenant
 
-tblUnit "1" -right- "0..*" tblTenant
 
 tblTenant "1" -down- "0..*" tblBilling
 tblBilling "1" -down- "0..*" tblPayment

@@ -30,7 +30,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var uid = CurrentUserID();
             if (uid == null) return null;
             return await _context.tblTenants
-                .Include(t => t.Unit)
+                .Include(t => t.Assignments).ThenInclude(a => a.Unit)
                 .FirstOrDefaultAsync(t => t.UserID == uid && t.Status == "Active");
         }
 
@@ -61,7 +61,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         public async Task<IActionResult> Index(string? statusFilter, string? searchTerm, bool archived = false)
         {
             IQueryable<tblMaintenanceRequest> query = _context.tblMaintenanceRequests
-                .Include(m => m.Tenant).ThenInclude(t => t!.Unit)
+                .Include(m => m.Tenant).ThenInclude(t => t!.Assignments).ThenInclude(a => a.Unit)
                 .Include(m => m.Unit)
                 .Include(m => m.AssignedStaff);
 
@@ -110,7 +110,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (id == null) return NotFound();
 
             var request = await _context.tblMaintenanceRequests
-                .Include(m => m.Tenant).ThenInclude(t => t!.Unit)
+                .Include(m => m.Tenant).ThenInclude(t => t!.Assignments).ThenInclude(a => a.Unit)
                 .Include(m => m.Unit)
                 .Include(m => m.AssignedStaff)
                 .FirstOrDefaultAsync(m => m.RequestID == id);
@@ -240,7 +240,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (id == null) return NotFound();
 
             var request = await _context.tblMaintenanceRequests
-                .Include(m => m.Tenant).ThenInclude(t => t!.Unit)
+                .Include(m => m.Tenant).ThenInclude(t => t!.Assignments).ThenInclude(a => a.Unit)
                 .FirstOrDefaultAsync(m => m.RequestID == id);
 
             if (request == null) return NotFound();
@@ -295,7 +295,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 ModelState.AddModelError(nameof(vm.ImageUpload), imgErr);
 
             var request = await _context.tblMaintenanceRequests
-                .Include(m => m.Tenant).ThenInclude(t => t!.Unit)
+                .Include(m => m.Tenant).ThenInclude(t => t!.Assignments).ThenInclude(a => a.Unit)
                 .FirstOrDefaultAsync(m => m.RequestID == id);
             if (request == null) return NotFound();
 
@@ -355,7 +355,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (id == null) return NotFound();
 
             var request = await _context.tblMaintenanceRequests
-                .Include(m => m.Tenant).ThenInclude(t => t!.Unit)
+                .Include(m => m.Tenant).ThenInclude(t => t!.Assignments).ThenInclude(a => a.Unit)
                 .Include(m => m.Unit)
                 .FirstOrDefaultAsync(m => m.RequestID == id);
 
@@ -394,7 +394,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (id != vm.RequestID) return NotFound();
 
             var request = await _context.tblMaintenanceRequests
-                .Include(m => m.Tenant).ThenInclude(t => t!.Unit)
+                .Include(m => m.Tenant).ThenInclude(t => t!.Assignments).ThenInclude(a => a.Unit)
                 .Include(m => m.Unit)
                 .FirstOrDefaultAsync(m => m.RequestID == id);
 
@@ -551,13 +551,13 @@ namespace YnclinoApartmentManagementSystem.Controllers
         private async Task<IEnumerable<SelectListItem>> GetActiveTenantListAsync()
         {
             return await _context.tblTenants
-                .Include(t => t.Unit)
+                .Include(t => t.Assignments).ThenInclude(a => a.Unit)
                 .Where(t => t.Status == "Active")
                 .OrderBy(t => t.LastName)
                 .Select(t => new SelectListItem
                 {
                     Value = t.TenantID.ToString(),
-                    Text = $"{t.LastName}, {t.FirstName} — Unit {t.Unit!.UnitNumber}"
+                    Text = $"{t.LastName}, {t.FirstName} — Unit {t.Assignments.Where(a => a.Status == "Active").Select(a => a.Unit!.UnitNumber).FirstOrDefault()}"
                 })
                 .ToListAsync();
         }

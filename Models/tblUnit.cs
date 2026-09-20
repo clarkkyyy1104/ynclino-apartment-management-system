@@ -40,6 +40,11 @@ namespace YnclinoApartmentManagementSystem.Models
         [Display(Name = "Date Added")]
         public DateTime DateAdded { get; set; } = DateTime.Now;
 
-        public ICollection<tblTenant> Tenants { get; set; } = new List<tblTenant>();
+        public ICollection<TenantUnitAssignment> Assignments { get; set; } = new List<TenantUnitAssignment>();
+
+        [NotMapped]
+        public IReadOnlyCollection<tblTenant> Tenants => Assignments
+            .Where(a => a.Status == "Active" && a.Tenant != null)
+            .Select(a => a.Tenant!).ToList();
     }
 }
