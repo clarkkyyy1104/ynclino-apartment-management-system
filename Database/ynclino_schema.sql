@@ -1,35 +1,4 @@
 -- ============================================================================
--- YNCLINO APARTMENT MANAGEMENT SYSTEM (YAMS)
--- IMPROVED DATABASE DESIGN
--- Target: MySQL 8.0.16+ / MariaDB 10.4+
---
--- Main improvements from the original YAMSDB.sql:
---   1. Keeps one centralized Users table with Roles for authentication/RBAC.
---   2. Adds common identity/contact fields to Users.
---   3. Renames Password to PasswordHash to make password storage intent explicit.
---   4. Splits TenantInfo into TenantProfiles and TenantUnitAssignments so unit/
---      lease history is preserved when a tenant transfers.
---   5. Tenant-only records reference TenantProfiles instead of generic Users.
---   6. Uses Payments as the ledger; AmountPaid remains a compatibility cache
---      for the current billing screens and is refreshed by the application.
---   7. Avoids cascading deletion of historical/financial records.
---   8. Adds useful indexes, uniqueness rules, defaults, and basic CHECK constraints.
---   9. Enforces at most one Active unit assignment per tenant using a generated
---      column + UNIQUE constraint (MySQL/MariaDB permit multiple NULLs).
---
--- IMPORTANT APPLICATION RULE:
---   AssignedStaffUserID in MaintenanceRequests still references Users because
---   maintenance personnel are user accounts. The application must ensure the
---   selected account has the Maintenance role.
--- ============================================================================
-
-DROP DATABASE IF EXISTS YAMSDB;
-CREATE DATABASE YAMSDB
-    CHARACTER SET utf8mb4
-    COLLATE utf8mb4_unicode_ci;
-USE YAMSDB;
-
--- ============================================================================
 -- 1. ROLES
 -- ============================================================================
 
@@ -524,7 +493,6 @@ VALUES
     'vzHaWGruR2VMjyAOyLhqOpdwix266UvV3peVJqo+OxKuKTAMYKKMynXHxPb4VOyf',
     'Maintenance',
     'Staff',
-    NULL,
     NULL,
     TRUE,
     TRUE,

@@ -54,7 +54,7 @@
 
                     @* An item marked Claimed must say WHO collected it — "Claimed" on
                        its own tells the admin nothing a month later. *@
-                    <div id="claimedByWrap">
+                    <div id="claimedByWrap" data-span>
                         <label asp-for="ClaimedByUserID"></label>
                         <select asp-for="ClaimedByUserID" asp-items="Model.AvailableTenants">
                             <option value="0">— Select tenant —</option>
@@ -63,7 +63,7 @@
                         <span asp-validation-for="ClaimedByUserID"></span>
                     </div>
 
-                    <div>
+                    <div data-span>
                         <label asp-for="ImageUpload"></label>
                         @if (!string.IsNullOrEmpty(Model.ImagePath))
                         {

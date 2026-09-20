@@ -1030,21 +1030,36 @@ tbody td span[title] { opacity: .45; }
 /* a group toggle already sends its caret to the right, so the count stops short */
 aside nav a[data-collapse] [data-navcount] { margin-left: auto; margin-right: .5rem; }
 
-/* a file picker should sit on the same footing as every other field */
+/* One joined upload control: navy chooser, pale filename area, shared outline. */
 input[type="file"] {
     width: 100%;
-    padding: .45rem .6rem;
+    max-width: 100%;
+    min-height: 30px;
+    height: 30px;
+    padding: 0;
+    overflow: hidden;
+    color: var(--ink);
     background: var(--field-bg);
-    border: 1px solid var(--field-line);
-    border-radius: 6px;
-    font-family: var(--font-family);
+    border: 1px solid #666;
+    border-radius: 4px;
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 28px;
 }
 input[type="file"]::file-selector-button {
-    margin-right: .75rem;
-    padding: .35rem .9rem;
-    color: #fff; background: var(--navy);
-    border: 1px solid var(--navy); border-radius: 6px;
-    font-family: var(--font-family); font-weight: 600; cursor: pointer;
+    height: 28px;
+    min-width: 93px;
+    margin: 0 14px 0 0;
+    padding: 0 17px;
+    color: #fff;
+    background: #202a36;
+    border: 0;
+    border-right: 1px solid #666;
+    border-radius: 0;
+    font: inherit;
+    vertical-align: top;
+    cursor: pointer;
 }
 input[type="file"]::file-selector-button:hover { background: #1F2937; }
 
@@ -1359,13 +1374,12 @@ img, svg, table, pre { max-width: 100%; }
 [data-modal-body] .validation-summary-valid { display: none; }
 /* the forms the design lays out in a single column */
 [data-modal-body] [data-form-body][data-cols="1"] > form { grid-template-columns: 1fr; }
+/* Inline label/field pairs already define their own inner columns. */
+[data-modal-body] [data-form-body][data-cols="inline"] > form { grid-template-columns: minmax(0, 1fr); }
 /* a unit that is not Custom has no bedrooms row, so Status takes the full width */
 [data-modal-body] form:has(> #bedroomWrap[style*="none"]) > div:has(> select[name="Status"]) { grid-column: 1 / -1; }
 /* the password rules sit in a grey box */
 [data-modal-body] #pwRules { background: #dcdcdc; border: 0; color: var(--ink); list-style: disc; }
-/* the file picker's button is the navy block the design shows */
-[data-modal-body] input[type="file"]::file-selector-button { color: #fff; background: var(--navy); border: 0; border-radius: 4px; }
-[data-modal-body] input[type="file"]::file-selector-button:hover { background: #1F2937; }
 
 /* label beside field, for the short Edit Personal Information form */
 [data-form-body][data-cols="inline"] > form { display: grid; grid-template-columns: 1fr; gap: .95rem; }
@@ -1379,18 +1393,19 @@ img, svg, table, pre { max-width: 100%; }
     [data-form-body][data-cols="inline"] > form > div > span { grid-column: 1; }
 }
 
-/* The buttons: no rule above them, the way out in outline, the action solid,
-   and the action always last. A form keeps them together on the right; a
-   details page spreads them, back on the left, as the design has it. */
+/* Modal actions stay together on the right; a lone action stays on the left. */
 [data-modal-body] [data-actions-row] {
     margin-top: 1.6rem; padding-top: 0; border-top: 0;
     justify-content: flex-end; gap: .9rem;
 }
 [data-modal-body] [data-modal-source] > [data-actions-row],
 [data-modal-body] [data-panel] > div[data-actions-row]:last-child {
-    justify-content: space-between; padding: 0; border-top: 0; background: none; margin-top: 1.6rem;
+    justify-content: flex-end; gap: .9rem; padding: 0; border-top: 0; background: none; margin-top: 1.6rem;
 }
-[data-modal-body] [data-actions-row]:has(> :only-child) { justify-content: flex-start; }
+[data-modal-body] [data-actions-row]:has(> :only-child),
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child:has(> :only-child) {
+    justify-content: flex-start;
+}
 [data-modal-body] [data-actions-row] > a,
 [data-modal-body] [data-actions-row] > button,
 [data-modal-body] [data-actions-row] > form > button {
@@ -2293,8 +2308,7 @@ input[type="month"],
 input[type="password"],
 input[type="email"],
 select,
-textarea,
-input[type="file"] {
+textarea {
     min-height: 42px;
     padding: .55rem .8rem;
     color: var(--figma-ink);
@@ -2545,6 +2559,16 @@ body:not(:has(aside)) form[method="post"] > button[type="submit"]:hover {
     [data-modal-body] [data-actions-row] > a,
     [data-modal-body] [data-actions-row] > button,
     [data-modal-body] [data-actions-row] > form > button { width: 100%; }
+    /* Multiple actions remain right-aligned when stacked on a narrow screen. */
+    [data-modal-body] [data-actions-row]:has(> :nth-child(2)),
+    [data-modal-body] [data-panel] > div[data-actions-row]:last-child:has(> :nth-child(2)) {
+        align-items: flex-end;
+    }
+    [data-modal-body] [data-actions-row]:has(> :nth-child(2)) > :is(a, button),
+    [data-modal-body] [data-actions-row]:has(> :nth-child(2)) > form > button {
+        width: auto;
+        max-width: 100%;
+    }
     body:not(:has(aside)) > div > div:last-child > div { padding: 1.5rem 1.25rem; }
 }
 /* ==========================================================================
@@ -2603,6 +2627,12 @@ tbody td a[aria-label^="View"]:hover > svg {
     gap: .75rem 1rem;
 }
 [data-modal-body] #userForm > div { min-width: 0; margin-bottom: 0; }
+[data-modal-body] #userForm > [data-span] > div:not(.pw-wrap) {
+    margin-top: .35rem;
+    color: var(--muted);
+    font-size: .82rem;
+    line-height: 1.4;
+}
 [data-modal-body] #userForm #pwRules {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2797,6 +2827,51 @@ main > [data-module-shell] > [data-page-head] > [data-actions] > a[data-back]:ho
 }
 
 /* Update forms use the same field grid both on their own page and in a dialog. */
+/* Staff request updates: paired context fields, followed by a full-width status. */
+[data-request-work] > dl[data-request-summary] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 1.5rem;
+    margin: 0 0 1.25rem;
+}
+[data-request-summary] > div { min-width: 0; }
+[data-request-summary] > [data-span] { grid-column: 1 / -1; }
+[data-request-work] [data-request-summary] dt {
+    margin: 0 0 .25rem;
+    color: var(--ink-soft);
+    font-size: .85rem;
+    font-weight: 700;
+}
+[data-request-work] [data-request-summary] dd {
+    margin: 0;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+}
+[data-request-description] { white-space: pre-wrap; }
+[data-request-photo] { display: block; margin-bottom: 1.25rem; }
+[data-request-photo] img {
+    display: block;
+    max-height: 220px;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+    border-radius: 6px;
+}
+[data-form-body][data-request-work] > form[data-form-grid],
+[data-modal-body] [data-form-body][data-request-work] > form[data-form-grid] {
+    grid-template-columns: minmax(0, 1fr);
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
+}
+[data-form-body][data-request-work] > form[data-form-grid] > [data-actions-row] {
+    margin-top: .25rem;
+    padding-top: 0;
+    border-top: 0;
+}
+@media (max-width: 560px) {
+    [data-request-work] > dl[data-request-summary] { grid-template-columns: minmax(0, 1fr); }
+}
+
 [data-form-body] > form[data-form-grid],
 [data-modal-body] [data-form-body] > form[data-form-grid] {
     display: grid;
@@ -2810,7 +2885,7 @@ main > [data-module-shell] > [data-page-head] > [data-actions] > a[data-back]:ho
 }
 [data-form-body] > form[data-form-grid] > h6 { margin-top: .5rem; }
 [data-form-body] > form[data-form-grid] > h6:first-of-type { margin-top: 0; }
-[data-form-body] > form[data-form-grid] > div > :is(input:not([type="hidden"]), select),
+[data-form-body] > form[data-form-grid] > div > :is(input:not([type="hidden"]):not([type="file"]), select),
 [data-form-body] > form[data-form-grid] .pw-wrap > input { min-height: 44px; }
 [data-form-body] > form[data-form-grid] > div:has(> label) > div:not(.pw-wrap):not(:has(input)) {
     margin-top: .35rem;

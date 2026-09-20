@@ -64,7 +64,7 @@
                         <li id="r-special"><span></span> At least one special character (!&#64;#$%^&amp;*)</li>
                     </ul>
 
-                    <div>
+                    <div data-span>
                         <label asp-for="Role"></label>
                         <select asp-for="Role">
                             <option value="Admin">Administrator</option>
@@ -77,7 +77,7 @@
                         <span asp-validation-for="Role"></span>
                     </div>
 
-                    <div>
+                    <div data-span>
                         <input asp-for="IsActive" type="checkbox" />
                         <label asp-for="IsActive">Active</label>
                     </div>

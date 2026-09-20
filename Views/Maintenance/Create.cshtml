@@ -15,7 +15,7 @@
 
                     @if (isAdmin)
                     {
-                        <div>
+                        <div data-span>
                             <label asp-for="TenantID"></label>
                             <select asp-for="TenantID" asp-items="Model.AvailableTenants">
                                 <option value="">— Select Tenant —</option>
@@ -67,7 +67,7 @@
                         <span asp-validation-for="Description"></span>
                     </div>
 
-                    <div>
+                    <div data-span>
                         <label asp-for="ImageUpload"></label>
                         <input asp-for="ImageUpload" type="file" accept="image/*" />
                         <div>Optional — attach a photo of the issue. JPG, PNG, GIF, or WEBP, up to 5 MB.</div>
