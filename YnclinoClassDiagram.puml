@@ -6,7 +6,7 @@ top to bottom direction
 skinparam classAttributeIconSize 0
 skinparam shadowing false
 skinparam linetype polyline
-skinparam nodesep 45
+skinparam nodesep 80
 skinparam ranksep 55
 
 skinparam class {
@@ -14,6 +14,12 @@ skinparam class {
     BorderColor Black
     ArrowColor Black
     FontSize 12
+}
+
+skinparam legend {
+    BackgroundColor White
+    BorderColor Black
+    FontSize 11
 }
 
 ' =========================
@@ -30,7 +36,10 @@ class tblUser {
     + ContactNumber : string?
     + IsActive : bool
     + MustChangePassword : bool
+    + IsMainAdmin : bool
+    + LastLoginAt : DateTime?
     + DateCreated : DateTime
+    + DateUpdated : DateTime
 }
 
 class tblTenant {
@@ -39,6 +48,10 @@ class tblTenant {
     + FirstName : string
     + LastName : string
     + ContactNumber : string?
+    + EmergencyContactName : string?
+    + EmergencyContactRelationship : string?
+    + EmergencyContactNumber : string?
+    + PhotoPath : string?
     + Status : string
     + AdvanceCredit : decimal
     + DateRecorded : DateTime
@@ -53,6 +66,7 @@ class tblUnit {
     + AdvancePayment : decimal
     + Capacity : int
     + Status : string
+    + DateAdded : DateTime
 }
 
 class TenantUnitAssignment {
@@ -64,6 +78,8 @@ class TenantUnitAssignment {
     + LeaseStart : DateTime?
     + LeaseEnd : DateTime?
     + Status : string
+    + DateRecorded : DateTime
+    + DateUpdated : DateTime
 }
 
 ' =========================
@@ -75,10 +91,17 @@ class tblBilling {
     + TenantID : int <<FK>>
     + BillingPeriod : DateTime
     + AmountDue : decimal
+    + Deposit : decimal
+    + Advance : decimal
     + DueDate : DateTime
     + AmountPaid : decimal?
+    + AdvanceFromOverpayment : decimal
+    + IssuedFromAdvance : bool
+    + DatePaid : DateTime?
     + Status : string
+    + Notes : string?
     + DateIssued : DateTime
+    + ArchivedAt : DateTime?
 }
 
 class tblPayment {
@@ -87,6 +110,7 @@ class tblPayment {
     + Amount : decimal
     + DatePaid : DateTime
     + Method : string?
+    + Remarks : string?
     + RecordedAt : DateTime
 }
 
@@ -100,10 +124,15 @@ class tblMaintenanceRequest {
     + UnitID : int? <<FK>>
     + AssignedStaffID : int? <<FK>>
     + Category : string
+    + Description : string
     + Priority : string
     + Status : string
     + DateSubmitted : DateTime
     + DateResolved : DateTime?
+    + StaffNotes : string?
+    + ImagePath : string?
+    + TenantArchivedAt : DateTime?
+    + StaffArchivedAt : DateTime?
 }
 
 ' =========================
@@ -119,6 +148,9 @@ class tblUnitTransferRequest {
     + Status : string
     + DateRequested : DateTime
     + DateReviewed : DateTime?
+    + AdminNotes : string?
+    + TenantArchivedAt : DateTime?
+    + StaffArchivedAt : DateTime?
 }
 
 ' =========================
@@ -130,11 +162,15 @@ class tblLostFoundItem {
     + ReportedByUserID : int <<FK>>
     + ClaimedByUserID : int? <<FK>>
     + ItemName : string
+    + Description : string?
     + ItemType : string
     + Location : string?
     + Status : string
     + DateReported : DateTime
     + DateClaimed : DateTime?
+    + Notes : string?
+    + ImagePath : string?
+    + ArchivedAt : DateTime?
 }
 
 class tblClaimRequest {
@@ -144,6 +180,8 @@ class tblClaimRequest {
     + VerificationDetails : string
     + SubmittedAt : DateTime
     + Status : string
+    + AdminNotes : string?
+    + ImagePath : string?
 }
 
 ' =========================
@@ -157,20 +195,54 @@ tblTenant "1" -down- "0..*" tblBilling
 tblBilling "1" -down- "0..*" tblPayment
 
 tblTenant "1" -right- "0..*" tblMaintenanceRequest
-tblUnit "1" -- "0..*" tblMaintenanceRequest
-tblUser "1" -- "0..*" tblMaintenanceRequest : assigned staff
+tblUnit "0..1" -- "0..*" tblMaintenanceRequest
+tblUser "0..1" -- "0..*" tblMaintenanceRequest : assigned staff
 
 tblTenant "1" -left- "0..*" tblUnitTransferRequest
 tblUnit "1" -- "0..*" tblUnitTransferRequest : requested unit
+tblUnit "0..1" -- "0..*" tblUnitTransferRequest : current unit
 
 tblTenant "1" -- "0..*" TenantUnitAssignment
 tblUnit "1" -- "0..*" TenantUnitAssignment
 
 tblUser "1" -right- "0..*" tblLostFoundItem : reports
-tblUser "1" -- "0..*" tblLostFoundItem : claimant
+tblUser "0..1" -- "0..*" tblLostFoundItem : claimant
 
 tblLostFoundItem "1" -down- "0..*" tblClaimRequest
 tblUser "1" -- "0..*" tblClaimRequest : claimant
+
+' =========================
+' HOW THE CLASSES MEET THE TABLES
+' The ERD is drawn from Database/ynclino_schema.sql; this diagram is drawn
+' from the C# models. EF Core (Data/ApplicationDbContext.cs) maps one onto
+' the other, and this legend records every place the two are spelled
+' differently, so the diagrams can be read side by side.
+' =========================
+
+legend bottom right
+    |= Class |= Table |
+    | tblUser | Users |
+    | tblTenant | TenantProfiles |
+    | tblUnit | Units |
+    | TenantUnitAssignment | TenantUnitAssignments |
+    | tblBilling | Billings |
+    | tblPayment | Payments |
+    | tblMaintenanceRequest | MaintenanceRequests |
+    | tblUnitTransferRequest | UnitTransferRequests |
+    | tblLostFoundItem | LostFoundItems |
+    | tblClaimRequest | ClaimRequests |
+
+    |= Property |= Column |
+    | tblUser.Password | PasswordHash |
+    | tblUser.Role | RoleID, FK to Roles (1 Admin, 2 Maintenance, 3 Tenant) |
+    | tblMaintenanceRequest.AssignedStaffID | AssignedStaffUserID |
+
+    Roles is reference data: EF converts Role to RoleID on every read and write.
+    BillingID, PaymentID, RequestID, TransferID, ItemID, ClaimID are int here, BIGINT in MySQL.
+    DateUpdated on Units and TenantProfiles is set by MySQL (ON UPDATE), not by the app.
+    TenantUnitAssignments.ActiveTenantID is a generated column: its UNIQUE key allows
+    one Active assignment per tenant. It is enforced by MySQL and not mapped here.
+endlegend
 
 ' =========================
 ' LAYOUT ASSISTANCE
