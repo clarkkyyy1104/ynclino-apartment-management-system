@@ -617,14 +617,14 @@
             else if (!tone && /^(update|edit|restore|reactivate|put back)/.test(label))
                 tone = 'green';
             else if (!tone && (control.hasAttribute('data-primary') ||
-                /^(add|new|create|register|report item|issue|request|apply|load sample|save|submit|approve|agree|accept|confirm|claim|login|sign in)/.test(label)))
+                /^(add|new|create|register|report item|issue|request|apply|save|submit|approve|agree|accept|confirm|claim|login|sign in)/.test(label)))
                 tone = 'orange';
             else if (!tone)
                 tone = 'gray';
             control.setAttribute('data-action-tone', tone);
             if (control.querySelector('img, svg, [data-action-icon]')) return;
             var icon = null;
-            if (/^(add|new|create|register|report item|issue|request|apply|submit request|submit report|submit application|load sample)/.test(label)) icon = 'add';
+            if (/^(add|new|create|register|report item|issue|request|apply|submit request|submit report|submit application)/.test(label)) icon = 'add';
             else if (/^(update|edit)/.test(label)) icon = 'edit';
             else if (/^(save|upload)/.test(label)) icon = 'save';
             else if (/^(delete|remove|yes, delete)/.test(label)) icon = 'trash';

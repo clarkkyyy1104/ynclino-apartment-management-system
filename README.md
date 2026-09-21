@@ -111,9 +111,8 @@ If startup reports that it cannot connect, check the MySQL service and both
 connection-string files. If it reports a model mismatch, apply the compatibility
 patch described in step 2.
 
-### 5. Log in and load demo data
+### 5. Log in
 - Default admin login: **`admin`** / **`Admin@123`**
-- On the **Units** page, click **Load Sample Data** to populate demo units and tenants.
 
 > **Resetting the database deletes all its records.** Run the script again only
 > if a fresh database is intended. The script itself drops `YAMSDB` first.

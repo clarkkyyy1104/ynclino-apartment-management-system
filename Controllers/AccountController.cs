@@ -90,8 +90,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        // Demo/presentation convenience: sign in as a sample admin or tenant with one
-        // click (no password), so the system can be shown/tested without typing logins.
+        // issues the auth cookie for a user whose password has already been verified
         private async Task SignInUserAsync(tblUser user)
         {
             var claims = new List<Claim>
