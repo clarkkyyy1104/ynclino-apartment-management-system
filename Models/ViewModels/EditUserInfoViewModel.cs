@@ -6,13 +6,18 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
     {
         public int UserID { get; set; }
 
+        // Same pattern as UserViewModel and TenantViewModel. This used to be
+        // ^[\p{L} .'-]+$, which works on the server but not in the browser:
+        // jQuery validation builds the pattern with new RegExp() and no "u"
+        // flag, so \p{L} there means the literal characters p { L } — every
+        // real name ("maria", "Staff") was rejected before it was ever sent.
         [Required, MaxLength(50)]
-        [RegularExpression(@"^[\p{L} .'-]+$", ErrorMessage = "First Name may not contain numbers.")]
+        [RegularExpression(@"^[A-Za-zñÑ .'-]+$", ErrorMessage = "First Name may not contain numbers.")]
         [Display(Name = "First Name")]
         public string FirstName { get; set; } = string.Empty;
 
         [Required, MaxLength(50)]
-        [RegularExpression(@"^[\p{L} .'-]+$", ErrorMessage = "Last Name may not contain numbers.")]
+        [RegularExpression(@"^[A-Za-zñÑ .'-]+$", ErrorMessage = "Last Name may not contain numbers.")]
         [Display(Name = "Last Name")]
         public string LastName { get; set; } = string.Empty;
 

@@ -943,12 +943,12 @@ tbody td span[title] { opacity: .45; }
     background: var(--field-bg); border: 1px solid var(--field-line); border-radius: 999px;
     font-size: .78rem; color: var(--ink-soft);
 }
-[data-note-module="LostFound"] [data-note-link] [data-module] {
+[data-notification-feed] [data-note-link] [data-module] {
     color: #b43a00;
     background: #fff3ec;
     border-color: #f4b89d;
 }
-[data-note-module="LostFound"] [data-note-link]:hover [data-module] {
+[data-notification-feed] [data-note-link]:hover [data-module] {
     color: #963100;
     background: #ffe4d6;
     border-color: #f28a5c;
@@ -1030,25 +1030,30 @@ tbody td span[title] { opacity: .45; }
 /* a group toggle already sends its caret to the right, so the count stops short */
 aside nav a[data-collapse] [data-navcount] { margin-left: auto; margin-right: .5rem; }
 
-/* One joined upload control: navy chooser, pale filename area, shared outline. */
+/* One joined upload control: navy chooser, pale filename area, shared outline.
+   --file-h keeps it the same height as the text boxes it sits under: 42px,
+   like every form field, and 44px in grid-layout forms (see the
+   [data-form-grid] rule further down). The chooser button fills the box
+   inside its 1px border. */
 input[type="file"] {
+    --file-h: 42px;
     width: 100%;
     max-width: 100%;
-    min-height: 30px;
-    height: 30px;
+    min-height: var(--file-h);
+    height: var(--file-h);
     padding: 0;
     overflow: hidden;
     color: var(--ink);
     background: var(--field-bg);
     border: 1px solid #666;
     border-radius: 4px;
-    font-family: 'Times New Roman', Times, serif;
+    font-family: var(--font-family);
     font-size: 12px;
     font-weight: 400;
-    line-height: 28px;
+    line-height: calc(var(--file-h) - 2px);
 }
 input[type="file"]::file-selector-button {
-    height: 28px;
+    height: calc(var(--file-h) - 2px);
     min-width: 93px;
     margin: 0 14px 0 0;
     padding: 0 17px;
@@ -2006,10 +2011,11 @@ body:not(:has(aside)) .pw-wrap > button.password-toggle:hover,
 }
 body .pw-wrap > button.password-toggle img { width: 18px; height: 18px; }
 
-/* Give record text and its context a little more visual weight. */
+/* Give record text and its context a little more visual weight. The pager's
+   "Showing 1-13 of 13 records" is left out on purpose: it is a status line,
+   not a record, and inherits the pager's regular weight. */
 main > [data-module-shell] > [data-page-intro],
-main [data-table-wrap] tbody td,
-[data-pagination-count] {
+main [data-table-wrap] tbody td {
     font-weight: 600;
 }
 
@@ -2663,7 +2669,7 @@ body.login-page > .login-stage {
     margin-top: -1.5rem;
     margin-right: 2px;
     color: #e7e5e4;
-    font: 14px/1.2 Georgia, 'Times New Roman', serif;
+    font: 14px/1.2 var(--font-family);
     white-space: nowrap;
 }
 body.login-page .login-card {
@@ -2673,12 +2679,12 @@ body.login-page .login-card {
     background: #fff;
     box-shadow: 0 2px 3px rgba(0, 0, 0, .35);
     color: #171717;
-    font-family: Georgia, 'Times New Roman', serif;
+    font-family: var(--font-family);
 }
 .login-card h1 {
     margin: 0 0 37px;
     text-align: center;
-    font: 400 17px/1.4 Georgia, 'Times New Roman', serif;
+    font: 400 17px/1.4 var(--font-family);
 }
 .login-card form > div { margin-bottom: 24px; }
 .login-card label {
@@ -2698,7 +2704,7 @@ body.login-page .login-card input:not([type="hidden"]) {
     border-radius: 6px;
     background: #f7f5f6;
     color: #151515;
-    font: 14px Georgia, 'Times New Roman', serif;
+    font: 14px var(--font-family);
 }
 body.login-page .login-card .pw-wrap > input { padding-right: 3rem; }
 body.login-page .login-card .password-toggle { width: 30px; height: 30px; }
@@ -2711,7 +2717,7 @@ body.login-page .login-card form > button[type="submit"] {
     border-radius: 5px;
     background: #fa5203;
     color: #fff;
-    font: 400 16px Georgia, 'Times New Roman', serif;
+    font: 400 16px var(--font-family);
 }
 body.login-page .login-card form > button[type="submit"]:hover { background: #d74600; }
 /* Page titles stay in the header; controls and record context follow below. */
@@ -2876,6 +2882,8 @@ main > [data-module-shell] > [data-page-head] > [data-actions] > a[data-back]:ho
 [data-form-body] > form[data-form-grid] > h6:first-of-type { margin-top: 0; }
 [data-form-body] > form[data-form-grid] > div > :is(input:not([type="hidden"]):not([type="file"]), select),
 [data-form-body] > form[data-form-grid] .pw-wrap > input { min-height: 44px; }
+/* the upload box matches the 44px fields beside it in these forms */
+[data-form-body] > form[data-form-grid] > div > input[type="file"] { --file-h: 44px; }
 [data-form-body] > form[data-form-grid] > div:has(> label) > div:not(.pw-wrap):not(:has(input)) {
     margin-top: .35rem;
     color: var(--muted);
