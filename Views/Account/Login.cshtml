@@ -11,15 +11,15 @@
     <title>Login — Apartment Management System</title>
     <link rel="stylesheet" href="~/css/ynclino.css" asp-append-version="true" />
 </head>
-<body>
-    <div>
-        <div>
-            <img src="~/images/logo.png" alt="Ynclino Apartment Management System" />
-            <p>Please sign in to your account</p>
+<body class="login-page">
+    <main class="login-stage">
+        <div class="login-brand">
+            <img src="~/images/logo.png" alt="Ynclino" />
+            <span>APARTMENT MANAGEMENT SYSTEM</span>
         </div>
 
-        <div>
-            <div>
+        <section class="login-card" aria-labelledby="login-heading">
+            <h1 id="login-heading">Please sign in to your administrator account</h1>
                 <form asp-action="Login" method="post">
                     <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
                     @Html.AntiForgeryToken()
@@ -38,26 +38,20 @@
 
                     <div>
                         <label asp-for="Password"></label>
-                        <div>
-                            <input asp-for="Password" id="loginPassword" placeholder="Password" autocomplete="current-password" />
-                            <button type="button" onclick="togglePassword('loginPassword', this)" tabindex="-1">Show</button>
+                        <div class="pw-wrap">
+                            <input asp-for="Password" id="loginPassword"
+                                placeholder="Password" autocomplete="current-password" />
+                            @await Html.PartialAsync("_PasswordToggle", "loginPassword")
                         </div>
                     </div>
-                    <button type="submit">Sign In</button>
+                    <button type="submit">Login</button>
 
                 </form>
 
-            </div>
-        </div>
-    </div>
+        </section>
+    </main>
 
-    <script>
-        function togglePassword(inputId, btn) {
-            var input = document.getElementById(inputId);
-            if (input.type === 'password') { input.type = 'text'; btn.textContent = 'Hide'; }
-            else { input.type = 'password'; btn.textContent = 'Show'; }
-        }
-    </script>
+    <script src="~/js/password.js" asp-append-version="true"></script>
     <script src="~/js/ynclino.js" asp-append-version="true"></script>
 </body>
 </html>

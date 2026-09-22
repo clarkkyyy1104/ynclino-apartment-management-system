@@ -27,7 +27,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var uid = CurrentUserID();
             if (uid == null) return null;
             return await _context.tblTenants
-                .Include(t => t.Unit)
+                .Include(t => t.Assignments).ThenInclude(a => a.Unit)
                 .FirstOrDefaultAsync(t => t.UserID == uid && t.Status == "Active");
         }
 
@@ -43,7 +43,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         public async Task<IActionResult> Index(bool archived = false)
         {
             IQueryable<tblUnitTransferRequest> query = _context.tblUnitTransferRequests
-                .Include(r => r.Tenant).ThenInclude(t => t!.Unit)
+                .Include(r => r.Tenant).ThenInclude(t => t!.Assignments).ThenInclude(a => a.Unit)
                 .Include(r => r.CurrentUnit)
                 .Include(r => r.RequestedUnit);
 
@@ -56,7 +56,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                     return View(new List<tblUnitTransferRequest>());
                 }
                 query = query.Where(r => r.TenantID == tenant.TenantID);
-                ViewBag.HasUnit = tenant.UnitID != null;   // drives "Apply for a Unit" vs "Request Transfer"
+                ViewBag.HasUnit = tenant.Assignments.Any(a => a.Status == "Active");   // drives "Apply for a Unit" vs "Request Transfer"
             }
 
             var all = await query.ToListAsync();
@@ -146,7 +146,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             await PopulateAvailableUnitsAsync(tenant);
             ViewBag.CurrentUnit = tenant.Unit?.UnitNumber;
-            ViewBag.HasUnit = tenant.UnitID != null;
+            ViewBag.HasUnit = tenant.Assignments.Any(a => a.Status == "Active");
             return View();
         }
 
@@ -175,7 +175,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             {
                 await PopulateAvailableUnitsAsync(tenant);
                 ViewBag.CurrentUnit = tenant.Unit?.UnitNumber;
-                ViewBag.HasUnit = tenant.UnitID != null;
+                ViewBag.HasUnit = tenant.Assignments.Any(a => a.Status == "Active");
                 return View();
             }
 
@@ -258,6 +258,12 @@ namespace YnclinoApartmentManagementSystem.Controllers
             }
 
             var tenant = req.Tenant!;
+            if (tenant.Status != "Active" || tenant.UnitID == req.RequestedUnitID ||
+                tenant.UnitID != req.CurrentUnitID)
+            {
+                TempData["Error"] = "The tenant's assignment has changed or is inactive. Review the request before approving it.";
+                return RedirectToAction(nameof(Index));
+            }
             int? oldUnitID = tenant.UnitID;                 // null when this is a first-unit application
             bool isApplication = oldUnitID == null;
             tenant.UnitID = req.RequestedUnitID;
@@ -312,7 +318,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
         private async Task<bool> UnitHasRoomAsync(tblUnit unit)
         {
             if (unit.Status == "Under Maintenance") return false;
-            int active = await _context.tblTenants.CountAsync(t => t.UnitID == unit.UnitID && t.Status == "Active");
+            int active = await _context.tblTenants.CountAsync(t => t.Assignments.Any(a => a.Status == "Active" && a.UnitID == unit.UnitID) && t.Status == "Active");
             return active < unit.Capacity;
         }
 
@@ -328,7 +334,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var options = new List<SelectListItem>();
             foreach (var u in units)
             {
-                int active = await _context.tblTenants.CountAsync(t => t.UnitID == u.UnitID && t.Status == "Active");
+                int active = await _context.tblTenants.CountAsync(t => t.Assignments.Any(a => a.Status == "Active" && a.UnitID == u.UnitID) && t.Status == "Active");
                 if (active < u.Capacity)
                     options.Add(new SelectListItem
                     {

@@ -4,13 +4,13 @@
     int lostFound = (int)(ViewBag.LostFoundCount ?? 0);
 }
 
-<div>
+<div data-modal-source data-confirm>
     <div>
-        <div>
-            <div>
+        <div data-panel>
+            <div data-panel-head>
                 Delete @Model.FullName permanently
             </div>
-            <div>
+            <div data-panel-body>
 
                 <p>
                     This removes the tenant, their login, and every record listed below
@@ -67,7 +67,7 @@
                             <button type="submit" data-danger>Delete permanently</button>
                         </form>
                     }
-                    <a asp-action="Details" asp-route-id="@Model.TenantID">Cancel</a>
+                    <a data-modal-link asp-action="Details" asp-route-id="@Model.TenantID">Cancel</a>
                 </div>
             </div>
         </div>

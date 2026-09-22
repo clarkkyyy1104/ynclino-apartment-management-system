@@ -10,17 +10,15 @@
     var unpaid       = Model.Count(r => r.Balance > 0);
 }
 
-<div data-page-head>
-    <div>
+<div data-module-shell>
+    <header data-page-head>
         <h3>@(tenant?.FullName ?? "Billing Record")</h3>
-        <div>
-            Unit @(tenant?.Unit?.UnitNumber ?? "—") · every bill issued to this tenant
-        </div>
-    </div>
-    <div data-actions>
+    </header>
+    <p data-page-meta>Unit @(tenant?.Unit?.UnitNumber ?? "—") · every bill issued to this tenant</p>
+    <div data-page-actions>
         @if (isAdmin)
         {
-            <a asp-action="History">← All Tenants</a>
+            <a asp-action="History" data-back>← All Tenants</a>
         }
     </div>
 </div>
@@ -68,7 +66,7 @@
 </div>
 
 <div data-panel>
-    <div data-panel-head><span>Bill by Bill</span></div>
+    <div data-panel-head><span>Bills List</span></div>
     <div data-panel-body>
         <div data-table-wrap>
             <table>

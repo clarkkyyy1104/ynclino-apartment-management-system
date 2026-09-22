@@ -1,0 +1,55 @@
+@model YnclinoApartmentManagementSystem.Models.tblUnit
+@{
+    ViewData["Title"] = $"Tenancy History — Unit {Model.UnitNumber}";
+}
+
+@{
+    var assignments = ViewBag.Assignments as List<YnclinoApartmentManagementSystem.Models.TenantUnitAssignment>
+        ?? new List<YnclinoApartmentManagementSystem.Models.TenantUnitAssignment>();
+}
+@* Who has lived in this unit. Opened from the unit's own details modal. *@
+<div data-modal-source>
+    <div data-panel>
+        <div data-panel-head>Tenancy History</div>
+        <div data-panel-body>
+            @if (assignments.Any())
+            {
+                <div data-table-wrap>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tenant Name</th>
+                                <th>Recorded</th>
+                                <th>Move-Out</th>
+                                <th>Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var assignment in assignments)
+                            {
+                                <tr>
+                                    <td>@assignment.Tenant?.LastName, @assignment.Tenant?.FirstName</td>
+                                    <td>@(assignment.MoveInDate?.ToString("MMM dd, yyyy") ?? assignment.DateRecorded.ToString("MMM dd, yyyy"))</td>
+                                    <td>@(assignment.MoveOutDate?.ToString("MMM dd, yyyy") ?? "-")</td>
+                                    <td>@assignment.Status</td>
+                                    <td>
+                                        <a data-modal-link asp-controller="Tenants" asp-action="Details" asp-route-id="@assignment.TenantID" title="View" aria-label="View"><img src="/images/icons/view.svg" alt="" /></a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p>No tenants have been assigned to this unit yet.</p>
+            }
+        </div>
+    </div>
+
+    <div data-actions-row>
+        <a asp-action="Index" data-back>Back to Units</a>
+    </div>
+</div>

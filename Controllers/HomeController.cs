@@ -39,6 +39,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 ViewBag.ActiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Active");
                 ViewBag.InactiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Inactive");
                 ViewBag.TotalUsers = await _context.tblUsers.CountAsync(u => u.IsActive);
+                ViewBag.StaffCount = await _context.tblUsers.CountAsync(u => u.IsActive && u.Role == "Maintenance");
+                ViewBag.AdminCount = await _context.tblUsers.CountAsync(u => u.IsActive && u.Role == "Admin");
                 ViewBag.Notifications = await MyNotificationsAsync();
                 return View("AdminDashboard");
             }
@@ -78,13 +80,14 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 if (int.TryParse(userIdStr, out int userId))
                 {
                     vm.Tenant = await _context.tblTenants
-                        .Include(t => t.Unit)
+                        .Include(t => t.Assignments).ThenInclude(a => a.Unit)
                         .FirstOrDefaultAsync(t => t.UserID == userId && t.Status == "Active");
 
                     vm.Notifications = await MyNotificationsAsync();
 
                     if (vm.Tenant != null)
                     {
+                        await _context.LoadTenantDatesAsync(vm.Tenant);
                         vm.AdvanceCredit = vm.Tenant.AdvanceCredit;
                         vm.Outstanding = await _context.tblBillings
                             .Where(b => b.TenantID == vm.Tenant.TenantID && b.Status != "Paid")

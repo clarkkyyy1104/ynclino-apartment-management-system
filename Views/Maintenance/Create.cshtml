@@ -8,14 +8,14 @@
     <div>
         <div data-form-panel>
             <div data-form-head>New Maintenance Request</div>
-            <div data-form-body>
+            <div data-form-body data-cols="@(isAdmin ? "2" : "1")">
                 <form asp-action="Create" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
                     <div asp-validation-summary="All"></div>
 
                     @if (isAdmin)
                     {
-                        <div>
+                        <div data-span>
                             <label asp-for="TenantID"></label>
                             <select asp-for="TenantID" asp-items="Model.AvailableTenants">
                                 <option value="">— Select Tenant —</option>
@@ -33,7 +33,6 @@
                         </div>
                     }
 
-                    <div>
                         <div>
                             <label asp-for="Category"></label>
                             <select asp-for="Category" id="categorySelect" required>
@@ -60,7 +59,6 @@
                             <span asp-validation-for="Priority"></span>
                         </div>
                         }
-                    </div>
 
                     <div id="descWrap">
                         <label asp-for="Description"></label>
@@ -69,7 +67,7 @@
                         <span asp-validation-for="Description"></span>
                     </div>
 
-                    <div>
+                    <div data-span>
                         <label asp-for="ImageUpload"></label>
                         <input asp-for="ImageUpload" type="file" accept="image/*" />
                         <div>Optional — attach a photo of the issue. JPG, PNG, GIF, or WEBP, up to 5 MB.</div>

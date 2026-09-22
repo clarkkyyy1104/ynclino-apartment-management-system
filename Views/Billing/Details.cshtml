@@ -3,7 +3,7 @@
     ViewData["Title"] = "Bill Details";
 }
 
-<div>
+<div data-modal-source>
     <div>
         <div data-panel>
             <div data-panel-head>
@@ -138,52 +138,9 @@
                     <dt>Date Issued</dt>
                     <dd>@Model.DateIssued.ToString("MMM dd, yyyy hh:mm tt")</dd>
                 </dl>
-
-                @{
-                    var payments = ViewBag.Payments as List<YnclinoApartmentManagementSystem.Models.tblPayment>
-                                   ?? new List<YnclinoApartmentManagementSystem.Models.tblPayment>();
-                }
-                @if (payments.Any())
-                {
-                    <h6>Payment History</h6>
-                    <div data-table-wrap>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Date Paid</th>
-                                    <th>Method</th>
-                                    <th>Amount</th>
-                                    <th>Remarks</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var p in payments)
-                                {
-                                    <tr>
-                                        <td>@p.DatePaid.ToString("MMM dd, yyyy")</td>
-                                        <td>
-                                            @* money that came out of held advance payment
-                                               rather than cash handed over today *@
-                                            @if (p.Method == "Advance")
-                                            {
-                                                <span>Advance</span>
-                                            }
-                                            else
-                                            {
-                                                <span>@p.Method</span>
-                                            }
-                                        </td>
-                                        <td>₱@p.Amount.ToString("N0")</td>
-                                        <td>@(string.IsNullOrWhiteSpace(p.Remarks) ? "—" : p.Remarks)</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
-
+                
                 <div data-actions-row>
-                    <a asp-action="Index">Back</a>
+                    <a asp-action="Index" data-back>Back</a>
                 </div>
             </div>
         </div>

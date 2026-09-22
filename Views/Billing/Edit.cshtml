@@ -8,12 +8,12 @@
         <div data-form-panel>
             <div data-form-head>Update Bill</div>
             <div data-form-body>
-                <form asp-action="Edit" method="post">
+                <form asp-action="Edit" method="post" data-billing-edit data-form-grid>
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="BillingID" />
                     <div asp-validation-summary="ModelOnly"></div>
 
-                    <div>
+                    <div data-span>
                         <label asp-for="TenantID"></label>
                         <select asp-for="TenantID" asp-items="Model.AvailableTenants">
                             <option value="">— Select Tenant —</option>
@@ -22,18 +22,16 @@
                     </div>
 
                     @* Bill details are fixed when the bill is issued — shown here, never edited *@
-                    <div>
                         <div>
                             <label>Billing Period (Month)</label>
-                            <input value="@Model.BillingPeriod.ToString("MMMM yyyy")" disabled />
+                            <input type="text" value="@Model.BillingPeriod.ToString("MMMM yyyy")" disabled />
                             <input type="hidden" asp-for="BillingPeriod" value="@Model.BillingPeriod.ToString("yyyy-MM-dd")" />
                         </div>
                         <div>
                             <label>Due Date</label>
-                            <input value="@Model.DueDate.ToString("MMM dd, yyyy")" disabled />
+                            <input type="text" value="@Model.DueDate.ToString("MMM dd, yyyy")" disabled />
                             <input type="hidden" asp-for="DueDate" value="@Model.DueDate.ToString("yyyy-MM-dd")" />
                         </div>
-                    </div>
                     @* carried so model validation still passes; the controller ignores it *@
                     <input type="hidden" asp-for="AmountDue" />
                     <p>
@@ -41,14 +39,14 @@
                     </p>
 
                     @* running totals — computed from the payments below, never typed *@
-                    <div>
-                        <div>
+                    <div data-span data-billing-summary>
+                        <div data-stat>
                             <div>
                                 <div>Amount Due</div>
                                 <div>₱@Model.AmountDue.ToString("N0")</div>
                             </div>
                         </div>
-                        <div>
+                        <div data-stat>
                             <div>
                                 <div>Total Paid</div>
                                 @* the full amount received, then where it went *@
@@ -63,7 +61,7 @@
                                 }
                             </div>
                         </div>
-                        <div>
+                        <div data-stat>
                             <div>
                                 <div>Balance</div>
                                 <div>₱@Model.Balance.ToString("N0")</div>
@@ -83,7 +81,7 @@
 
                     @if (Model.AdvanceCredit > 0)
                     {
-                        <div>
+                        <div data-span>
                             This tenant is holding <strong>₱@Model.AdvanceCredit.ToString("N0")</strong>
                             in advance payment. It is applied automatically to their next bill.
                         </div>
@@ -91,7 +89,7 @@
 
                     @if (Model.Balance <= 0)
                     {
-                        <div>
+                        <div data-span>
                             This bill is fully settled — no further payment is needed.
                         </div>
                     }
@@ -103,7 +101,6 @@
                             and the balance and status update automatically.
                         </p>
 
-                        <div>
                             <div>
                                 <label asp-for="PaymentAmount"></label>
                                 <div>
@@ -119,10 +116,9 @@
                             </div>
                             <div>
                                 <label>Date Paid</label>
-                                <input value="@DateTime.Today.ToString("MMM dd, yyyy")" disabled />
-                                <div>Recorded as today automatically.</div>
+                                <input type="text" value="@DateTime.Today.ToString("MMM dd, yyyy")" disabled />
+                                <div data-field-note>Recorded as today automatically.</div>
                             </div>
-                        </div>
                     }
 
                     <div data-actions-row>

@@ -30,7 +30,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var uid = CurrentUserID();
             if (uid == null) return null;
             return await _context.tblTenants
-                .Include(t => t.Unit)
+                .Include(t => t.Assignments).ThenInclude(a => a.Unit)
                 .FirstOrDefaultAsync(t => t.UserID == uid && t.Status == "Active");
         }
 
@@ -90,7 +90,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             vm.IncomeThisMonth = payments.Where(p => p.DatePaid >= firstOfMonth).Sum(p => p.Amount);
 
             var bills = await _context.tblBillings.AsNoTracking()
-                .Include(b => b.Tenant).ThenInclude(t => t!.Unit)
+                .Include(b => b.Tenant).ThenInclude(t => t!.Assignments).ThenInclude(a => a.Unit)
                 .ToListAsync();
 
             // ── Open requests ──
@@ -120,9 +120,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             // ── Tenants ──
             var allTenants = await _context.tblTenants.AsNoTracking()
-                .Include(t => t.Unit)
+                .Include(t => t.Assignments).ThenInclude(a => a.Unit)
                 .OrderBy(t => t.LastName).ThenBy(t => t.FirstName)
                 .ToListAsync();
+            await _context.LoadTenantDatesAsync(allTenants);
 
             // ── Where every tenant's account stands ──
             // Built from the tenant list rather than from the bills, so a tenant
@@ -162,7 +163,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
                         // ── Maintenance records by status ──
             var requests = await _context.tblMaintenanceRequests.AsNoTracking()
-                .Include(m => m.Tenant).ThenInclude(t => t!.Unit)
+                .Include(m => m.Tenant).ThenInclude(t => t!.Assignments).ThenInclude(a => a.Unit)
                 .ToListAsync();
 
             vm.MaintenanceByStatus = requests

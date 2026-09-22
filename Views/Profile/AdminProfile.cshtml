@@ -3,6 +3,10 @@
     ViewData["Title"] = "My Profile";
 }
 
+<header data-page-head>
+    <div><h3>My Profile</h3></div>
+</header>
+
 @if (Model == null)
 {
     <div data-panel>
@@ -29,7 +33,7 @@
             <span>@roleLabel</span>
         </div>
         <div data-actions>
-            <a asp-controller="Account" asp-action="ChangePassword">Change Password</a>
+            <a data-modal-link asp-controller="Account" asp-action="ChangePassword">Change Password</a>
         </div>
     </div>
 </div>
@@ -49,7 +53,7 @@
                     <dt>Username</dt><dd>@Model.Username</dd>
                     <dt>Role</dt><dd>@roleLabel</dd>
                     <dt>Status</dt>
-                    <dd><span>@(Model.IsActive ? "Active" : "Inactive")</span></dd>
+                    <dd><span data-status="@(Model.IsActive ? "active" : "inactive")">@(Model.IsActive ? "Active" : "Inactive")</span></dd>
                     <dt>Member Since</dt><dd>@Model.DateCreated.ToString("MMMM dd, yyyy")</dd>
                 </dl>
             </div>
@@ -63,7 +67,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
                     <path d="M0 0h1v15h15v1H0zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07"/>
                 </svg>
-                <span>At a Glance</span>
+                <span>Overview</span>
             </div>
             <div data-panel-body>
                 @* four counts, each one a way into the module it counts *@

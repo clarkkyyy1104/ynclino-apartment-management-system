@@ -47,8 +47,8 @@ Core's `EnsureCreated()` at startup, which quietly built whatever the models
 happened to say at that moment — so the schema in the database and the schema in
 the repository could drift apart with nobody noticing. Now there is one written
 source of truth, `Database/ynclino_schema.sql`, and it is the thing that gets
-run. If the database is missing, the app says so on the console instead of
-inventing one.
+run. If the database is missing or its tables do not match, startup stops with
+an error instead of serving broken pages.
 
 ### 1. Make sure MySQL Server is running
 `Win + R` → `services.msc` → find **MySQL80** → its status should be **Running**
@@ -62,16 +62,23 @@ From the project root, run the script once:
 mysql -u root -p < Database/ynclino_schema.sql
 ```
 
-It creates the database, the nine tables with their keys and relationships, and
+It creates `YAMSDB`, its 11 tables with their keys and relationships, and
 the one administrator account you need to sign in the first time
 (**`admin`** / **`Admin@123`**).
 
 > In MySQL Workbench you can do the same with **File → Open SQL Script…**, pick
 > `Database/ynclino_schema.sql`, then hit the lightning bolt to execute it.
 
+If you created `YAMSDB` from an earlier version of the SQL file, run
+`Database/yamsdb_app_compat.sql` once in Workbench instead of rebuilding it.
+That patch adds only the columns required by the current screens.
+For a `YAMSDB` created before Lost & Found archiving was added, run
+`Database/yamsdb_lostfound_archive.sql` once in Workbench. It adds the archive
+date without changing existing item or claim records.
+
 ### 3. Create `appsettings.Local.json` (your private config)
-In the project root, copy `appsettings.Local.json.example` to
-**`appsettings.Local.json`** and put your own MySQL password in it:
+In the project root, create **`appsettings.Local.json`** with your MySQL
+password:
 
 ```json
 {
@@ -88,26 +95,29 @@ In the project root, copy `appsettings.Local.json.example` to
   `YOUR_MYSQL_PASSWORD` placeholder untouched.
 - Each teammate creates their own `appsettings.Local.json` with their own password.
 
-> Different databases per branch: the `crud` branch uses its own database and
-> `crud(copy)` uses `YnclinoApartmentManagementSystemDb`, so the two branches
-> never share data. (Set in each branch's `appsettings.json`.) Whichever database
-> a branch names, build it from the same script first.
+The committed `appsettings.json` points to `YAMSDB`. A full
+`ConnectionStrings:DefaultConnection` in `appsettings.Local.json` overrides it;
+make sure that override also names `YAMSDB`. If MySqlConnector reports a local
+Windows SSL authentication error, add `SslMode=Disabled` to a **localhost-only**
+connection string in the private file. The app automatically enables MySQL RSA
+public-key retrieval for that localhost-only configuration so MySQL 8's default
+`caching_sha2_password` authentication can complete.
 
 ### 4. Run the app
 Press **F5** in Visual Studio (or `dotnet run`). It connects to the database you
 built in step 2 and opens at **https://localhost:7251**.
 
-If the console prints `[schema] Cannot reach the database named in the connection
-string`, step 2 has not been done (or the name in `appsettings.json` does not
-match the one the script created).
+If startup reports that it cannot connect, check the MySQL service and both
+connection-string files. If it reports a model mismatch, apply the compatibility
+patch described in step 2.
 
-### 5. Log in and load demo data
+### 5. Log in
 - Default admin login: **`admin`** / **`Admin@123`**
-- On the **Units** page, click **Load Sample Data** to populate demo units and tenants.
 
-> **Resetting the database:** drop it and run the script again.
+> **Resetting the database deletes all its records.** Run the script again only
+> if a fresh database is intended. The script itself drops `YAMSDB` first.
 > ```sql
-> DROP DATABASE YnclinoApartmentManagementSystemDb;
+> DROP DATABASE YAMSDB;
 > ```
 > ```
 > mysql -u root -p < Database/ynclino_schema.sql
@@ -182,7 +192,6 @@ ynclino-apartment-management-system/
 │   └── uploads/         Runtime-uploaded photos (git-ignored)
 ├── appsettings.json              Config with a password placeholder (committed)
 ├── appsettings.Local.json        Your private DB password (git-ignored — you create this)
-├── appsettings.Local.json.example  Template to copy
 ├── Program.cs                    App entry point
 └── YnclinoApartmentManagementSystem.csproj
 ```

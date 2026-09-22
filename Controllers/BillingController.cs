@@ -69,7 +69,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             await RefreshStatusesAsync();
 
             IQueryable<tblBilling> query = _context.tblBillings
-                .Include(b => b.Tenant).ThenInclude(t => t!.Unit);
+                .Include(b => b.Tenant).ThenInclude(t => t!.Assignments).ThenInclude(a => a.Unit);
 
             // tenants only see their own bills
             if (User.IsInRole("Tenant"))
@@ -156,7 +156,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             }
 
             // Admin sees ONE ROW PER TENANT — cleaner than a long list of every payment.
-            IQueryable<tblTenant> tenants = _context.tblTenants.Include(t => t.Unit);
+            IQueryable<tblTenant> tenants = _context.tblTenants.Include(t => t.Assignments).ThenInclude(a => a.Unit);
             if (!string.IsNullOrWhiteSpace(searchTerm))
                 tenants = tenants.Where(t => t.FirstName.Contains(searchTerm) || t.LastName.Contains(searchTerm));
 
@@ -196,7 +196,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             }
 
             var tenant = await _context.tblTenants
-                .Include(t => t.Unit)
+                .Include(t => t.Assignments).ThenInclude(a => a.Unit)
                 .FirstOrDefaultAsync(t => t.TenantID == id);
             if (tenant == null) return NotFound();
 
@@ -237,7 +237,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (id == null) return NotFound();
 
             var billing = await _context.tblBillings
-                .Include(b => b.Tenant).ThenInclude(t => t!.Unit)
+                .Include(b => b.Tenant).ThenInclude(t => t!.Assignments).ThenInclude(a => a.Unit)
                 .FirstOrDefaultAsync(b => b.BillingID == id);
 
             if (billing == null) return NotFound();
@@ -442,7 +442,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
         private async Task<List<DateTime>> IssueBillsFromAdvanceAsync(tblBilling sourceBill, tblTenant tenant)
         {
             var monthsPaid = new List<DateTime>();
-            await _context.Entry(tenant).Reference(t => t.Unit).LoadAsync();
+            await _context.Entry(tenant).Collection(t => t.Assignments)
+                .Query().Include(a => a.Unit).LoadAsync();
 
             // Work out a month's rent. The unit is the right answer, but a tenant with
             // no unit on file must NOT make the overpayment disappear, so fall back to
@@ -620,42 +621,13 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: Billing/Delete/5
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null) return NotFound();
-
-            var billing = await _context.tblBillings
-                .Include(b => b.Tenant).ThenInclude(t => t!.Unit)
-                .FirstOrDefaultAsync(b => b.BillingID == id);
-
-            if (billing == null) return NotFound();
-            return View(billing);
-        }
-
-        // POST: Billing/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var billing = await _context.tblBillings.FindAsync(id);
-            if (billing == null) return NotFound();
-
-            _context.tblBillings.Remove(billing);
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Billing record deleted.";
-            return RedirectToAction(nameof(Index));
-        }
-
         // ajax helper - suggests the unit's monthly rent and reports any arrears
         [HttpGet]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetSuggestedAmount(int tenantId)
         {
             var tenant = await _context.tblTenants
-                .Include(t => t.Unit)
+                .Include(t => t.Assignments).ThenInclude(a => a.Unit)
                 .FirstOrDefaultAsync(t => t.TenantID == tenantId);
             if (tenant == null || tenant.Unit == null)
                 return Json(new { suggestedAmount = 0m, unpaidMonths = 0 });
@@ -691,13 +663,13 @@ namespace YnclinoApartmentManagementSystem.Controllers
         private async Task<IEnumerable<SelectListItem>> GetActiveTenantListAsync()
         {
             return await _context.tblTenants
-                .Include(t => t.Unit)
-                .Where(t => t.Status == "Active" && t.UnitID != null)
+                .Include(t => t.Assignments).ThenInclude(a => a.Unit)
+                .Where(t => t.Status == "Active" && t.Assignments.Any(a => a.Status == "Active"))
                 .OrderBy(t => t.LastName)
                 .Select(t => new SelectListItem
                 {
                     Value = t.TenantID.ToString(),
-                    Text = $"{t.LastName}, {t.FirstName} — Unit {t.Unit!.UnitNumber}"
+                    Text = $"{t.LastName}, {t.FirstName} — Unit {t.Assignments.Where(a => a.Status == "Active").Select(a => a.Unit!.UnitNumber).FirstOrDefault()}"
                 })
                 .ToListAsync();
         }
@@ -706,13 +678,13 @@ namespace YnclinoApartmentManagementSystem.Controllers
         private async Task<IEnumerable<SelectListItem>> GetTenantListForBillAsync(int currentTenantId)
         {
             return await _context.tblTenants
-                .Include(t => t.Unit)
-                .Where(t => (t.Status == "Active" && t.UnitID != null) || t.TenantID == currentTenantId)
+                .Include(t => t.Assignments).ThenInclude(a => a.Unit)
+                .Where(t => (t.Status == "Active" && t.Assignments.Any(a => a.Status == "Active")) || t.TenantID == currentTenantId)
                 .OrderBy(t => t.LastName)
                 .Select(t => new SelectListItem
                 {
                     Value = t.TenantID.ToString(),
-                    Text = $"{t.LastName}, {t.FirstName} — Unit {t.Unit!.UnitNumber}"
+                    Text = $"{t.LastName}, {t.FirstName} — Unit {t.Assignments.Where(a => a.Status == "Active").Select(a => a.Unit!.UnitNumber).FirstOrDefault()}"
                 })
                 .ToListAsync();
         }

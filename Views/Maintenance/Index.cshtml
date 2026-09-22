@@ -6,39 +6,38 @@
     bool archived = ViewBag.Archived == true;
 }
 
-@await Component.InvokeAsync("ModuleNotifications", new { module = "Maintenance" })
-
+<div data-module-shell>
 <div data-page-head>
     <div>
         <h3>
             @(archived ? "Maintenance Archive" : isStaff ? "My Assigned Requests" : "Maintenance Requests")
         </h3>
     </div>
-    <div data-actions>
-        @* staff carry out work; they do not raise requests *@
-        @if (!archived && !isStaff)
-        {
-            <a data-primary asp-action="Create">+ New Request</a>
-        }
+</div>
+    <div data-page-actions>
         @* One button, not a pair of tabs: it names the list you are NOT looking
            at, so it always reads as somewhere to go rather than as a choice
            between two things one of which you are already on. *@
         @if (archived)
         {
-            <a asp-action="Index">← Back</a>
+            <a asp-action="Index" data-back>Back</a>
         }
         else
         {
-            <a asp-action="Index" asp-route-archived="true">Archive</a>
+            <a asp-action="Index" asp-route-archived="true" data-action-tone="amber">Archive</a>
+        }
+        @* staff carry out work; they do not raise requests *@
+        @if (!archived && !isStaff)
+        {
+            <a data-modal-link data-primary asp-action="Create">New Request</a>
         }
     </div>
-</div>
 
-<form method="get">
+<form method="get" data-auto-search>
     <input type="hidden" name="archived" value="@archived.ToString().ToLower()" />
     @if (isAdmin)
     {
-        <div>
+        <div class="searchBar">
             <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" placeholder="Search tenant or issue type…" />
         </div>
     }
@@ -52,9 +51,10 @@
         </select>
     </div>
     <div>
-        <a asp-action="Index" asp-route-archived="@archived.ToString().ToLower()">Clear</a>
+        <a asp-action="Index" asp-route-archived="@archived.ToString().ToLower()" data-action-tone="gray">Clear</a>
     </div>
 </form>
+</div>
 
 <div data-table-wrap>
     <table>
@@ -107,7 +107,7 @@
                     <td>
                         
                             <!-- VIEW -->
-                            <a asp-action="Details"
+                            <a data-modal-link asp-action="Details"
                                asp-route-id="@r.RequestID"
                                title="View"
                                aria-label="View">
@@ -123,7 +123,7 @@
                     
                             @if (isStaff && !YnclinoApartmentManagementSystem.Helpers.StatusFlowHelper.IsClosedMaintenance(r.Status))
                             {
-                                <a asp-action="Work"
+                                <a data-modal-link asp-action="Work"
                                    asp-route-id="@r.RequestID">
                                     Update
                                 </a>
@@ -156,7 +156,7 @@
                             {
                                 @if (!archived && !YnclinoApartmentManagementSystem.Helpers.StatusFlowHelper.IsClosedMaintenance(r.Status))
                                 {
-                                    <a asp-action="Edit"
+                                    <a data-modal-link asp-action="Edit"
                                        asp-route-id="@r.RequestID">
                                         Update
                                     </a>

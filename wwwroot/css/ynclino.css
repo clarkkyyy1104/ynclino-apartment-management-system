@@ -1,3 +1,4 @@
+
 /* ==========================================================================
    YNCLINO APARTMENT MANAGEMENT SYSTEM — stylesheet
    Colours and shapes taken from the Figma design. The views are plain
@@ -15,7 +16,7 @@
 
 /* 1. TOKENS ─────────────────────────────────────────────────────────────── */
 :root {
-    --navy:       #2B3648;   /* sidebar, sign-in page, table headers, card cap */
+    --navy:       #2B3648;   /* sidebar, sign-in page, table headers, card accent */
     --navy-soft:  #2B3648;   /* the current nav item */
     --orange:     #FA5203;   /* accent bar, active icon, eye icon */
     --orange-btn: #F94C01;   /* buttons */
@@ -34,7 +35,7 @@
     --green: #157347;  --green-bg: #d9f2e4;
     --red:   #b02a37;  --red-bg:   #fadbde;
 
-    --serif: Georgia, "Times New Roman", Cambria, serif;
+    --font-family: Arial, Helvetica, sans-serif;
     --radius: 10px;
     --sidebar-w: 264px;
 }
@@ -43,7 +44,7 @@
 *, *::before, *::after { box-sizing: border-box; }
 body {
     margin: 0;
-    font-family: var(--serif);
+    font-family: var(--font-family);
     line-height: 1.5;
     color: var(--ink);
     background: #fff;
@@ -65,7 +66,7 @@ body > div:has(> aside#appSidebar) { display: flex; height: 100vh; overflow: hid
 aside#appSidebar {
     width: var(--sidebar-w);
     flex: 0 0 var(--sidebar-w);
-    background: var(--navy);
+    background: #1F2937;
     color: var(--cream);
     display: flex;
     flex-direction: column;
@@ -93,46 +94,47 @@ aside#appSidebar + div { flex: 1 1 auto; min-width: 0; display: flex; flex-direc
 /* ── The account, at the foot of the sidebar ─────────────────────────────────
    margin-top:auto is what pins it to the bottom: the sidebar is a column, so
    the gap above this block absorbs whatever space the nav does not use. */
-[data-account] {
-    position: relative;
-    margin-top: auto;
-    border-top: 1px solid rgba(255,255,255,.12);
-}
-[data-account] > a[role="button"] {
-    display: flex; flex-direction: column; gap: .1rem;
-    padding: .9rem 1.35rem;
+[data-account] { margin-top: auto; }
+[data-account-card] {
+    display: flex; align-items: center; gap: .8rem;
+    padding: .8rem 1.35rem; padding-left:80px;
+    border-left: 5px solid transparent;
     color: var(--cream);
+    font-size: .92rem;
 }
-[data-account] > a[role="button"]:hover { background: rgba(255,255,255,.06); color: #fff; text-decoration: none; }
-[data-account-name] { font-weight: 700; font-size: 1.02rem; }
-[data-account-role] { font-size: .82rem; color: rgba(239,236,225,.65); }
-/* the caret points up, because the menu opens upward from down here */
-[data-account] > a[role="button"]::after {
-    content: ""; position: absolute; right: 1.35rem; top: 50%;
-    margin-top: -.15em;
-    border: .3em solid transparent; border-bottom-color: currentColor;
+/* maintenance staff have no profile page — their card is display-only,
+   not a nav link, so it gets normal nav padding instead of the 80px offset */
+.maintenanceProfileCard {
+    padding-left: 1.35rem;
+    cursor: default;
+    pointer-events: none;
 }
-[data-account] > a[role="button"][aria-expanded="true"]::after {
-    border-bottom-color: transparent; border-top-color: currentColor; margin-top: -.45em;
+.maintenanceProfileCard:hover {
+    background: transparent;
 }
-
-/* opens upward: there is no room below it */
-[data-account] ul#accountMenu {
-    position: absolute; left: .6rem; right: .6rem; bottom: 100%; z-index: 20;
-    margin: 0 0 .4rem; padding: .35rem 0;
-    list-style: none; background: #fff;
-    border: 1px solid var(--line); border-radius: var(--radius);
-    box-shadow: 0 -8px 24px rgba(0,0,0,.28);
+.profButton {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
 }
-[data-account] ul#accountMenu a,
-[data-account] ul#accountMenu button {
-    display: block; width: 100%; padding: .45rem 1rem;
-    text-align: left; color: var(--ink);
-    background: none; border: 0; font: inherit; cursor: pointer;
+[data-account-card]:hover { background: rgba(255,255,255,.06); color: var(--cream); text-decoration: none; }
+[data-account-card] [data-nav-icon] { width: 24px; height: 24px; }
+/* only while the profile page is open: lighter ground, orange bar, orange icon */
+[data-account-card][aria-current="page"] { background: #2B3648; border-left-color: var(--orange); }
+[data-account-card][aria-current="page"] [data-nav-icon] { color: var(--orange); }
+[data-account-text] { display: flex; flex-direction: column; min-width: 0; line-height: 1.3; }
+[data-account-text] span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+[data-logout] { margin: 0; border-top: 1px solid rgba(255,255,255,.14); }
+[data-logout] button {
+    display: flex; align-items: center; justify-content: flex-start; gap: .8rem;
+    width: 100%; padding: .9rem 1.35rem;
+    background: none; border: 0; color: var(--cream);
+    border-left: 5px solid transparent;
+    font: inherit; cursor: pointer;
 }
-[data-account] ul#accountMenu a:hover,
-[data-account] ul#accountMenu button:hover { background: var(--field-bg); text-decoration: none; }
-[data-account] ul#accountMenu form { margin: 0; }
+[data-logout] button:hover { background: rgba(255,255,255,.06); }
+[data-logout] [data-nav-icon] { width: 24px; height: 24px; }
+[data-logout] [data-nav-label] { flex: 0 0 auto; }
 
 /* 4. SIDEBAR NAVIGATION ─────────────────────────────────────────────────── */
 aside nav { display: flex; flex-direction: column; flex: 0 1 auto; min-height: 0; overflow-y: auto; }
@@ -174,8 +176,10 @@ aside nav a:hover { background: rgba(255,255,255,.06); color: #fff; text-decorat
 [data-nav-icon="maintenance"] { --nav-icon: url("/images/icons/maintenance.svg"); }
 [data-nav-icon="lostfound"]   { --nav-icon: url("/images/icons/lost-found.svg"); }
 [data-nav-icon="reports"]     { --nav-icon: url("/images/icons/reports.svg"); }
+[data-nav-icon="profile"]     { --nav-icon: url("/images/icons/profile.svg"); }
+[data-nav-icon="logout"]      { --nav-icon: url("/images/icons/logout.svg"); }
 [data-nav-label] { flex: 1 1 auto; min-width: 0; }
-[data-caret] { margin-left: auto; transition: transform .15s; }
+[data-caret] { flex: 0 0 16px; width: 16px; height: 16px; transition: transform .15s; }
 aside nav a[aria-expanded="true"] [data-caret] { transform: rotate(180deg); }
 
 /* the page you are on — this is why the markup carries aria-current */
@@ -184,65 +188,14 @@ aside nav a[aria-current="page"] {
     border-left-color: var(--orange);
     color: #fff;
 }
+/* the current module's icon turns orange — a group's icon too (Units, Billing)
+   while one of the pages inside it is open */
+aside nav a[aria-current="page"] [data-nav-icon],
+aside nav a[data-collapse]:has(+ div a[aria-current="page"]) [data-nav-icon] { color: var(--orange); }
 
 /* the panel a group opens; [hidden] already keeps it closed with no css */
 aside nav div > div { background: rgba(0,0,0,.18); }
 aside nav div > div a { padding-left: 3.2rem; font-size: .95rem; }
-
-/* ── THE COLLAPSED RAIL ──────────────────────────────────────────────────────
-   One attribute on <html> drives all of it, and the whole thing is a media
-   query deep: below 768px the sidebar is already a drawer that slides in and
-   out, so a rail there would be two ideas fighting.
-
-   Redefining --sidebar-w is what actually moves the edge — the width and the
-   flex-basis both read it, so nothing else has to be told the new number. */
-@media (min-width: 768px) {
-    html[data-rail] { --sidebar-w: 76px; }
-
-    /* the wordmark gives way to the Y */
-    html[data-rail] [data-brand] { flex-direction: column; gap: .55rem; padding: 16px 8px; }
-    html[data-rail] [data-logo-full] { display: none; }
-    html[data-rail] [data-logo-mark] { display: block; width: 100%; max-width: 38px; margin: 0 auto; }
-
-    /* the icon is all that is left of a nav line, centred in the rail */
-    html[data-rail] aside nav a {
-        justify-content: center;
-        gap: 0;
-        padding-left: 0; padding-right: 0;
-        border-left-width: 3px;
-        position: relative;
-    }
-    html[data-rail] [data-nav-label],
-    html[data-rail] [data-caret] { display: none; }
-
-    /* a count still has to be visible, so it rides the corner of the icon */
-    html[data-rail] aside nav a [data-navcount] {
-        position: absolute; top: .3rem; right: .85rem;
-        margin: 0;
-    }
-
-    /* a sub-list has nowhere to go on a rail; the script widens the sidebar
-       on the first click instead, and this keeps any open one out of sight */
-    html[data-rail] aside nav > div { display: none; }
-
-    /* the account keeps its initial only */
-    html[data-rail] [data-account] > a[role="button"] { align-items: center; padding: .9rem .5rem; }
-    html[data-rail] [data-account-name],
-    html[data-rail] [data-account-role] { display: none; }
-    html[data-rail] [data-account] > a[role="button"]::after { display: none; }
-    html[data-rail] [data-account] ul#accountMenu { left: .4rem; width: 13rem; right: auto; }
-}
-
-/* off the rail the initial is not needed */
-[data-account-initial] { display: none; }
-@media (min-width: 768px) {
-    html[data-rail] [data-account-initial] {
-        display: inline-flex; align-items: center; justify-content: center;
-        width: 34px; height: 34px;
-        background: var(--navy-soft); border-radius: 50%;
-        font-weight: 700; color: #fff;
-    }
-}
 
 /* 5. THE SIGN-IN SCREEN ─────────────────────────────────────────────────────
    body:not(:has(aside)) means "a page with no sidebar": sign in, access
@@ -346,7 +299,7 @@ main > div:has(> h3) > a,
 main > div:has(> h4) > a {
     display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
     padding: .55rem 1.15rem;
-    font-family: var(--serif); font-size: 1rem; font-weight: 700;
+    font-family: var(--font-family); font-size: 1rem; font-weight: 700;
     color: #fff; background: var(--orange-btn);
     border: 1px solid var(--orange-btn); border-radius: 6px;
     cursor: pointer;
@@ -366,13 +319,64 @@ header > button:hover { background: var(--field-bg); color: var(--ink); }
    a search box, two selects and a Clear link, which was already one control
    too many for a laptop window */
 main form[method="get"] { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin-bottom: 1.25rem; }
-main form[method="get"] a { font-weight: 600; }
+main form[method="get"] a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: .5rem .9rem;
+    color: var(--ink);
+    background: #fff;
+    border: 1px solid var(--field-line);
+    border-radius: 6px;
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+}
+main form[method="get"] a:hover { background: var(--field-bg); text-decoration: none; }
+main form[method="get"] a:focus-visible {
+    outline: 2px solid var(--ink-soft);
+    outline-offset: 2px;
+}
 
-input[type="text"], input[type="number"], input[type="date"],
-input[type="password"], input[type="email"], select, textarea {
+/* password field with inline show/hide toggle */
+.pw-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.pw-wrap input {
+    width: 100%;
+    padding-right: 2.75rem;
+}
+.pw-wrap > button {
+    position: absolute;
+    right: .6rem;
+    background: none;
+    border: none;
+    padding: .25rem;
+    color: var(--ink-soft);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    line-height: 1;
+}
+
+.pw-wrap > button:hover { color: var(--ink); background: none; }
+.pw-wrap > button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.pw-wrap > button img { width: 18px; height: 18px; display: block; }
+input[type="number"],
+input[type="date"],
+input[type="password"],
+input[type="email"],
+input[type="tel"],
+select,
+textarea {
     padding: .55rem .8rem;
-    font-family: var(--serif); font-size: 1rem; color: var(--ink);
-    background: var(--field-bg);              /* filled, per the design */
+    font-family: var(--font-family);
+    font-size: 1rem;
+    color: var(--ink);
+    background: var(--field-bg);
     border: 1px solid var(--field-line);
     border-radius: 6px;
 }
@@ -395,8 +399,9 @@ table { width: 100%; border-collapse: collapse; background: #fff; }
    edge. A two-word heading may take two lines; the table then fits. */
 thead th {
     padding: .8rem .6rem;
-    background: var(--navy); color: #fff; font-weight: 700;
+    background: #fff; color: var(--ink); font-weight: 700;
     text-align: center;
+    border-bottom: 1px solid var(--line);
 }
 tbody td {
     padding: .7rem .6rem; text-align: center; vertical-align: middle;
@@ -408,11 +413,22 @@ tbody tr:hover { background: #f7f8f9; }
    like a different control from the same icon in the other six modules. It is
    matched on being an icon now, not on its wording, and it wears the same box
    as the buttons beside it so the row lines up. */
-tbody td a[aria-label^="View"] { color: var(--orange); }
+tbody td a[aria-label^="View"] {
+    color: #FA5203;
+}
+
+tbody td a[aria-label^="View"] img {
+    display: block;
+    width: 16px;
+    height: 16px;
+}
+tbody td a[aria-label^="View"]:hover {
+    background: #FFF1EA;
+    border-color: #FA5203;
+}
 /* An icon button is a fixed square, and the empty slot that stands in for one
    is the same square. Left to size themselves they came out 40px and 35px, and
    the five-pixel difference pushed every button on that row out of line. */
-tbody td a[aria-label],
 tbody td span[data-ghost][data-icon] {
     width: 2.5rem; padding: 0; justify-content: center;
 }
@@ -426,6 +442,7 @@ tbody td span[data-ghost][data-icon] {
 tbody td:last-child { white-space: nowrap; }
 tbody td:last-child:has(a, button, span) { text-align: right; }
 thead th:last-child { text-align: right; }
+table [data-user-actions] { text-align: center !important; }
 
 /* One height for everything that sits in a row, so the icons stop floating
    above the buttons beside them: the eye was a bare 14px glyph next to 33px
@@ -443,6 +460,10 @@ tbody td span[data-ghost] { min-height: 33px; }
 tbody td:last-child a:not([aria-label]),
 tbody td:last-child button,
 tbody td:last-child span[data-ghost]:not([data-icon]) { min-width: 5.5rem; }
+tbody td:last-child form[data-wide-icon-action] button {
+    width: 5.5rem;
+    padding: .3rem .75rem;
+}
 tbody td a,
 tbody td button,
 tbody td form,
@@ -455,9 +476,11 @@ tbody td:last-child > span { display: inline-block; margin: 0 .2rem; }
    the column would not line up. The gap belongs to the control, not to the
    wrapper that happens to be needed to post it. */
 tbody td:last-child form { display: inline-block; margin: 0; }
+tbody td:last-child form[data-wide-icon-action] { margin: 0 .2rem; }
+tbody td:last-child form[data-wide-icon-action] button { margin: 0; }
 /* 11. FORM PANELS (create / edit) ───────────────────────────────────────────
-   These views are  div > div > (caption div) + (div > form).  The caption
-   becomes the navy bar across the top of the panel, as in the design.     */
+   These views are div > div > (caption div) + (div > form), with the caption
+   presented as the panel's navy header.                                  */
 /* A form panel is named, not inferred. The previous rules said "a div followed
    by a div holding a post form", which also described a page header whose
    actions group happens to contain one — so the Notifications title was given
@@ -473,6 +496,7 @@ tbody td:last-child form { display: inline-block; margin: 0; }
     padding: .85rem 1.5rem;
     background: var(--navy);
     color: #fff;
+    border-bottom: 0;
     font-size: 1.05rem;
     letter-spacing: .02em;
     text-transform: uppercase;
@@ -540,7 +564,7 @@ main > div > div > a:has(> div > div > svg) {
     text-align: center; color: var(--ink);
     background: #fff;
     border: 1px solid var(--line);
-    border-top: 5px solid var(--navy);     /* the dark cap from the design */
+    border-left: 5px solid var(--navy);
     border-radius: var(--radius);
     box-shadow: 0 2px 6px rgba(16,24,40,.06);
 }
@@ -683,7 +707,7 @@ tbody td form > button { margin: 0; }
 [data-primary] {
     display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
     padding: .55rem 1.15rem;
-    font-family: var(--serif); font-size: 1rem; font-weight: 700;
+    font-family: var(--font-family); font-size: 1rem; font-weight: 700;
     color: #fff; background: var(--orange-btn);
     border: 1px solid var(--orange-btn); border-radius: 6px;
     white-space: nowrap; cursor: pointer;
@@ -695,6 +719,7 @@ tbody td form > button { margin: 0; }
 /* anything else in the header is secondary */
 [data-page-head] [data-actions] a:not([data-primary]),
 [data-page-head] [data-actions] button:not([data-primary]) {
+    display: inline-flex; align-items: center; gap: .4rem;
     padding: .5rem .9rem;
     color: var(--ink); background: #fff;
     border: 1px solid var(--field-line); border-radius: 6px;
@@ -710,7 +735,7 @@ tbody td button,
 tbody td span[data-ghost] {
     display: inline-flex; align-items: center; justify-content: center;
     padding: .3rem .75rem; margin: 0 .1rem;
-    font-family: var(--serif); font-size: .9rem; font-weight: 600;
+    font-family: var(--font-family); font-size: .9rem; font-weight: 600;
     color: var(--ink); background: #fff;
     border: 1px solid var(--field-line); border-radius: 6px;
     white-space: nowrap; cursor: pointer;
@@ -756,7 +781,8 @@ tbody td span[title] { opacity: .45; }
 [data-panel-head] {
     display: flex; align-items: center; gap: .75rem;
     padding: .7rem 1.15rem;
-    background: var(--navy); color: #fff;
+    background: #fff; color: var(--ink);
+    border-bottom: 1px solid var(--line);
     font-weight: 600;
 }
 /* actions living in a panel header stay legible on the dark bar */
@@ -764,10 +790,10 @@ tbody td span[title] { opacity: .45; }
 [data-panel-head] form { margin: 0 0 0 auto; }
 [data-panel-head] button {
     padding: .25rem .7rem; font-size: .85rem; font-weight: 600;
-    color: #fff; background: transparent;
-    border: 1px solid rgba(255,255,255,.45); border-radius: 6px; cursor: pointer;
+    color: var(--ink); background: #fff;
+    border: 1px solid #888; border-radius: 6px; cursor: pointer;
 }
-[data-panel-head] button:hover { background: rgba(255,255,255,.12); color: #fff; }
+[data-panel-head] button:hover { background: #f1f1f1; color: var(--ink); }
 [data-panel-body] { padding: 1.25rem; }
 /* a panel whose body is nothing but a table should not double its padding */
 [data-panel-body]:has(> table) { padding: 0; }
@@ -800,7 +826,7 @@ tbody td span[title] { opacity: .45; }
     padding: 1rem 1.1rem;
     background: #fff;
     border: 1px solid var(--line);
-    border-top: 5px solid var(--navy);
+    border-left: 5px solid var(--navy);
     border-radius: var(--radius);
     box-shadow: 0 2px 6px rgba(16,24,40,.06);
 }
@@ -861,6 +887,8 @@ tbody td span[title] { opacity: .45; }
 @media (max-width: 900px) { [data-chart-row] { grid-template-columns: 1fr; } }
 [data-chart-row] [data-panel-body] { display: flex; flex-direction: column; align-items: center; }
 [data-chart-row] svg { max-height: 200px; }
+/* the charts are centred, but a table beside them fills its panel like every other report table */
+[data-chart-row] [data-table-wrap] { align-self: stretch; }
 
 /* an empty panel says so quietly and centred — no oversized icon */
 [data-empty] { text-align: center; color: var(--muted); padding: 2rem 1.25rem; }
@@ -879,19 +907,51 @@ tbody td span[title] { opacity: .45; }
 [data-list] { padding: 0; }
 
 [data-note] {
-    display: flex; align-items: baseline; justify-content: space-between; gap: 1rem;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
     padding: .8rem 1.15rem;
     color: var(--ink);
 }
 [data-note] + [data-note] { border-top: 1px solid var(--line-soft); }
-[data-note]:hover { background: #f7f8f9; color: var(--ink); text-decoration: none; }
-[data-note] > div:first-child { min-width: 0; }
+[data-note]:hover { background: #f7f8f9; }
+[data-note-link] { flex: 1; min-width: 0; color: var(--ink); }
+[data-note-link]:hover { color: var(--ink); text-decoration: underline; }
+[data-notification-actions] {
+    display: flex;
+    justify-content: flex-end;
+    padding: .8rem 1.15rem;
+    border-top: 1px solid var(--line-soft);
+}
+[data-notification-actions]:has(> [hidden]) { display: none; }
+[data-mark-all-read] {
+    padding: .5rem .9rem;
+    background: transparent;
+    border: 1px solid var(--red);
+    border-radius: 6px;
+    color: var(--red);
+    font-size: .85rem;
+    font-weight: 600;
+}
+[data-mark-all-read]:hover { background: var(--red-bg); }
+[data-mark-all-read][hidden] { display: none; }
+@media (max-width: 600px) {
+    [data-note] { flex-wrap: wrap; }
+}
 
 /* which module the line came from, set apart from the sentence itself */
 [data-module] {
     display: inline-block; margin-right: .5rem; padding: .15rem .5rem;
     background: var(--field-bg); border: 1px solid var(--field-line); border-radius: 999px;
     font-size: .78rem; color: var(--ink-soft);
+}
+[data-notification-feed] [data-note-link] [data-module] {
+    color: #b43a00;
+    background: #fff3ec;
+    border-color: #f4b89d;
+}
+[data-notification-feed] [data-note-link]:hover [data-module] {
+    color: #963100;
+    background: #ffe4d6;
+    border-color: #f28a5c;
 }
 [data-meta] { flex: 0 0 auto; display: flex; align-items: center; gap: .5rem;
               font-size: .875rem; color: var(--muted); white-space: nowrap; }
@@ -970,28 +1030,43 @@ tbody td span[title] { opacity: .45; }
 /* a group toggle already sends its caret to the right, so the count stops short */
 aside nav a[data-collapse] [data-navcount] { margin-left: auto; margin-right: .5rem; }
 
-/* the unread banner above a module page is a panel, and it is the one place
-   the header is a sentence rather than a title */
-[data-module-alert] { margin-bottom: 1.25rem; }
-[data-module-alert] [data-panel-head] { font-weight: 400; font-size: .95rem; }
-
-/* a file picker should sit on the same footing as every other field */
+/* One joined upload control: navy chooser, pale filename area, shared outline.
+   --file-h keeps it the same height as the text boxes it sits under: 42px,
+   like every form field, and 44px in grid-layout forms (see the
+   [data-form-grid] rule further down). The chooser button fills the box
+   inside its 1px border. */
 input[type="file"] {
+    --file-h: 42px;
     width: 100%;
-    padding: .45rem .6rem;
+    max-width: 100%;
+    min-height: var(--file-h);
+    height: var(--file-h);
+    padding: 0;
+    overflow: hidden;
+    color: var(--ink);
     background: var(--field-bg);
-    border: 1px solid var(--field-line);
-    border-radius: 6px;
-    font-family: var(--serif);
+    border: 1px solid #666;
+    border-radius: 4px;
+    font-family: var(--font-family);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: calc(var(--file-h) - 2px);
 }
 input[type="file"]::file-selector-button {
-    margin-right: .75rem;
-    padding: .35rem .9rem;
-    color: var(--ink); background: #fff;
-    border: 1px solid var(--field-line); border-radius: 6px;
-    font-family: var(--serif); font-weight: 600; cursor: pointer;
+    height: calc(var(--file-h) - 2px);
+    min-width: 93px;
+    margin: 0 14px 0 0;
+    padding: 0 17px;
+    color: #fff;
+    background: #202a36;
+    border: 0;
+    border-right: 1px solid #666;
+    border-radius: 0;
+    font: inherit;
+    vertical-align: top;
+    cursor: pointer;
 }
-input[type="file"]::file-selector-button:hover { background: var(--field-bg); }
+input[type="file"]::file-selector-button:hover { background: #1F2937; }
 
 /* ══ 19. THE ROW OF ACTIONS AT THE FOOT OF A PAGE ═══════════════════════════
    These sit in three different places depending on the view — after the panel,
@@ -1015,10 +1090,10 @@ input[type="file"]::file-selector-button:hover { background: var(--field-bg); }
 [data-actions-row] > button,
 [data-actions-row] > form > button,
 [data-back] {
-    display: inline-flex; align-items: center; justify-content: center;
+    display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
     padding: .5rem 1.1rem;
     max-width: 100%;
-    font-family: var(--serif); font-size: 1rem; font-weight: 600;
+    font-family: var(--font-family); font-size: 1rem; font-weight: 600;
     color: var(--ink); background: #fff;
     border: 1px solid var(--field-line); border-radius: 6px;
     cursor: pointer; text-align: center;
@@ -1046,9 +1121,9 @@ input[type="file"]::file-selector-button:hover { background: var(--field-bg); }
     background: var(--orange-dark); border-color: var(--orange-dark); color: #fff;
 }
 [data-actions-row] button[data-danger] {
-    color: #fff; background: var(--red); border-color: var(--red); font-weight: 700;
+    color: var(--red); background: transparent; border-color: var(--red); font-weight: 700;
 }
-[data-actions-row] button[data-danger]:hover { background: #8f222c; border-color: #8f222c; color: #fff; }
+[data-actions-row] button[data-danger]:hover { background: var(--red-bg); border-color: #8f222c; color: #8f222c; }
 [data-actions-row] > a[href*="/Delete"],
 [data-actions-row] > a[href*="/DeletePermanent"] { color: var(--red); border-color: #e5b6bb; }
 
@@ -1118,7 +1193,7 @@ img, svg, table, pre { max-width: 100%; }
 [data-identity-cover] { height: 110px; background: var(--navy); }
 [data-identity-body] {
     display: flex; align-items: flex-end; flex-wrap: wrap; gap: 1rem;
-    padding: 0 1.5rem 1.25rem;
+    padding: .75rem 1.5rem 1.25rem;
 }
 
 /* the picture straddles the band, so it is pulled up out of its own row */
@@ -1177,7 +1252,7 @@ img, svg, table, pre { max-width: 100%; }
     padding: .5rem 1.1rem;
     color: var(--ink); background: #fff;
     border: 1px solid var(--field-line); border-radius: 6px;
-    font-family: var(--serif); font-size: 1rem; font-weight: 600; cursor: pointer;
+    font-family: var(--font-family); font-size: 1rem; font-weight: 600; cursor: pointer;
 }
 [data-identity-body] [data-actions] a:hover,
 [data-identity-body] [data-actions] button:hover { background: var(--field-bg); color: var(--ink); text-decoration: none; }
@@ -1215,4 +1290,1607 @@ img, svg, table, pre { max-width: 100%; }
     [data-identity-body] { justify-content: center; text-align: center; }
     [data-identity-name] { flex-basis: 100%; }
     [data-glance] { grid-template-columns: 1fr; }
+}
+
+/* ── Modals ──────────────────────────────────────────────────────────────
+   The design puts every Add/Update form on a panel floating over its list,
+   with everything behind it dimmed. */
+[data-modal] {
+    width: min(760px, calc(100vw - 2rem));
+    max-height: calc(100vh - 3rem);
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: 0 18px 50px rgba(16, 24, 40, .22);
+    background: #fff;
+    color: var(--ink);
+    overflow: hidden;
+}
+[data-modal]::backdrop { background: rgba(16, 24, 40, .55); }
+
+[data-modal-panel] { display: flex; flex-direction: column; max-height: calc(100vh - 3rem); }
+
+[data-modal-head] {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: .85rem 1.15rem;
+    background: #fff; color: var(--ink);
+    border-bottom: 1px solid var(--line);
+    font-weight: 700;
+}
+[data-modal-head] [data-modal-close] {
+    border: 0; background: transparent; color: inherit;
+    font-size: 1.4rem; line-height: 1; cursor: pointer; padding: 0 .25rem;
+}
+[data-modal-head] [data-modal-close]:hover { color: var(--orange); }
+
+[data-modal-body] { overflow: auto; padding: 1.15rem; }
+/* the panel is already framed by the dialog, so it drops its own chrome */
+[data-modal-body] [data-form-panel] { border: 0; box-shadow: none; margin: 0; }
+[data-modal-body] [data-form-body] { padding: 0; }
+/* two columns, as the design lays the fields out; the rows that read as one
+   line of their own still run the full width */
+[data-modal-body] [data-form-body] > form { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.15rem; }
+[data-modal-body] [data-form-body] > form > [data-actions-row],
+[data-modal-body] [data-form-body] > form > [asp-validation-summary],
+[data-modal-body] [data-form-body] > form > div.validation-summary-errors,
+[data-modal-body] [data-form-body] > form > div.validation-summary-valid,
+[data-modal-body] [data-form-body] > form > div:has(textarea) { grid-column: 1 / -1; }
+@media (max-width: 560px) {
+    [data-modal-body] [data-form-body] > form { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px) {
+    [data-modal] { width: calc(100vw - 1rem); }
+}
+
+/* ── Modal layout, as designed ─────────────────────────────────────────────
+   Three kinds share the one dialog: forms (fields in two columns), details
+   (label beside value) and confirmations (a question and two answers). The
+   modal script stamps data-kind on the dialog so each is sized and titled the
+   way the design shows it. */
+[data-modal][data-kind="details"] { width: min(620px, calc(100vw - 2rem)); }
+[data-modal][data-kind="confirm"] { width: min(480px, calc(100vw - 2rem)); }
+#appModal:has(#cpwForm),
+#mandatoryPasswordDialog { width: min(560px, calc(100vw - 2rem)); }
+[data-modal-head] { padding: .95rem 1.6rem; font-size: 1.1rem; }
+[data-modal][data-kind="form"] [data-modal-title],
+[data-modal][data-kind="confirm"] [data-modal-title] { text-transform: uppercase; letter-spacing: .02em; font-weight: 400; }
+/* the design has no close mark in the bar; Escape and a click outside still close it */
+[data-modal-head] [data-modal-close] { display: none; }
+[data-modal-body] { padding: 1.4rem 1.6rem 1.5rem; }
+
+/* detail and confirm pages drop their own panel chrome inside the dialog */
+[data-modal-body] [data-panel] { border: 0; border-radius: 0; box-shadow: none; margin: 0; }
+[data-modal-body] [data-panel-body] { padding: 0; }
+
+/* details: the label in bold, its value beside it, air between the rows */
+[data-modal-body] dl { grid-template-columns: minmax(8rem, 1fr) 1.4fr; gap: 1.1rem 1.5rem; margin: 0; }
+[data-modal-body] dt { font-weight: 700; color: var(--ink); }
+[data-modal-body] dd { margin: 0; color: var(--ink); }
+[data-modal][data-kind="confirm"] [data-panel-body] > p:first-child { margin: 0 0 .75rem; font-size: 1.05rem; }
+
+/* forms: headings, notes, lists and marked rows run across both columns */
+[data-modal-body] [data-form-body] > form > h6,
+[data-modal-body] [data-form-body] > form > p,
+[data-modal-body] [data-form-body] > form > ul,
+[data-modal-body] [data-form-body] > form > [data-span] { grid-column: 1 / -1; }
+[data-modal-body] [data-form-body] > form > h6 { margin: .4rem 0 .7rem; font-size: 1.15rem; font-weight: 400; color: var(--ink); }
+[data-modal-body] [data-form-body] > form > h6 ~ h6 { margin-top: 1.2rem; text-transform: uppercase; }
+[data-modal-body] .validation-summary-valid { display: none; }
+/* the forms the design lays out in a single column */
+[data-modal-body] [data-form-body][data-cols="1"] > form { grid-template-columns: 1fr; }
+/* Inline label/field pairs already define their own inner columns. */
+[data-modal-body] [data-form-body][data-cols="inline"] > form { grid-template-columns: minmax(0, 1fr); }
+/* a unit that is not Custom has no bedrooms row, so Status takes the full width */
+[data-modal-body] form:has(> #bedroomWrap[style*="none"]) > div:has(> select[name="Status"]) { grid-column: 1 / -1; }
+/* the password rules sit in a grey box */
+[data-modal-body] #pwRules { background: #dcdcdc; border: 0; color: var(--ink); list-style: disc; }
+
+/* label beside field, for the short Edit Personal Information form */
+[data-form-body][data-cols="inline"] > form { display: grid; grid-template-columns: 1fr; gap: .95rem; }
+[data-form-body][data-cols="inline"] > form > div:not([data-actions-row]):not([class^="validation-summary"]) {
+    display: grid; grid-template-columns: 11rem 1fr; align-items: center; column-gap: 1.5rem;
+}
+[data-form-body][data-cols="inline"] > form > div > label { margin: 0; font-weight: 700; }
+[data-form-body][data-cols="inline"] > form > div > span { grid-column: 2; }
+@media (max-width: 560px) {
+    [data-form-body][data-cols="inline"] > form > div:not([data-actions-row]) { grid-template-columns: 1fr; }
+    [data-form-body][data-cols="inline"] > form > div > span { grid-column: 1; }
+}
+
+/* Modal actions stay together on the right; a lone action stays on the left. */
+[data-modal-body] [data-actions-row] {
+    margin-top: 1.6rem; padding-top: 0; border-top: 0;
+    justify-content: flex-end; gap: .9rem;
+}
+[data-modal-body] [data-modal-source] > [data-actions-row],
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child {
+    justify-content: flex-end; gap: .9rem; padding: 0; border-top: 0; background: none; margin-top: 1.6rem;
+}
+[data-modal-body] [data-actions-row]:has(> :only-child),
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child:has(> :only-child) {
+    justify-content: flex-start;
+}
+[data-modal-body] [data-actions-row] > a,
+[data-modal-body] [data-actions-row] > button,
+[data-modal-body] [data-actions-row] > form > button {
+    order: 0; min-width: 8.5rem; padding: .6rem 1.4rem;
+    color: var(--orange-btn); background: #fff;
+    border: 1px solid var(--orange-btn); border-radius: 6px; font-weight: 700;
+}
+[data-modal-body] [data-actions-row] > a:hover,
+[data-modal-body] [data-actions-row] > button:hover,
+[data-modal-body] [data-actions-row] > form > button:hover { color: var(--orange-dark); background: #fff3ec; border-color: var(--orange-dark); text-decoration: none; }
+[data-modal-body] [data-actions-row] > button[type="submit"],
+[data-modal-body] [data-actions-row] > form > button[type="submit"],
+[data-modal-body] [data-actions-row] > [data-primary] {
+    order: 1; color: #fff; background: var(--orange-btn); border-color: var(--orange-btn);
+}
+[data-modal-body] [data-actions-row] > button[type="submit"]:hover,
+[data-modal-body] [data-actions-row] > form > button[type="submit"]:hover,
+[data-modal-body] [data-actions-row] > [data-primary]:hover { color: #fff; background: var(--orange-dark); border-color: var(--orange-dark); }
+
+/* the same buttons when they sit at the foot of a panel (Tenant Details). An
+   older rule for panel footers, [data-panel] > div:last-child:not(...) > a,
+   is more specific than the modal rules above and painted every button there
+   white; these match its weight, and coming later they win. */
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > a,
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > button,
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > form > button {
+    order: 0; min-width: 8.5rem; padding: .6rem 1.4rem;
+    color: var(--orange-btn); background: #fff;
+    border: 1px solid var(--orange-btn); border-radius: 6px; font-weight: 700;
+}
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > a:hover,
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > button:hover { color: var(--orange-dark); background: #fff3ec; border-color: var(--orange-dark); text-decoration: none; }
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > [data-primary],
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > button[type="submit"],
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > form > button[type="submit"] {
+    order: 1; color: #fff; background: var(--orange-btn); border-color: var(--orange-btn);
+}
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > [data-primary]:hover { color: #fff; background: var(--orange-dark); border-color: var(--orange-dark); }
+
+[data-report-page] [data-panel-body]:has(> [data-table-wrap]) {
+    padding: 0;
+}
+
+[data-report-page] [data-panel-body] table td:not(:first-child),
+[data-report-page] [data-panel-body] table th:not(:first-child) {
+    text-align: center;
+}
+
+[data-pagination],
+[data-report-pagination] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .75rem 1rem;
+    width: 100%;
+    min-width: 0;
+    align-self: stretch;
+    container: pagination / inline-size;
+    padding: .8rem 0 1rem;
+    color: var(--ink);
+    font-size: .9rem;
+}
+[data-pagination-count], [data-report-position] { line-height: 1.4; }
+[data-pagination-controls] {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: .75rem 1rem;
+    min-width: 0;
+}
+/* Row capacity is measured from the viewport, not selected by the user.
+   Keep the pager outside this area; only wide tables may scroll horizontally. */
+[data-table-wrap][data-viewport-table] {
+    flex-shrink: 0;
+    background: #fff;
+    overflow-y: hidden;
+}
+[data-viewport-table] tbody > tr[hidden] { display: none !important; }
+main { min-height: 0; }
+[data-pagination-pages] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: center;
+    gap: .4rem;
+}
+[data-pagination-pages]:has(> [data-pagination-current]) {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+}
+[data-pagination-current] {
+    display: grid;
+    place-items: center;
+    min-width: 40px;
+    height: 40px;
+    padding: 0 .5rem;
+    text-align: center;
+    background: #e9e9e9;
+    border: 1px solid var(--field-line);
+    border-radius: 6px;
+    font-variant-numeric: tabular-nums;
+}
+[data-pagination] button,
+[data-report-pagination] button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    min-width: 6rem;
+    height: 40px;
+    margin: 0;
+    padding: .4rem .65rem;
+    border: 1px solid var(--field-line);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--ink);
+    font-family: var(--font-family);
+    font-size: .85rem;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+}
+[data-pagination] button:disabled {
+    opacity: .5;
+    cursor: default;
+}
+
+/* Reports show one section at a time so the dashboard does not become a long
+   stack of panels. Each section's own table pager handles additional records. */
+/* Reports use the same pagination layout as every other module */
+[data-report-pagination] {
+    display: none;
+}
+
+[data-reports-ready] [data-report-pagination] {
+    display: flex;
+    margin: 0;
+    font-weight: 400;
+}
+
+[data-report-pagination] [data-report-position] {
+    color: var(--ink-soft);
+    font-size: .9rem;
+}
+
+/* Respond to the table's width, including narrow cards on a wide screen. */
+@container pagination (max-width: 650px) {
+    [data-pagination-count], [data-report-position] {
+        flex-basis: 100%;
+        text-align: center;
+    }
+    [data-pagination-controls] {
+        flex-basis: 100%;
+        justify-content: center;
+    }
+}
+
+[data-report-pagination] button:hover:not(:disabled) {
+    background: var(--field-bg);
+    border-color: #888;
+}
+
+[data-report-pagination] button:disabled {
+    opacity: .45;
+    cursor: default;
+}
+[data-report-page][hidden] { display: none; }
+[data-report-page] { min-width: 0; }
+[data-chart-row]:has(> [data-report-page]) { display: block; }
+[data-report-page] [data-chart-row] { margin-bottom: 0; }
+[data-report-page] [data-table-wrap] table {
+    width: 100%;
+    table-layout: fixed;
+}
+[data-report-page] table th,
+[data-report-page] table td {
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+@media (max-width: 900px) {
+    [data-report-page] [data-table-wrap] table { font-size: .78rem; }
+    [data-report-page] table th,
+[data-report-page] table td { padding: .35rem .2rem; }
+}
+
+/* Related reports share a page; cards retain their natural size. */
+main > div:has(> [data-report-group="Operations"]) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+[data-report-group="Tenant records"] { grid-column: 1 / -1; }
+[data-chart-row]:has(> [data-report-group="Maintenance"]) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (max-width: 1050px) {
+    main > div:has(> [data-report-group="Operations"]),
+    [data-chart-row]:has(> [data-report-group="Maintenance"]) {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Shared module heading and controls. The title is a full-width strip; search,
+   filters, navigation and the primary action share the row beneath it. */
+main:has(> [data-module-shell]) { padding-top: 0; }
+main > [data-module-shell] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 1rem;
+    row-gap: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+main > [data-module-shell] > [data-page-head] { display: contents; }
+main > [data-module-shell] > [data-page-head] > :first-child {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    margin: 0 -2rem;
+    padding: .62rem 2rem;
+    background: #fff;
+    border-bottom: 2px solid #dfe2e6;
+    box-shadow: 0 2px 3px rgba(24, 35, 47, .08);
+}
+main > [data-module-shell] > [data-page-head] h3,
+main > [data-module-shell] > [data-page-head] h4 { font-size: 1.55rem; line-height: 1.15; }
+main > [data-module-shell] > [data-page-head] > [data-actions],
+main > [data-module-shell] > [data-page-head] > a,
+main > [data-module-shell] > [data-page-head] > span {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+}
+main > [data-module-shell] > [data-page-head] > [data-actions] {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: .5rem;
+}
+main > [data-module-shell] > [data-page-head] > [data-actions] > [data-primary] { order: 2; }
+main > [data-module-shell] > [data-page-head] > [data-actions] > [data-primary]::before {
+    content: none;
+}
+
+/* Wireframe controls keep the same position and weight across list pages. */
+main > [data-module-shell] > [data-page-head] > [data-actions] > a,
+main > [data-module-shell] > [data-page-head] > [data-actions] > form > button {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    min-height: 34px;
+    padding: .4rem .8rem;
+    border: 1px solid #888;
+    border-radius: 5px;
+    background: #fff;
+    color: var(--ink);
+    font-size: .85rem;
+    font-weight: 500;
+    text-decoration: none;
+}
+main > [data-module-shell] > [data-page-head] > [data-actions] > a:hover,
+main > [data-module-shell] > [data-page-head] > [data-actions] > form > button:hover {
+    background: #f1f1f1;
+    color: var(--ink);
+    border-color: #555;
+}
+svg[data-action-icon] {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+main > [data-module-shell] > form[method="get"] { margin-bottom: 0; }
+main > [data-module-shell] + [data-table-wrap] { margin-top: 0; }
+
+main [data-table-wrap] > table > thead th { background: #fff; color: var(--ink); }
+main [data-table-wrap] > table > tbody tr { height: 3.25rem; }
+main [data-table-wrap] > table > tbody td { border-top-color: #dedede; }
+main [data-table-wrap] > table > tbody td:last-child a,
+main [data-table-wrap] > table > tbody td:last-child button { font-size: .82rem; }
+
+[data-modal-body] [data-actions-row] > a,
+[data-modal-body] [data-actions-row] > button,
+[data-modal-body] [data-actions-row] > form > button,
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > a,
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > button,
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > form > button {
+    min-width: 6.5rem;
+    padding: .5rem .85rem;
+    border-color: #888;
+    background: #fff;
+    color: var(--ink);
+    font-size: .85rem;
+    font-weight: 500;
+}
+[data-modal-body] [data-actions-row] > button[type="submit"],
+[data-modal-body] [data-actions-row] > form > button[type="submit"],
+[data-modal-body] [data-actions-row] > [data-primary],
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > [data-primary],
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > button[type="submit"],
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > form > button[type="submit"] {
+    border-color: #888;
+    background: #fff;
+    color: var(--ink);
+}
+main > [data-module-shell] > [data-page-head] > a {
+    display: inline-flex;
+    align-items: center;
+    padding: .55rem .95rem;
+    border: 1px solid var(--field-line);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--ink);
+}
+main > [data-module-shell] > form[method="get"] {
+    grid-column: 1;
+    grid-row: 2;
+    min-width: 0;
+    margin: 0;
+}
+main > [data-module-shell] > form[method="get"] > div:has(input[name="searchTerm"]) { margin-right: 2.35rem; }
+main > [data-module-shell] > form[method="get"] input[name="searchTerm"] {
+    width: min(18rem, 100%);
+    height: 38px;
+    background: #fff;
+    border-color: #757575;
+    box-shadow: 0 2px 3px rgba(20, 20, 20, .14);
+}
+main > [data-module-shell] > form[method="get"] select {
+    min-width: 8rem;
+    height: 33px;
+    padding: .3rem .65rem;
+    background: #fff;
+    box-shadow: 0 2px 3px rgba(20, 20, 20, .12);
+}
+main > [data-module-shell] > form[method="get"] a,
+main > [data-module-shell] > form[method="get"] button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 33px;
+    padding: .3rem .8rem;
+    color: var(--ink);
+    background: #fff;
+    border: 1px solid #757575;
+    border-radius: 6px;
+    box-shadow: 0 2px 3px rgba(20, 20, 20, .12);
+    font-size: .9rem;
+    font-weight: 500;
+}
+main > [data-module-shell] > [data-page-intro] {
+    grid-column: 1;
+    grid-row: 2;
+    margin: 0;
+}
+main > [data-module-shell] > [data-temp-password],
+main > [data-module-shell] > [data-advance-note] {
+    grid-column: 1 / -1;
+    grid-row: 3;
+}
+@media (max-width: 1050px) {
+    main > [data-module-shell] { grid-template-columns: minmax(0, 1fr); }
+    main > [data-module-shell] > form[method="get"] { grid-column: 1; grid-row: 2; }
+    main > [data-module-shell] > [data-page-head] > [data-actions],
+    main > [data-module-shell] > [data-page-head] > a,
+    main > [data-module-shell] > [data-page-head] > span {
+        grid-column: 1;
+        grid-row: 3;
+        justify-self: start;
+        justify-content: flex-start;
+    }
+    main > [data-module-shell]:not(:has(> form[method="get"])):not(:has(> [data-page-intro])) > [data-page-head] > [data-actions],
+    main > [data-module-shell]:not(:has(> form[method="get"])):not(:has(> [data-page-intro])) > [data-page-head] > span { grid-row: 2; }
+    main > [data-module-shell] > [data-temp-password],
+    main > [data-module-shell] > [data-advance-note] { grid-row: 4; }
+}
+@media (max-width: 700px) {
+    main > [data-module-shell] > [data-page-head] > :first-child {
+        margin: 0 -1rem;
+        padding: .72rem 1rem;
+    }
+    main > [data-module-shell] > form[method="get"] > div:has(input[name="searchTerm"]) { margin-right: 0; }
+    main > [data-module-shell] > form[method="get"] input[name="searchTerm"] { width: 100%; }
+}
+
+/* Issue Bill: matching field heights and readable guidance in both columns. */
+[data-form-body] > form[data-billing-create] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 1.15rem;
+    align-items: start;
+}
+[data-billing-create] > .validation-summary-errors,
+[data-billing-create] > .validation-summary-valid,
+[data-billing-create] > [data-actions-row] { grid-column: 1 / -1; }
+[data-billing-create] > .validation-summary-valid { display: none; }
+[data-billing-create] > div:not([data-actions-row]) { min-width: 0; margin: 0; }
+[data-billing-create] label { margin-bottom: .35rem; font-size: .9rem; font-weight: 600; }
+[data-billing-create] > div > select,
+[data-billing-create] > div > input,
+[data-billing-create] [data-currency-field] {
+    width: 100%;
+    min-height: 42px;
+}
+[data-billing-create] > div > input[type="month"],
+[data-billing-create] > div > input[type="date"],
+[data-billing-create] > div > select,
+[data-billing-create] [data-currency-field] > input {
+    height: 42px;
+    padding: .55rem .75rem;
+    background: #fff;
+    border: 1px solid var(--field-line);
+    border-radius: 6px;
+    color: var(--ink);
+    font: inherit;
+}
+[data-billing-create] [data-currency-field] > span {
+    min-width: 42px;
+    justify-content: center;
+    background: #f7f7f7;
+}
+[data-billing-create] [data-currency-field] > input {
+    flex: 1 1 auto;
+    min-width: 0;
+    border-radius: 0 6px 6px 0;
+}
+[data-billing-create] [data-field-note] {
+    margin-top: .35rem;
+    color: var(--muted);
+    font-size: .78rem;
+    font-weight: 400;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+[data-billing-create] [data-field-note]:empty { display: none; }
+[data-billing-edit] [data-field-note] {
+    margin-top: .35rem;
+    color: var(--muted);
+    font-size: .82rem;
+    font-weight: 400;
+    line-height: 1.4;
+}
+[data-billing-summary] {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .75rem;
+    align-items: stretch;
+}
+[data-billing-summary] > [data-stat] {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+[data-billing-summary] > div > div > div:nth-child(3) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .2rem .4rem;
+    margin-top: .35rem;
+}
+@media (max-width: 640px) {
+    [data-billing-summary] { grid-template-columns: minmax(0, 1fr); }
+}
+[data-billing-create] > [data-actions-row] { margin-top: .25rem; }
+@media (max-width: 560px) {
+    [data-form-body] > form[data-billing-create] { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Action colors follow the consequence of the action across lists and dialogs. */
+[data-action-tone="green"] {
+    --action-ink: var(--green);
+    --action-bg: transparent;
+    --action-border: var(--green);
+    --action-hover-ink: #0f5c38;
+    --action-hover-bg: var(--green-bg);
+    --action-hover-border: #0f5c38;
+}
+[data-action-tone="orange"] {
+    --action-ink: #fff;
+    --action-bg: var(--orange-btn);
+    --action-border: var(--orange-btn);
+    --action-hover-ink: #fff;
+    --action-hover-bg: var(--orange-dark);
+    --action-hover-border: var(--orange-dark);
+}
+[data-action-tone="orange-outline"] {
+    --action-ink: var(--orange-btn);
+    --action-bg: #fff;
+    --action-border: var(--orange-btn);
+    --action-hover-ink: #963100;
+    --action-hover-bg: #ffe4d6;
+    --action-hover-border: #f28a5c;
+}
+[data-action-tone="gray"] {
+    --action-ink: #374151;
+    --action-bg: transparent;
+    --action-border: #6b7280;
+    --action-hover-ink: #1f2937;
+    --action-hover-bg: #f3f4f6;
+    --action-hover-border: #374151;
+}
+[data-action-tone="amber"] {
+    --action-ink: #b43a00;
+    --action-bg: #fff3ec;
+    --action-border: #f4b89d;
+    --action-hover-ink: #963100;
+    --action-hover-bg: #ffe4d6;
+    --action-hover-border: #f28a5c;
+}
+[data-action-tone="red"] {
+    --action-ink: var(--red);
+    --action-bg: transparent;
+    --action-border: var(--red);
+    --action-hover-ink: #8f222c;
+    --action-hover-bg: var(--red-bg);
+    --action-hover-border: #8f222c;
+}
+[data-status="active"], [data-status="inactive"] {
+    display: inline-block;
+    padding: .2rem .65rem;
+    border-radius: 999px;
+    border: 1px solid;
+    font-size: .83rem;
+    font-weight: 700;
+    line-height: 1.3;
+}
+[data-status="active"] {
+    color: #166534;
+    background: #e5f5e9;
+    border-color: #79bb8d;
+}
+[data-status="inactive"] {
+    color: #991b1b;
+    background: #fee9e8;
+    border-color: #dc8d88;
+}
+:is(a, button)[data-action-tone] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    color: var(--action-ink) !important;
+    background: var(--action-bg) !important;
+    border: 1px solid var(--action-border) !important;
+    text-decoration: none;
+}
+:is(a, button)[data-action-tone]:hover {
+    color: var(--action-hover-ink) !important;
+    background: var(--action-hover-bg) !important;
+    border-color: var(--action-hover-border) !important;
+    text-decoration: none;
+}
+:is(a, button)[data-action-tone]:focus-visible {
+    outline: 2px solid var(--action-ink);
+    outline-offset: 2px;
+}
+
+/* Keep the eye inside its password field on login and modal forms. */
+body .pw-wrap {
+    position: relative;
+    display: block;
+}
+body .pw-wrap > input {
+    width: 100%;
+    padding-right: 3.2rem;
+}
+body .pw-wrap > button.password-toggle,
+body:not(:has(aside)) .pw-wrap > button.password-toggle,
+[data-form-body] .pw-wrap > button.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: .4rem;
+    transform: translateY(-50%);
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    box-shadow: none;
+    color: var(--ink-soft);
+}
+body .pw-wrap > button.password-toggle:hover,
+body:not(:has(aside)) .pw-wrap > button.password-toggle:hover,
+[data-form-body] .pw-wrap > button.password-toggle:hover {
+    border: 0;
+    background: rgba(0, 0, 0, .06);
+    color: var(--ink);
+}
+body .pw-wrap > button.password-toggle img { width: 18px; height: 18px; }
+
+/* Give record text and its context a little more visual weight. The pager's
+   "Showing 1-13 of 13 records" is left out on purpose: it is a status line,
+   not a record, and inherits the pager's regular weight. */
+main > [data-module-shell] > [data-page-intro],
+main [data-table-wrap] tbody td {
+    font-weight: 600;
+}
+
+/* ========================================================================== 
+   22. FIGMA ALIGNMENT — THESIS2 / YNCLINO AMS
+   Reference frame: 250:1843
+
+   These final rules intentionally come after the legacy/wireframe corrections.
+   Several late rules in the original sheet override the visual system defined
+   earlier (orange primary actions, navy table headers and modal hierarchy).
+   This section restores one consistent YNCLINO presentation without changing
+   the Razor markup or application behaviour.
+   ========================================================================== */
+:root {
+    --font-family: Arial, Helvetica, sans-serif;
+}
+
+body,
+table,
+input,
+select,
+textarea,
+button {
+    font-family: var(--font-family);
+}
+tbody td {
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: 400;
+}
+tbody td,
+p,
+dd,
+[data-pagination][data-pagination] {
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: 400;
+}
+[data-report-pagination],
+[data-pagination-info] {
+    font-weight: 400;
+}
+
+label,
+dt {
+    font-weight: 500;
+}
+
+thead th,
+h3,
+h4,
+[data-page-head] h3,
+[data-page-head] h4 {
+    font-weight: 600;
+}
+
+:root {
+    --figma-navy: #2B3648;
+    --figma-orange: #FA5203;
+    --figma-orange-btn: #F94C01;
+    --figma-orange-dark: #C93D01;
+    --figma-cream: #EFECE1;
+    --figma-ink: #111111;
+    --figma-muted: #6B7280;
+    --figma-line: #D7DBE0;
+    --figma-line-soft: #ECEEF1;
+    --figma-field: #EDE9E9;
+    --figma-field-line: #B9B4B4;
+    --figma-shadow: 0 2px 8px rgba(16, 24, 40, .08);
+    --figma-modal-shadow: 0 24px 60px rgba(16, 24, 40, .28);
+}
+
+/* Global presentation */
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--figma-ink);
+    background: #fff;
+}
+main { background: #fff; }
+main h3,
+main h4 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: .01em;
+}
+
+/* Sidebar: use the design navy consistently instead of mixing two dark tones. */
+aside#appSidebar { background: var(--figma-navy); }
+[data-brand] { min-height: 92px; padding: 20px 24px 18px; }
+[data-logo-full] { max-width: 184px; }
+aside nav a {
+    min-height: 48px;
+    font-size: 1rem;
+    font-weight: 500;
+}
+aside nav a[aria-current="page"] {
+    background: rgba(255, 255, 255, .08);
+    border-left-color: var(--figma-orange);
+}
+aside nav a[aria-current="page"] [data-nav-icon],
+aside nav a[data-collapse]:has(+ div a[aria-current="page"]) [data-nav-icon] {
+    color: var(--figma-orange);
+}
+aside nav div > div { background: rgba(0, 0, 0, .14); }
+
+/* Keep the account block aligned to the same icon/text grid as navigation. */
+[data-account-card],
+.maintenanceProfileCard {
+    min-height: 54px;
+    padding: .8rem 1.35rem;
+    border-left: 5px solid transparent;
+}
+[data-account-card][aria-current="page"] {
+    background: rgba(255, 255, 255, .08);
+    border-left-color: var(--figma-orange);
+}
+[data-logout] button { min-height: 52px; }
+
+/* Shared module heading and toolbar */
+main > [data-module-shell] { row-gap: 1rem; }
+main > [data-module-shell] > [data-page-head] > :first-child {
+    padding-top: .85rem;
+    padding-bottom: .85rem;
+    border-bottom: 1px solid #DFE2E6;
+    box-shadow: 0 2px 4px rgba(24, 35, 47, .08);
+}
+main > [data-module-shell] > [data-page-head] h3,
+main > [data-module-shell] > [data-page-head] h4 {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+/* Dashboards, profiles, reports, and history pages use the same title strip
+   as the module lists, even when they have no filter toolbar. */
+main > [data-page-head] {
+    align-items: center;
+    margin: -1.5rem -2rem 1.25rem;
+    padding: .85rem 2rem;
+    background: #fff;
+    border-bottom: 1px solid #DFE2E6;
+    box-shadow: 0 2px 4px rgba(24, 35, 47, .08);
+}
+main > [data-page-head] > div:first-child { margin-left: 0; }
+@media (max-width: 767.98px) {
+    main > [data-page-head] { margin: -1.25rem -1rem 1.25rem; padding: .8rem 1rem; }
+}
+main > [data-module-shell] > form[method="get"] { gap: .65rem; }
+main > [data-module-shell] > form[method="get"] > div:has(input[name="searchTerm"]) {
+    margin-right: 1rem;
+}
+main > [data-module-shell] > form[method="get"] input[name="searchTerm"],
+main > [data-module-shell] > form[method="get"] select,
+main > [data-module-shell] > form[method="get"] a,
+main > [data-module-shell] > form[method="get"] button {
+    min-height: 40px;
+    border: 1px solid var(--figma-field-line);
+    border-radius: 6px;
+    background: #fff;
+    box-shadow: none;
+    color: var(--figma-ink);
+    font-size: .9rem;
+}
+main > [data-module-shell] > form[method="get"] input[name="searchTerm"] {
+    height: 40px;
+    padding: .55rem .8rem;
+}
+main > [data-module-shell] > form[method="get"] select {
+    height: 40px;
+    padding: .45rem 2rem .45rem .75rem;
+}
+
+/* Primary action. The previous high-specificity "wireframe" rule made this
+   white; the Figma hierarchy requires the page's main action to stay orange. */
+main > [data-module-shell] > [data-page-head] > [data-actions] > [data-primary],
+main > [data-module-shell] > [data-page-head] > [data-actions] > a[data-primary],
+main > [data-module-shell] > [data-page-head] > [data-actions] > button[data-primary] {
+    min-height: 40px;
+    padding: .55rem 1.15rem;
+    color: #fff !important;
+    background: var(--figma-orange-btn) !important;
+    border: 1px solid var(--figma-orange-btn) !important;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(249, 76, 1, .18);
+    font-size: .95rem;
+    font-weight: 700;
+}
+main > [data-module-shell] > [data-page-head] > [data-actions] > [data-primary]:is([data-action-tone="green"], [data-action-tone="red"], [data-action-tone="gray"], [data-action-tone="amber"]) {
+    color: var(--action-ink) !important;
+    background: var(--action-bg) !important;
+    border-color: var(--action-border) !important;
+    box-shadow: none;
+}
+main > [data-module-shell] > [data-page-head] > [data-actions] > [data-primary]:hover,
+main > [data-module-shell] > [data-page-head] > [data-actions] > a[data-primary]:hover,
+main > [data-module-shell] > [data-page-head] > [data-actions] > button[data-primary]:hover {
+    color: #fff !important;
+    background: var(--figma-orange-dark) !important;
+    border-color: var(--figma-orange-dark) !important;
+}
+main > [data-module-shell] > [data-page-head] > [data-actions] > [data-primary]:is([data-action-tone="green"], [data-action-tone="red"], [data-action-tone="gray"], [data-action-tone="amber"]):hover {
+    color: var(--action-hover-ink) !important;
+    background: var(--action-hover-bg) !important;
+    border-color: var(--action-hover-border) !important;
+}
+main > [data-module-shell] > [data-page-head] > [data-actions] > a:not([data-primary]),
+main > [data-module-shell] > [data-page-head] > [data-actions] > form > button:not([data-primary]) {
+    min-height: 40px;
+    padding: .5rem .9rem;
+    color: var(--figma-ink);
+    background: #fff;
+    border: 1px solid var(--figma-field-line);
+    font-size: .9rem;
+    font-weight: 600;
+}
+
+/* Tables. ynclino.css describes the design as using a navy column header, but
+   a late rule changed it back to white. Restore the intended header band. */
+[data-table-wrap],
+main [data-panel] > [data-panel-body] > [data-table-wrap] {
+    border: 1px solid var(--figma-line);
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: var(--figma-shadow);
+}
+thead th,
+main [data-table-wrap] > table > thead th,
+[data-panel-body] [data-table-wrap] > table > thead th {
+    padding: .72rem .65rem;
+    background: var(--figma-navy);
+    color: #fff;
+    border-bottom: 0;
+    text-align: center;
+    font-size: .82rem;
+    font-weight: 700;
+    line-height: 1.25;
+}
+tbody tr { min-height: 52px; background: #fff; }
+tbody tr:nth-child(even) { background: #FCFCFC; }
+tbody tr:hover { background: #FFF7F2; }
+tbody td {
+    padding: .68rem .6rem;
+    border-top: 1px solid var(--figma-line-soft);
+    color: var(--figma-ink);
+}
+thead th:last-child,
+tbody td:last-child:has(a, button, span, form) { text-align: center; }
+
+/* Row actions stay compact and secondary to the page-level action. */
+tbody td a:not([data-record-link]),
+tbody td button,
+tbody td span[data-ghost] {
+    min-height: 32px;
+    padding: .32rem .65rem;
+    margin: 0 .08rem;
+    color: var(--figma-ink);
+    background: #fff;
+    border: 1px solid var(--figma-field-line);
+    border-radius: 5px;
+    font-size: .82rem;
+    font-weight: 600;
+}
+tbody td a[aria-label^="View"] {
+    width: 34px;
+    min-width: 34px;
+    padding: 0;
+    color: var(--figma-orange);
+    border-color: #F4B89D;
+}
+tbody td a[aria-label^="View"] img,
+tbody td a[aria-label^="View"] svg { width: 16px; height: 16px; }
+tbody td a:not([data-record-link]):hover,
+tbody td button:hover { background: var(--figma-field); color: var(--figma-ink); }
+tbody td a[href*="/Delete"],
+tbody td a[href*="DeletePermanent"] {
+    color: #B02A37;
+    background: #fff;
+    border-color: #E5B6BB;
+}
+tbody td a[href*="/Delete"]:hover,
+tbody td a[href*="DeletePermanent"]:hover { background: #FADBDE; color: #B02A37; }
+/* Fields and forms */
+input[type="text"],
+input[type="tel"],
+input[type="number"],
+input[type="date"],
+input[type="month"],
+input[type="password"],
+input[type="email"],
+select,
+textarea {
+    min-height: 42px;
+    padding: .55rem .8rem;
+    color: var(--figma-ink);
+    background: var(--figma-field);
+    border: 1px solid var(--figma-field-line);
+    border-radius: 6px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: .95rem;
+}
+textarea { min-height: 96px; resize: vertical; }
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--figma-orange);
+    box-shadow: 0 0 0 3px rgba(250, 82, 3, .16);
+}
+label {
+    color: var(--figma-ink);
+    font-size: .9rem;
+    font-weight: 600;
+}
+[data-form-panel] {
+    border-color: var(--figma-line);
+    border-radius: 8px;
+    box-shadow: var(--figma-shadow);
+}
+[data-form-head] {
+    padding: .9rem 1.5rem;
+    background: var(--figma-navy);
+    color: #fff;
+    border-bottom: 0;
+    font-weight: 700;
+}
+[data-form-body] { padding: 1.5rem; }
+
+/* Remove the Billing form's one-off white-field exception. */
+[data-billing-create] > div > input[type="month"],
+[data-billing-create] > div > input[type="date"],
+[data-billing-create] > div > select,
+[data-billing-create] [data-currency-field] > input {
+    background: var(--figma-field);
+    border-color: var(--figma-field-line);
+}
+[data-billing-create] [data-currency-field] > span {
+    background: #E3E0E0;
+    border-color: var(--figma-field-line);
+}
+
+/* Cards and panels */
+[data-panel] {
+    border-color: var(--figma-line);
+    border-radius: 8px;
+    box-shadow: var(--figma-shadow);
+}
+[data-panel-head] {
+    background: var(--figma-navy);
+    color: #fff;
+    border-bottom-color: transparent;
+    font-weight: 700;
+}
+
+/* A table already has its own navy column header. Remove the surrounding card
+   chrome so its section title does not look like a second header. */
+main [data-panel]:is([data-table-section], :has(> [data-panel-body] > [data-table-wrap])) {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+    box-shadow: none;
+}
+main [data-panel]:is([data-table-section], :has(> [data-panel-body] > [data-table-wrap])) > [data-panel-head] {
+    padding: 0 0 .75rem;
+    background: transparent;
+    color: #000;
+    border-bottom: 0;
+}
+main [data-panel]:is([data-table-section], :has(> [data-panel-body] > [data-table-wrap])) > [data-panel-head] a {
+    color: #000;
+}
+main [data-panel]:is([data-table-section], :has(> [data-panel-body] > [data-table-wrap])) > [data-panel-body] {
+    padding: 0;
+}
+main [data-panel][data-table-section] > [data-panel-body] > [data-empty] {
+    border: 1px solid var(--figma-line);
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: var(--figma-shadow);
+}
+[data-stat],
+main > div > div > a:has(> div > div > svg) {
+    border: 1px solid var(--figma-line);
+    border-left: 5px solid var(--figma-navy);
+    border-radius: 8px;
+    box-shadow: var(--figma-shadow);
+}
+main > div > div > a:has(> div > div > svg):hover,
+[data-stat]:hover { border-left-color: var(--figma-orange); }
+[data-meter-fill] { background: var(--figma-orange-btn); }
+
+/* The modal script removes [data-form-head], so the dialog supplies the same
+   navy header treatment itself. */
+[data-modal] {
+    border: 0;
+    border-radius: 10px;
+    box-shadow: var(--figma-modal-shadow);
+}
+[data-modal]::backdrop { background: rgba(16, 24, 40, .55); }
+[data-modal-head] {
+    padding: .95rem 1.5rem;
+    background: var(--figma-navy);
+    color: #fff;
+    border-bottom: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+}
+[data-modal][data-kind="form"] [data-modal-title],
+[data-modal][data-kind="confirm"] [data-modal-title] { color: #fff; font-weight: 700; }
+[data-modal-body] { padding: 1.45rem 1.5rem 1.5rem; }
+[data-modal-body] [data-form-body] > form { gap: .9rem 1.15rem; }
+
+/* Fallback modal treatment before the action classifier assigns a tone. */
+[data-modal-body] [data-actions-row] > a:not([data-action-tone]),
+[data-modal-body] [data-actions-row] > button:not([data-action-tone]),
+[data-modal-body] [data-actions-row] > form > button:not([data-action-tone]),
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > a:not([data-action-tone]),
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > button:not([data-action-tone]),
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > form > button:not([data-action-tone]) {
+    min-width: 7rem;
+    padding: .55rem 1rem;
+    color: var(--figma-orange-btn) !important;
+    background: #fff !important;
+    border: 1px solid var(--figma-orange-btn) !important;
+    border-radius: 6px;
+    font-size: .9rem;
+    font-weight: 700;
+}
+[data-modal-body] [data-actions-row] > a:not([data-action-tone]):hover,
+[data-modal-body] [data-actions-row] > button:not([data-action-tone]):hover,
+[data-modal-body] [data-actions-row] > form > button:not([data-action-tone]):hover,
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > a:not([data-action-tone]):hover,
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > button:not([data-action-tone]):hover,
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > form > button:not([data-action-tone]):hover {
+    color: var(--figma-orange-dark) !important;
+    background: #FFF3EC !important;
+    border-color: var(--figma-orange-dark) !important;
+}
+
+/* Primary modal buttons. A late wireframe rule previously reset these to white. */
+[data-modal-body] [data-actions-row] > button[type="submit"]:not([data-danger]):not([data-action-tone]),
+[data-modal-body] [data-actions-row] > form > button[type="submit"]:not([data-danger]):not([data-action-tone]),
+[data-modal-body] [data-actions-row] > [data-primary]:not([data-action-tone]),
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > [data-primary]:not([data-action-tone]),
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > button[type="submit"]:not([data-danger]):not([data-action-tone]),
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > form > button[type="submit"]:not([data-danger]):not([data-action-tone]) {
+    color: #fff !important;
+    background: var(--figma-orange-btn) !important;
+    border-color: var(--figma-orange-btn) !important;
+}
+[data-modal-body] [data-actions-row] button[data-danger] {
+    color: #B02A37 !important;
+    background: transparent !important;
+    border-color: #B02A37 !important;
+}
+
+/* Secondary semantic actions keep their assigned tone in every modal layout,
+   including panel-foot actions with stronger structural rules. */
+[data-modal-body] [data-actions-row] :is(a, button)[data-action-tone],
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child :is(a, button)[data-action-tone] {
+    color: var(--action-ink) !important;
+    background: var(--action-bg) !important;
+    border: 1px solid var(--action-border) !important;
+}
+[data-modal-body] [data-actions-row] :is(a, button)[data-action-tone]:hover,
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child :is(a, button)[data-action-tone]:hover {
+    color: var(--action-hover-ink) !important;
+    background: var(--action-hover-bg) !important;
+    border-color: var(--action-hover-border) !important;
+}
+
+/* Login */
+body:not(:has(aside)) {
+    display: grid;
+    place-items: center;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    background: var(--figma-navy);
+}
+body:not(:has(aside)) > div {
+    width: min(100%, 470px);
+    max-width: 470px;
+    margin: 0;
+    padding: 0;
+}
+body:not(:has(aside)) > div > div:first-child { margin-bottom: 1.5rem; }
+body:not(:has(aside)) > div > div:first-child img {
+    width: min(100%, 300px);
+    max-width: 300px;
+}
+body:not(:has(aside)) > div > div:last-child {
+    border-radius: 10px;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, .22);
+}
+body:not(:has(aside)) > div > div:last-child > div { padding: 2rem 2.25rem; }
+body:not(:has(aside)) input[type] {
+    min-height: 44px;
+    padding: .7rem .9rem;
+    background: var(--figma-field);
+}
+body:not(:has(aside)) form[method="post"] > button[type="submit"] {
+    min-height: 44px;
+    color: #fff;
+    background: var(--figma-orange-btn);
+    border-color: var(--figma-orange-btn);
+    font-weight: 700;
+}
+body:not(:has(aside)) form[method="post"] > button[type="submit"]:hover {
+    background: var(--figma-orange-dark);
+    border-color: var(--figma-orange-dark);
+}
+
+/* Responsive */
+@media (max-width: 767.98px) {
+    main { padding: 1.25rem 1rem 1.5rem; }
+    main > [data-module-shell] > [data-page-head] > :first-child {
+        margin: 0 -1rem;
+        padding: .8rem 1rem;
+    }
+    [data-page-head] [data-actions] { width: 100%; }
+    main > [data-module-shell] > [data-page-head] > [data-actions] > a,
+    main > [data-module-shell] > [data-page-head] > [data-actions] > form { flex: 1 1 auto; }
+    main > [data-module-shell] > [data-page-head] > [data-actions] > a,
+    main > [data-module-shell] > [data-page-head] > [data-actions] > form > button {
+        width: 100%;
+        justify-content: center;
+    }
+    main > [data-module-shell] > form[method="get"] > * { flex: 1 1 100%; }
+    main > [data-module-shell] > form[method="get"] input[name="searchTerm"],
+    main > [data-module-shell] > form[method="get"] select,
+    main > [data-module-shell] > form[method="get"] a,
+    main > [data-module-shell] > form[method="get"] button { width: 100%; }
+}
+@media (max-width: 560px) {
+    [data-modal-body] [data-actions-row] {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+    [data-modal-body] [data-actions-row] > a,
+    [data-modal-body] [data-actions-row] > button,
+    [data-modal-body] [data-actions-row] > form > button { width: 100%; }
+    /* Multiple actions remain right-aligned when stacked on a narrow screen. */
+    [data-modal-body] [data-actions-row]:has(> :nth-child(2)),
+    [data-modal-body] [data-panel] > div[data-actions-row]:last-child:has(> :nth-child(2)) {
+        align-items: flex-end;
+    }
+    [data-modal-body] [data-actions-row]:has(> :nth-child(2)) > :is(a, button),
+    [data-modal-body] [data-actions-row]:has(> :nth-child(2)) > form > button {
+        width: auto;
+        max-width: 100%;
+    }
+    body:not(:has(aside)) > div > div:last-child > div { padding: 1.5rem 1.25rem; }
+}
+/* ==========================================================================
+   23. VIEW / DETAILS ACTION
+   One eye only. Always YNCLINO orange.
+   ========================================================================== */
+
+tbody td a[aria-label^="View"] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 34px;
+    min-width: 34px;
+    height: 32px;
+    padding: 0;
+
+    color: #FA5203 !important;
+    background: #fff;
+    border: 1px solid #F4B89D;
+    border-radius: 5px;
+}
+
+/* Kill any old pseudo-eye rule left from previous edits. */
+tbody td a[aria-label^="View"]::before,
+tbody td a[aria-label^="View"]::after {
+    content: none !important;
+    display: none !important;
+}
+
+/* The actual eye */
+tbody td a[aria-label^="View"] > svg {
+    display: block;
+    width: 16px;
+    height: 16px;
+    fill: #FA5203 !important;
+    color: #FA5203 !important;
+    flex: 0 0 16px;
+}
+
+tbody td a[aria-label^="View"]:hover {
+    color: #FA5203 !important;
+    background: #FFF1EA !important;
+    border-color: #FA5203 !important;
+}
+
+tbody td a[aria-label^="View"]:hover > svg {
+    fill: #FA5203 !important;
+    color: #FA5203 !important;
+}
+
+/* Keep the Add Account dialog compact on desktop while preserving a readable
+   single-column form on narrow screens. */
+[data-modal-body] #userForm {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .75rem 1rem;
+}
+[data-modal-body] #userForm > div { min-width: 0; margin-bottom: 0; }
+[data-modal-body] #userForm > [data-span] > div:not(.pw-wrap) {
+    margin-top: .35rem;
+    color: var(--muted);
+    font-size: .82rem;
+    line-height: 1.4;
+}
+[data-modal-body] #userForm #pwRules {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .15rem 1rem;
+    margin: 0;
+    padding: .65rem 1rem .65rem 2rem;
+}
+[data-modal-body] #userForm > [data-actions-row] { margin-top: .25rem; }
+@media (max-width: 560px) {
+    [data-modal-body] #userForm,
+    [data-modal-body] #userForm #pwRules { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Administrator sign-in, based on the supplied login reference. */
+body.login-page {
+    display: block;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: 0;
+    background: #202a38;
+    color: #151515;
+}
+body.login-page > .login-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    max-width: none;
+    margin: 0;
+    padding: 1rem 1.5rem 4rem;
+    background: #202a38;
+}
+.login-brand { display: flex; flex-direction: column; align-items: flex-end; width: min(76vw, 380px); margin-bottom: 25px; }
+.login-brand img { display: block; width: 100%; height: auto; }
+.login-brand span {
+    margin-top: -1.5rem;
+    margin-right: 2px;
+    color: #e7e5e4;
+    font: 14px/1.2 var(--font-family);
+    white-space: nowrap;
+}
+body.login-page .login-card {
+    width: min(100%, 420px);
+    padding: 1.5rem clamp(1.5rem, 5vw, 3rem) 2rem;
+    border-radius: 5px;
+    background: #fff;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, .35);
+    color: #171717;
+    font-family: var(--font-family);
+}
+.login-card h1 {
+    margin: 0 0 37px;
+    text-align: center;
+    font: 400 17px/1.4 var(--font-family);
+}
+.login-card form > div { margin-bottom: 24px; }
+.login-card label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+body.login-page .login-card input:not([type="hidden"]) {
+    width: 100%;
+    height: 40px;
+    min-height: 40px;
+    padding: .55rem 1rem;
+    border: 1px solid #777;
+    border-radius: 6px;
+    background: #f7f5f6;
+    color: #151515;
+    font: 14px var(--font-family);
+}
+body.login-page .login-card .pw-wrap > input { padding-right: 3rem; }
+body.login-page .login-card .password-toggle { width: 30px; height: 30px; }
+body.login-page .login-card form > button[type="submit"] {
+    width: 100%;
+    min-height: 40px;
+    margin-top: 19px;
+    padding: .55rem 1rem;
+    border: 0;
+    border-radius: 5px;
+    background: #fa5203;
+    color: #fff;
+    font: 400 16px var(--font-family);
+}
+body.login-page .login-card form > button[type="submit"]:hover { background: #d74600; }
+/* Page titles stay in the header; controls and record context follow below. */
+main > [data-module-shell] > [data-page-actions] {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: .5rem;
+}
+main > [data-module-shell] > [data-page-meta] {
+    grid-column: 1;
+    grid-row: 2;
+    margin: 0;
+}
+main > [data-module-shell] > [data-page-actions] > a,
+main > [data-module-shell] > [data-page-actions] > button,
+main > [data-page-actions] > a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    min-height: 40px;
+    padding: .5rem .9rem;
+    color: var(--ink);
+    background: #fff;
+    border: 1px solid var(--field-line);
+    border-radius: 6px;
+    font-weight: 600;
+    text-decoration: none;
+}
+main > [data-module-shell] > [data-page-actions] > a:not([data-primary]):hover,
+main > [data-page-actions] > a:not([data-primary]):hover { background: var(--field-bg); }
+[data-page-meta] { margin: 0 0 1.25rem; color: var(--ink-soft); }
+main > [data-page-head]:has(> h3) { display: block; }
+@media (max-width: 1050px) {
+    main > [data-module-shell]:has(> form[method="get"]) > [data-page-actions] {
+        grid-column: 1;
+        grid-row: 3;
+        justify-self: start;
+    }
+    main > [data-module-shell]:not(:has(> form[method="get"])) > [data-page-actions] {
+        grid-column: 1;
+        grid-row: 2;
+        justify-self: start;
+    }
+    main > [data-module-shell]:has(> [data-page-meta]) > [data-page-actions] {
+        grid-row: 3;
+    }
+}
+
+/* A modest but visible type increase across navigation, forms and tables. */
+html { font-size: 18px; }
+main h3, main h4,
+main > [data-module-shell] > [data-page-head] h3,
+main > [data-module-shell] > [data-page-head] h4 { font-size: 1.65rem; }
+aside nav a { font-size: 1.05rem; }
+main > [data-module-shell] > form[method="get"] input[name="searchTerm"],
+main > [data-module-shell] > form[method="get"] select,
+main > [data-module-shell] > form[method="get"] a,
+main > [data-module-shell] > form[method="get"] button,
+main > [data-module-shell] > [data-page-actions] > a,
+main > [data-module-shell] > [data-page-actions] > button { font-size: 1rem; }
+table, main [data-table-wrap] table { font-size: .95rem; }
+[data-panel-body] td > div,
+tbody td a,
+tbody td button { font-size: .92rem; }
+body.login-page .login-card form > button[type="submit"] { font-size: 17px; }
+@media (max-width: 767.98px) {
+    main > [data-module-shell] > [data-page-actions] { width: 100%; }
+    main > [data-module-shell] > [data-page-actions] > a { flex: 1 1 auto; }
+}
+/* Back links share the main action color across pages and dialogs. */
+a[data-back],
+main > [data-module-shell] > [data-page-head] > [data-actions] > a[data-back],
+[data-modal-body] [data-actions-row] > a[data-back],
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > a[data-back] {
+    color: var(--orange-btn) !important;
+    background: transparent !important;
+    border-color: var(--orange-btn) !important;
+}
+a[data-back]:hover,
+main > [data-module-shell] > [data-page-head] > [data-actions] > a[data-back]:hover,
+[data-modal-body] [data-actions-row] > a[data-back]:hover,
+[data-modal-body] [data-panel] > div[data-actions-row]:last-child > a[data-back]:hover {
+    color: #963100 !important;
+    background: #ffe4d6 !important;
+    border-color: #f28a5c !important;
+    text-decoration: none;
+}
+[data-actions-row] > a[data-back],
+[data-actions] > a[data-back],
+[data-page-actions] > a[data-back] { margin-top: 0; }
+@media (max-width: 540px) {
+    body.login-page > .login-stage { padding: 1rem 1rem 3rem; }
+    body.login-page .login-card { padding: 1.5rem; }
+    .login-brand { margin-bottom: 30px; }
+    .login-brand span { font-size: 11px; }
+}
+
+/* Update forms use the same field grid both on their own page and in a dialog. */
+/* Staff request updates: paired context fields, followed by a full-width status. */
+[data-request-work] > dl[data-request-summary] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 1.5rem;
+    margin: 0 0 1.25rem;
+}
+[data-request-summary] > div { min-width: 0; }
+[data-request-summary] > [data-span] { grid-column: 1 / -1; }
+[data-request-work] [data-request-summary] dt {
+    margin: 0 0 .25rem;
+    color: var(--ink-soft);
+    font-size: .85rem;
+    font-weight: 700;
+}
+[data-request-work] [data-request-summary] dd {
+    margin: 0;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+}
+[data-request-description] { white-space: pre-wrap; }
+[data-request-photo] { display: block; margin-bottom: 1.25rem; }
+[data-request-photo] img {
+    display: block;
+    max-height: 220px;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+    border-radius: 6px;
+}
+[data-form-body][data-request-work] > form[data-form-grid],
+[data-modal-body] [data-form-body][data-request-work] > form[data-form-grid] {
+    grid-template-columns: minmax(0, 1fr);
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
+}
+[data-form-body][data-request-work] > form[data-form-grid] > [data-actions-row] {
+    margin-top: .25rem;
+    padding-top: 0;
+    border-top: 0;
+}
+@media (max-width: 560px) {
+    [data-request-work] > dl[data-request-summary] { grid-template-columns: minmax(0, 1fr); }
+}
+
+[data-form-body] > form[data-form-grid],
+[data-modal-body] [data-form-body] > form[data-form-grid] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 1.15rem;
+    align-items: start;
+}
+[data-form-body] > form[data-form-grid] > * { min-width: 0; margin: 0; }
+[data-form-body] > form[data-form-grid] > :is(h6, p, ul, [data-span], [data-actions-row], .validation-summary-errors, .validation-summary-valid) {
+    grid-column: 1 / -1;
+}
+[data-form-body] > form[data-form-grid] > h6 { margin-top: .5rem; }
+[data-form-body] > form[data-form-grid] > h6:first-of-type { margin-top: 0; }
+[data-form-body] > form[data-form-grid] > div > :is(input:not([type="hidden"]):not([type="file"]), select),
+[data-form-body] > form[data-form-grid] .pw-wrap > input { min-height: 44px; }
+/* the upload box matches the 44px fields beside it in these forms */
+[data-form-body] > form[data-form-grid] > div > input[type="file"] { --file-h: 44px; }
+[data-form-body] > form[data-form-grid] > div:has(> label) > div:not(.pw-wrap):not(:has(input)) {
+    margin-top: .35rem;
+    color: var(--muted);
+    font-size: .82rem;
+    line-height: 1.4;
+}
+@media (max-width: 560px) {
+    [data-form-body] > form[data-form-grid],
+    [data-modal-body] [data-form-body] > form[data-form-grid] { grid-template-columns: minmax(0, 1fr); }
 }

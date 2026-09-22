@@ -17,6 +17,19 @@ namespace YnclinoApartmentManagementSystem.Models
         [Required, MaxLength(20)]
         public string Role { get; set; } = "Tenant"; // Admin | Maintenance | Tenant
 
+        [Required, MaxLength(80)]
+        public string FirstName { get; set; } = string.Empty;
+
+        [Required, MaxLength(80)]
+        public string LastName { get; set; } = string.Empty;
+
+        [MaxLength(30)]
+        public string? ContactNumber { get; set; }
+
+        public DateTime? LastLoginAt { get; set; }
+
+        public DateTime DateUpdated { get; set; } = DateTime.Now;
+
         public bool IsActive { get; set; } = true;
         public bool MustChangePassword { get; set; }
 
@@ -33,6 +46,6 @@ namespace YnclinoApartmentManagementSystem.Models
         public string DisplayName =>
             Tenants != null && Tenants.Count > 0
                 ? Tenants.First().FullName
-                : Username;
+                : string.IsNullOrWhiteSpace(FirstName + LastName) ? Username : $"{FirstName} {LastName}";
     }
 }

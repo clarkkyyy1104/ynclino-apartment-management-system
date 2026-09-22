@@ -7,6 +7,10 @@
     var transfers = ViewBag.Transfers as IEnumerable<tblUnitTransferRequest> ?? Enumerable.Empty<tblUnitTransferRequest>();
 }
 
+<header data-page-head>
+    <div><h3>My Profile</h3></div>
+</header>
+
 @if (Model == null)
 {
     <div data-panel>
@@ -19,45 +23,56 @@
     var initials = $"{(Model.FirstName.Length > 0 ? Model.FirstName[0] : ' ')}{(Model.LastName.Length > 0 ? Model.LastName[0] : ' ')}".Trim();
 }
 
-@* Unread unit-request alerts (e.g. "approved") — clicking one marks it read and clears the red badge *@
-@await Component.InvokeAsync("ModuleNotifications", new { module = "Transfer" })
-
 @* The identity band. The file input itself is never shown — the photo (or the
    initials standing in for one) is the label, so clicking the picture is what
    opens the file picker, and the little camera says so. *@
 <div data-identity>
     <div data-identity-cover></div>
     <div data-identity-body>
-        <form asp-action="UploadPhoto" method="post" enctype="multipart/form-data" id="photoForm" data-photo-form>
-            @Html.AntiForgeryToken()
-            <input type="file" name="photo" accept="image/*" id="photoInput"
-                   onchange="document.getElementById('photoForm').submit();" />
-            <label for="photoInput" role="button" data-avatar
-                   title="@(string.IsNullOrEmpty(Model.PhotoPath) ? "Add a profile photo" : "Change your profile photo")">
-                @if (!string.IsNullOrEmpty(Model.PhotoPath))
-                {
-                    <img src="@Model.PhotoPath" alt="Profile photo" />
-                }
-                else
-                {
-                    <div>@initials.ToUpper()</div>
-                }
-                <span data-avatar-camera>📷</span>
-            </label>
-        </form>
+        <div data-avatar>
+            @if (!string.IsNullOrEmpty(Model.PhotoPath))
+            {
+                <img src="@Model.PhotoPath" alt="Profile photo" />
+            }
+            else
+            {
+                <div>@initials</div>
+            }
+        </div>
         <div data-identity-name>
             <h4>@Model.FullName</h4>
             <span>Unit @(Model.Unit?.UnitNumber ?? "—")</span>
         </div>
-        @if (!string.IsNullOrEmpty(Model.PhotoPath))
-        {
-            <div data-actions>
-                <form asp-action="RemovePhoto" method="post" onsubmit="return confirm('Remove your profile photo?');">
+        <div data-actions>
+            <a data-modal-link asp-action="EditInfo">Edit</a>
+            @* Change Password lived in the sidebar's account menu, which is gone *@
+            <a data-modal-link asp-controller="Account" asp-action="ChangePassword">Change Password</a>
+            @if (!string.IsNullOrEmpty(Model.PhotoPath))
+            {
+                <div class="profButton">
+                    <form asp-action="UploadPhoto" method="post" enctype="multipart/form-data" data-photo-form>
                     @Html.AntiForgeryToken()
-                    <button type="submit">Remove Photo</button>
+                    <input type="file" name="photo" accept="image/*" id="photoInput"
+                           onchange="this.form.submit();" />
+                    <button type="button" onclick="document.getElementById('photoInput').click()">Upload Photo</button>
+                    </form>
+                
+                    <form asp-action="RemovePhoto" method="post" onsubmit="return confirm('Remove your profile photo?');">
+                        @Html.AntiForgeryToken()
+                        <button type="submit">Remove Photo</button>
+                    </form>
+                </div>
+            }
+            else
+            {
+                <form asp-action="UploadPhoto" method="post" enctype="multipart/form-data" data-photo-form>
+                    @Html.AntiForgeryToken()
+                    <input type="file" name="photo" accept="image/*" id="photoInput"
+                           onchange="this.form.submit();" />
+                    <button type="button" onclick="document.getElementById('photoInput').click()">Upload Photo</button>
                 </form>
-            </div>
-        }
+            }
+        </div>
     </div>
 </div>
 
@@ -97,7 +112,7 @@
                         <dt>Capacity</dt><dd>@Model.Unit.Capacity person(s)</dd>
                     </dl>
                     <div data-actions-row>
-                        <a asp-controller="Transfers" asp-action="Create">Request Transfer</a>
+                        <a data-modal-link asp-controller="Transfers" asp-action="Create">Request Transfer</a>
                         <a asp-controller="Transfers" asp-action="Index">My Transfer Requests @await Component.InvokeAsync("NavAlert", new { module = "Transfer" })</a>
                     </div>
                 }
@@ -105,7 +120,7 @@
                 {
                     <p>You don't have a unit yet.</p>
                     <div data-actions-row>
-                        <a asp-controller="Transfers" asp-action="Create">Apply for a Unit</a>
+                        <a data-modal-link asp-controller="Transfers" asp-action="Create">Apply for a Unit</a>
                         <a asp-controller="Transfers" asp-action="Index">My Requests @await Component.InvokeAsync("NavAlert", new { module = "Transfer" })</a>
                     </div>
                 }

@@ -10,8 +10,27 @@ namespace YnclinoApartmentManagementSystem.Models
 
         public int? UserID { get; set; }
 
-        // a tenant may exist without a unit until they apply for one and it's approved
-        public int? UnitID { get; set; }
+        // UI compatibility only: the database stores occupancy in assignments.
+        // A setter stages an assignment change; SaveChangesAsync persists it.
+        private int? requestedUnitID;
+        [NotMapped]
+        public bool HasPendingUnitChange { get; private set; }
+        [NotMapped]
+        public int? UnitID
+        {
+            get => HasPendingUnitChange ? requestedUnitID : CurrentAssignment?.UnitID;
+            set { requestedUnitID = value; HasPendingUnitChange = true; }
+        }
+
+        public ICollection<TenantUnitAssignment> Assignments { get; set; } = new List<TenantUnitAssignment>();
+        [NotMapped]
+        public TenantUnitAssignment? CurrentAssignment => Assignments.SingleOrDefault(a => a.Status == "Active");
+
+        internal void AcceptUnitChange()
+        {
+            requestedUnitID = null;
+            HasPendingUnitChange = false;
+        }
 
         [Required, MaxLength(50)]
         [Display(Name = "First Name")]
@@ -37,16 +56,16 @@ namespace YnclinoApartmentManagementSystem.Models
         [Display(Name = "Emergency Contact Number")]
         public string? EmergencyContactNumber { get; set; }
 
-        [Display(Name = "Move-In Date")]
+        [NotMapped, Display(Name = "Move-In Date")]
         public DateTime? MoveInDate { get; set; }
 
-        [Display(Name = "Move-Out Date")]
+        [NotMapped, Display(Name = "Move-Out Date")]
         public DateTime? MoveOutDate { get; set; }
 
-        [Display(Name = "Lease Start")]
+        [NotMapped, Display(Name = "Lease Start")]
         public DateTime? LeaseStart { get; set; }
 
-        [Display(Name = "Lease End")]
+        [NotMapped, Display(Name = "Lease End")]
         public DateTime? LeaseEnd { get; set; }
 
         [Required, MaxLength(20)]
@@ -68,8 +87,8 @@ namespace YnclinoApartmentManagementSystem.Models
         [ForeignKey("UserID")]
         public tblUser? User { get; set; }
 
-        [ForeignKey("UnitID")]
-        public tblUnit? Unit { get; set; }
+        [NotMapped]
+        public tblUnit? Unit => CurrentAssignment?.Unit;
 
         [NotMapped]
         public string FullName => $"{FirstName} {LastName}";

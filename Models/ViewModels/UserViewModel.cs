@@ -22,6 +22,23 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         [Display(Name = "Confirm Password")]
         public string? ConfirmPassword { get; set; }
 
+        [Required(ErrorMessage = "First Name is required.")]
+        [MaxLength(50)]
+        [RegularExpression(@"^[A-Za-zñÑ .'-]+$", ErrorMessage = "First Name may not contain numbers.")]
+        [Display(Name = "First Name")]
+        public string FirstName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Last Name is required.")]
+        [MaxLength(50)]
+        [RegularExpression(@"^[A-Za-zñÑ .'-]+$", ErrorMessage = "Last Name may not contain numbers.")]
+        [Display(Name = "Last Name")]
+        public string LastName { get; set; } = string.Empty;
+
+        [MaxLength(20)]
+        [RegularExpression(@"^[0-9]{7,15}$", ErrorMessage = "Contact Number must contain digits only (7–15 digits).")]
+        [Display(Name = "Contact Number")]
+        public string? ContactNumber { get; set; }
+
         [Required]
         [Display(Name = "Role")]
         public string Role { get; set; } = "Tenant";

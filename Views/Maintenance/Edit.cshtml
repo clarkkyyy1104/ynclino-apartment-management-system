@@ -10,7 +10,7 @@
                 Update Request #@Model.RequestID — @Model.TenantName
             </div>
             <div data-form-body>
-                <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                <form asp-action="Edit" method="post" enctype="multipart/form-data" data-form-grid>
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="RequestID" />
                     <input type="hidden" asp-for="TenantID" />
@@ -20,7 +20,6 @@
                         Tenant: <strong>@Model.TenantName</strong> — Unit @Model.UnitNumber
                     </p>
 
-                    <div>
                         <div>
                             <label asp-for="Category"></label>
                             <select asp-for="Category" id="categorySelect">
@@ -40,15 +39,14 @@
                                 <option>Urgent</option>
                             </select>
                         </div>
-                    </div>
 
-                    <div id="descWrap">
+                    <div id="descWrap" data-span>
                         <label asp-for="Description"></label>
                         <textarea asp-for="Description" rows="3"></textarea>
                         <span asp-validation-for="Description"></span>
                     </div>
 
-                    <div>
+                    <div data-span>
                         <label asp-for="ImageUpload"></label>
                         @if (!string.IsNullOrEmpty(Model.ImagePath))
                         {
@@ -61,7 +59,7 @@
                         <span asp-validation-for="ImageUpload"></span>
                     </div>
 
-                    <div>
+                    <div data-span>
                         <label asp-for="Status"></label>
                         @{
                             var allowedStatuses = ViewBag.AllowedStatuses as List<string>
@@ -79,7 +77,7 @@
                         </div>
                     </div>
 
-                    <div>
+                    <div data-span>
                         <label asp-for="AssignedStaffID"></label>
                         <select asp-for="AssignedStaffID"
                                 asp-items="Model.AvailableStaff">
@@ -88,14 +86,6 @@
                         <div>The staff member is notified as soon as you assign them.</div>
                         <span asp-validation-for="AssignedStaffID"></span>
                     </div>
-
-                    @if (!string.IsNullOrWhiteSpace(Model.StaffNotes))
-                    {
-                        <div>
-                            <label>Work Notes (from maintenance staff)</label>
-                            <p>@Model.StaffNotes</p>
-                        </div>
-                    }
 
                     <div data-actions-row>
                         <button type="submit">Save Changes</button>

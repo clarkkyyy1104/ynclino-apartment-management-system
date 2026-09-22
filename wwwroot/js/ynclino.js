@@ -97,17 +97,612 @@
         });
     });
 
+    /* Auto-collapse. On a wide screen the sidebar sits as a rail and opens while
+       the pointer is over it, folding back when the pointer leaves. data-peek
+       lays the open sidebar over the page rather than pushing the page aside.
+       Pinning it open with the menu button turns this off: data-rail is then
+       absent, so there is nothing to fold back to. */
+    var sidebar = document.getElementById('appSidebar');
+    if (sidebar) {
+        var wide = window.matchMedia('(min-width: 768px)');
+        sidebar.addEventListener('mouseenter', function () {
+            if (!wide.matches || !document.documentElement.hasAttribute('data-rail')) return;
+            document.documentElement.removeAttribute('data-rail');
+            document.documentElement.setAttribute('data-peek', '');
+        });
+        sidebar.addEventListener('mouseleave', function () {
+            if (!document.documentElement.hasAttribute('data-peek')) return;
+            document.documentElement.removeAttribute('data-peek');
+            document.documentElement.setAttribute('data-rail', '');
+        });
+    }
+
     /* flash messages remove themselves; the close button removes one early */
     document.addEventListener('click', function (e) {
         var close = e.target.closest('[data-dismiss]');
-        if (close && close.parentElement) close.parentElement.remove();
+        if (close && close.parentElement) { close.parentElement.remove(); scheduleTableFit(); }
     });
 
+        /* ── Modals ───────────────────────────────────────────────────────────
+       The design has no separate Add/Update pages: every form is a panel
+       floating over the list it belongs to, with the page behind it dimmed.
+
+       Rather than rewrite fourteen views into fourteen dialogs, this takes the
+       pages that already exist. A link marked data-modal-link is fetched, its
+       [data-form-panel] is lifted out and dropped into the one dialog in the
+       layout, and the form posts through fetch. A redirect back means the save
+       worked; HTML back means validation failed, so we show the returned form
+       with its messages, exactly as the full page would have.
+
+       Nothing here is required for the app to work. Without <dialog> support,
+       or with JavaScript off, the links stay ordinary links and every form is
+       still reachable at its own address.                                    */
+    /* One pager per table. The viewport, not a dropdown, determines capacity.
+       Reserve the actual header/footer/filter space and measure wrapped rows.
+       Tables keep their natural height, with the pager just below the records. */
+    var tablePagers = [];
+    var fitTimer;
+    var fittingTables = false;
+    var tableResizeObserver = typeof ResizeObserver === 'function' ? new ResizeObserver(function (entries) {
+        if (entries.some(function (entry) {
+            var width = Math.round(entry.contentRect.width);
+            if (entry.target._paginationWidth === width) return false;
+            entry.target._paginationWidth = width;
+            return true;
+        })) scheduleTableFit();
+    }) : null;
+
+    function scheduleTableFit() {
+        clearTimeout(fitTimer);
+        fitTimer = setTimeout(fitTablesToScreen, 80);
+    }
+
+    function fitTablesToScreen() {
+        if (fittingTables) return;
+        fittingTables = true;
+        try {
+            tablePagers = tablePagers.filter(function (state) {
+                if (state.table.isConnected) return true;
+                if (tableResizeObserver) tableResizeObserver.unobserve(state.wrap);
+                return false;
+            });
+            var roots = new Map();
+            tablePagers.forEach(function (state) {
+                if (!state.table.getClientRects().length || state.table.closest('[hidden]')) return;
+                var root = state.table.closest('[data-modal-body]') || state.table.closest('main');
+                if (!root) return;
+                if (!roots.has(root)) roots.set(root, []);
+                roots.get(root).push(state);
+            });
+            roots.forEach(function (states, root) {
+                var modal = root.closest('[data-modal]');
+                var viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+                var rootStyle = getComputedStyle(root);
+                var rootRect = root.getBoundingClientRect();
+                var budget = Math.min(root.clientHeight, viewportHeight - Math.max(0, rootRect.top));
+                if (modal) {
+                    var head = modal.querySelector('[data-modal-head]');
+                    budget = viewportHeight - 48 - (head ? head.getBoundingClientRect().height : 0) - 4;
+                }
+                budget = Math.max(0, budget - 2);
+                var marker = document.createElement('span');
+                marker.setAttribute('data-pagination-end', '');
+                marker.style.cssText = 'display:block;height:0;margin:0;padding:0;border:0;clear:both';
+                root.appendChild(marker);
+                function contentHeight() {
+                    return marker.getBoundingClientRect().top - root.getBoundingClientRect().top +
+                        root.scrollTop + (parseFloat(rootStyle.paddingBottom) || 0);
+                }
+
+                states.forEach(function (state) {
+                    state.anchor = state.page * state.pageSize;
+                    state.wrap.style.removeProperty('height');
+                    state.table.style.tableLayout = state.originalLayout;
+                    if (state.columns) { state.columns.remove(); state.columns = null; }
+                    state.rows.forEach(function (row) { row.hidden = false; });
+
+                    // Keep columns steady when a different page has longer values.
+                    // Respect authored colgroups and tables containing merged cells.
+                    var sample = state.rows.find(function (row) {
+                        return Array.from(row.cells).every(function (cell) { return cell.colSpan === 1; });
+                    });
+                    if (sample && !state.table.querySelector('colgroup')) {
+                        var width = state.table.getBoundingClientRect().width;
+                        var columns = document.createElement('colgroup');
+                        Array.from(sample.cells).forEach(function (cell) {
+                            var col = document.createElement('col');
+                            col.style.width = (cell.getBoundingClientRect().width / width * 100) + '%';
+                            columns.appendChild(col);
+                        });
+                        state.table.insertBefore(columns, state.table.tHead || state.table.tBodies[0]);
+                        state.columns = columns;
+                        state.table.style.tableLayout = 'fixed';
+                    }
+                    var heights = state.rows.map(function (row) { return row.getBoundingClientRect().height; });
+                    var rowsHeight = heights.reduce(function (sum, height) { return sum + height; }, 0);
+                    // Includes the table head, foot, unpaginated rows, borders and
+                    // any horizontal scrollbar already required by a narrow screen.
+                    state.fixedHeight = Math.ceil(state.table.getBoundingClientRect().height - rowsHeight +
+                        state.wrap.offsetHeight - state.wrap.clientHeight);
+                    // Reserve only the tallest actual PAGE, not N copies of the
+                    // tallest row. A single wrapped note must not waste space
+                    // on every other record. This keeps one capacity per screen
+                    // while ensuring that subsequent pages also fit.
+                    state.measurePageHeight = function () {
+                        var tallest = 0;
+                        for (var first = 0; first < heights.length; first += state.pageSize) {
+                            var height = 0;
+                            for (var i = first; i < Math.min(first + state.pageSize, heights.length); i++) {
+                                height += heights[i];
+                            }
+                            tallest = Math.max(tallest, height);
+                        }
+                        return state.fixedHeight + Math.ceil(tallest);
+                    };
+                    state.pageSize = 1;
+                    state.areaHeight = state.measurePageHeight();
+                    state.wrap.style.height = state.areaHeight + 'px';
+                    state.render();
+                });
+
+                // Grow tables round-robin: stacked tables share space while
+                // side-by-side report cards can each use the full row height.
+                var growing = states.slice();
+                while (growing.length) {
+                    growing = growing.filter(function (state) {
+                        if (state.pageSize >= state.rows.length) return false;
+                        state.pageSize++;
+                        state.areaHeight = state.measurePageHeight();
+                        state.wrap.style.height = state.areaHeight + 'px';
+                        state.render();
+                        if (contentHeight() <= budget) return true;
+                        state.pageSize--;
+                        state.areaHeight = state.measurePageHeight();
+                        state.wrap.style.height = state.areaHeight + 'px';
+                        state.render();
+                        return false;
+                    });
+                }
+
+                states.forEach(function (state) {
+                    state.page = Math.min(Math.floor(state.anchor / state.pageSize),
+                        Math.ceil(state.rows.length / state.pageSize) - 1);
+                    state.table.setAttribute('data-fitted-page-size', String(state.pageSize));
+                    state.render();
+                    // The measurement budget is not visible padding. Let the
+                    // border and pager follow the final row, including last pages.
+                    state.wrap.style.removeProperty('height');
+                });
+                // Do not clip content at extreme zoom/short viewports where even
+                // the filters, header and ONE row cannot physically fit.
+                root.toggleAttribute('data-pagination-overflow', contentHeight() > budget + 2);
+                marker.remove();
+            });
+        } finally {
+            fittingTables = false;
+        }
+    }
+
+    function paginateTables(scope) {
+        scope.querySelectorAll('[data-table-wrap] > table').forEach(function (table) {
+            if (table.hasAttribute('data-paginated')) return;
+            var body = table.tBodies[0];
+            if (!body) return;
+            var rows = Array.prototype.filter.call(body.rows, function (row) {
+                return !row.hasAttribute('data-no-paginate') &&
+                    !(row.cells.length === 1 && row.cells[0].colSpan > 1);
+            });
+            if (!rows.length) return;
+            table.setAttribute('data-paginated', '');
+            var nav = document.createElement('nav');
+            nav.setAttribute('data-pagination', '');
+            nav.setAttribute('aria-label', 'Table pages');
+            var previous = document.createElement('button');
+            previous.type = 'button';
+            previous.textContent = 'Previous';
+            var status = document.createElement('span');
+            status.setAttribute('aria-live', 'polite');
+            status.setAttribute('data-pagination-count', '');
+            var controls = document.createElement('div');
+            controls.setAttribute('data-pagination-controls', '');
+            var next = document.createElement('button');
+            next.type = 'button';
+            next.textContent = 'Next';
+            var current = document.createElement('span');
+            current.setAttribute('data-pagination-current', '');
+            var pages = document.createElement('div');
+            pages.setAttribute('data-pagination-pages', '');
+            pages.append(previous, current, next);
+            controls.append(pages);
+            nav.append(status, controls);
+            var wrap = table.parentElement;
+            wrap.setAttribute('data-viewport-table', '');
+            wrap.insertAdjacentElement('afterend', nav);
+
+            var state = { table: table, wrap: wrap, rows: rows, page: 0, pageSize: 1,
+                columns: null, originalLayout: table.style.tableLayout };
+            state.render = function () {
+                var pageCount = Math.ceil(rows.length / state.pageSize);
+                state.page = Math.max(0, Math.min(state.page, pageCount - 1));
+                var first = state.page * state.pageSize;
+                rows.forEach(function (row, index) {
+                    row.hidden = index < first || index >= first + state.pageSize;
+                });
+                status.textContent = 'Showing ' + (first + 1) + '-' +
+                    Math.min(first + state.pageSize, rows.length) + ' of ' + rows.length + ' records';
+                current.textContent = String(state.page + 1);
+                current.setAttribute('aria-label', 'Page ' + (state.page + 1) + ' of ' + pageCount);
+                previous.disabled = state.page === 0;
+                next.disabled = state.page === pageCount - 1;
+            };
+            previous.addEventListener('click', function () { state.page--; state.render(); });
+            next.addEventListener('click', function () { state.page++; state.render(); });
+            tablePagers.push(state);
+            if (tableResizeObserver) tableResizeObserver.observe(wrap);
+            state.render();
+        });
+        scheduleTableFit();
+    }
+
+    window.addEventListener('resize', scheduleTableFit);
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', scheduleTableFit);
+    if (document.fonts) document.fonts.ready.then(scheduleTableFit);
+    document.addEventListener('load', function (event) {
+        if (event.target.tagName === 'IMG') scheduleTableFit();
+    }, true);
+    new MutationObserver(scheduleTableFit).observe(document.documentElement,
+        { attributes: true, attributeFilter: ['data-rail', 'data-peek'] });
+
+    function paginateReportSections() {
+        var nav = document.querySelector('[data-report-pagination]');
+        if (!nav) return;
+        var pages = Array.prototype.slice.call(document.querySelectorAll('[data-report-page]'));
+        if (!pages.length) return;
+        var groups = pages.reduce(function (names, section) {
+            var name = section.getAttribute('data-report-group');
+            if (names.indexOf(name) === -1) names.push(name);
+            return names;
+        }, []);
+        var previous = nav.querySelector('[data-report-previous]');
+        var next = nav.querySelector('[data-report-next]');
+        var position = nav.querySelector('[data-report-position]');
+        var page = 0;
+        function showPage() {
+            pages.forEach(function (section) {
+                var current = section.getAttribute('data-report-group') === groups[page];
+                section.hidden = !current;
+                section.toggleAttribute('data-report-current', current);
+            });
+            position.textContent = groups[page] + ' · ' + (page + 1) + ' of ' + groups.length;
+            previous.disabled = page === 0;
+            next.disabled = page === groups.length - 1;
+            scheduleTableFit();
+        }
+        previous.addEventListener('click', function () { page--; showPage(); });
+        next.addEventListener('click', function () { page++; showPage(); });
+        showPage();
+        document.documentElement.setAttribute('data-reports-ready', '');
+    }
+
+    function wireNotificationFeeds() {
+        document.querySelectorAll('[data-notification-feed]').forEach(function (feed) {
+            var userId = feed.getAttribute('data-notification-user');
+            if (!userId) return;
+            var storageKey = 'ynclino-read-notifications-' + userId;
+            var saved = [];
+            try {
+                var value = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                if (Array.isArray(value)) saved = value.filter(function (item) { return typeof item === 'string'; });
+            } catch (err) { }
+            var read = new Set(saved);
+            var rows = Array.prototype.slice.call(feed.querySelectorAll('[data-notification-key]'));
+            var markAll = feed.querySelector('[data-mark-all-read]');
+
+            function update() {
+                rows.forEach(function (row) {
+                    var isRead = read.has(row.getAttribute('data-notification-key'));
+                    if (isRead) row.removeAttribute('data-unread');
+                    else row.setAttribute('data-unread', 'true');
+                });
+                if (markAll) markAll.hidden = rows.every(function (row) {
+                    return read.has(row.getAttribute('data-notification-key'));
+                });
+            }
+
+            function save() {
+                try { localStorage.setItem(storageKey, JSON.stringify(Array.from(read).slice(-200))); }
+                catch (err) { }
+                update();
+            }
+
+            feed.addEventListener('click', function (event) {
+                if (event.target.closest('[data-mark-all-read]')) {
+                    rows.forEach(function (row) { read.add(row.getAttribute('data-notification-key')); });
+                    save();
+                }
+            });
+            update();
+        });
+    }
+
+    var dlg = document.getElementById('appModal');
+    var canModal = dlg && typeof dlg.showModal === 'function';
+    if (dlg) new MutationObserver(scheduleTableFit).observe(dlg,
+        { attributes: true, attributeFilter: ['open'] });
+
+    /* Markup injected as HTML never runs its own <script> tags, so they are
+       re-added here — one at a time, each waiting for the last. Appending them
+       all at once looked fine and was not: jquery.validate would start loading
+       beside jQuery instead of after it, and win the race often enough to throw
+       "jQuery is not defined" on a slow load. */
+    function runPageScripts(doc, done) {
+        var holder = doc.querySelector('[data-page-scripts]');
+        var list = holder ? Array.prototype.slice.call(holder.querySelectorAll('script')) : [];
+
+        (function next(i) {
+            if (i >= list.length) { done && done(); return; }
+            var old = list[i];
+            var src = old.getAttribute('src');
+
+            /* a library the page already loaded does not need loading twice */
+            if (src && document.querySelector('script[src="' + src + '"]')) { next(i + 1); return; }
+
+            var s = document.createElement('script');
+            if (src) {
+                s.src = src;
+                s.onload = s.onerror = function () { next(i + 1); };
+                document.body.appendChild(s);
+            } else {
+                s.textContent = old.textContent;
+                document.body.appendChild(s);
+                next(i + 1);
+            }
+        })(0);
+    }
+
+    /* jQuery's unobtrusive validation wires itself up once, when the document is
+       ready. A form that arrives afterwards is invisible to it, so every form we
+       inject has to be handed over explicitly or the client-side messages never
+       appear — the second and later modals especially, where the script is
+       already loaded and nothing re-runs at all. */
+    function wireValidation(scope) {
+        var $ = window.jQuery;
+        if (!$ || !$.validator || !$.validator.unobtrusive) return;
+        var form = scope.querySelector('form');
+        if (!form) return;
+        $(form).removeData('validator').removeData('unobtrusiveValidation');
+        $.validator.unobtrusive.parse(form);
+    }
+
+    function fillModal(html) {
+        var doc = new DOMParser().parseFromString(html, 'text/html');
+        /* a form page names its panel data-form-panel; a detail or confirm page
+           names the part to lift data-modal-source */
+        var panel = doc.querySelector('[data-form-panel], [data-modal-source]');
+        if (!panel) return false;
+
+        /* the kind decides the dialog's width and how its title reads */
+        dlg.setAttribute('data-kind', panel.hasAttribute('data-confirm') ? 'confirm'
+            : panel.matches('[data-form-panel]') ? 'form' : 'details');
+
+        var head = panel.querySelector('[data-form-head], [data-panel-head]');
+        dlg.querySelector('[data-modal-title]').textContent = head ? head.textContent.trim() : '';
+        if (head) head.remove();          /* the dialog draws the heading itself */
+
+        var body = dlg.querySelector('[data-modal-body]');
+        body.innerHTML = '';
+        body.appendChild(panel);
+        paginateTables(body);
+        decorateActions(body);
+        runPageScripts(doc, function () { wireValidation(body); });
+        return true;
+    }
+
+    function openModal(url) {
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (r) { return r.ok ? r.text() : null; })
+            .then(function (html) {
+                /* anything unexpected: fall back to the page itself */
+                if (html === null || !fillModal(html)) { window.location = url; return; }
+                if (!dlg.open) dlg.showModal();
+            })
+            .catch(function () { window.location = url; });
+    }
+
+    if (canModal) {
+        document.addEventListener('click', function (e) {
+            var link = e.target.closest('[data-modal-link]');
+            if (link && link.getAttribute('href')) {
+                e.preventDefault();
+                openModal(link.getAttribute('href'));
+                return;
+            }
+            if (e.target.closest('[data-modal-close]') && dlg.open) { e.preventDefault(); dlg.close(); return; }
+            /* Cancel and Back inside a modal lead to the list it is already floating
+               over, so they close it rather than reload that same page */
+            var back = e.target.closest('[data-modal-body] [data-actions-row] a[href]:not([data-modal-link])');
+            /* a list page is one path segment deep: /Units, /Tenants */
+            if (back && dlg.open && new URL(back.href, location.href).pathname.split('/').filter(Boolean).length === 1) {
+                e.preventDefault(); dlg.close(); return;
+            }
+            /* the backdrop is the dialog itself; the panel sits inside it */
+            if (e.target === dlg) dlg.close();
+        });
+
+        dlg.addEventListener('submit', function (e) {
+            var form = e.target;
+            if (form.tagName !== 'FORM') return;
+            /* onsubmit="return confirm(...)", a password-rules check or client
+               validation already said no — posting anyway would ignore the answer */
+            if (e.defaultPrevented) return;
+            e.preventDefault();
+
+            var submit = form.querySelector('[type="submit"]');
+            if (submit) submit.disabled = true;
+
+            fetch(form.action, {
+                method: (form.method || 'post'),
+                /* the clicked button carries its own name and value (Approve / Reject),
+                   which FormData leaves out unless it is told which button it was */
+                body: (function () { try { return new FormData(form, e.submitter); } catch (err) { return new FormData(form); } })(),
+                /* Manual, so the browser does NOT quietly fetch the redirect
+                   target for us. Letting it follow cost us every success
+                   message: the controller puts one in TempData, fetch's own
+                   silent GET read it, and TempData is read-once — so by the
+                   time the real navigation happened the message was gone. We
+                   only need to know the save worked; reloading shows it. */
+                redirect: 'manual',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+                .then(function (r) {
+                    /* saved: the controller answered with a redirect */
+                    if (r.type === 'opaqueredirect' || r.status === 0) { window.location.reload(); return null; }
+                    return r.text();
+                })
+                .then(function (html) {
+                    if (html === null) return;
+                    if (submit) submit.disabled = false;
+                    /* rejected: show the form again, with its messages */
+                    if (!fillModal(html)) window.location.reload();
+                })
+                .catch(function () { if (submit) submit.disabled = false; form.submit(); });
+        });
+
+        /* closing leaves nothing behind for the next form to trip over */
+        dlg.addEventListener('close', function () {
+            dlg.querySelector('[data-modal-body]').innerHTML = '';
+            dlg.querySelector('[data-modal-title]').textContent = '';
+        });
+    }
+
+    function decorateActions(scope) {
+        var selector = [
+            '[data-page-actions] a',
+            '[data-page-actions] button',
+            'main a[data-primary]',
+            'main a[data-modal-link]',
+            '[data-page-head] [data-actions] a',
+            '[data-page-head] [data-actions] button',
+            'main [data-identity] [data-actions] a',
+            'main [data-identity] [data-actions] button',
+            'main form[method="get"] button',
+            'main form[method="get"] a',
+            'main [data-actions-row] a',
+            'main [data-actions-row] button',
+            'main [data-table-wrap] td:last-child a',
+            'main [data-table-wrap] td:last-child button',
+            'main [data-form-panel] button[type="submit"]',
+            'body:not(:has(aside)) form[method="post"] > button[type="submit"]',
+            'main [data-panel-head] button',
+            'main [data-pagination] button',
+            'main [data-report-pagination] button',
+            '[data-modal-body] [data-actions-row] a',
+            '[data-modal-body] [data-actions-row] button',
+            '[data-modal-body] [data-form-panel] button[type="submit"]',
+            '[data-notification-feed] [data-mark-all-read]'
+        ].join(',');
+        scope.querySelectorAll(selector).forEach(function (control) {
+            var label = ((control.textContent || '').trim() || control.getAttribute('aria-label') || control.getAttribute('title') || '').trim().toLowerCase().replace(/^\+\s*/, '');
+            if (label === 'login') return;
+            var tone = control.getAttribute('data-action-tone');
+            if (!tone && (control.hasAttribute('data-danger') ||
+                /^(delete|remove|yes, delete|deactivate|reject|mark .*read|sign out instead)/.test(label)))
+                tone = 'red';
+            else if (!tone && /^(cancel|exit|close)\b/.test(label))
+                tone = 'orange-outline';
+            else if (!tone && /^(reset password)/.test(label))
+                tone = 'amber';
+            else if (!tone && /^(archive|yes, archive|move to archive)/.test(label))
+                tone = 'amber';
+            else if (!tone && /^(update|edit|restore|reactivate|put back)/.test(label))
+                tone = 'green';
+            else if (!tone && (control.hasAttribute('data-primary') ||
+                /^(add|new|create|register|report item|issue|request|apply|save|submit|approve|agree|accept|confirm|claim|login|sign in)/.test(label)))
+                tone = 'orange';
+            else if (!tone)
+                tone = 'gray';
+            control.setAttribute('data-action-tone', tone);
+            if (control.querySelector('img, svg, [data-action-icon]')) return;
+            var icon = null;
+            if (/^(add|new|create|register|report item|issue|request|apply|submit request|submit report|submit application)/.test(label)) icon = 'add';
+            else if (/^(update|edit)/.test(label)) icon = 'edit';
+            else if (/^(save|upload)/.test(label)) icon = 'save';
+            else if (/^(delete|remove|yes, delete)/.test(label)) icon = 'trash';
+            else if (/^(archive|yes, archive|move to archive)/.test(label)) icon = 'archive';
+            else if (/^(restore|reactivate|put back)/.test(label)) icon = 'restore';
+            else if (/^(cancel|exit|close)\b/.test(label)) icon = 'close';
+            else if (/^(back|← back)/.test(label)) icon = 'back';
+            else if (/^previous/.test(label)) icon = 'back';
+            else if (/^next/.test(label)) icon = 'forward';
+            else if (/^(approve|agree|accept|confirm|claim|mark .*read)/.test(label)) icon = 'check';
+            else if (/^(reject|deactivate)/.test(label)) icon = 'close';
+            else if (/^(reset password|change password)/.test(label)) icon = 'key';
+            else if (/^(login|sign in)/.test(label)) icon = 'lock';
+            else if (/^(tenancy history|payment history|my transfer requests|my requests)/.test(label)) icon = 'clock';
+            else if (/^(view|details)/.test(label)) icon = 'file';
+            else if (/^search/.test(label)) icon = 'search';
+            if (!icon) return;
+            var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('data-action-icon', '');
+            svg.setAttribute('aria-hidden', 'true');
+            var use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+            use.setAttribute('href', '/images/icons/actions.svg#' + icon);
+            svg.appendChild(use);
+            control.insertBefore(svg, control.firstChild);
+        });
+    }
+
+    function wireAutoSearch() {
+        var key = 'ynclino-search-focus';
+        var pending = null;
+        try {
+            pending = JSON.parse(sessionStorage.getItem(key) || 'null');
+            sessionStorage.removeItem(key);
+        } catch (err) { /* Search still works when storage is unavailable. */ }
+
+        document.querySelectorAll('form[data-auto-search]').forEach(function (form) {
+            var input = form.querySelector('input[name="searchTerm"]');
+            if (!input) return;
+
+            if (pending && pending.path === location.pathname && pending.value === input.value) {
+                input.focus({ preventScroll: true });
+                try { input.setSelectionRange(pending.start, pending.end); } catch (err) { }
+            }
+
+            var timer;
+            var composing = false;
+            function scheduleSearch() {
+                clearTimeout(timer);
+                timer = setTimeout(function () {
+                    if (input.value === (new URLSearchParams(location.search).get('searchTerm') || '')) return;
+                    try {
+                        sessionStorage.setItem(key, JSON.stringify({
+                            path: location.pathname,
+                            value: input.value,
+                            start: input.selectionStart,
+                            end: input.selectionEnd
+                        }));
+                    } catch (err) { }
+                    form.requestSubmit();
+                }, 500);
+            }
+            input.addEventListener('compositionstart', function () { composing = true; clearTimeout(timer); });
+            input.addEventListener('compositionend', function () { composing = false; scheduleSearch(); });
+            input.addEventListener('input', function () { if (!composing) scheduleSearch(); });
+            form.addEventListener('submit', function () { clearTimeout(timer); });
+        });
+    }
+
     window.addEventListener('DOMContentLoaded', function () {
+        wireAutoSearch();
+        paginateTables(document);
+        paginateReportSections();
+        wireNotificationFeeds();
+        decorateActions(document);
         /* the head script set the attribute before paint; the button has to agree */
         if (document.documentElement.hasAttribute('data-rail')) setRail(true);
         document.querySelectorAll('[data-flash]').forEach(function (msg) {
-            setTimeout(function () { msg.remove(); }, 5000);
+            setTimeout(function () { msg.remove(); scheduleTableFit(); }, 5000);
         });
     });
 })();

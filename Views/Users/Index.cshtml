@@ -12,21 +12,23 @@
     };
 }
 
+<div data-module-shell>
 <div data-page-head>
     <div>
         <h3>User Management</h3>
-        <p>
-            Every account that can sign in to the system. Administrators and Maintenance
-            Staff are created here; a Tenant account is created together with the tenant's
-            record in the <a asp-controller="Tenants" asp-action="Index">Tenants</a> module.
-        </p>
     </div>
-    <div data-actions>
+</div>
+    <div data-page-actions>
         @if (isAdmin)
         {
-            <a data-primary asp-action="Create">Add User Account</a>
+            <a data-modal-link data-primary asp-action="Create">Add User Account</a>
         }
     </div>
+<p data-page-intro>
+    Every account that can sign in to the system. Administrators and Maintenance
+    Staff are created here; a Tenant account is created together with the tenant's
+    record in the <a asp-controller="Tenants" asp-action="Index">Tenants</a> module.
+</p>
 </div>
 
 @if (TempData["TempPassword"] != null)
@@ -46,13 +48,12 @@
     <table>
         <thead>
             <tr>
-                <th>#</th>
                 <th>Name</th>
                 <th>Username</th>
                 <th>Account Type</th>
                 <th>Status</th>
                 <th>Date Created</th>
-                <th>Actions</th>
+                <th data-user-actions>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -60,7 +61,6 @@
             {
                 var tenant = user.Tenants?.FirstOrDefault();
                 <tr>
-                    <td>@user.UserID</td>
                     <td>
                         @user.DisplayName
                         @if (user.IsMainAdmin)
@@ -76,23 +76,31 @@
                     <td>@user.Username</td>
                     <td><span>@RoleLabel(user.Role)</span></td>
                     <td>
-                        <span>
+                        <span data-status="@(user.IsActive ? "active" : "inactive")">
                             @(user.IsActive ? "Active" : "Inactive")
                         </span>
                     </td>
                     <td>@user.DateCreated.ToString("MM/dd/yyyy")</td>
-                    <td>
-                        @if (user.Role == "Tenant" && tenant != null)
+                    <td data-user-actions>
+                        @if (!user.IsMainAdmin)
                         {
-                            @* a tenant login belongs to a tenant record — manage it there,
-                               where the unit, lease and billing live with it *@
-                            <a asp-controller="Tenants" asp-action="Details" asp-route-id="@tenant.TenantID" title="View in Tenants" aria-label="View in Tenants">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                            <a data-modal-link
+                               asp-action="Details"
+                               asp-route-id="@user.UserID"
+                               title="View"
+                               aria-label="View">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                     width="16"
+                                     height="16"
+                                     viewBox="0 0 16 16"
+                                     aria-hidden="true">
                                     <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
                                     <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
                                 </svg>
                             </a>
-
+                        }
+                        @if (user.Role == "Tenant" && tenant != null)
+                        {
                             @* Switches the LOGIN off, not the tenancy — the unit, bills
                                and history stay exactly as they are. *@
                             <form asp-action="ToggleActive" asp-route-id="@user.UserID" method="post"
@@ -114,13 +122,6 @@
                         }
                         else if (isAdmin && !user.IsMainAdmin && user.Role != "Tenant")
                         {
-                            @* a staff account has no tenant record to open, so the
-                               slot the eye occupies on every other row is held
-                               empty rather than closed up *@
-                            <span data-ghost data-icon>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5"/></svg>
-                            </span>
-
                             @* A staff account is switched off, never deleted. The repairs
                                they logged, the notes they wrote and the requests they were
                                assigned stay attached to their name; deleting the account
@@ -141,10 +142,6 @@
                                 @Html.AntiForgeryToken()
                                 <button type="submit">Reset Password</button>
                             </form>
-                        }
-                        else
-                        {
-                            <span>—</span>
                         }
                     </td>
                 </tr>

@@ -58,7 +58,68 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return View((ViewBag.Accounts as List<tblUser>)!);
         }
 
+        // GET: Users/Details/5 — account information for every role.
+        public async Task<IActionResult> Details(int id)
+        {
+            var user = await _context.tblUsers
+                .Include(u => u.Tenants)
+                .FirstOrDefaultAsync(u => u.UserID == id);
+            return user == null ? NotFound() : View(user);
+        }
+
         // GET: Users/Create — staff accounts only
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var user = await _context.tblUsers.FindAsync(id);
+            if (user == null) return NotFound();
+            if (user.IsMainAdmin) return Forbid();
+
+            return View(new EditUserInfoViewModel
+            {
+                UserID = user.UserID,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                ContactNumber = user.ContactNumber
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, EditUserInfoViewModel vm)
+        {
+            var user = await _context.tblUsers.Include(u => u.Tenants)
+                .FirstOrDefaultAsync(u => u.UserID == id);
+            if (user == null) return NotFound();
+            if (user.IsMainAdmin) return Forbid();
+            if (vm.UserID != id) return BadRequest();
+
+            vm.FirstName = vm.FirstName?.Trim() ?? string.Empty;
+            vm.LastName = vm.LastName?.Trim() ?? string.Empty;
+            vm.ContactNumber = string.IsNullOrWhiteSpace(vm.ContactNumber) ? null : vm.ContactNumber.Trim();
+            if (string.IsNullOrWhiteSpace(vm.FirstName))
+                ModelState.AddModelError(nameof(vm.FirstName), "First name is required.");
+            if (string.IsNullOrWhiteSpace(vm.LastName))
+                ModelState.AddModelError(nameof(vm.LastName), "Last name is required.");
+            if (!ModelState.IsValid) return View(vm);
+
+            user.FirstName = vm.FirstName;
+            user.LastName = vm.LastName;
+            user.ContactNumber = vm.ContactNumber;
+            user.DateUpdated = DateTime.Now;
+
+            foreach (var tenant in user.Tenants)
+            {
+                tenant.FirstName = vm.FirstName;
+                tenant.LastName = vm.LastName;
+                tenant.ContactNumber = vm.ContactNumber;
+            }
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = $"Account details for '{user.Username}' have been updated.";
+            return RedirectToAction(nameof(Index));
+        }
+
         public IActionResult Create()
         {
             bool isMainAdmin = CurrentUserIsMainAdmin();
@@ -84,6 +145,14 @@ namespace YnclinoApartmentManagementSystem.Controllers
         {
             bool isMainAdmin = CurrentUserIsMainAdmin();
             bool isAdmin = User.IsInRole("Admin");
+
+            vm.FirstName = vm.FirstName?.Trim() ?? string.Empty;
+            vm.LastName = vm.LastName?.Trim() ?? string.Empty;
+            vm.ContactNumber = string.IsNullOrWhiteSpace(vm.ContactNumber) ? null : vm.ContactNumber.Trim();
+            if (string.IsNullOrWhiteSpace(vm.FirstName))
+                ModelState.AddModelError(nameof(vm.FirstName), "First name is required.");
+            if (string.IsNullOrWhiteSpace(vm.LastName))
+                ModelState.AddModelError(nameof(vm.LastName), "Last name is required.");
 
             // this module creates staff accounts only — Admin or Maintenance. Anything
             // else (a forged "Tenant", say) is REFUSED, never quietly turned into an
@@ -116,6 +185,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 Username     = vm.Username,
                 Password     = PasswordHelper.Hash(vm.Password!),
                 Role         = vm.Role,
+                FirstName    = vm.FirstName,
+                LastName     = vm.LastName,
+                ContactNumber = vm.ContactNumber,
                 IsActive     = vm.IsActive,
                 IsMainAdmin = false,
                 // an account created FOR someone else must have its password changed on
@@ -204,6 +276,15 @@ namespace YnclinoApartmentManagementSystem.Controllers
             var tenant = user.Tenants?.FirstOrDefault();
             if (tenant != null)
             {
+                if (activating)
+                {
+                    var error = await _context.PrepareTenantReactivationAsync(tenant);
+                    if (error != null)
+                    {
+                        TempData["Error"] = error;
+                        return RedirectToAction(nameof(Index));
+                    }
+                }
                 tenant.Status = activating ? "Active" : "Inactive";
 
                 // an active tenant has no move-out date; a deactivated one is stamped
@@ -225,85 +306,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 ? $"{user.DisplayName} can sign in again" + (tenant != null ? " and their tenancy is Active." : ".")
                 : $"{user.DisplayName} has been deactivated" + (tenant != null ? " and their tenancy is now Inactive." : ".");
 
-            return RedirectToAction(nameof(Index));
-        }
-
-        // GET: Users/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null) return NotFound();
-
-            var user = await _context.tblUsers.FindAsync(id);
-            if (user == null) return NotFound();
-
-            if (user.IsMainAdmin)
-            {
-                TempData["Error"] = "The Main Admin account cannot be deleted.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            if (user.Role == "Tenant")
-            {
-                TempData["Error"] = "Tenant accounts are managed from the Tenants module.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            if (!User.IsInRole("Admin"))
-                return Forbid();
-
-            if (user.UserID == CurrentUserID())
-            {
-                TempData["Error"] = "You cannot delete the account you are signed in with.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            return View(user);
-        }
-
-        // POST: Users/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var user = await _context.tblUsers.FindAsync(id);
-            if (user == null) return NotFound();
-
-            if (user.IsMainAdmin)
-            {
-                TempData["Error"] = "The Main Admin account cannot be deleted.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            if (user.Role == "Tenant")
-            {
-                TempData["Error"] = "Tenant accounts are managed from the Tenants module.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            if (!User.IsInRole("Admin"))
-                return Forbid();
-
-            if (user.UserID == CurrentUserID())
-            {
-                TempData["Error"] = "You cannot delete the account you are signed in with.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            // lost & found rows keep a hard reference to their reporter/claimant,
-            // so deleting this account would fail at the database level
-            bool hasLostFoundRecords =
-                await _context.tblLostFoundItems.AnyAsync(l => l.ReportedByUserID == id) ||
-                await _context.tblLostFoundItems.AnyAsync(l => l.ClaimedByUserID == id) ||
-                await _context.tblClaimRequests.AnyAsync(c => c.ClaimantUserID == id);
-            if (hasLostFoundRecords)
-            {
-                TempData["Error"] = $"Account '{user.Username}' has Lost & Found records and cannot be deleted. Deactivate it instead.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            _context.tblUsers.Remove(user);
-            await _context.SaveChangesAsync();
-            TempData["Success"] = $"Account '{user.Username}' has been deleted.";
             return RedirectToAction(nameof(Index));
         }
 

@@ -3,11 +3,11 @@
     ViewData["Title"] = "Item Details";
 }
 
-<div>
+<div data-modal-source>
     <div>
         <div data-panel>
             <div data-panel-head>
-                @Model.ItemType Item — @Model.ItemName
+                @($"{Model.ItemType} Item - {Model.ItemName}".ToUpper())
             </div>
             <div data-panel-body>
                 <dl>
@@ -56,6 +56,12 @@
 
                     <dt>Date Reported</dt>
                     <dd>@Model.DateReported.ToString("MMM dd, yyyy hh:mm tt")</dd>
+
+                    @if (Model.ArchivedAt != null)
+                    {
+                        <dt>Archived</dt>
+                        <dd>@Model.ArchivedAt.Value.ToString("MMM dd, yyyy hh:mm tt")</dd>
+                    }
 
                 </dl>
 
@@ -124,7 +130,24 @@
                 }
 
                 <div data-actions-row>
-                    <a asp-action="Index">Back</a>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        if (Model.ArchivedAt != null)
+                        {
+                            <form asp-action="Restore" asp-route-id="@Model.ItemID" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit"><img src="~/images/icons/restore.svg" alt="" width="16" height="16" /> Restore</button>
+                            </form>
+                        }
+                        else if (YnclinoApartmentManagementSystem.Helpers.StatusFlowHelper.IsClosedLostFound(Model.Status))
+                        {
+                            <form asp-action="Archive" asp-route-id="@Model.ItemID" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit"><img src="~/images/icons/archive.svg" alt="" width="16" height="16" /> Archive</button>
+                            </form>
+                        }
+                    }
+                    <a asp-action="Index" asp-route-archived="@(Model.ArchivedAt != null)" data-back>Back</a>
                 </div>
             </div>
         </div>

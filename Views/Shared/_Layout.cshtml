@@ -8,7 +8,7 @@
     @* Applied before anything is drawn, so a collapsed rail does not flash open
        on every page load. *@
     <script>
-        try { if (localStorage.getItem('ynclino-rail') === '1') document.documentElement.setAttribute('data-rail', ''); } catch (e) { }
+        try { if (localStorage.getItem('ynclino-rail') !== '0') document.documentElement.setAttribute('data-rail', ''); } catch (e) { }
     </script>
 </head>
 <body>
@@ -17,6 +17,9 @@
     // marks the current page semantically: style it with a[aria-current="page"]
     string? Active(string c) => activeController == c ? "page" : null;
     bool isAdmin = User.IsInRole("Admin");
+    var accountName = User.Identity?.Name ?? "";
+    if (isAdmin && accountName.Length > 0)
+        accountName = char.ToUpperInvariant(accountName[0]) + accountName.Substring(1);
     // three roles now, so "not admin" no longer means "tenant" — name each one
     bool isStaff = User.IsInRole("Maintenance");
     bool isTenant = User.IsInRole("Tenant");
@@ -54,7 +57,7 @@
                         <span data-nav-icon="units"></span>
                         <span data-nav-label>Units</span>
                         @await Component.InvokeAsync("NavAlert", new { module = "Transfer" })
-                        <span data-caret>&#9662;</span>
+                        <svg data-caret aria-hidden="true" viewBox="0 0 16 16" fill="none"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
                     </a>
                     <div id="unitsGroup" hidden="@(unitsOpen ? null : "hidden")">
                         <div>
@@ -95,7 +98,7 @@
                         <span data-nav-icon="billing"></span>
                         <span data-nav-label>Billing and Payment</span>
                         @await Component.InvokeAsync("NavAlert", new { module = "Billing" })
-                        <span data-caret>&#9662;</span>
+                        <svg data-caret aria-hidden="true" viewBox="0 0 16 16" fill="none"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
                     </a>
                     <div id="billingGroup" hidden="@(billingOpen ? null : "hidden")">
                         <div>
@@ -134,40 +137,48 @@
                top of the page, so the first thing at the top of every module is
                that module's own heading. *@
             <div data-account>
-                <a href="#" role="button" data-dropdown aria-expanded="false" aria-controls="accountMenu"
-                   title="@User.Identity.Name">
-                    @* the initial is all that fits on the rail *@
-                    <span data-account-initial>@(User.Identity.Name?.Substring(0, 1).ToUpper())</span>
-                    <span data-account-name>@User.Identity.Name</span>
-                    <span data-account-role>@(isAdmin ? "Admin" : isStaff ? "Maintenance Staff" : "Tenant")</span>
-                </a>
-                <ul id="accountMenu" hidden>
-                    @if (!isStaff)
-                    {
-                        <li>
-                            <a asp-controller="Profile" asp-action="Index">
-                                My Profile @if (isTenant) { @await Component.InvokeAsync("NavAlert", new { module = "Transfer" }) }
-                            </a>
-                        </li>
-                    }
-                    <li><a asp-controller="Account" asp-action="ChangePassword">Change Password</a></li>
-                    <li><hr></li>
-                    <li>
-                        <form asp-controller="Account" asp-action="Logout" method="post">
-                            @Html.AntiForgeryToken()
-                            <button type="submit">Sign Out</button>
-                        </form>
-                    </li>
-                </ul>
+                @if (isStaff && !isAdmin)
+                {
+                    <div class="maintenanceProfileCard" data-account-card title="My Profile">
+                    <span data-nav-icon="profile"></span>
+                    <span data-account-text>
+                        <span>@accountName</span>
+                        @if(isAdmin){ <span/> }
+                        else{<span>@(isAdmin ? "Admin" : isStaff ? "Maintenance Staff" : "Tenant")</span>}
+                    </span>
+                    </div>
+                    @* a form, not a link: Logout only accepts a POST carrying the token *@
+                    <form asp-controller="Account" asp-action="Logout" method="post" data-logout>
+                        @Html.AntiForgeryToken()
+                        <button type="submit" title="Logout">
+                            <span data-nav-icon="logout"></span>
+                            <span data-nav-label>Logout</span>
+                        </button>
+                    </form>
+                }
+                else 
+                {
+                    <a data-account-card aria-current="@Active("Profile")" asp-controller="Profile" asp-action="Index" title="My Profile">
+                    <span data-nav-icon="profile"></span>
+                    <span data-account-text>
+                        <span>@accountName</span>
+                        @if(isAdmin){ <span/> }
+                        else{<span>@(isAdmin ? "Admin" : isStaff ? "Maintenance Staff" : "Tenant")</span>}
+                    </span>
+                    </a>
+                    @* a form, not a link: Logout only accepts a POST carrying the token *@
+                    <form asp-controller="Account" asp-action="Logout" method="post" data-logout>
+                        @Html.AntiForgeryToken()
+                        <button type="submit" title="Logout">
+                            <span data-nav-icon="logout"></span>
+                            <span data-nav-label>Logout</span>
+                        </button>
+                    </form>
+                }
             </div>
         </aside>
 
         <div>
-            <header>
-                <button type="button" data-rail-toggle
-                        title="Collapse the menu" aria-label="Collapse the menu"
-                        aria-expanded="true" aria-controls="appSidebar">&#9776;</button>
-            </header>
             <main>
                 @RenderBody()
             </main>
@@ -181,8 +192,22 @@ else
     </div>
 }
 
+@* The modal every "Add"/"Update" button opens. One shell for the whole system:
+   the button says which page to load, the script below fetches that page and
+   lifts its [data-form-panel] in here. *@
+<dialog data-modal id="appModal" aria-labelledby="appModalTitle">
+    <div data-modal-panel>
+        <div data-modal-head>
+            <span data-modal-title id="appModalTitle"></span>
+            <button type="button" data-modal-close aria-label="Close">&times;</button>
+        </div>
+        <div data-modal-body></div>
+    </div>
+</dialog>
+
     <script src="~/js/ynclino.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+    @* wrapped so the modal script can tell a page's own scripts from the layout's *@
+    <div data-page-scripts>@await RenderSectionAsync("Scripts", required: false)</div>
 
 @* flash messages: data-flash is the hook, ynclino.js removes them after 5s *@
 @if (TempData["Success"] != null)

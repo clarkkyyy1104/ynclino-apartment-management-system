@@ -5,42 +5,23 @@
     bool isTenant = User.IsInRole("Tenant");
 }
 
+<div data-module-shell>
 <div data-page-head>
     <div><h3>Units</h3></div>
+</div>
     @if (isStaff)
     {
-        <div data-actions>
-            @* @if (ViewBag.HasUnits != true)
-            {
-                <form asp-action="GenerateSampleData" method="post"
-                      onsubmit="return confirm('Load the sample data (5 units, 5 tenants, and connected records)?')">
-                    @Html.AntiForgeryToken()
-                    <button type="submit">Load Sample Data</button>
-                </form>
-            }
-            else
-            {
-                <form asp-action="ReloadSampleData" method="post"
-                      onsubmit="return confirm('Reload the sample data? This DELETES the current units, tenants, bills, maintenance, and lost &amp; found records (admin accounts are kept) and regenerates a fresh set of 5 units and 5 tenants.')">
-                    @Html.AntiForgeryToken()
-                    <button type="submit">Reload Sample Data</button>
-                </form>
-            } *@
-            <a data-primary asp-action="Create">+ Add Unit</a>
+        <div data-page-actions>
+            <a data-modal-link data-primary asp-action="Create">Add Unit</a>
         </div>
     }
     @if (isTenant)
     {
-        <a asp-controller="Transfers" asp-action="Create">+ Request Transfer</a>
+        <div data-page-actions>
+            <a data-modal-link data-primary asp-controller="Transfers" asp-action="Create">Request Transfer</a>
+        </div>
     }
-</div>
-
-@if (isTenant)
-{
-    @await Component.InvokeAsync("ModuleNotifications", new { module = "Transfer" })
-}
-
-<form method="get">
+<form method="get" data-auto-search>
     <div>
         <input type="text" name="searchTerm" value="@ViewBag.SearchTerm"
                placeholder="Search unit number or type…" />
@@ -55,9 +36,10 @@
         </select>
     </div>
     <div>
-        <a asp-action="Index">Clear</a>
+        <a asp-action="Index" data-action-tone="gray">Clear</a>
     </div>
 </form>
+</div>
 
 <div data-table-wrap>
     <table>
@@ -87,11 +69,16 @@
                         <span>@unit.Status</span>
                     </td>
                     <td>
-                        <a asp-action="Details" asp-route-id="@unit.UnitID" title="View" aria-label="View"><img src="/images/icons/view.svg"/></a>
+                        <a data-modal-link asp-action="Details" asp-route-id="@unit.UnitID" title="View" aria-label="View">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#FA5203" class="bi bi-eye" viewBox="0 0 16 16">
+                                <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
+                                <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
+                            </svg>
+                        </a>
                         @if (isStaff)
                         {
-                            <a asp-action="Edit" asp-route-id="@unit.UnitID">Update</a>
-                            <a asp-action="Delete" asp-route-id="@unit.UnitID">Delete</a>
+                            <a data-modal-link asp-action="Edit" asp-route-id="@unit.UnitID">Update</a>
+                            <a data-modal-link asp-action="Delete" asp-route-id="@unit.UnitID">Delete</a>
                         }
                     </td>
                 </tr>

@@ -1,261 +1,522 @@
--- =============================================================================
---  YNCLINO APARTMENT MANAGEMENT SYSTEM — database schema
---  Bayotas · Lariosa · Frejoles · Palicte   |   BSIT, Asian College of Technology
---
---  Generated from the application's own models, so this is the same shape the
---  program builds for itself — no hand-written drift between the two.
---
---  MySQL 8 / MariaDB 10.4+.  Run it as a whole:
---      mysql -u root -p < ynclino_schema.sql
---
---  It creates the database, the nine tables, their keys and their relationships,
---  and (at the end, clearly marked) the one administrator account you need in
---  order to sign in the first time.
--- =============================================================================
+-- ============================================================================
+-- 1. ROLES
+-- ============================================================================
 
-DROP DATABASE IF EXISTS `YnclinoApartmentManagementSystemDb`;
-CREATE DATABASE `YnclinoApartmentManagementSystemDb`
-    CHARACTER SET utf8mb4
-    COLLATE utf8mb4_general_ci;
-USE `YnclinoApartmentManagementSystemDb`;
+CREATE TABLE Roles (
+    RoleID TINYINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    RoleName VARCHAR(50) NOT NULL,
 
--- Tables are created parents-first, so every foreign key has something to point
--- at by the time it is declared.
+    PRIMARY KEY (RoleID),
+    CONSTRAINT uq_roles_name UNIQUE (RoleName)
+);
 
--- -----------------------------------------------------------------------------
--- tblUnits
---   The apartment units themselves. Status is Available, Occupied,
---   Reserved or Under Maintenance.
--- -----------------------------------------------------------------------------
-CREATE TABLE `tblUnits` (
-  `UnitID` int NOT NULL AUTO_INCREMENT,
-  `UnitNumber` varchar(20) NOT NULL,
-  `UnitType` varchar(50) NOT NULL,
-  `RentPrice` decimal(10,2) NOT NULL,
-  `Deposit` decimal(10,2) NOT NULL,
-  `AdvancePayment` decimal(10,2) NOT NULL,
-  `Capacity` int NOT NULL,
-  `Status` varchar(20) NOT NULL DEFAULT 'Available',
-  `DateAdded` datetime(6) NOT NULL,
-  PRIMARY KEY (`UnitID`),
-  UNIQUE KEY `IX_tblUnits_UnitNumber` (`UnitNumber`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- ============================================================================
+-- 2. USERS
+-- Central account table for Admin, Tenant, and Maintenance users.
+-- Role-specific operational data belongs in separate profile/history tables.
+-- ============================================================================
 
--- -----------------------------------------------------------------------------
--- tblUsers
---   Every account that can sign in. Role is Admin, Maintenance or Tenant.
---   IsMainAdmin marks the one account that cannot be deleted or deactivated.
---   MustChangePassword forces a new password on the next sign-in.
--- -----------------------------------------------------------------------------
-CREATE TABLE `tblUsers` (
-  `UserID` int NOT NULL AUTO_INCREMENT,
-  `Username` varchar(50) NOT NULL,
-  `Password` varchar(255) NOT NULL,
-  `Role` varchar(20) NOT NULL,
-  `IsActive` tinyint(1) NOT NULL,
-  `MustChangePassword` tinyint(1) NOT NULL,
-  `IsMainAdmin` tinyint(1) NOT NULL,
-  `DateCreated` datetime(6) NOT NULL,
-  PRIMARY KEY (`UserID`),
-  UNIQUE KEY `IX_tblUsers_Username` (`Username`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE Users (
+    UserID INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    RoleID TINYINT UNSIGNED NOT NULL,
 
--- -----------------------------------------------------------------------------
--- tblLostFoundItems
---   The lost & found board. Status is Reported or Claimed.
--- -----------------------------------------------------------------------------
-CREATE TABLE `tblLostFoundItems` (
-  `ItemID` int NOT NULL AUTO_INCREMENT,
-  `ReportedByUserID` int NOT NULL,
-  `ItemName` varchar(100) NOT NULL,
-  `Description` varchar(500) DEFAULT NULL,
-  `ItemType` varchar(10) NOT NULL,
-  `Location` varchar(200) DEFAULT NULL,
-  `Status` varchar(20) NOT NULL DEFAULT 'Reported',
-  `DateReported` datetime(6) NOT NULL,
-  `ClaimedByUserID` int DEFAULT NULL,
-  `DateClaimed` datetime(6) DEFAULT NULL,
-  `Notes` varchar(500) DEFAULT NULL,
-  `ImagePath` varchar(260) DEFAULT NULL,
-  PRIMARY KEY (`ItemID`),
-  KEY `IX_tblLostFoundItems_ClaimedByUserID` (`ClaimedByUserID`),
-  KEY `IX_tblLostFoundItems_ReportedByUserID` (`ReportedByUserID`),
-  CONSTRAINT `FK_tblLostFoundItems_tblUsers_ClaimedByUserID` FOREIGN KEY (`ClaimedByUserID`) REFERENCES `tblUsers` (`UserID`),
-  CONSTRAINT `FK_tblLostFoundItems_tblUsers_ReportedByUserID` FOREIGN KEY (`ReportedByUserID`) REFERENCES `tblUsers` (`UserID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+    Username VARCHAR(50) NOT NULL,
+    PasswordHash VARCHAR(255) NOT NULL,
 
--- -----------------------------------------------------------------------------
--- tblTenants
---   A tenant's record: who they are, which unit, and the advance payment
---   they are holding. UserID is their login; UnitID is null before they move in.
--- -----------------------------------------------------------------------------
-CREATE TABLE `tblTenants` (
-  `TenantID` int NOT NULL AUTO_INCREMENT,
-  `UserID` int DEFAULT NULL,
-  `UnitID` int DEFAULT NULL,
-  `FirstName` varchar(50) NOT NULL,
-  `LastName` varchar(50) NOT NULL,
-  `ContactNumber` varchar(20) DEFAULT NULL,
-  `EmergencyContactName` varchar(100) DEFAULT NULL,
-  `EmergencyContactRelationship` varchar(50) DEFAULT NULL,
-  `EmergencyContactNumber` varchar(20) DEFAULT NULL,
-  `MoveInDate` datetime(6) DEFAULT NULL,
-  `MoveOutDate` datetime(6) DEFAULT NULL,
-  `LeaseStart` datetime(6) DEFAULT NULL,
-  `LeaseEnd` datetime(6) DEFAULT NULL,
-  `Status` varchar(20) NOT NULL DEFAULT 'Active',
-  `AdvanceCredit` decimal(10,2) NOT NULL,
-  `DateRecorded` datetime(6) NOT NULL,
-  `PhotoPath` varchar(300) DEFAULT NULL,
-  PRIMARY KEY (`TenantID`),
-  KEY `IX_tblTenants_UnitID` (`UnitID`),
-  KEY `IX_tblTenants_UserID` (`UserID`),
-  CONSTRAINT `FK_tblTenants_tblUnits_UnitID` FOREIGN KEY (`UnitID`) REFERENCES `tblUnits` (`UnitID`),
-  CONSTRAINT `FK_tblTenants_tblUsers_UserID` FOREIGN KEY (`UserID`) REFERENCES `tblUsers` (`UserID`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+    FirstName VARCHAR(80) NOT NULL,
+    LastName VARCHAR(80) NOT NULL,
+    ContactNumber VARCHAR(30) NULL,
 
--- -----------------------------------------------------------------------------
--- tblUnitTransferRequests
---   A tenant asking to move, or applying for a first unit.
---   Archived per side, like maintenance.
--- -----------------------------------------------------------------------------
-CREATE TABLE `tblUnitTransferRequests` (
-  `TransferID` int NOT NULL AUTO_INCREMENT,
-  `TenantID` int NOT NULL,
-  `CurrentUnitID` int DEFAULT NULL,
-  `RequestedUnitID` int NOT NULL,
-  `Reason` varchar(500) NOT NULL,
-  `Status` varchar(20) NOT NULL DEFAULT 'Pending',
-  `DateRequested` datetime(6) NOT NULL,
-  `DateReviewed` datetime(6) DEFAULT NULL,
-  `TenantArchivedAt` datetime(6) DEFAULT NULL,
-  `StaffArchivedAt` datetime(6) DEFAULT NULL,
-  `AdminNotes` varchar(500) DEFAULT NULL,
-  PRIMARY KEY (`TransferID`),
-  KEY `IX_tblUnitTransferRequests_CurrentUnitID` (`CurrentUnitID`),
-  KEY `IX_tblUnitTransferRequests_RequestedUnitID` (`RequestedUnitID`),
-  KEY `IX_tblUnitTransferRequests_TenantID` (`TenantID`),
-  CONSTRAINT `FK_tblUnitTransferRequests_tblTenants_TenantID` FOREIGN KEY (`TenantID`) REFERENCES `tblTenants` (`TenantID`) ON DELETE CASCADE,
-  CONSTRAINT `FK_tblUnitTransferRequests_tblUnits_CurrentUnitID` FOREIGN KEY (`CurrentUnitID`) REFERENCES `tblUnits` (`UnitID`),
-  CONSTRAINT `FK_tblUnitTransferRequests_tblUnits_RequestedUnitID` FOREIGN KEY (`RequestedUnitID`) REFERENCES `tblUnits` (`UnitID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+    IsActive BOOLEAN NOT NULL DEFAULT TRUE,
+    MustChangePassword BOOLEAN NOT NULL DEFAULT TRUE,
+    IsMainAdmin BOOLEAN NOT NULL DEFAULT FALSE,
 
--- -----------------------------------------------------------------------------
--- tblBillings
---   One row per bill. AmountPaid is what was paid against THIS bill;
---   AdvanceFromOverpayment is the part of a payment that went past it and became
---   credit. ArchivedAt files a settled bill out of the working list without
---   removing it from the tenant's record or the reports.
--- -----------------------------------------------------------------------------
-CREATE TABLE `tblBillings` (
-  `BillingID` int NOT NULL AUTO_INCREMENT,
-  `TenantID` int NOT NULL,
-  `BillingPeriod` datetime(6) NOT NULL,
-  `AmountDue` decimal(10,2) NOT NULL,
-  `Deposit` decimal(10,2) NOT NULL,
-  `Advance` decimal(10,2) NOT NULL,
-  `DueDate` datetime(6) NOT NULL,
-  `AmountPaid` decimal(10,2) DEFAULT NULL,
-  `AdvanceFromOverpayment` decimal(10,2) NOT NULL,
-  `IssuedFromAdvance` tinyint(1) NOT NULL,
-  `DatePaid` datetime(6) DEFAULT NULL,
-  `Status` varchar(20) NOT NULL DEFAULT 'Unpaid',
-  `Notes` varchar(500) DEFAULT NULL,
-  `DateIssued` datetime(6) NOT NULL,
-  `ArchivedAt` datetime(6) DEFAULT NULL,
-  PRIMARY KEY (`BillingID`),
-  KEY `IX_tblBillings_TenantID` (`TenantID`),
-  CONSTRAINT `FK_tblBillings_tblTenants_TenantID` FOREIGN KEY (`TenantID`) REFERENCES `tblTenants` (`TenantID`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+    LastLoginAt DATETIME(6) NULL,
+    DateCreated DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    DateUpdated DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)
+        ON UPDATE CURRENT_TIMESTAMP(6),
 
--- -----------------------------------------------------------------------------
--- tblClaimRequests
---   Someone claiming a found item, with the details they gave to
---   prove it is theirs.
--- -----------------------------------------------------------------------------
-CREATE TABLE `tblClaimRequests` (
-  `ClaimID` int NOT NULL AUTO_INCREMENT,
-  `ItemID` int NOT NULL,
-  `ClaimantUserID` int NOT NULL,
-  `VerificationDetails` varchar(1000) NOT NULL,
-  `SubmittedAt` datetime(6) NOT NULL,
-  `Status` varchar(20) NOT NULL DEFAULT 'Pending',
-  `AdminNotes` varchar(500) DEFAULT NULL,
-  `ImagePath` varchar(300) DEFAULT NULL,
-  PRIMARY KEY (`ClaimID`),
-  KEY `IX_tblClaimRequests_ClaimantUserID` (`ClaimantUserID`),
-  KEY `IX_tblClaimRequests_ItemID` (`ItemID`),
-  CONSTRAINT `FK_tblClaimRequests_tblLostFoundItems_ItemID` FOREIGN KEY (`ItemID`) REFERENCES `tblLostFoundItems` (`ItemID`) ON DELETE CASCADE,
-  CONSTRAINT `FK_tblClaimRequests_tblUsers_ClaimantUserID` FOREIGN KEY (`ClaimantUserID`) REFERENCES `tblUsers` (`UserID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+    PRIMARY KEY (UserID),
+    CONSTRAINT uq_users_username UNIQUE (Username),
 
--- -----------------------------------------------------------------------------
--- tblMaintenanceRequests
---   Repairs. Archived per side: a tenant clearing their own list
---   does not clear the staff's, and the other way round.
--- -----------------------------------------------------------------------------
-CREATE TABLE `tblMaintenanceRequests` (
-  `RequestID` int NOT NULL AUTO_INCREMENT,
-  `TenantID` int NOT NULL,
-  `UnitID` int DEFAULT NULL,
-  `AssignedStaffID` int DEFAULT NULL,
-  `Category` varchar(50) NOT NULL,
-  `Description` varchar(500) NOT NULL,
-  `Priority` varchar(20) NOT NULL,
-  `Status` varchar(30) NOT NULL DEFAULT 'Pending',
-  `DateSubmitted` datetime(6) NOT NULL,
-  `DateResolved` datetime(6) DEFAULT NULL,
-  `TenantArchivedAt` datetime(6) DEFAULT NULL,
-  `StaffArchivedAt` datetime(6) DEFAULT NULL,
-  `StaffNotes` varchar(500) DEFAULT NULL,
-  `ImagePath` varchar(260) DEFAULT NULL,
-  PRIMARY KEY (`RequestID`),
-  KEY `IX_tblMaintenanceRequests_AssignedStaffID` (`AssignedStaffID`),
-  KEY `IX_tblMaintenanceRequests_TenantID` (`TenantID`),
-  KEY `IX_tblMaintenanceRequests_UnitID` (`UnitID`),
-  CONSTRAINT `FK_tblMaintenanceRequests_tblTenants_TenantID` FOREIGN KEY (`TenantID`) REFERENCES `tblTenants` (`TenantID`) ON DELETE CASCADE,
-  CONSTRAINT `FK_tblMaintenanceRequests_tblUnits_UnitID` FOREIGN KEY (`UnitID`) REFERENCES `tblUnits` (`UnitID`),
-  CONSTRAINT `FK_tblMaintenanceRequests_tblUsers_AssignedStaffID` FOREIGN KEY (`AssignedStaffID`) REFERENCES `tblUsers` (`UserID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+    CONSTRAINT fk_users_role
+        FOREIGN KEY (RoleID)
+        REFERENCES Roles(RoleID)
+        ON DELETE RESTRICT,
 
--- -----------------------------------------------------------------------------
--- tblPayments
---   Every payment, kept separately from the bill it settled so a bill can
---   be paid in instalments and still add up.
--- -----------------------------------------------------------------------------
-CREATE TABLE `tblPayments` (
-  `PaymentID` int NOT NULL AUTO_INCREMENT,
-  `BillingID` int NOT NULL,
-  `Amount` decimal(10,2) NOT NULL,
-  `DatePaid` datetime(6) NOT NULL,
-  `Method` varchar(50) DEFAULT NULL,
-  `Remarks` varchar(300) DEFAULT NULL,
-  `RecordedAt` datetime(6) NOT NULL,
-  PRIMARY KEY (`PaymentID`),
-  KEY `IX_tblPayments_BillingID` (`BillingID`),
-  CONSTRAINT `FK_tblPayments_tblBillings_BillingID` FOREIGN KEY (`BillingID`) REFERENCES `tblBillings` (`BillingID`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+    INDEX idx_users_role (RoleID),
+    INDEX idx_users_active (IsActive),
+    INDEX idx_users_name (LastName, FirstName)
+);
 
--- =============================================================================
---  THE FIRST ACCOUNT
---
---  Without this the database is complete but nobody can get in. The password is
---  not stored: what follows is a PBKDF2-SHA256 hash (100,000 iterations, with a
---  16-byte salt in front of it) of the starting password below.
---
---      admin        / Admin@123     (signs straight in)
---      maintenance1 / Staff@123     (asked to set its own password first)
---
---  Change the administrator's password from inside the system the first time
---  you sign in. The program can also create both of these by itself if the
---  table is empty, so if you would rather start with nothing, leave this whole
---  section out — everything above it is the schema and stands on its own.
--- =============================================================================
+-- ============================================================================
+-- 3. UNITS
+-- Unit master data. Historical occupancy is stored in TenantUnitAssignments.
+-- ============================================================================
 
-INSERT INTO `tblUsers`
-    (`Username`, `Password`, `Role`, `IsActive`, `IsMainAdmin`, `MustChangePassword`, `DateCreated`)
+CREATE TABLE Units (
+    UnitID INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    UnitNumber VARCHAR(20) NOT NULL,
+    UnitType VARCHAR(50) NOT NULL,
+
+    RentPrice DECIMAL(10,2) NOT NULL,
+    Deposit DECIMAL(10,2) NOT NULL,
+    AdvancePayment DECIMAL(10,2) NOT NULL,
+    Capacity INT UNSIGNED NOT NULL,
+
+    Status VARCHAR(20) NOT NULL DEFAULT 'Available',
+    DateAdded DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    DateUpdated DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)
+        ON UPDATE CURRENT_TIMESTAMP(6),
+
+    PRIMARY KEY (UnitID),
+    CONSTRAINT uq_units_number UNIQUE (UnitNumber),
+
+    CONSTRAINT chk_units_rent_nonnegative CHECK (RentPrice >= 0),
+    CONSTRAINT chk_units_deposit_nonnegative CHECK (Deposit >= 0),
+    CONSTRAINT chk_units_advance_nonnegative CHECK (AdvancePayment >= 0),
+    CONSTRAINT chk_units_capacity_positive CHECK (Capacity > 0),
+
+    INDEX idx_units_status (Status),
+    INDEX idx_units_type (UnitType)
+);
+
+-- ============================================================================
+-- 4. TENANT PROFILES
+-- One tenant profile per user account.
+-- Current unit and lease fields support the existing tenant screens. Every
+-- change of current unit is also recorded in TenantUnitAssignments.
+-- FirstName, LastName and ContactNumber are current tenant details edited on
+-- tenant/profile screens. The application copies them to Users on each save so
+-- account displays agree. Run schema_consistency_checks.sql after direct SQL
+-- edits, which bypass that application synchronization.
+-- ============================================================================
+
+CREATE TABLE TenantProfiles (
+    TenantID INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    UserID INT UNSIGNED NOT NULL,
+
+    -- Existing tenant screens still edit these details. User identity is also
+    -- copied to Users on save so account lists and tenant records agree.
+    FirstName VARCHAR(80) NOT NULL,
+    LastName VARCHAR(80) NOT NULL,
+    ContactNumber VARCHAR(30) NULL,
+    EmergencyContactName VARCHAR(100) NULL,
+    EmergencyContactRelationship VARCHAR(50) NULL,
+    EmergencyContactNumber VARCHAR(20) NULL,
+    PhotoPath VARCHAR(300) NULL,
+
+    AdvanceCredit DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    Status VARCHAR(20) NOT NULL DEFAULT 'Active',
+    DateRecorded DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    DateUpdated DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)
+        ON UPDATE CURRENT_TIMESTAMP(6),
+
+    PRIMARY KEY (TenantID),
+    CONSTRAINT uq_tenant_profiles_user UNIQUE (UserID),
+
+    CONSTRAINT fk_tenant_profiles_user
+        FOREIGN KEY (UserID)
+        REFERENCES Users(UserID)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT chk_tenant_advance_credit_nonnegative CHECK (AdvanceCredit >= 0),
+
+    INDEX idx_tenant_profiles_status (Status)
+);
+
+-- ============================================================================
+-- 5. TENANT UNIT ASSIGNMENTS / LEASE HISTORY
+-- Sole source of current occupancy and historical unit assignments.
+-- A tenant can have many historical assignments but only one row with
+-- Status = 'Active' at a time.
+-- The Active row identifies the tenant's current unit. No Active row means
+-- no current unit; Ended rows are history and must not count as occupants.
+-- ============================================================================
+
+CREATE TABLE TenantUnitAssignments (
+    AssignmentID BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    TenantID INT UNSIGNED NOT NULL,
+    UnitID INT UNSIGNED NOT NULL,
+
+    MoveInDate DATETIME(6) NULL,
+    MoveOutDate DATETIME(6) NULL,
+    LeaseStart DATETIME(6) NULL,
+    LeaseEnd DATETIME(6) NULL,
+    Status VARCHAR(20) NOT NULL DEFAULT 'Active',
+
+    DateRecorded DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    DateUpdated DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)
+        ON UPDATE CURRENT_TIMESTAMP(6),
+
+    -- If Status is Active, this stores TenantID; otherwise NULL.
+    -- UNIQUE therefore prevents two Active assignments for the same tenant.
+    ActiveTenantID INT UNSIGNED
+        GENERATED ALWAYS AS (
+            CASE WHEN Status = 'Active' THEN TenantID ELSE NULL END
+        ) STORED,
+
+    PRIMARY KEY (AssignmentID),
+    CONSTRAINT uq_tenant_one_active_assignment UNIQUE (ActiveTenantID),
+
+    CONSTRAINT fk_assignments_tenant
+        FOREIGN KEY (TenantID)
+        REFERENCES TenantProfiles(TenantID)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_assignments_unit
+        FOREIGN KEY (UnitID)
+        REFERENCES Units(UnitID)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT chk_assignment_move_dates CHECK (
+        MoveOutDate IS NULL OR MoveInDate IS NULL OR MoveOutDate >= MoveInDate
+    ),
+    CONSTRAINT chk_assignment_lease_dates CHECK (
+        LeaseEnd IS NULL OR LeaseStart IS NULL OR LeaseEnd >= LeaseStart
+    ),
+
+    INDEX idx_assignments_tenant (TenantID),
+    INDEX idx_assignments_unit (UnitID),
+    INDEX idx_assignments_status (Status),
+    INDEX idx_assignments_lease_period (LeaseStart, LeaseEnd)
+);
+
+-- ============================================================================
+-- 6. LOST AND FOUND ITEMS
+-- Any authenticated user may report or claim an item, so these FKs correctly
+-- reference the centralized Users table rather than a tenant-specific table.
+-- ============================================================================
+
+CREATE TABLE LostFoundItems (
+    ItemID BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+
+    ReportedByUserID INT UNSIGNED NOT NULL,
+    ClaimedByUserID INT UNSIGNED NULL,
+
+    ItemName VARCHAR(100) NOT NULL,
+    Description VARCHAR(500) NULL,
+    ItemType VARCHAR(20) NOT NULL,
+    Location VARCHAR(200) NULL,
+    Status VARCHAR(20) NOT NULL DEFAULT 'Reported',
+
+    DateReported DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    DateClaimed DATETIME(6) NULL,
+    ArchivedAt DATETIME(6) NULL,
+    Notes VARCHAR(500) NULL,
+    ImagePath VARCHAR(260) NULL,
+
+    PRIMARY KEY (ItemID),
+
+    CONSTRAINT fk_lostfound_reported_by
+        FOREIGN KEY (ReportedByUserID)
+        REFERENCES Users(UserID)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_lostfound_claimed_by
+        FOREIGN KEY (ClaimedByUserID)
+        REFERENCES Users(UserID)
+        ON DELETE RESTRICT,
+
+    INDEX idx_lostfound_reporter (ReportedByUserID),
+    INDEX idx_lostfound_claimant (ClaimedByUserID),
+    INDEX idx_lostfound_status (Status),
+    INDEX idx_lostfound_archived (ArchivedAt),
+    INDEX idx_lostfound_reported_date (DateReported)
+);
+
+-- ============================================================================
+-- 7. CLAIM REQUESTS
+-- Any user may submit a claim request.
+-- ============================================================================
+
+CREATE TABLE ClaimRequests (
+    ClaimID BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    ItemID BIGINT UNSIGNED NOT NULL,
+    ClaimantUserID INT UNSIGNED NOT NULL,
+
+    VerificationDetails VARCHAR(1000) NOT NULL,
+    SubmittedAt DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    Status VARCHAR(20) NOT NULL DEFAULT 'Pending',
+    AdminNotes VARCHAR(500) NULL,
+    ImagePath VARCHAR(300) NULL,
+
+    PRIMARY KEY (ClaimID),
+
+    CONSTRAINT fk_claims_item
+        FOREIGN KEY (ItemID)
+        REFERENCES LostFoundItems(ItemID)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_claims_user
+        FOREIGN KEY (ClaimantUserID)
+        REFERENCES Users(UserID)
+        ON DELETE RESTRICT,
+
+    INDEX idx_claims_item (ItemID),
+    INDEX idx_claims_user (ClaimantUserID),
+    INDEX idx_claims_status (Status),
+    INDEX idx_claims_submitted (SubmittedAt)
+);
+
+-- ============================================================================
+-- 8. UNIT TRANSFER REQUESTS
+-- Tenant-only transaction: references TenantProfiles rather than Users.
+-- CurrentUnitID records the unit at request time; assignment history is also
+-- kept in TenantUnitAssignments.
+-- CurrentUnitID is a snapshot, so an approved transfer does not change what
+-- the request originally asked to move from.
+-- ============================================================================
+
+CREATE TABLE UnitTransferRequests (
+    TransferID BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    TenantID INT UNSIGNED NOT NULL,
+    RequestedUnitID INT UNSIGNED NOT NULL,
+    CurrentUnitID INT UNSIGNED NULL,
+
+    Reason VARCHAR(500) NOT NULL,
+    Status VARCHAR(20) NOT NULL DEFAULT 'Pending',
+    DateRequested DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    DateReviewed DATETIME(6) NULL,
+
+    TenantArchivedAt DATETIME(6) NULL,
+    StaffArchivedAt DATETIME(6) NULL,
+    AdminNotes VARCHAR(500) NULL,
+
+    PRIMARY KEY (TransferID),
+
+    CONSTRAINT fk_transfer_tenant
+        FOREIGN KEY (TenantID)
+        REFERENCES TenantProfiles(TenantID)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_transfer_requested_unit
+        FOREIGN KEY (RequestedUnitID)
+        REFERENCES Units(UnitID)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_transfer_current_unit
+        FOREIGN KEY (CurrentUnitID) REFERENCES Units(UnitID) ON DELETE RESTRICT,
+
+    INDEX idx_transfer_tenant (TenantID),
+    INDEX idx_transfer_unit (RequestedUnitID),
+    INDEX idx_transfer_status (Status),
+    INDEX idx_transfer_requested_date (DateRequested)
+);
+
+-- ============================================================================
+-- 9. BILLINGS
+-- Tenant-only financial record: references TenantProfiles.
+-- Payments is the source of truth. AmountPaid is a compatibility cache for
+-- existing screens and should equal the sum of related payment rows.
+-- DatePaid caches the latest payment date. Deposit and Advance are amounts
+-- charged on this particular bill, while Units.Deposit/AdvancePayment are
+-- current unit prices and can change independently.
+-- ============================================================================
+
+CREATE TABLE Billings (
+    BillingID BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    TenantID INT UNSIGNED NOT NULL,
+
+    BillingPeriod DATE NOT NULL,
+    AmountDue DECIMAL(10,2) NOT NULL,
+    -- Compatibility cache for existing billing screens; Payments remains the
+    -- authoritative ledger and the application refreshes this on each payment.
+    AmountPaid DECIMAL(10,2) NULL,
+    Deposit DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    Advance DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    DueDate DATE NOT NULL,
+
+    AdvanceFromOverpayment DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    IssuedFromAdvance BOOLEAN NOT NULL DEFAULT FALSE,
+
+    DatePaid DATETIME(6) NULL,
+    Status VARCHAR(20) NOT NULL DEFAULT 'Unpaid',
+    Notes VARCHAR(500) NULL,
+    DateIssued DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    ArchivedAt DATETIME(6) NULL,
+
+    PRIMARY KEY (BillingID),
+
+    CONSTRAINT fk_billings_tenant
+        FOREIGN KEY (TenantID)
+        REFERENCES TenantProfiles(TenantID)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT chk_billings_amount_due_nonnegative CHECK (AmountDue >= 0),
+    CONSTRAINT chk_billings_deposit_nonnegative CHECK (Deposit >= 0),
+    CONSTRAINT chk_billings_advance_nonnegative CHECK (Advance >= 0),
+    CONSTRAINT chk_billings_overpayment_nonnegative CHECK (AdvanceFromOverpayment >= 0),
+
+    INDEX idx_billings_tenant (TenantID),
+    INDEX idx_billings_period (BillingPeriod),
+    INDEX idx_billings_due_date (DueDate),
+    INDEX idx_billings_status (Status),
+    INDEX idx_billings_date_issued (DateIssued)
+);
+
+-- ============================================================================
+-- 10. PAYMENTS
+-- Authoritative payment history for a billing record.
+-- Financial history is protected from accidental cascading deletion.
+-- ============================================================================
+
+CREATE TABLE Payments (
+    PaymentID BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    BillingID BIGINT UNSIGNED NOT NULL,
+
+    Amount DECIMAL(10,2) NOT NULL,
+    DatePaid DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    Method VARCHAR(50) NULL,
+    Remarks VARCHAR(300) NULL,
+    RecordedAt DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+
+    PRIMARY KEY (PaymentID),
+
+    CONSTRAINT fk_payments_billing
+        FOREIGN KEY (BillingID)
+        REFERENCES Billings(BillingID)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT chk_payments_amount_positive CHECK (Amount > 0),
+
+    INDEX idx_payments_billing (BillingID),
+    INDEX idx_payments_date_paid (DatePaid)
+);
+
+-- ============================================================================
+-- 11. MAINTENANCE REQUESTS
+-- TenantID identifies the tenant who submitted the request.
+-- AssignedStaffUserID references Users so the assigned maintenance account
+-- remains part of the centralized account model.
+-- UnitID identifies the unit where this request occurred; it can differ from
+-- the tenant's current UnitID after a transfer.
+-- ============================================================================
+
+CREATE TABLE MaintenanceRequests (
+    RequestID BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+
+    TenantID INT UNSIGNED NOT NULL,
+    UnitID INT UNSIGNED NULL,
+    AssignedStaffUserID INT UNSIGNED NULL,
+
+    Category VARCHAR(50) NOT NULL,
+    Description VARCHAR(500) NOT NULL,
+    Priority VARCHAR(20) NOT NULL,
+    Status VARCHAR(30) NOT NULL DEFAULT 'Pending',
+
+    DateSubmitted DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    DateResolved DATETIME(6) NULL,
+
+    TenantArchivedAt DATETIME(6) NULL,
+    StaffArchivedAt DATETIME(6) NULL,
+    StaffNotes VARCHAR(500) NULL,
+    ImagePath VARCHAR(260) NULL,
+
+    PRIMARY KEY (RequestID),
+
+    CONSTRAINT fk_maintenance_tenant
+        FOREIGN KEY (TenantID)
+        REFERENCES TenantProfiles(TenantID)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_maintenance_unit
+        FOREIGN KEY (UnitID)
+        REFERENCES Units(UnitID)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_maintenance_staff
+        FOREIGN KEY (AssignedStaffUserID)
+        REFERENCES Users(UserID)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT chk_maintenance_resolved_date CHECK (
+        DateResolved IS NULL OR DateResolved >= DateSubmitted
+    ),
+
+    INDEX idx_maintenance_tenant (TenantID),
+    INDEX idx_maintenance_unit (UnitID),
+    INDEX idx_maintenance_staff (AssignedStaffUserID),
+    INDEX idx_maintenance_status (Status),
+    INDEX idx_maintenance_priority (Priority),
+    INDEX idx_maintenance_submitted (DateSubmitted)
+);
+
+-- ============================================================================
+-- DEFAULT ROLES
+-- ============================================================================
+
+INSERT INTO Roles (RoleName)
 VALUES
-    -- the administrator — the one account that cannot be deleted or switched off
-    ('admin', 'djYghAu8O+sp9Cvf31GmHYlY3jXA5UjsxHi0K88subOp77uz49xjukaeeYt2LqGh', 'Admin', 1, 1, 0, NOW()),
-    -- a maintenance staff account, asked for a new password on first sign-in
-    ('maintenance1', 'vzHaWGruR2VMjyAOyLhqOpdwix266UvV3peVJqo+OxKuKTAMYKKMynXHxPb4VOyf', 'Maintenance', 1, 0, 1, NOW());
+    ('Admin'),
+    ('Maintenance'),
+    ('Tenant');
+
+-- ============================================================================
+-- DEFAULT SYSTEM ACCOUNTS
+-- Retains the two original seed accounts. Names are generic seed labels only.
+-- PasswordHash values are carried forward from the original YAMSDB.sql.
+-- ============================================================================
+
+INSERT INTO Users
+(
+    RoleID,
+    Username,
+    PasswordHash,
+    FirstName,
+    LastName,
+    ContactNumber,
+    IsActive,
+    MustChangePassword,
+    IsMainAdmin
+)
+VALUES
+(
+    (SELECT RoleID FROM Roles WHERE RoleName = 'Admin'),
+    'admin',
+    'djYghAu8O+sp9Cvf31GmHYlY3jXA5UjsxHi0K88subOp77uz49xjukaeeYt2LqGh',
+    'System',
+    'Administrator',
+    NULL,
+    TRUE,
+    FALSE,
+    TRUE
+),
+(
+    (SELECT RoleID FROM Roles WHERE RoleName = 'Maintenance'),
+    'maintenance1',
+    'vzHaWGruR2VMjyAOyLhqOpdwix266UvV3peVJqo+OxKuKTAMYKKMynXHxPb4VOyf',
+    'Maintenance',
+    'Staff',
+    NULL,
+    TRUE,
+    TRUE,
+    FALSE
+);
+
+-- ============================================================================
+-- REFERENCE QUERIES (COMMENTS ONLY)
+-- ============================================================================
+-- Current unit for a tenant:
+--
+-- SELECT tua.*
+-- FROM TenantUnitAssignments tua
+-- WHERE tua.TenantID = ?
+--   AND tua.Status = 'Active';
+--
+-- Amount paid and remaining balance for a bill:
+--
+-- SELECT
+--     b.BillingID,
+--     b.AmountDue,
+--     COALESCE(SUM(p.Amount), 0) AS AmountPaid,
+--     b.AmountDue - COALESCE(SUM(p.Amount), 0) AS Balance
+-- FROM Billings b
+-- LEFT JOIN Payments p ON p.BillingID = b.BillingID
+-- WHERE b.BillingID = ?
+-- GROUP BY b.BillingID, b.AmountDue;
+--
+-- IMPORTANT:
+-- Prefer setting Users.IsActive = FALSE instead of deleting user accounts.
+-- This preserves billing, transfer, maintenance, lost/found, and audit history.
+-- ============================================================================

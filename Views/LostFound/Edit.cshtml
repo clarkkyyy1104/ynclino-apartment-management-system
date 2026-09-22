@@ -21,22 +21,17 @@
                     }
 
                     <div>
-                        <label asp-for="ItemType"></label>
-                        <select asp-for="ItemType">
-                            <option>Lost</option>
-                            <option>Found</option>
-                        </select>
-                    </div>
-
-                    <div>
                         <label asp-for="ItemName"></label>
                         <input asp-for="ItemName" />
                         <span asp-validation-for="ItemName"></span>
                     </div>
 
                     <div>
-                        <label asp-for="Description"></label>
-                        <textarea asp-for="Description" rows="2"></textarea>
+                        <label asp-for="ItemType"></label>
+                        <select asp-for="ItemType">
+                            <option>Lost</option>
+                            <option>Found</option>
+                        </select>
                     </div>
 
                     <div>
@@ -59,7 +54,7 @@
 
                     @* An item marked Claimed must say WHO collected it — "Claimed" on
                        its own tells the admin nothing a month later. *@
-                    <div id="claimedByWrap">
+                    <div id="claimedByWrap" data-span>
                         <label asp-for="ClaimedByUserID"></label>
                         <select asp-for="ClaimedByUserID" asp-items="Model.AvailableTenants">
                             <option value="0">— Select tenant —</option>
@@ -68,7 +63,7 @@
                         <span asp-validation-for="ClaimedByUserID"></span>
                     </div>
 
-                    <div>
+                    <div data-span>
                         <label asp-for="ImageUpload"></label>
                         @if (!string.IsNullOrEmpty(Model.ImagePath))
                         {
@@ -79,6 +74,11 @@
                         <input asp-for="ImageUpload" type="file" accept="image/*" />
                         <div>Upload to replace the current photo. JPG, PNG, GIF, or WEBP — up to 5 MB.</div>
                         <span asp-validation-for="ImageUpload"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="Description"></label>
+                        <textarea asp-for="Description" rows="2"></textarea>
                     </div>
 
                     <div data-actions-row>

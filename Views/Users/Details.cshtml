@@ -1,0 +1,40 @@
+@model YnclinoApartmentManagementSystem.Models.tblUser
+@{
+    ViewData["Title"] = $"Account: {Model.DisplayName}";
+    var tenant = Model.Tenants.FirstOrDefault();
+    string roleLabel = Model.Role switch
+    {
+        "Admin" => "Administrator",
+        "Maintenance" => "Maintenance Staff",
+        _ => "Tenant"
+    };
+}
+
+<div data-modal-source>
+    <div data-panel>
+        <div data-panel-head>Account Details - @Model.DisplayName</div>
+        <div data-panel-body>
+            <dl>
+                <dt>First Name</dt><dd>@Model.FirstName</dd>
+                <dt>Last Name</dt><dd>@Model.LastName</dd>
+                <dt>Username</dt><dd>@Model.Username</dd>
+                <dt>Role</dt><dd>@roleLabel@(Model.IsMainAdmin ? " (Main Admin)" : "")</dd>
+                <dt>Contact Number</dt><dd>@(Model.ContactNumber ?? "—")</dd>
+                <dt>Status</dt><dd>@(Model.IsActive ? "Active" : "Inactive")</dd>
+                <dt>Date Created</dt><dd>@Model.DateCreated.ToString("MMMM dd, yyyy")</dd>
+                <dt>Last Login</dt><dd>@(Model.LastLoginAt?.ToString("MMMM dd, yyyy h:mm tt") ?? "Never")</dd>
+            </dl>
+        </div>
+    </div>
+    <div data-actions-row>
+        <a asp-action="Index" data-back>Back to Users</a>
+        @if (!Model.IsMainAdmin)
+        {
+            <a data-modal-link data-primary asp-action="Edit" asp-route-id="@Model.UserID">Update</a>
+        }
+        @if (tenant != null)
+        {
+            <a data-modal-link asp-controller="Tenants" asp-action="Details" asp-route-id="@tenant.TenantID">View Tenant Record</a>
+        }
+    </div>
+</div>

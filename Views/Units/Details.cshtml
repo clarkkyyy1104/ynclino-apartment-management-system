@@ -1,76 +1,37 @@
 @model YnclinoApartmentManagementSystem.Models.tblUnit
 @{
     ViewData["Title"] = $"Unit {Model.UnitNumber}";
-    bool isStaff = User.IsInRole("Admin");
+    bool isAdmin = User.IsInRole("Admin");
 }
 
-<div>
-    <div>
-        <div data-panel>
-            <div data-panel-head>Unit @Model.UnitNumber</div>
-            <div data-panel-body>
-                <dl>
-                    <dt>Unit Type</dt>
-                    <dd>@Model.UnitType</dd>
-                    <dt>Rent Price</dt>
-                    <dd>₱@Model.RentPrice.ToString("N0")</dd>
-                    <dt>Deposit</dt>
-                    <dd>₱@Model.Deposit.ToString("N0")</dd>
-                    <dt>One Month Advance</dt>
-                    <dd>₱@Model.AdvancePayment.ToString("N0")</dd>
-                    <dt>Capacity</dt>
-                    <dd>@Model.Capacity</dd>
-                    <dt>Status</dt>
-                    <dd><span>@Model.Status</span></dd>
-                </dl>
-            </div>
+@* data-modal-source is the part the modal script lifts into the dialog *@
+<div data-modal-source>
+    <div data-panel>
+        <div data-panel-head>Unit @Model.UnitNumber</div>
+        <div data-panel-body>
+            <dl>
+                <dt>Unit Type</dt>
+                <dd>@Model.UnitType</dd>
+                <dt>Rent Price</dt>
+                <dd>₱ @Model.RentPrice.ToString("N2")</dd>
+                <dt>Deposit</dt>
+                <dd>₱ @Model.Deposit.ToString("N2")</dd>
+                <dt>One Month Advance</dt>
+                <dd>₱ @Model.AdvancePayment.ToString("N2")</dd>
+                <dt>Capacity</dt>
+                <dd>@Model.Capacity</dd>
+                <dt>Status</dt>
+                <dd>@Model.Status</dd>
+            </dl>
         </div>
+    </div>
 
-        @if (isStaff)
+    <div data-actions-row>
+        <a asp-action="Index" data-back>Back to Units</a>
+        @if (isAdmin)
         {
-            <div>
-                <div>Tenancy History</div>
-                <div data-table-wrap>
-                    @if (Model.Tenants.Any())
-                    {
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Tenant</th>
-                                    <th>Recorded</th>
-                                    <th>Move-Out</th>
-                                    <th>Status</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var tenant in Model.Tenants.OrderByDescending(t => t.Status == "Active").ThenByDescending(t => t.DateRecorded))
-                                {
-                                    <tr>
-                                        <td>@tenant.LastName, @tenant.FirstName</td>
-                                        <td>@tenant.DateRecorded.ToString("MMM dd, yyyy")</td>
-                                        <td>@(tenant.MoveOutDate?.ToString("MMM dd, yyyy") ?? "—")</td>
-                                        <td>
-                                            <span>@tenant.Status</span>
-                                        </td>
-                                        <td>
-                                            <a asp-controller="Tenants" asp-action="Details" asp-route-id="@tenant.TenantID">View</a>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    }
-                    else
-                    {
-                        <p>No tenants have been assigned to this unit yet.</p>
-                    }
-                </div>
-            </div>
+            @* the history opens in a modal of its own, as the design has it *@
+            <a data-modal-link data-primary asp-action="History" asp-route-id="@Model.UnitID">Tenancy History</a>
         }
-
-        <div data-actions-row>
-            <a asp-action="Index">Back to Units</a>
-        </div>
     </div>
 </div>

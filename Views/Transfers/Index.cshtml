@@ -6,43 +6,45 @@
     string title = isAdmin ? "Unit Requests" : "My Unit Requests";
 }
 
+<div data-module-shell>
 <div data-page-head>
     <div>
         <h3>@title</h3>
-        <p>
-            @if (archived)
-            {
-                <text>Requests you have filed away. They stay on the other side's list.</text>
-            }
-            else if (isAdmin)
-            {
-                <text>Requests to move to another unit, and applications for a first unit.</text>
-            }
-            else
-            {
-                <text>The requests you have sent, and what has become of them.</text>
-            }
-        </p>
     </div>
-    <div data-actions>
-        @if (!isAdmin && !archived)
-        {
-            <a asp-action="Create" data-primary>+ New Request</a>
-        }
+</div>
+    <div data-page-actions>
         @* One button, not a pair of tabs: it names the list you are NOT looking
            at, so it always reads as somewhere to go. *@
         @if (archived)
         {
-            <a asp-action="Index">← Back</a>
+            <a asp-action="Index" data-back>Back</a>
         }
         else
         {
-            <a asp-action="Index" asp-route-archived="true">Archive</a>
+            <a asp-action="Index" asp-route-archived="true" data-action-tone="amber">Archive</a>
+        }
+        @if (!isAdmin && !archived)
+        {
+            <a data-modal-link asp-action="Create" data-primary>New Request</a>
         }
     </div>
+<p data-page-intro>
+    @if (archived)
+    {
+        <text>Requests you have filed away. They stay on the other side's list.</text>
+    }
+    else if (isAdmin)
+    {
+        <text>Requests to move to another unit, and applications for a first unit.</text>
+    }
+    else
+    {
+        <text>The requests you have sent, and what has become of them.</text>
+    }
+</p>
 </div>
 
-<div data-panel>
+<div data-panel data-table-section>
     <div data-panel-head>@(archived ? "Archive" : "Active")</div>
     <div data-panel-body>
         @{

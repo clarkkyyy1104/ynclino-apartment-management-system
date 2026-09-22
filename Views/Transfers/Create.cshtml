@@ -7,9 +7,9 @@
 
 <div>
     <div>
-        <div>
-            <div>@("Request a Unit Transfer")</div>
-            <div>
+        <div data-form-panel>
+            <div data-form-head>Request a Unit Transfer</div>
+            <div data-form-body data-cols="1">
                 @if (!ViewData.ModelState.IsValid)
                 {
                     <div asp-validation-summary="All"></div>

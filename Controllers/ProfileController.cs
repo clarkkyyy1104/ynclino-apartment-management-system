@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using YnclinoApartmentManagementSystem.Data;
 using YnclinoApartmentManagementSystem.Helpers;
 using YnclinoApartmentManagementSystem.Models;
+using YnclinoApartmentManagementSystem.Models.ViewModels;
 
 namespace YnclinoApartmentManagementSystem.Controllers
 {
@@ -38,7 +39,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             }
 
             var tenant = await _context.tblTenants
-                .Include(t => t.Unit)
+                .Include(t => t.Assignments).ThenInclude(a => a.Unit)
                 .Include(t => t.User)
                 .FirstOrDefaultAsync(t => t.UserID == uid);
 
@@ -114,5 +115,55 @@ namespace YnclinoApartmentManagementSystem.Controllers
             }
             return RedirectToAction(nameof(Index));
         }
+
+        // GET: Profile/EditInfo — the tenant's own name, number and emergency contact.
+        // This did not exist before: a tenant could see these but not correct them.
+        [Authorize(Roles = "Tenant")]
+        public async Task<IActionResult> EditInfo()
+        {
+            var tenant = await MyTenantAsync();
+            if (tenant == null) return RedirectToAction(nameof(Index));
+
+            return View(new ProfileInfoViewModel
+            {
+                FirstName = tenant.FirstName,
+                LastName = tenant.LastName,
+                ContactNumber = tenant.ContactNumber,
+                EmergencyContactName = tenant.EmergencyContactName,
+                EmergencyContactRelationship = tenant.EmergencyContactRelationship,
+                EmergencyContactNumber = tenant.EmergencyContactNumber
+            });
+        }
+
+        // POST: Profile/EditInfo
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Tenant")]
+        public async Task<IActionResult> EditInfo(ProfileInfoViewModel vm)
+        {
+            var tenant = await MyTenantAsync();
+            if (tenant == null) return RedirectToAction(nameof(Index));
+
+            if (!ModelState.IsValid) return View(vm);
+
+            static string? Clean(string? v) => string.IsNullOrWhiteSpace(v) ? null : v.Trim();
+
+            tenant.FirstName = vm.FirstName.Trim();
+            tenant.LastName = vm.LastName.Trim();
+            tenant.ContactNumber = Clean(vm.ContactNumber);
+            tenant.EmergencyContactName = Clean(vm.EmergencyContactName);
+            tenant.EmergencyContactRelationship = Clean(vm.EmergencyContactRelationship);
+            tenant.EmergencyContactNumber = Clean(vm.EmergencyContactNumber);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Your personal information has been updated.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // the tenant record behind the signed-in account, or null
+        private async Task<tblTenant?> MyTenantAsync() =>
+            int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int uid)
+                ? await _context.tblTenants.FirstOrDefaultAsync(t => t.UserID == uid)
+                : null;
     }
 }
