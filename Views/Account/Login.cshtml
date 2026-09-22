@@ -7,6 +7,8 @@
     var portal = ViewBag.Portal as LoginPortal ?? LoginPortal.Tenant;
     var rightPortal = ViewBag.RightPortal as LoginPortal;
     var returnUrl = ViewBag.ReturnUrl as string;
+    // only the tenant page is ever linked to; the staff pages are given out in person
+    var others = LoginPortal.All.Where(p => p != portal && p.IsListed).ToList();
     ViewData["Title"] = portal.Title;
 }
 <!DOCTYPE html>
@@ -62,17 +64,16 @@
 
                 </form>
 
-                @* the other two sign-in pages, carrying returnUrl so a staff member
-                   who was sent to the tenant default still lands where they meant to *@
-                <nav data-portal-switch aria-label="Other sign-in pages">
-                    @{ var others = LoginPortal.All.Where(p => p != portal).ToList(); }
-                    @for (var i = 0; i < others.Count; i++)
-                    {
-                        @* a visible separator, so two adjacent links never read as one *@
-                        @if (i > 0) { <span aria-hidden="true"> · </span> }
-                        <a asp-action="@others[i].Action" asp-route-returnUrl="@returnUrl">@others[i].Title</a>
-                    }
-                </nav>
+                @* the staff pages link back to the tenant page; the tenant page links nowhere *@
+                @if (others.Count > 0)
+                {
+                    <nav data-portal-switch aria-label="Other sign-in pages">
+                        @foreach (var other in others)
+                        {
+                            <a asp-action="@other.Action" asp-route-returnUrl="@returnUrl">@other.Title</a>
+                        }
+                    </nav>
+                }
 
         </section>
     </main>

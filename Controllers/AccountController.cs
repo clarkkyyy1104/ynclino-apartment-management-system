@@ -23,9 +23,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
         // ── Sign-in pages ──────────────────────────────────────────────────
         // Three pages, one for each kind of account. The tenant page is the
         // default: it keeps the /Account/Login address, which is where the
-        // cookie sends anyone who is not signed in. Staff reach theirs from the
-        // links under the form, or directly at /Account/MaintenanceLogin and
-        // /Account/AdminLogin. There is no self-service reset.
+        // cookie sends anyone who is not signed in. Staff are told their page's
+        // address in person — /Account/MaintenanceLogin and /Account/AdminLogin
+        // — and no page links to either. There is no self-service reset.
 
         [HttpGet]
         public IActionResult Login(string? returnUrl) => ShowPortal(LoginPortal.Tenant, returnUrl);
@@ -102,12 +102,14 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 return PortalView(portal, vm, returnUrl);
             }
 
-            // Right password, wrong page. Nobody is signed in; they are pointed at
-            // the page their account belongs to. Saying which kind of account it is
-            // gives nothing away — the password has already been proven correct.
+            // Right password, wrong page. Nobody is signed in. A tenant is pointed
+            // at the tenant page; staff are only told this page is not theirs,
+            // since their page's address is never shown on screen.
             if (user.Role != portal.Role)
             {
-                ViewBag.RightPortal = LoginPortal.For(user.Role);
+                var rightPortal = LoginPortal.For(user.Role);
+                if (rightPortal.IsListed)
+                    ViewBag.RightPortal = rightPortal;
                 ModelState.AddModelError(string.Empty, $"This page is for {portal.Audience} accounts only.");
                 return PortalView(portal, vm, returnUrl);
             }
