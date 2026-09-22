@@ -248,7 +248,7 @@ namespace YnclinoApartmentManagementSystem.Services
                         {
                             Module = "Transfer",
                             Message = "Your unit transfer request is still pending.",
-                            Link = $"/Transfers/Details/{request.TransferID}",
+                            Link = "/Transfers",
                             TargetId = request.TransferID,
                             CreatedAt = request.DateRequested
                         });
