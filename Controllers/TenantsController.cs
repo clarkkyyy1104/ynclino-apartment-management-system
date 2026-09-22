@@ -70,8 +70,12 @@ namespace YnclinoApartmentManagementSystem.Controllers
             ViewBag.StatusFilter = statusFilter;
             ViewBag.SearchTerm = searchTerm;
 
-            // list in username order (the school-style ID) rather than by name
-            var tenants = await query.OrderBy(t => t.User!.Username).ToListAsync();
+            // newest registration first; TenantID breaks a tie between two
+            // tenants saved in the same instant
+            var tenants = await query
+                .OrderByDescending(t => t.DateRecorded)
+                .ThenByDescending(t => t.TenantID)
+                .ToListAsync();
             return View(tenants);
         }
 
