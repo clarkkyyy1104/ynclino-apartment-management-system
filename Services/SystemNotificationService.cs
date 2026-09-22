@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using YnclinoApartmentManagementSystem.Data;
@@ -36,11 +37,19 @@ namespace YnclinoApartmentManagementSystem.Services
             return GetNotificationsAsync(userId, role);
         }
 
+        // Overdue means past the due date and not paid in full — the rule
+        // BillingController.DeriveStatus uses. It is read from the dates rather
+        // than the stored Status, which is only brought up to date when someone
+        // opens the Bills page, so a bill that fell due yesterday is counted today.
+        private static Expression<Func<tblBilling, bool>> IsOverdue(DateTime today) =>
+            b => (b.AmountPaid == null || b.AmountPaid < b.AmountDue) && b.DueDate < today;
+
         public async Task<List<SystemNotification>> GetNotificationsAsync(
             int userId,
             string role)
         {
             var notifications = new List<SystemNotification>();
+            var today = DateTime.Today;
 
             // ============================================================
             // ADMIN NOTIFICATIONS
@@ -83,10 +92,10 @@ namespace YnclinoApartmentManagementSystem.Services
                     });
                 }
 
-                // Overdue bills
+                // Overdue bills — the badge shows how many, not just that there are some
                 var overdueBills =
                     await _context.tblBillings
-                        .CountAsync(b => b.Status == "Overdue");
+                        .CountAsync(IsOverdue(today));
 
                 if (overdueBills > 0)
                 {
@@ -97,7 +106,8 @@ namespace YnclinoApartmentManagementSystem.Services
                                   (overdueBills > 1 ? "s" : "") +
                                   " require attention.",
                         Link = "/Billing?statusFilter=Overdue",
-                        CreatedAt = DateTime.Now
+                        CreatedAt = DateTime.Now,
+                        BadgeCount = overdueBills
                     });
                 }
 
@@ -170,9 +180,8 @@ namespace YnclinoApartmentManagementSystem.Services
                     // ----------------------------------------------------
                     var overdueBills =
                         await _context.tblBillings
-                            .CountAsync(b =>
-                                b.TenantID == tenant.TenantID &&
-                                b.Status == "Overdue");
+                            .Where(b => b.TenantID == tenant.TenantID)
+                            .CountAsync(IsOverdue(today));
 
                     if (overdueBills > 0)
                     {
@@ -183,16 +192,19 @@ namespace YnclinoApartmentManagementSystem.Services
                                 ? "You have an overdue bill."
                                 : $"You have {overdueBills} overdue bills.",
                             Link = "/Billing",
-                            CreatedAt = DateTime.Now
+                            CreatedAt = DateTime.Now,
+                            BadgeCount = overdueBills
                         });
                     }
 
+                    // a bill not yet due is worth a line in the feed, but it is
+                    // not overdue, so it adds nothing to the Billing badge
                     var unpaidBills =
                         await _context.tblBillings
                             .CountAsync(b =>
                                 b.TenantID == tenant.TenantID &&
-                                (b.Status == "Unpaid" ||
-                                 b.Status == "Partial"));
+                                (b.AmountPaid == null || b.AmountPaid < b.AmountDue) &&
+                                b.DueDate >= today);
 
                     if (unpaidBills > 0)
                     {
@@ -203,7 +215,8 @@ namespace YnclinoApartmentManagementSystem.Services
                                 ? "You have an unpaid or partially paid bill."
                                 : $"You have {unpaidBills} unpaid or partially paid bills.",
                             Link = "/Billing",
-                            CreatedAt = DateTime.Now
+                            CreatedAt = DateTime.Now,
+                            BadgeCount = 0
                         });
                     }
 

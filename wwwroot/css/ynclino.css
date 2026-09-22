@@ -801,7 +801,10 @@ tbody td span[title] { opacity: .45; }
 
 /* detail pages read as label/value pairs, not as a wall of text */
 [data-panel-body] dl { display: grid; grid-template-columns: 12rem 1fr; gap: .55rem 1rem; margin: 0; }
-[data-panel-body] dt { color: var(--ink-soft); }
+/* Labels were grey at 500, and Arial has no 500 — it drew them as plain
+   regular text, faint beside the values. They are bold now, as they already
+   are in the details dialogs, and stay grey so the value still reads first. */
+[data-panel-body] dt { color: var(--ink-soft); font-weight: 700; }
 [data-panel-body] dd { margin: 0; }
 @media (max-width: 600px) { [data-panel-body] dl { grid-template-columns: 1fr; gap: .15rem; } }
 
@@ -872,9 +875,12 @@ tbody td span[title] { opacity: .45; }
 
 /* report tables sit flush inside their panel */
 [data-panel-body] table { width: 100%; border-collapse: collapse; }
-[data-panel-body] table td { text-align: left; }
-[data-panel-body] table td:not(:first-child) { text-align: right; }
-[data-panel-body] table th:not(:first-child) { text-align: right; }
+/* In a panel the first column reads from the left and the ones after it from
+   the right. The heading and the total over a column take the same side as
+   its cells: they used to stay centred, so no heading sat over its own
+   figures — on Reports, a tenant's bills, a unit's history, unit requests. */
+[data-panel-body] table :is(th, td) { text-align: left; }
+[data-panel-body] table :is(th, td):not(:first-child) { text-align: right; }
 
 /* the two report charts sit side by side; each is capped so an SVG with only a
    viewBox cannot grow to fill the screen the way the occupancy ring did */
@@ -943,7 +949,10 @@ tbody td span[title] { opacity: .45; }
     background: var(--field-bg); border: 1px solid var(--field-line); border-radius: 999px;
     font-size: .78rem; color: var(--ink-soft);
 }
-[data-notification-feed] [data-note-link] [data-module] {
+/* the profile's Recent Activity names its module the same way a notification
+   does, so it wears the same orange tag rather than a grey one of its own */
+[data-notification-feed] [data-note-link] [data-module],
+[data-feed-row] [data-module] {
     color: #b43a00;
     background: #fff3ec;
     border-color: #f4b89d;
@@ -1454,8 +1463,8 @@ img, svg, table, pre { max-width: 100%; }
     padding: 0;
 }
 
-[data-report-page] [data-panel-body] table td:not(:first-child),
-[data-report-page] [data-panel-body] table th:not(:first-child) {
+/* report columns after the first sit in the middle, heading and cells alike */
+[data-report-page] [data-panel-body] table :is(th, td):not(:first-child) {
     text-align: center;
 }
 
@@ -2245,7 +2254,8 @@ main [data-table-wrap] > table > thead th,
     background: var(--figma-navy);
     color: #fff;
     border-bottom: 0;
-    text-align: center;
+    /* no text-align here: a heading takes its column's side, which section 10
+       sets for list tables and section 17 for tables inside a panel */
     font-size: .82rem;
     font-weight: 700;
     line-height: 1.25;

@@ -26,6 +26,9 @@
     bool unitsOpen = activeController == "Units" || activeController == "Transfers";
     var activeAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
     bool billingOpen = activeController == "Billing";
+    // one tenant's record is opened from Payment History and goes back to it,
+    // so it belongs under that item rather than falling through to Bills
+    bool paymentHistoryActive = billingOpen && (activeAction == "History" || activeAction == "TenantHistory");
 }
 @if (User.Identity?.IsAuthenticated == true)
 {
@@ -102,8 +105,8 @@
                     </a>
                     <div id="billingGroup" hidden="@(billingOpen ? null : "hidden")">
                         <div>
-                            <a aria-current="@(activeController == "Billing" && activeAction != "History" ? "page" : null)" asp-controller="Billing" asp-action="Index">Bills</a>
-                            <a aria-current="@(activeController == "Billing" && activeAction == "History" ? "page" : null)" asp-controller="Billing" asp-action="History">Payment History</a>
+                            <a aria-current="@(billingOpen && !paymentHistoryActive ? "page" : null)" asp-controller="Billing" asp-action="Index">Bills</a>
+                            <a aria-current="@(paymentHistoryActive ? "page" : null)" asp-controller="Billing" asp-action="History">Payment History</a>
                         </div>
                     </div>
                 }

@@ -24,11 +24,15 @@ namespace YnclinoApartmentManagementSystem.ViewComponents
         {
             var notifications = await _notificationService.ForCurrentUserAsync(HttpContext.User);
 
+            // each notification says how much it adds, so "3 overdue bills" reads
+            // 3 on the badge rather than 1 for the one line it takes in the feed
             int count = module == "All"
-                ? notifications.Count
-                : notifications.Count(n => module
-                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                    .Contains(n.Module, StringComparer.OrdinalIgnoreCase));
+                ? notifications.Sum(n => n.BadgeCount)
+                : notifications
+                    .Where(n => module
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                        .Contains(n.Module, StringComparer.OrdinalIgnoreCase))
+                    .Sum(n => n.BadgeCount);
 
             return View(count);
         }
