@@ -1,14 +1,20 @@
-@model YnclinoApartmentManagementSystem.Models.ViewModels.LoginViewModel
+@using YnclinoApartmentManagementSystem.Models.ViewModels
+@model LoginViewModel
 @{
     Layout = null;
-    ViewData["Title"] = "Login";
+    // All three sign-in pages render this view. The controller says which one:
+    // Tenant (the default, at /Account/Login), Maintenance, or Admin.
+    var portal = ViewBag.Portal as LoginPortal ?? LoginPortal.Tenant;
+    var rightPortal = ViewBag.RightPortal as LoginPortal;
+    var returnUrl = ViewBag.ReturnUrl as string;
+    ViewData["Title"] = portal.Title;
 }
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login — Apartment Management System</title>
+    <title>@portal.Title — Apartment Management System</title>
     <link rel="stylesheet" href="~/css/ynclino.css" asp-append-version="true" />
 </head>
 <body class="login-page">
@@ -18,16 +24,24 @@
             <span>APARTMENT MANAGEMENT SYSTEM</span>
         </div>
 
-        <section class="login-card" aria-labelledby="login-heading">
-            <h1 id="login-heading">Please sign in to your administrator account</h1>
-                <form asp-action="Login" method="post">
-                    <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+        <section class="login-card" aria-labelledby="login-heading" data-portal="@portal.Role">
+            <h1 id="login-heading">@portal.Heading</h1>
+                <form asp-action="@portal.Action" method="post">
+                    <input type="hidden" name="returnUrl" value="@returnUrl" />
                     @Html.AntiForgeryToken()
 
                     @if (!ViewData.ModelState.IsValid)
                     {
                         <div>
                             <div asp-validation-summary="All"></div>
+                            @* right password on the wrong page: point them at their own *@
+                            @if (rightPortal != null)
+                            {
+                                <p data-right-portal>
+                                    That is a @rightPortal.Audience account —
+                                    <a asp-action="@rightPortal.Action" asp-route-returnUrl="@returnUrl">sign in on the @rightPortal.Audience page</a>.
+                                </p>
+                            }
                         </div>
                     }
 
@@ -47,6 +61,18 @@
                     <button type="submit">Login</button>
 
                 </form>
+
+                @* the other two sign-in pages, carrying returnUrl so a staff member
+                   who was sent to the tenant default still lands where they meant to *@
+                <nav data-portal-switch aria-label="Other sign-in pages">
+                    @{ var others = LoginPortal.All.Where(p => p != portal).ToList(); }
+                    @for (var i = 0; i < others.Count; i++)
+                    {
+                        @* a visible separator, so two adjacent links never read as one *@
+                        @if (i > 0) { <span aria-hidden="true"> · </span> }
+                        <a asp-action="@others[i].Action" asp-route-returnUrl="@returnUrl">@others[i].Title</a>
+                    }
+                </nav>
 
         </section>
     </main>
