@@ -135,14 +135,29 @@ namespace YnclinoApartmentManagementSystem.Services
                     });
                 }
 
-                // Claims waiting on a decision.
-                //
-                // This used to count items with Status 'Reported' — every
-                // unclaimed item on the board. Nothing needs doing about an item
-                // sitting in the box, so that badge could never reach zero, while
-                // the claims that genuinely need a yes or no were not counted at
-                // all. A claim is the thing that waits on the admin, so a claim
-                // is what the badge counts.
+                // Items still Reported — found or reported, not yet back with
+                // their owner. The badge counts these and drops as each one is
+                // claimed.
+                var reportedItems =
+                    await _context.tblLostFoundItems
+                        .CountAsync(l => l.Status == "Reported");
+
+                if (reportedItems > 0)
+                {
+                    notifications.Add(new SystemNotification
+                    {
+                        Module = "LostFound",
+                        Message = $"{reportedItems} reported item" +
+                                  (reportedItems > 1 ? "s are" : " is") +
+                                  " not yet claimed.",
+                        Link = "/LostFound?statusFilter=Reported",
+                        CreatedAt = DateTime.Now,
+                        BadgeCount = reportedItems
+                    });
+                }
+
+                // Claims waiting on a decision stay in the feed, but the badge
+                // counts reported items only, so a claim adds nothing to it.
                 var pendingClaims =
                     await _context.tblClaimRequests
                         .CountAsync(c => c.Status == "Pending");
@@ -157,7 +172,7 @@ namespace YnclinoApartmentManagementSystem.Services
                                   " waiting to be reviewed.",
                         Link = "/LostFound",
                         CreatedAt = DateTime.Now,
-                        BadgeCount = pendingClaims
+                        BadgeCount = 0
                     });
                 }
             }
