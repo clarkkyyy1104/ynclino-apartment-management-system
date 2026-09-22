@@ -70,7 +70,30 @@ namespace YnclinoApartmentManagementSystem.Services
                                   (pendingMaintenance > 1 ? "s" : "") +
                                   " require attention.",
                         Link = "/Maintenance",
-                        CreatedAt = DateTime.Now
+                        CreatedAt = DateTime.Now,
+                        BadgeCount = pendingMaintenance
+                    });
+                }
+
+                // Resolved maintenance requests the admin has not archived yet.
+                // In Progress is left out: the staff are on it and nothing waits on
+                // the admin. A resolved one tells the admin the work is done, and
+                // archiving it is how the admin says they have seen it.
+                var resolvedMaintenance =
+                    await _context.tblMaintenanceRequests
+                        .CountAsync(m => m.Status == "Resolved" && m.StaffArchivedAt == null);
+
+                if (resolvedMaintenance > 0)
+                {
+                    notifications.Add(new SystemNotification
+                    {
+                        Module = "Maintenance",
+                        Message = $"{resolvedMaintenance} maintenance request" +
+                                  (resolvedMaintenance > 1 ? "s have" : " has") +
+                                  " been resolved.",
+                        Link = "/Maintenance?statusFilter=Resolved",
+                        CreatedAt = DateTime.Now,
+                        BadgeCount = resolvedMaintenance
                     });
                 }
 
@@ -88,7 +111,8 @@ namespace YnclinoApartmentManagementSystem.Services
                                   (pendingTransfers > 1 ? "s" : "") +
                                   " require review.",
                         Link = "/Transfers",
-                        CreatedAt = DateTime.Now
+                        CreatedAt = DateTime.Now,
+                        BadgeCount = pendingTransfers
                     });
                 }
 
@@ -132,7 +156,8 @@ namespace YnclinoApartmentManagementSystem.Services
                                   (pendingClaims > 1 ? "s are" : " is") +
                                   " waiting to be reviewed.",
                         Link = "/LostFound",
-                        CreatedAt = DateTime.Now
+                        CreatedAt = DateTime.Now,
+                        BadgeCount = pendingClaims
                     });
                 }
             }
@@ -158,7 +183,8 @@ namespace YnclinoApartmentManagementSystem.Services
                                   (assignedRequests > 1 ? "s" : "") +
                                   " assigned to you.",
                         Link = "/Maintenance",
-                        CreatedAt = DateTime.Now
+                        CreatedAt = DateTime.Now,
+                        BadgeCount = assignedRequests
                     });
                 }
             }
