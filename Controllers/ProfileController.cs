@@ -33,7 +33,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 var admin = await _context.tblUsers.FirstOrDefaultAsync(u => u.UserID == uid);
                 ViewBag.TotalUnits = await _context.tblUnits.CountAsync();
                 ViewBag.ActiveTenants = await _context.tblTenants.CountAsync(t => t.Status == "Active");
-                ViewBag.PendingTransfers = await _context.tblUnitTransferRequests.CountAsync(r => r.Status == "Pending");
+                // open = awaiting a decision OR approved and awaiting the actual move
+                ViewBag.OpenTransfers = await _context.tblUnitTransferRequests
+                    .CountAsync(r => r.Status == "Pending" || r.Status == "Approved");
                 ViewBag.AdminCount = await _context.tblUsers.CountAsync(u => u.Role == "Admin" && u.IsActive);
                 return View("AdminProfile", admin);
             }

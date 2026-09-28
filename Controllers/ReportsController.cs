@@ -96,7 +96,10 @@ namespace YnclinoApartmentManagementSystem.Controllers
             // ── Open requests ──
             vm.PendingMaintenance = await _context.tblMaintenanceRequests
                 .CountAsync(m => m.Status == "Pending" || m.Status == "In Progress");
-            vm.PendingTransfers = await _context.tblUnitTransferRequests.CountAsync(r => r.Status == "Pending");
+            // Approved counts as open: the move has been agreed but not carried out,
+            // the same way In Progress counts as open for maintenance above.
+            vm.OpenTransfers = await _context.tblUnitTransferRequests
+                .CountAsync(r => r.Status == "Pending" || r.Status == "Approved");
             vm.OpenLostFound = await _context.tblLostFoundItems.CountAsync(l => l.Status == "Reported");
 
             // ── Monthly income, last 6 months ──
@@ -238,8 +241,9 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             vm.PendingMaintenance = await _context.tblMaintenanceRequests
                 .CountAsync(m => m.TenantID == tenant.TenantID && (m.Status == "Pending" || m.Status == "In Progress"));
-            vm.PendingTransfers = await _context.tblUnitTransferRequests
-                .CountAsync(r => r.TenantID == tenant.TenantID && r.Status == "Pending");
+            vm.OpenTransfers = await _context.tblUnitTransferRequests
+                .CountAsync(r => r.TenantID == tenant.TenantID &&
+                                 (r.Status == "Pending" || r.Status == "Approved"));
 
             var firstOfMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
             for (int i = 5; i >= 0; i--)

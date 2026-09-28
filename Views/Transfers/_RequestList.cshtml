@@ -4,7 +4,9 @@
     string emptyText = ViewData["EmptyText"] as string ?? "Nothing here.";
     // the same partial draws both columns, so it has to know which one it is
     bool isArchiveColumn = ViewData["IsArchive"] as bool? ?? false;
-    var closedStatuses = ViewBag.ClosedStatuses as string[] ?? new[] { "Approved", "Rejected", "Cancelled" };    
+    @* 'Approved' is NOT closed — the tenant still has to be moved. Archiving one
+       would hide outstanding work, so the fallback must match the controller. *@
+    var closedStatuses = ViewBag.ClosedStatuses as string[] ?? new[] { "Completed", "Rejected", "Cancelled" };
 }
 @if (!Model.Any())
 {
@@ -33,18 +35,42 @@ else
                         @if (isAdmin) { <td>@r.Tenant?.FullName</td> }
                         <td>@(r.CurrentUnit?.UnitNumber ?? "—")</td>
                         <td>@r.RequestedUnit?.UnitNumber</td>
-                        <td><span>@r.Status</span></td>
+                        @* 'Approved' on its own reads as finished, which it is not —
+                           the tenant still has to be moved. Name the phase instead. *@
+                        <td>
+                            <span data-status="@r.Status">
+                                @(r.Status == "Approved" ? "Approved — For Transfer" : r.Status)
+                            </span>
+                        </td>
                         <td>
                             @if (isAdmin && r.Status == "Pending")
                             {
                                 <div>
-                                    <form asp-action="Approve" asp-route-id="@r.TransferID" method="post" onsubmit="return confirm('Move @r.Tenant?.FullName to unit @r.RequestedUnit?.UnitNumber?');">
+                                    @* Approving does NOT move anybody, so the wording must not
+                                       promise that it does. The move happens on Complete. *@
+                                    <form asp-action="Approve" asp-route-id="@r.TransferID" method="post" onsubmit="return confirm('Approve this request? @r.Tenant?.FullName will be subject for transfer to unit @r.RequestedUnit?.UnitNumber, but will not be moved until you mark it as completed.');">
                                         @Html.AntiForgeryToken()
                                         <button type="submit">Approve</button>
                                     </form>
                                     <form asp-action="Reject" asp-route-id="@r.TransferID" method="post">
                                         @Html.AntiForgeryToken()
                                         <button type="submit">Reject</button>
+                                    </form>
+                                </div>
+                            }
+                            else if (isAdmin && r.Status == "Approved")
+                            {
+                                <div>
+                                    @* This is the step the old design was missing: the
+                                       transfer has been agreed and is now being carried
+                                       out. Completing it is what moves the tenant. *@
+                                    <form asp-action="Complete" asp-route-id="@r.TransferID" method="post" onsubmit="return confirm('Mark as done? This moves @r.Tenant?.FullName into unit @r.RequestedUnit?.UnitNumber and closes their old assignment.');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit">Mark as Completed</button>
+                                    </form>
+                                    <form asp-action="CancelApproved" asp-route-id="@r.TransferID" method="post" onsubmit="return confirm('Call off this approved transfer? Unit @r.RequestedUnit?.UnitNumber will be released.');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit">Call Off</button>
                                     </form>
                                 </div>
                             }
@@ -55,6 +81,12 @@ else
                                     @Html.AntiForgeryToken()
                                     <button type="submit">Cancel</button>
                                 </form>
+                            }
+                            else if (!isAdmin && r.Status == "Approved")
+                            {
+                                @* Decided in their favour, but not theirs to cancel any
+                                   more — the office is carrying it out. *@
+                                <span>Waiting to be moved</span>
                             }
                             else
                             {

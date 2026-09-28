@@ -30,8 +30,12 @@ namespace YnclinoApartmentManagementSystem.Models.ViewModels
         public int OverdueTenants { get; set; }
 
         // ── Open requests ──
+        // "Open" means not finished yet, which for each module includes its middle
+        // state: maintenance counts Pending and In Progress, and transfers count
+        // Pending and Approved. An approved transfer is work still outstanding —
+        // the tenant has been promised a unit but has not been moved into it.
         public int PendingMaintenance { get; set; }
-        public int PendingTransfers { get; set; }
+        public int OpenTransfers { get; set; }
         public int OpenLostFound { get; set; }
 
         // ── Tables ──

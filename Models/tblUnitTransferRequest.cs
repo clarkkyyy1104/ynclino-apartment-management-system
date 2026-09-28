@@ -23,13 +23,29 @@ namespace YnclinoApartmentManagementSystem.Models
         [MaxLength(500)]
         public string Reason { get; set; } = string.Empty;
 
+        // A transfer is a process, not one event. Agreeing to a move and carrying
+        // it out are separate steps, because days can pass between the decision and
+        // the day the tenant actually moves.
+        //   Pending   - submitted, nobody has decided yet
+        //   Approved  - the admin agreed; SUBJECT FOR TRANSFER. The tenant has NOT
+        //               moved, and the requested unit stays Reserved
+        //   Completed - the admin confirmed the move happened; only now does the
+        //               tenant's assignment change
+        //   Rejected  - the admin refused it
+        //   Cancelled - the tenant withdrew it, or an approved move was called off
         [Required]
         [MaxLength(20)]
-        public string Status { get; set; } = "Pending"; // Pending | Approved | Rejected
+        public string Status { get; set; } = "Pending"; // Pending | Approved | Completed | Rejected | Cancelled
 
         public DateTime DateRequested { get; set; } = DateTime.Now;
 
+        // when the admin decided (approved or rejected)
         public DateTime? DateReviewed { get; set; }
+
+        // when the tenant was actually moved. Null on every request that has not
+        // reached Completed, which is what makes an unfinished transfer findable.
+        [Display(Name = "Date Completed")]
+        public DateTime? DateCompleted { get; set; }
 
         // A finished record stays in the ACTIVE list until somebody chooses to file
         // it away. Each side archives independently: the tenant clearing their own

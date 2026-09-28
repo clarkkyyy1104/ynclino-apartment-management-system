@@ -97,7 +97,7 @@ namespace YnclinoApartmentManagementSystem.Services
                     });
                 }
 
-                // Pending unit transfer requests
+                // Unit requests nobody has decided on yet — these wait on a decision.
                 var pendingTransfers =
                     await _context.tblUnitTransferRequests
                         .CountAsync(r => r.Status == "Pending");
@@ -107,12 +107,34 @@ namespace YnclinoApartmentManagementSystem.Services
                     notifications.Add(new SystemNotification
                     {
                         Module = "Transfer",
-                        Message = $"{pendingTransfers} pending unit transfer request" +
-                                  (pendingTransfers > 1 ? "s" : "") +
-                                  " require review.",
+                        Message = $"{pendingTransfers} pending unit request" +
+                                  (pendingTransfers > 1 ? "s require" : " requires") +
+                                  " review.",
                         Link = "/Transfers",
                         CreatedAt = DateTime.Now,
                         BadgeCount = pendingTransfers
+                    });
+                }
+
+                // Approved but not carried out yet — these wait on the MOVE, not on a
+                // decision, and they are the work the old one-step design could never
+                // show. Without this the badge would read zero while transfers sit
+                // unfinished, because the request is no longer Pending.
+                var transfersForMove =
+                    await _context.tblUnitTransferRequests
+                        .CountAsync(r => r.Status == "Approved");
+
+                if (transfersForMove > 0)
+                {
+                    notifications.Add(new SystemNotification
+                    {
+                        Module = "Transfer",
+                        Message = $"{transfersForMove} approved unit request" +
+                                  (transfersForMove > 1 ? "s are" : " is") +
+                                  " subject for transfer and waiting to be carried out.",
+                        Link = "/Transfers",
+                        CreatedAt = DateTime.Now,
+                        BadgeCount = transfersForMove
                     });
                 }
 
@@ -288,11 +310,14 @@ namespace YnclinoApartmentManagementSystem.Services
                     // ----------------------------------------------------
                     // UNIT TRANSFER
                     // ----------------------------------------------------
+                    // Both open states matter to the tenant, and they mean very
+                    // different things: one is still being decided, the other has
+                    // been granted and is being arranged.
                     var transferRequests =
                         await _context.tblUnitTransferRequests
                             .Where(r =>
                                 r.TenantID == tenant.TenantID &&
-                                r.Status == "Pending")
+                                (r.Status == "Pending" || r.Status == "Approved"))
                             .OrderByDescending(r => r.DateRequested)
                             .ToListAsync();
 
@@ -301,10 +326,14 @@ namespace YnclinoApartmentManagementSystem.Services
                         notifications.Add(new SystemNotification
                         {
                             Module = "Transfer",
-                            Message = "Your unit transfer request is still pending.",
+                            Message = request.Status == "Approved"
+                                ? "Your unit request has been approved. You will be moved shortly."
+                                : "Your unit request is still pending.",
                             Link = $"/Transfers/Details/{request.TransferID}",
                             TargetId = request.TransferID,
-                            CreatedAt = request.DateRequested
+                            CreatedAt = request.Status == "Approved" && request.DateReviewed.HasValue
+                                ? request.DateReviewed.Value
+                                : request.DateRequested
                         });
                     }
                 }

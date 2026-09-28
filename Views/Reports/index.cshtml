@@ -43,10 +43,13 @@
     <div>
         <div data-stat>
             <div>
-                <div>Pending Requests</div>
-                <div>@(Model.PendingMaintenance + Model.PendingTransfers + Model.OpenLostFound)</div>
+                @* "Open", not "Pending": the figure includes work that has been
+                   decided but not finished — maintenance In Progress, and transfers
+                   approved but not yet carried out. *@
+                <div>Open Requests</div>
+                <div>@(Model.PendingMaintenance + Model.OpenTransfers + Model.OpenLostFound)</div>
                 <div>
-                    @Model.PendingMaintenance maintenance · @Model.PendingTransfers transfer · @Model.OpenLostFound lost &amp; found
+                    @Model.PendingMaintenance maintenance · @Model.OpenTransfers unit · @Model.OpenLostFound lost &amp; found
                 </div>
             </div>
         </div>
