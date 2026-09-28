@@ -329,7 +329,11 @@ namespace YnclinoApartmentManagementSystem.Services
                             Message = request.Status == "Approved"
                                 ? "Your unit request has been approved. You will be moved shortly."
                                 : "Your unit request is still pending.",
-                            Link = $"/Transfers/Details/{request.TransferID}",
+                            // TransfersController has no Details action, so a link to
+                            // /Transfers/Details/{id} was a 404. The tenant's own
+                            // requests are listed on /Transfers, which is where the
+                            // other notifications for this module already point.
+                            Link = "/Transfers",
                             TargetId = request.TransferID,
                             CreatedAt = request.Status == "Approved" && request.DateReviewed.HasValue
                                 ? request.DateReviewed.Value
