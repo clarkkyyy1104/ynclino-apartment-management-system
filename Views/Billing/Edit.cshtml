@@ -43,20 +43,20 @@
                         <div data-stat>
                             <div>
                                 <div>Amount Due</div>
-                                <div>₱@Model.AmountDue.ToString("N0")</div>
+                                <div>₱@Model.AmountDue.ToString("N2")</div>
                             </div>
                         </div>
                         <div data-stat>
                             <div>
                                 <div>Total Paid</div>
                                 @* the full amount received, then where it went *@
-                                <div>₱@Model.TotalReceived.ToString("N0")</div>
+                                <div>₱@Model.TotalReceived.ToString("N2")</div>
                                 @if (Model.AdvanceFromOverpayment > 0)
                                 {
                                     <div>
-                                        <span>₱@Model.TotalPaid.ToString("N0") rent</span>
+                                        <span>₱@Model.TotalPaid.ToString("N2") rent</span>
                                         <span>·</span>
-                                        <span>₱@Model.AdvanceFromOverpayment.ToString("N0") advance</span>
+                                        <span>₱@Model.AdvanceFromOverpayment.ToString("N2") advance</span>
                                     </div>
                                 }
                             </div>
@@ -64,7 +64,7 @@
                         <div data-stat>
                             <div>
                                 <div>Balance</div>
-                                <div>₱@Model.Balance.ToString("N0")</div>
+                                <div>₱@Model.Balance.ToString("N2")</div>
                             </div>
                         </div>
                     </div>
@@ -73,16 +73,16 @@
                     {
                         <p>
                             This bill includes a
-                            <span>₱@Model.Deposit.ToString("N0")</span> deposit
+                            <span>₱@Model.Deposit.ToString("N2")</span> deposit
                             (held until the tenant moves out) and
-                            <span>₱@Model.Advance.ToString("N0")</span> advance payment.
+                            <span>₱@Model.Advance.ToString("N2")</span> advance payment.
                         </p>
                     }
 
                     @if (Model.AdvanceCredit > 0)
                     {
                         <div data-span>
-                            This tenant is holding <strong>₱@Model.AdvanceCredit.ToString("N0")</strong>
+                            This tenant is holding <strong>₱@Model.AdvanceCredit.ToString("N2")</strong>
                             in advance payment. It is applied automatically to their next bill.
                         </div>
                     }
@@ -109,7 +109,7 @@
                                            placeholder="— leave blank if none" />
                                 </div>
                                 <div>
-                                    Balance: ₱@Model.Balance.ToString("N0"). Paying more is fine — the extra
+                                    Balance: ₱@Model.Balance.ToString("N2"). Paying more is fine — the extra
                                     settles other unpaid bills, then becomes advance payment.
                                 </div>
                                 <span asp-validation-for="PaymentAmount"></span>

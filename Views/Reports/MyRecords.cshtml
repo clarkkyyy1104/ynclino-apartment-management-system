@@ -24,7 +24,7 @@
         <div data-stat>
             <div>
                 <div>Total Paid</div>
-                <div>₱@Model.IncomeAllTime.ToString("N0")</div>
+                <div>₱@Model.IncomeAllTime.ToString("N2")</div>
             </div>
         </div>
     </div>
@@ -32,7 +32,7 @@
         <div data-stat>
             <div>
                 <div>Outstanding Balance</div>
-                <div>₱@Model.OutstandingTotal.ToString("N0")</div>
+                <div>₱@Model.OutstandingTotal.ToString("N2")</div>
             </div>
         </div>
     </div>
@@ -40,7 +40,7 @@
         <div data-stat>
             <div>
                 <div>Advance Payment</div>
-                <div>₱@tenant.AdvanceCredit.ToString("N0")</div>
+                <div>₱@tenant.AdvanceCredit.ToString("N2")</div>
             </div>
         </div>
     </div>
@@ -72,9 +72,9 @@
                         {
                             <tr>
                                 <td>@m.Month.ToString("MMMM yyyy")</td>
-                                <td>₱@m.Billed.ToString("N0")</td>
-                                <td>₱@m.Collected.ToString("N0")</td>
-                                <td>₱@m.Uncollected.ToString("N0")</td>
+                                <td>₱@m.Billed.ToString("N2")</td>
+                                <td>₱@m.Collected.ToString("N2")</td>
+                                <td>₱@m.Uncollected.ToString("N2")</td>
                             </tr>
                         }
                     </tbody>

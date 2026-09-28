@@ -309,7 +309,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             decimal usedAdvance = await UseAdvanceCreditAsync(billing);
 
             TempData["Success"] = usedAdvance > 0
-                ? $"Billing record created. ₱{usedAdvance:N0} of advance payment was applied automatically."
+                ? $"Billing record created. ₱{usedAdvance:N2} of advance payment was applied automatically."
                 : "Billing record created.";
             return RedirectToAction(nameof(Index));
         }
@@ -601,17 +601,17 @@ namespace YnclinoApartmentManagementSystem.Controllers
                         string list = names.Count == 1
                             ? names[0]
                             : string.Join(", ", names.Take(names.Count - 1)) + " and " + names[^1];
-                        extra = $" ₱{toAdvance:N0} was advance payment, and it has paid {list}.";
+                        extra = $" ₱{toAdvance:N2} was advance payment, and it has paid {list}.";
                     }
                     else
                     {
-                        extra = $" ₱{toAdvance:N0} became advance payment and will be deducted from the next bill.";
+                        extra = $" ₱{toAdvance:N2} became advance payment and will be deducted from the next bill.";
                     }
                 }
 
                 TempData["Success"] = (balanceAfter <= 0
-                    ? $"Payment of ₱{paidNow:N0} recorded. This bill is now fully paid."
-                    : $"Payment of ₱{paidNow:N0} recorded. Remaining balance: ₱{balanceAfter:N0}.") + extra;
+                    ? $"Payment of ₱{paidNow:N2} recorded. This bill is now fully paid."
+                    : $"Payment of ₱{paidNow:N2} recorded. Remaining balance: ₱{balanceAfter:N2}.") + extra;
             }
             else
             {

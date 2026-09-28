@@ -101,11 +101,11 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             if (vm.Deposit > vm.RentPrice)
                 ModelState.AddModelError(nameof(vm.Deposit),
-                    $"The deposit cannot be more than one month's rent (₱{vm.RentPrice:N0}).");
+                    $"The deposit cannot be more than one month's rent (₱{vm.RentPrice:N2}).");
 
             if (vm.AdvancePayment > vm.RentPrice)
                 ModelState.AddModelError(nameof(vm.AdvancePayment),
-                    $"The advance cannot be more than one month's rent (₱{vm.RentPrice:N0}).");
+                    $"The advance cannot be more than one month's rent (₱{vm.RentPrice:N2}).");
         }
 
         // POST: Units/Create

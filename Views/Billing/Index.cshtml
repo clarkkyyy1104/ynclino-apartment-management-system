@@ -34,7 +34,7 @@
 @if (!isAdmin && advanceCredit > 0)
 {
     <div>
-        You have <strong>₱@advanceCredit.ToString("N0")</strong> in advance payment.
+        You have <strong>₱@advanceCredit.ToString("N2")</strong> in advance payment.
         It will be applied automatically to your next bill.
     </div>
 }
@@ -106,7 +106,7 @@
                         }
                     </td>
                     <td>@b.DueDate.ToString("MMM dd, yyyy")</td>
-                    <td>₱@((b.Tenant?.Unit?.Deposit ?? 0m).ToString("N0"))</td>
+                    <td>₱@((b.Tenant?.Unit?.Deposit ?? 0m).ToString("N2"))</td>
                     @* Two things are advance payment and both belong in this column:
                        the one month charged at move-in, and anything the tenant
                        overpaid. Only the second is ever non-zero on a normal rent
@@ -115,28 +115,28 @@
                         @{ var advanceOnBill = b.Advance + b.AdvanceFromOverpayment; }
                         @if (b.AdvanceFromOverpayment > 0)
                         {
-                            <span>₱@advanceOnBill.ToString("N0")</span>
+                            <span>₱@advanceOnBill.ToString("N2")</span>
                             <div>from overpayment</div>
                         }
                         else
                         {
-                            <text>₱@advanceOnBill.ToString("N0")</text>
+                            <text>₱@advanceOnBill.ToString("N2")</text>
                         }
                     </td>
-                    <td>₱@((b.AmountDue - b.Deposit - b.Advance).ToString("N0"))</td>
-                    <td>₱@((b.AmountDue - (b.AmountPaid ?? 0m)).ToString("N0"))</td>
+                    <td>₱@((b.AmountDue - b.Deposit - b.Advance).ToString("N2"))</td>
+                    <td>₱@((b.AmountDue - (b.AmountPaid ?? 0m)).ToString("N2"))</td>
                     @* the whole amount handed over, with the overpaid part named
                        underneath so the row still adds up to what was received *@
                     <td>
                         @if (b.TotalReceived > 0)
                         {
-                            <span>₱@b.TotalReceived.ToString("N0")</span>
+                            <span>₱@b.TotalReceived.ToString("N2")</span>
                             @if (b.AdvanceFromOverpayment > 0)
                             {
                                 <div>
-                                    <span>₱@((b.AmountPaid ?? 0m).ToString("N0")) rent</span>
+                                    <span>₱@((b.AmountPaid ?? 0m).ToString("N2")) rent</span>
                                     <span>·</span>
-                                    <span>₱@b.AdvanceFromOverpayment.ToString("N0") advance</span>
+                                    <span>₱@b.AdvanceFromOverpayment.ToString("N2") advance</span>
                                 </div>
                             }
                         }

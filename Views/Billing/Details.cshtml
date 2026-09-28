@@ -33,14 +33,14 @@
                     </dd>
 
                     <dt>Amount Due</dt>
-                    <dd>₱@Model.AmountDue.ToString("N0")</dd>
+                    <dd>₱@Model.AmountDue.ToString("N2")</dd>
 
                     <dt>Monthly Rent</dt>
-                    <dd>₱@((Model.AmountDue - Model.Deposit - Model.Advance).ToString("N0"))</dd>
+                    <dd>₱@((Model.AmountDue - Model.Deposit - Model.Advance).ToString("N2"))</dd>
 
                     <dt>Deposit on File</dt>
                     <dd>
-                        <span>₱@((Model.Tenant?.Unit?.Deposit ?? 0m).ToString("N0"))</span>
+                        <span>₱@((Model.Tenant?.Unit?.Deposit ?? 0m).ToString("N2"))</span>
                         <span>covers the final month at move-out</span>
                     </dd>
 
@@ -51,7 +51,7 @@
                     {
                         <dt>Advance Payment Charged</dt>
                         <dd>
-                            ₱@Model.Advance.ToString("N0")
+                            ₱@Model.Advance.ToString("N2")
                             <span>one month, collected at move-in</span>
                         </dd>
                     }
@@ -63,7 +63,7 @@
                         @* only colour it while there is actually credit being held *@
                         @if ((Model.Tenant?.AdvanceCredit ?? 0m) > 0)
                         {
-                            <span>₱@((Model.Tenant!.AdvanceCredit).ToString("N0"))</span>
+                            <span>₱@((Model.Tenant!.AdvanceCredit).ToString("N2"))</span>
                             <span>applied automatically to the next bill</span>
                         }
                         else
@@ -83,7 +83,7 @@
                     <dd>
                         @if (Model.TotalReceived > 0)
                         {
-                            <span>₱@Model.TotalReceived.ToString("N0")</span>
+                            <span>₱@Model.TotalReceived.ToString("N2")</span>
 
                             @* only worth splitting when the money went two ways *@
                             @if (Model.AdvanceFromOverpayment > 0)
@@ -91,11 +91,11 @@
                                 <div>
                                     <div>
                                         Monthly Rent
-                                        <span>₱@((Model.AmountPaid ?? 0m).ToString("N0"))</span>
+                                        <span>₱@((Model.AmountPaid ?? 0m).ToString("N2"))</span>
                                     </div>
                                     <div>
                                         Advance Payment
-                                        <span>₱@Model.AdvanceFromOverpayment.ToString("N0")</span>
+                                        <span>₱@Model.AdvanceFromOverpayment.ToString("N2")</span>
                                     </div>
                                 </div>
                             }

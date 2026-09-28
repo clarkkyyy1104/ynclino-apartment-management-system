@@ -108,7 +108,7 @@
                     <dl>
                         <dt>Unit Number</dt><dd>@Model.Unit.UnitNumber</dd>
                         <dt>Unit Type</dt><dd>@Model.Unit.UnitType</dd>
-                        <dt>Monthly Rent</dt><dd>₱@Model.Unit.RentPrice.ToString("N0")</dd>
+                        <dt>Monthly Rent</dt><dd>₱@Model.Unit.RentPrice.ToString("N2")</dd>
                         <dt>Capacity</dt><dd>@Model.Unit.Capacity person(s)</dd>
                     </dl>
                     <div data-actions-row>
@@ -142,7 +142,7 @@
                     <div data-feed-row>
                         <div>
                             <span data-module>Billing</span>
-                            Bill for @b.BillingPeriod.ToString("MMMM yyyy") — ₱@b.AmountDue.ToString("N0")
+                            Bill for @b.BillingPeriod.ToString("MMMM yyyy") — ₱@b.AmountDue.ToString("N2")
                         </div>
                         <span>@b.Status</span>
                     </div>

@@ -339,7 +339,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                     options.Add(new SelectListItem
                     {
                         Value = u.UnitID.ToString(),
-                        Text = $"Unit {u.UnitNumber} — {u.UnitType} (₱{u.RentPrice:N0}/mo, {u.Capacity - active} slot(s) open)"
+                        Text = $"Unit {u.UnitNumber} — {u.UnitType} (₱{u.RentPrice:N2}/mo, {u.Capacity - active} slot(s) open)"
                     });
             }
             ViewBag.AvailableUnits = options;

@@ -211,7 +211,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                         DueDate = DateTime.Today,
                         DatePaid = DateTime.Today,
                         Status = "Paid",
-                        Notes = $"Move-in payment - Deposit ₱{unit.Deposit:N0} + Advance Payment ₱{unit.AdvancePayment:N0}",
+                        Notes = $"Move-in payment - Deposit ₱{unit.Deposit:N2} + Advance Payment ₱{unit.AdvancePayment:N2}",
                         DateIssued = DateTime.Now
                     };
                     _context.tblBillings.Add(moveInBill);
@@ -702,7 +702,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 .Select(u => new SelectListItem
                 {
                     Value = u.UnitID.ToString(),
-                    Text = $"{u.UnitNumber} — {u.UnitType} (₱{u.RentPrice:N0})"
+                    Text = $"{u.UnitNumber} — {u.UnitType} (₱{u.RentPrice:N2})"
                 })
                 .ToListAsync();
         }
@@ -714,7 +714,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 .Select(u => new SelectListItem
                 {
                     Value = u.UnitID.ToString(),
-                    Text = $"{u.UnitNumber} — {u.UnitType} (₱{u.RentPrice:N0}) [{u.Status}]"
+                    Text = $"{u.UnitNumber} — {u.UnitType} (₱{u.RentPrice:N2}) [{u.Status}]"
                 })
                 .ToListAsync();
         }
