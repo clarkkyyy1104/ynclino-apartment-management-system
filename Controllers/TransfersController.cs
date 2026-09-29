@@ -31,10 +31,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 .FirstOrDefaultAsync(t => t.UserID == uid && t.Status == "Active");
         }
 
-        // A request may only be filed away once it is genuinely finished. 'Approved'
-        // is NOT finished — the tenant still has to be moved — so it is deliberately
-        // absent here. Archiving an approved transfer would hide outstanding work.
-        private static readonly string[] ClosedStatuses = { "Completed", "Rejected", "Cancelled" };
+        // a request may only be filed away once it has actually been reviewed
+        private static readonly string[] ClosedStatuses = { "Approved", "Rejected", "Cancelled" };
 
         // Archiving is per side: the tenant clears their own list without touching
         // the admin's, and the other way round.
@@ -142,7 +140,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             if (await HasPendingAsync(tenant.TenantID))
             {
-                TempData["Error"] = await OpenRequestMessageAsync(tenant.TenantID);
+                TempData["Error"] = "You already have a pending transfer request. Please wait for it to be reviewed.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -163,7 +161,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
 
             if (await HasPendingAsync(tenant.TenantID))
             {
-                TempData["Error"] = await OpenRequestMessageAsync(tenant.TenantID);
+                TempData["Error"] = "You already have a pending transfer request.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -236,12 +234,7 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // POST: Transfers/Approve/5
-        // Step 2 of the flow: the admin AGREES to the move. Nothing is moved here.
-        // The request becomes "subject for transfer" and waits for Complete, which
-        // is where the tenant's assignment actually changes. Keeping the decision
-        // and the move apart is what lets the office record that a transfer was
-        // agreed on one day and carried out on another.
+        // POST: Transfers/Approve/5  (admin moves the tenant)
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
@@ -257,73 +250,27 @@ namespace YnclinoApartmentManagementSystem.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            var problem = await TransferBlockedReasonAsync(req, "approved");
-            if (problem != null)
+            var target = await _context.tblUnits.FindAsync(req.RequestedUnitID);
+            if (target == null || !await UnitHasRoomAsync(target))
             {
-                TempData["Error"] = problem;
+                TempData["Error"] = "The requested unit is no longer available. The request was not approved.";
                 return RedirectToAction(nameof(Index));
             }
+
+            var tenant = req.Tenant!;
+            if (tenant.Status != "Active" || tenant.UnitID == req.RequestedUnitID ||
+                tenant.UnitID != req.CurrentUnitID)
+            {
+                TempData["Error"] = "The tenant's assignment has changed or is inactive. Review the request before approving it.";
+                return RedirectToAction(nameof(Index));
+            }
+            int? oldUnitID = tenant.UnitID;                 // null when this is a first-unit application
+            bool isApplication = oldUnitID == null;
+            tenant.UnitID = req.RequestedUnitID;
 
             req.Status = "Approved";
             req.DateReviewed = DateTime.Now;
             req.AdminNotes = adminNotes;
-            await _context.SaveChangesAsync();
-
-            // The unit was already Reserved while the request was Pending and it
-            // stays Reserved now, so nobody else can take it before the move. The
-            // refresh is here so the status is re-derived from the new state rather
-            // than assumed.
-            await UnitStatusHelper.RefreshAsync(_context, req.RequestedUnitID);
-            await _context.SaveChangesAsync();
-
-            var unitNo = (await _context.tblUnits.FindAsync(req.RequestedUnitID))?.UnitNumber;
-            TempData["Success"] = $"Request approved. {req.Tenant!.FullName} is now subject for transfer " +
-                                  $"to unit {unitNo}. Mark it as completed once they have actually moved.";
-            return RedirectToAction(nameof(Index));
-        }
-
-        // POST: Transfers/Complete/5
-        // Step 3 of the flow: the admin confirms the tenant HAS moved. This is the
-        // only place the tenant's unit changes — setting tenant.UnitID closes the
-        // current TenantUnitAssignment and opens a new one, so the tenancy history
-        // records the move instead of overwriting it.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Complete(int id, string? adminNotes)
-        {
-            var req = await _context.tblUnitTransferRequests
-                .Include(r => r.Tenant).ThenInclude(t => t!.Assignments)
-                .FirstOrDefaultAsync(r => r.TransferID == id);
-            if (req == null) return NotFound();
-            if (req.Status != "Approved")
-            {
-                TempData["Error"] = req.Status == "Pending"
-                    ? "This request has to be approved before it can be completed."
-                    : "Only an approved request can be marked as completed.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            // Time has passed since the approval, so every check made then has to be
-            // made again. An approval is a promise, not a guarantee: the unit may
-            // have filled up and the tenant may have been deactivated in between.
-            var problem = await TransferBlockedReasonAsync(req, "completed");
-            if (problem != null)
-            {
-                TempData["Error"] = problem;
-                return RedirectToAction(nameof(Index));
-            }
-
-            var target = (await _context.tblUnits.FindAsync(req.RequestedUnitID))!;
-            var tenant = req.Tenant!;
-            int? oldUnitID = tenant.UnitID;                 // null when this is a first-unit application
-            bool isApplication = oldUnitID == null;
-
-            tenant.UnitID = req.RequestedUnitID;            // the move itself
-
-            req.Status = "Completed";
-            req.DateCompleted = DateTime.Now;
-            if (!string.IsNullOrWhiteSpace(adminNotes)) req.AdminNotes = adminNotes;
 
             await _context.SaveChangesAsync();
 
@@ -335,65 +282,6 @@ namespace YnclinoApartmentManagementSystem.Controllers
             string verb = isApplication ? "assigned to" : "moved to";
             TempData["Success"] = $"{tenant.FullName} was {verb} unit {target.UnitNumber}.";
             return RedirectToAction(nameof(Index));
-        }
-
-        // POST: Transfers/CancelApproved/5
-        // An approved move that never happened — the tenant changed their mind, or
-        // the office called it off. This releases the unit it was holding.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> CancelApproved(int id, string? adminNotes)
-        {
-            var req = await _context.tblUnitTransferRequests.FindAsync(id);
-            if (req == null) return NotFound();
-            if (req.Status != "Approved")
-            {
-                TempData["Error"] = "Only an approved request that has not been completed can be called off.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            req.Status = "Cancelled";
-            if (!string.IsNullOrWhiteSpace(adminNotes)) req.AdminNotes = adminNotes;
-            await _context.SaveChangesAsync();
-
-            // the unit is no longer being held for this tenant
-            await UnitStatusHelper.RefreshAsync(_context, req.RequestedUnitID);
-            await _context.SaveChangesAsync();
-
-            TempData["Success"] = "The approved transfer was called off and the unit released.";
-            return RedirectToAction(nameof(Index));
-        }
-
-        // The conditions a transfer needs in order to go ahead, checked both when it
-        // is approved and again when it is completed. Returns null when it is fine,
-        // or the reason it cannot proceed. 'stage' only shapes the wording.
-        private async Task<string?> TransferBlockedReasonAsync(tblUnitTransferRequest req, string stage)
-        {
-            var target = await _context.tblUnits.FindAsync(req.RequestedUnitID);
-            if (target == null || !await UnitHasRoomAsync(target))
-                return $"The requested unit is no longer available, so the request was not {stage}.";
-
-            // Load the tenant WITH their assignments, always. tenant.UnitID reads the
-            // Active row out of Assignments, and lazy loading is off in this project,
-            // so an un-Included collection makes UnitID silently null — which would
-            // read as "the tenant has been moved" and block every genuine transfer.
-            // EF returns the already-tracked instance here, so this also fills in
-            // req.Tenant.Assignments for the caller.
-            var tenant = await _context.tblTenants
-                .Include(t => t.Assignments)
-                .FirstOrDefaultAsync(t => t.TenantID == req.TenantID);
-            if (tenant == null) return "The tenant on this request no longer exists.";
-
-            if (tenant.Status != "Active")
-                return $"That tenant is no longer active, so the request cannot be {stage}.";
-            if (tenant.UnitID == req.RequestedUnitID)
-                return "That tenant is already in the requested unit.";
-            if (tenant.UnitID != req.CurrentUnitID)
-                return $"The tenant has been moved since this request was filed, so it cannot be {stage}. " +
-                       "Review the request against their current unit.";
-
-            return null;
         }
 
         // POST: Transfers/Reject/5
@@ -423,25 +311,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // One open request at a time. 'Approved' counts as open: the tenant has been
-        // promised a unit and has not moved into it yet, so they must not be able to
-        // queue up a second request against a different one.
         private async Task<bool> HasPendingAsync(int tenantId) =>
-            await _context.tblUnitTransferRequests.AnyAsync(r =>
-                r.TenantID == tenantId && (r.Status == "Pending" || r.Status == "Approved"));
-
-        // "You already have a request" means two different things now, so say which.
-        // An approved one has been decided and is waiting on the office, not on them.
-        private async Task<string> OpenRequestMessageAsync(int tenantId)
-        {
-            bool approved = await _context.tblUnitTransferRequests
-                .AnyAsync(r => r.TenantID == tenantId && r.Status == "Approved");
-
-            return approved
-                ? "Your unit request has already been approved and is waiting to be carried out. " +
-                  "Please contact the office about the move instead of filing another request."
-                : "You already have a pending unit request. Please wait for it to be reviewed.";
-        }
+            await _context.tblUnitTransferRequests.AnyAsync(r => r.TenantID == tenantId && r.Status == "Pending");
 
         // a unit can take the tenant if it isn't full and isn't under maintenance
         private async Task<bool> UnitHasRoomAsync(tblUnit unit)

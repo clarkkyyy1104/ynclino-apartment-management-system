@@ -20,57 +20,26 @@ namespace YnclinoApartmentManagementSystem.Controllers
             _context = context;
         }
 
-        // ── Sign-in pages ──────────────────────────────────────────────────
-        // Three pages, one for each kind of account. The tenant page is the
-        // default: it keeps the /Account/Login address, which is where the
-        // cookie sends anyone who is not signed in. Staff are told their page's
-        // address in person — /Account/MaintenanceLogin and /Account/AdminLogin
-        // — and no page links to either. There is no self-service reset.
-
+        // There is no self-service reset. This page carries no form and no input,
         [HttpGet]
-        public IActionResult Login(string? returnUrl) => ShowPortal(LoginPortal.Tenant, returnUrl);
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public Task<IActionResult> Login(LoginViewModel vm, string? returnUrl) =>
-            SignInThroughAsync(LoginPortal.Tenant, vm, returnUrl);
-
-        [HttpGet]
-        public IActionResult MaintenanceLogin(string? returnUrl) => ShowPortal(LoginPortal.Maintenance, returnUrl);
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public Task<IActionResult> MaintenanceLogin(LoginViewModel vm, string? returnUrl) =>
-            SignInThroughAsync(LoginPortal.Maintenance, vm, returnUrl);
-
-        [HttpGet]
-        public IActionResult AdminLogin(string? returnUrl) => ShowPortal(LoginPortal.Admin, returnUrl);
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public Task<IActionResult> AdminLogin(LoginViewModel vm, string? returnUrl) =>
-            SignInThroughAsync(LoginPortal.Admin, vm, returnUrl);
-
-        private IActionResult ShowPortal(LoginPortal portal, string? returnUrl)
+        public IActionResult Login(string? returnUrl)
         {
             if (User.Identity?.IsAuthenticated == true)
                 return RedirectToAction("Index", "Home");
 
-            return PortalView(portal, new LoginViewModel(), returnUrl);
-        }
-
-        // every sign-in page renders the same view; only the portal changes
-        private IActionResult PortalView(LoginPortal portal, LoginViewModel vm, string? returnUrl)
-        {
-            ViewBag.Portal = portal;
             ViewBag.ReturnUrl = returnUrl;
-            return View("Login", vm);
+            return View(new LoginViewModel());
         }
 
-        private async Task<IActionResult> SignInThroughAsync(LoginPortal portal, LoginViewModel vm, string? returnUrl)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(LoginViewModel vm, string? returnUrl)
         {
             if (!ModelState.IsValid)
-                return PortalView(portal, vm, returnUrl);
+            {
+                ViewBag.ReturnUrl = returnUrl;
+                return View(vm);
+            }
 
             var username = vm.Username.Trim();
 
@@ -80,7 +49,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
             {
                 ModelState.AddModelError(string.Empty,
                     $"Too many failed sign-in attempts. Try again in {Math.Ceiling(wait.Value.TotalMinutes)} minute(s).");
-                return PortalView(portal, vm, returnUrl);
+                ViewBag.ReturnUrl = returnUrl;
+                return View(vm);
             }
 
             var user = await _context.tblUsers
@@ -90,7 +60,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
             {
                 LoginThrottle.RecordFailure(username);
                 ModelState.AddModelError(string.Empty, "Invalid username or password.");
-                return PortalView(portal, vm, returnUrl);
+                ViewBag.ReturnUrl = returnUrl;
+                return View(vm);
             }
 
             LoginThrottle.RecordSuccess(username);
@@ -99,19 +70,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
             if (!user.IsActive)
             {
                 ModelState.AddModelError(string.Empty, "This account has been deactivated. Please contact the administrator.");
-                return PortalView(portal, vm, returnUrl);
-            }
-
-            // Right password, wrong page. Nobody is signed in. A tenant is pointed
-            // at the tenant page; staff are only told this page is not theirs,
-            // since their page's address is never shown on screen.
-            if (user.Role != portal.Role)
-            {
-                var rightPortal = LoginPortal.For(user.Role);
-                if (rightPortal.IsListed)
-                    ViewBag.RightPortal = rightPortal;
-                ModelState.AddModelError(string.Empty, $"This page is for {portal.Audience} accounts only.");
-                return PortalView(portal, vm, returnUrl);
+                ViewBag.ReturnUrl = returnUrl;
+                return View(vm);
             }
 
             user.LastLoginAt = DateTime.Now;
@@ -160,11 +120,8 @@ namespace YnclinoApartmentManagementSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
-            // send each person back to their own sign-in page, not the tenant default
-            var portal = LoginPortal.For(User.FindFirstValue(ClaimTypes.Role));
-
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return RedirectToAction(portal.Action);
+            return RedirectToAction("Login");
         }
 
         [Authorize]

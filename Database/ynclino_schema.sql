@@ -266,35 +266,6 @@ CREATE TABLE ClaimRequests (
 -- kept in TenantUnitAssignments.
 -- CurrentUnitID is a snapshot, so an approved transfer does not change what
 -- the request originally asked to move from.
---
--- REQUEST LIFECYCLE
--- A transfer is a process, not a single event. The decision to allow a move and
--- the move itself are separate facts recorded at separate times, because days
--- can pass between them while keys are handed over and the units prepared.
---
---     Pending    tenant has submitted; nobody has decided yet
---                -> the requested unit is held as Reserved
---
---     Approved   the administrator has agreed, and the request is now SUBJECT
---                FOR TRANSFER. The tenant has NOT moved: no row in
---                TenantUnitAssignments changes at this point, and the requested
---                unit stays Reserved so no one else can take it
---
---     Completed  the administrator has confirmed the move actually happened.
---                Only now does the tenant's Active assignment in
---                TenantUnitAssignments close and a new Active row open, and
---                only now do both units' Status values change
---
---     Rejected   the administrator refused the request
---     Cancelled  the tenant withdrew it, or an approved move was called off
---
--- DateReviewed  = when the decision was made      (Pending  -> Approved/Rejected)
--- DateCompleted = when the tenant actually moved   (Approved -> Completed)
---
--- Because time passes between those two moments, the checks made at approval
--- (the unit still has room, the tenant is still active and still in
--- CurrentUnitID) MUST be re-applied at completion. An approval is a promise,
--- not a guarantee.
 -- ============================================================================
 
 CREATE TABLE UnitTransferRequests (
@@ -304,21 +275,9 @@ CREATE TABLE UnitTransferRequests (
     CurrentUnitID INT UNSIGNED NULL,
 
     Reason VARCHAR(500) NOT NULL,
-
-    -- Pending | Approved | Completed | Rejected | Cancelled
-    -- 'Approved' means subject for transfer, NOT moved. See the lifecycle
-    -- notes above the table.
     Status VARCHAR(20) NOT NULL DEFAULT 'Pending',
-
     DateRequested DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-
-    -- when the administrator decided (approved or rejected)
     DateReviewed DATETIME(6) NULL,
-
-    -- when the tenant was actually moved. NULL on every request that has not
-    -- reached 'Completed', which is what makes an approved-but-unfinished
-    -- transfer findable.
-    DateCompleted DATETIME(6) NULL,
 
     TenantArchivedAt DATETIME(6) NULL,
     StaffArchivedAt DATETIME(6) NULL,
@@ -339,33 +298,10 @@ CREATE TABLE UnitTransferRequests (
     CONSTRAINT fk_transfer_current_unit
         FOREIGN KEY (CurrentUnitID) REFERENCES Units(UnitID) ON DELETE RESTRICT,
 
-    -- The state machine written into the schema, so an invalid status cannot be
-    -- stored even by direct SQL. Drop this if a new state is added later.
-    CONSTRAINT chk_transfer_status CHECK (
-        Status IN ('Pending', 'Approved', 'Completed', 'Rejected', 'Cancelled')
-    ),
-
-    -- A move cannot be recorded before a decision was: you cannot complete a
-    -- transfer nobody approved.
-    CONSTRAINT chk_transfer_completed_after_review CHECK (
-        DateCompleted IS NULL OR DateReviewed IS NOT NULL
-    ),
-
-    -- Only a completed transfer carries a completion date, and a completed one
-    -- must carry one.
-    CONSTRAINT chk_transfer_completed_date CHECK (
-        (Status = 'Completed' AND DateCompleted IS NOT NULL) OR
-        (Status <> 'Completed' AND DateCompleted IS NULL)
-    ),
-
     INDEX idx_transfer_tenant (TenantID),
     INDEX idx_transfer_unit (RequestedUnitID),
     INDEX idx_transfer_status (Status),
-    INDEX idx_transfer_requested_date (DateRequested),
-
-    -- 'Pending' and 'Approved' are both OPEN states: each holds the requested
-    -- unit as Reserved and blocks the tenant from filing a second request.
-    INDEX idx_transfer_open (RequestedUnitID, Status)
+    INDEX idx_transfer_requested_date (DateRequested)
 );
 
 -- ============================================================================

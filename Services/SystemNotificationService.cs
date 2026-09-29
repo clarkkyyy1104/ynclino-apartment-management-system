@@ -97,7 +97,7 @@ namespace YnclinoApartmentManagementSystem.Services
                     });
                 }
 
-                // Unit requests nobody has decided on yet — these wait on a decision.
+                // Pending unit transfer requests
                 var pendingTransfers =
                     await _context.tblUnitTransferRequests
                         .CountAsync(r => r.Status == "Pending");
@@ -107,34 +107,12 @@ namespace YnclinoApartmentManagementSystem.Services
                     notifications.Add(new SystemNotification
                     {
                         Module = "Transfer",
-                        Message = $"{pendingTransfers} pending unit request" +
-                                  (pendingTransfers > 1 ? "s require" : " requires") +
-                                  " review.",
+                        Message = $"{pendingTransfers} pending unit transfer request" +
+                                  (pendingTransfers > 1 ? "s" : "") +
+                                  " require review.",
                         Link = "/Transfers",
                         CreatedAt = DateTime.Now,
                         BadgeCount = pendingTransfers
-                    });
-                }
-
-                // Approved but not carried out yet — these wait on the MOVE, not on a
-                // decision, and they are the work the old one-step design could never
-                // show. Without this the badge would read zero while transfers sit
-                // unfinished, because the request is no longer Pending.
-                var transfersForMove =
-                    await _context.tblUnitTransferRequests
-                        .CountAsync(r => r.Status == "Approved");
-
-                if (transfersForMove > 0)
-                {
-                    notifications.Add(new SystemNotification
-                    {
-                        Module = "Transfer",
-                        Message = $"{transfersForMove} approved unit request" +
-                                  (transfersForMove > 1 ? "s are" : " is") +
-                                  " subject for transfer and waiting to be carried out.",
-                        Link = "/Transfers",
-                        CreatedAt = DateTime.Now,
-                        BadgeCount = transfersForMove
                     });
                 }
 
@@ -310,14 +288,11 @@ namespace YnclinoApartmentManagementSystem.Services
                     // ----------------------------------------------------
                     // UNIT TRANSFER
                     // ----------------------------------------------------
-                    // Both open states matter to the tenant, and they mean very
-                    // different things: one is still being decided, the other has
-                    // been granted and is being arranged.
                     var transferRequests =
                         await _context.tblUnitTransferRequests
                             .Where(r =>
                                 r.TenantID == tenant.TenantID &&
-                                (r.Status == "Pending" || r.Status == "Approved"))
+                                r.Status == "Pending")
                             .OrderByDescending(r => r.DateRequested)
                             .ToListAsync();
 
@@ -326,18 +301,14 @@ namespace YnclinoApartmentManagementSystem.Services
                         notifications.Add(new SystemNotification
                         {
                             Module = "Transfer",
-                            Message = request.Status == "Approved"
-                                ? "Your unit request has been approved. You will be moved shortly."
-                                : "Your unit request is still pending.",
+                            Message = "Your unit transfer request is still pending.",
                             // TransfersController has no Details action, so a link to
                             // /Transfers/Details/{id} was a 404. The tenant's own
                             // requests are listed on /Transfers, which is where the
                             // other notifications for this module already point.
                             Link = "/Transfers",
                             TargetId = request.TransferID,
-                            CreatedAt = request.Status == "Approved" && request.DateReviewed.HasValue
-                                ? request.DateReviewed.Value
-                                : request.DateRequested
+                            CreatedAt = request.DateRequested
                         });
                     }
                 }
